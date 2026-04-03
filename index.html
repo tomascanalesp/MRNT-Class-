@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#080b12" />
-  <title>Sala Joven · Adventista Las Condes</title>
+  <meta name="theme-color" content="#07091f" />
+  <title>Maranata Class · Las Condes</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -22,40 +22,56 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
+    :root {
+      --navy:   #07091f;
+      --navy2:  #0d1035;
+      --navy3:  #141744;
+      --yellow: #ffd000;
+      --yellow2:#e6bb00;
+      --white:  #f0f2ff;
+      --muted:  #4a4f7a;
+      --muted2: #2a2f5a;
+    }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     html, body, #root { height:100%; }
     body {
-      background:#080b12; color:#e8eaf0;
-      font-family:'DM Sans', sans-serif;
+      background:var(--navy); color:var(--white);
+      font-family:'Barlow', sans-serif;
       overflow:hidden; -webkit-tap-highlight-color:transparent;
     }
     input { outline:none; transition:border-color .2s, box-shadow .2s; }
     input:focus {
-      border-color:#6366f1 !important;
-      box-shadow:0 0 0 3px rgba(99,102,241,.2) !important;
+      border-color:var(--yellow) !important;
+      box-shadow:0 0 0 3px rgba(255,208,0,.15) !important;
     }
     button { transition:opacity .15s, transform .1s; cursor:pointer; }
-    button:active { opacity:.8; transform:scale(.97); }
+    button:active { opacity:.85; transform:scale(.97); }
     ::-webkit-scrollbar { width:3px; }
-    ::-webkit-scrollbar-thumb { background:#1f2937; border-radius:2px; }
+    ::-webkit-scrollbar-thumb { background:var(--muted2); border-radius:2px; }
+
     @keyframes fadeUp {
-      from { opacity:0; transform:translateY(18px); }
+      from { opacity:0; transform:translateY(20px); }
       to   { opacity:1; transform:translateY(0); }
     }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    @keyframes glow {
-      0%,100% { box-shadow:0 0 10px var(--gc,#6366f1); }
-      50%      { box-shadow:0 0 24px var(--gc,#6366f1); }
+    @keyframes spin  { to { transform:rotate(360deg); } }
+    @keyframes pulse {
+      0%,100% { opacity:1; } 50% { opacity:.3; }
     }
-    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:.25; } }
-    @keyframes slideIn {
-      from { opacity:0; transform:translateY(6px); }
-      to   { opacity:1; transform:translateY(0); }
+    @keyframes glowY {
+      0%,100% { box-shadow:0 0 12px rgba(255,208,0,.4); }
+      50%      { box-shadow:0 0 28px rgba(255,208,0,.7); }
     }
     @keyframes pop {
-      0%  { transform:translate(-50%,-50%) scale(.6); }
-      65% { transform:translate(-50%,-50%) scale(1.12); }
+      0%  { transform:translate(-50%,-50%) scale(.5); }
+      65% { transform:translate(-50%,-50%) scale(1.15); }
       100%{ transform:translate(-50%,-50%) scale(1); }
+    }
+    @keyframes slideIn {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes triPulse {
+      0%,100% { opacity:.18; } 50% { opacity:.32; }
     }
   </style>
 </head>
@@ -75,21 +91,15 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db   = firebase.database();
-    // Navegador recuerda el login aunque se cierre la app
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   </script>
 
   <script type="text/babel">
     const { useState, useRef, useEffect, useCallback } = React;
 
-    const AVATARS = [
-      '🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉',
-      '⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄',
-    ];
-    const COLORS = [
-      '#6366f1','#ec4899','#22d3ee','#10b981',
-      '#f59e0b','#ef4444','#8b5cf6','#fb923c',
-    ];
+    /* ── Constantes ── */
+    const AVATARS = ['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
+    const COLORS  = ['#6366f1','#ec4899','#22d3ee','#10b981','#ffd000','#ef4444','#8b5cf6','#fb923c'];
 
     const getSID  = () => new Date().toISOString().slice(0,10);
     const nowTime = () => new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
@@ -98,84 +108,137 @@
       'auth/user-not-found':          'No existe una cuenta con ese correo',
       'auth/wrong-password':          'Contraseña incorrecta',
       'auth/email-already-in-use':    'Ese correo ya tiene una cuenta',
-      'auth/invalid-email':           'El correo no tiene un formato válido',
+      'auth/invalid-email':           'El correo no es válido',
       'auth/weak-password':           'La contraseña debe tener al menos 6 caracteres',
       'auth/too-many-requests':       'Demasiados intentos. Espera unos minutos',
       'auth/invalid-credential':      'Correo o contraseña incorrectos',
       'auth/popup-closed-by-user':    '',
       'auth/cancelled-popup-request': '',
+      'auth/operation-not-allowed':   'Método de acceso no habilitado en Firebase',
+      'auth/unauthorized-domain':     'Dominio no autorizado. Agrégalo en Firebase Console → Authentication → Authorized domains',
     };
-    const getErr = code => AUTH_ERRORS[code] || 'Ocurrió un error. Intenta de nuevo';
+    const getErr = code => AUTH_ERRORS[code] || `Error: ${code}`;
 
-    /* ══ ROOM CANVAS ════════════════════════════════════════ */
+    /* ── Logo SVG Maranata ── */
+    const Logo = ({ size=48, white=false }) => (
+      <svg width={size} height={size*0.75} viewBox="0 0 80 60">
+        {/* Triángulo amarillo */}
+        <polygon points="8,54 72,54 58,10" fill={white?"rgba(255,255,255,.2)":"#ffd000"} />
+        {/* Libro */}
+        <g stroke={white?"white":"#07091f"} strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M28 42 L28 18 Q28 15 31 15 L40 17 L40 42"/>
+          <path d="M52 42 L52 18 Q52 15 49 15 L40 17 L40 42"/>
+          <path d="M28 42 Q34 40 40 42 Q46 40 52 42"/>
+          <line x1="32" y1="22" x2="38" y2="23"/>
+          <line x1="32" y1="27" x2="38" y2="28"/>
+          <line x1="42" y1="23" x2="48" y2="22"/>
+          <line x1="42" y1="28" x2="48" y2="27"/>
+        </g>
+      </svg>
+    );
+
+    /* ── Fondo decorativo ── */
+    const BgTriangles = () => (
+      <div style={{position:'fixed',inset:0,overflow:'hidden',pointerEvents:'none',zIndex:0}}>
+        <div style={{position:'absolute',top:'-10%',right:'-5%',width:'55%',height:'70%',
+          background:'linear-gradient(135deg,rgba(255,208,0,.08),transparent 60%)',
+          clipPath:'polygon(100% 0,100% 100%,0 100%)',
+          animation:'triPulse 4s ease-in-out infinite'}}/>
+        <div style={{position:'absolute',bottom:'-5%',left:'-8%',width:'45%',height:'55%',
+          background:'linear-gradient(315deg,rgba(99,102,241,.06),transparent 60%)',
+          clipPath:'polygon(0 0,100% 100%,0 100%)',
+          animation:'triPulse 6s ease-in-out infinite'}}/>
+        <div style={{position:'absolute',top:'30%',left:'20%',width:'60%',height:'40%',
+          background:'radial-gradient(ellipse,rgba(255,208,0,.03),transparent 70%)'}}/>
+      </div>
+    );
+
+    /* ══ ROOM CANVAS ══════════════════════════════════════════ */
     function RoomCanvas({ users, myId, onDragStart, full }) {
       const entries = Object.entries(users);
       return (
         <div style={{
           width:'100%', height:'100%', position:'relative', overflow:'hidden',
-          background:'#080b12',
-          backgroundImage:`linear-gradient(rgba(99,102,241,.04) 1px,transparent 1px),
-                           linear-gradient(90deg,rgba(99,102,241,.04) 1px,transparent 1px)`,
-          backgroundSize:'48px 48px',
+          background:'var(--navy)',
+          backgroundImage:`linear-gradient(rgba(255,208,0,.03) 1px,transparent 1px),
+                           linear-gradient(90deg,rgba(255,208,0,.03) 1px,transparent 1px)`,
+          backgroundSize:'44px 44px',
         }}>
-          {[['7%','16%','#6366f1'],['60%','46%','#22d3ee'],['38%','14%','#ec4899']].map(([l,t,c],i)=>(
-            <div key={i} style={{position:'absolute',width:'32%',height:'32%',borderRadius:'50%',
-              background:`radial-gradient(circle,${c}07,transparent 70%)`,
-              left:l,top:t,pointerEvents:'none'}}/>
-          ))}
+          {/* Luces ambientales */}
+          <div style={{position:'absolute',top:'10%',left:'5%',width:'35%',height:'35%',borderRadius:'50%',
+            background:'radial-gradient(circle,rgba(255,208,0,.05),transparent 70%)',pointerEvents:'none'}}/>
+          <div style={{position:'absolute',bottom:'15%',right:'8%',width:'30%',height:'30%',borderRadius:'50%',
+            background:'radial-gradient(circle,rgba(99,102,241,.05),transparent 70%)',pointerEvents:'none'}}/>
+
+          {/* Pantalla proyección */}
           <div style={{
             position:'absolute',top:'3%',left:'50%',transform:'translateX(-50%)',
-            width:full?'30%':'38%',minWidth:120,height:full?'8%':'9%',minHeight:30,
-            background:'linear-gradient(135deg,#1a2645,#111d36)',
-            border:'1.5px solid rgba(99,102,241,.45)',borderRadius:8,
+            width:full?'32%':'40%',minWidth:130,height:full?'9%':'10%',minHeight:32,
+            background:'linear-gradient(135deg,#0d1035,#141744)',
+            border:`1.5px solid ${full?'rgba(255,208,0,.5)':'rgba(255,208,0,.3)'}`,
+            borderRadius:8,
             display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-            boxShadow:'0 0 22px rgba(99,102,241,.2)',
-            color:'rgba(165,180,252,.5)',letterSpacing:'.1em',
-            textTransform:'uppercase',fontSize:full?13:9,
+            boxShadow:'0 0 20px rgba(255,208,0,.12)',
+            color:'rgba(255,208,0,.5)',letterSpacing:'.1em',
+            textTransform:'uppercase',fontSize:full?12:9,
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
           }}>
             {full
               ? <><span style={{width:7,height:7,borderRadius:'50%',background:'#ef4444',
-                  display:'inline-block',animation:'blink 1.5s infinite'}}/>EN VIVO</>
-              : '📺 Pantalla'}
+                  display:'inline-block',animation:'pulse 1.5s infinite'}}/>EN VIVO</>
+              : '📺 PANTALLA'}
           </div>
           {['32%','66%'].map((l,i)=>(
-            <div key={i} style={{position:'absolute',top:'12%',left:l,width:'1.5%',
-              height:'5%',minWidth:3,background:'rgba(99,102,241,.12)',borderRadius:2}}/>
+            <div key={i} style={{position:'absolute',top:'13%',left:l,
+              width:'1.5%',height:'4%',minWidth:3,
+              background:'rgba(255,208,0,.1)',borderRadius:2}}/>
           ))}
-          {[[9,47,22,12],[37,57,22,12],[62,43,22,12]].map(([l,t,w,h],i)=>(
+
+          {/* Mesas */}
+          {[[9,47,22,11],[37,57,22,11],[62,43,22,11]].map(([l,t,w,h],i)=>(
             <div key={i} style={{position:'absolute',left:`${l}%`,top:`${t}%`,
               width:`${w}%`,height:`${h}%`,
-              background:'linear-gradient(135deg,#16213a,#0f1729)',
-              border:'1px solid rgba(34,211,238,.1)',borderRadius:8,
-              boxShadow:'0 6px 16px rgba(0,0,0,.5)'}}/>
+              background:'linear-gradient(135deg,#0d1035,#0a0c28)',
+              border:'1px solid rgba(255,208,0,.08)',borderRadius:8,
+              boxShadow:'0 4px 16px rgba(0,0,0,.6)'}}/>
           ))}
+
+          {/* Overlay proyección */}
           {full && (<>
             <div style={{position:'absolute',top:18,left:'50%',transform:'translateX(-50%)',
-              background:'rgba(8,11,18,.92)',border:'1px solid rgba(99,102,241,.2)',
-              borderRadius:14,padding:'10px 24px',textAlign:'center',
-              backdropFilter:'blur(8px)',zIndex:20}}>
-              <div style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:22,
-                color:'white',letterSpacing:'-.02em'}}>Sala Joven</div>
-              <div style={{fontSize:12,color:'#4b5563',marginTop:2}}>
+              background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.25)',
+              borderRadius:14,padding:'10px 28px',textAlign:'center',
+              backdropFilter:'blur(10px)',zIndex:20}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:24,color:'#ffd000',letterSpacing:'.05em',textTransform:'uppercase'}}>
+                MARANATA CLASS
+              </div>
+              <div style={{fontSize:11,color:'var(--muted)',marginTop:1}}>
                 Adventista Las Condes ·{' '}
                 {new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})}
               </div>
             </div>
             <div style={{position:'absolute',bottom:22,left:'50%',transform:'translateX(-50%)',
-              background:'rgba(8,11,18,.92)',border:'1px solid rgba(34,211,238,.2)',
-              borderRadius:20,padding:'8px 20px',
-              display:'flex',alignItems:'center',gap:8,color:'#22d3ee',fontSize:14,zIndex:20}}>
-              <div style={{width:8,height:8,borderRadius:'50%',background:'#22d3ee',
-                animation:'blink 1.5s infinite'}}/>
-              {entries.length} {entries.length===1?'joven':'jóvenes'} en sala
+              background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.2)',
+              borderRadius:20,padding:'8px 22px',
+              display:'flex',alignItems:'center',gap:8,zIndex:20}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:'#ffd000',
+                animation:'pulse 1.5s infinite'}}/>
+              <span style={{color:'#ffd000',fontSize:14,fontFamily:'Barlow Condensed',fontWeight:700}}>
+                {entries.length} {entries.length===1?'JOVEN':'JÓVENES'} EN SALA
+              </span>
             </div>
           </>)}
+
           {!full && (
             <div style={{position:'absolute',bottom:8,left:0,right:0,
-              textAlign:'center',fontSize:9,color:'#1f2937',pointerEvents:'none'}}>
+              textAlign:'center',fontSize:9,color:'var(--muted)',pointerEvents:'none',
+              fontFamily:'Barlow,sans-serif'}}>
               ✨ Arrastra tu avatar para moverte
             </div>
           )}
+
+          {/* Avatares */}
           {entries.map(([uid,u])=>(
             <div key={uid}
               onMouseDown={!full&&uid===myId?onDragStart:undefined}
@@ -190,29 +253,31 @@
                 pointerEvents:full?'none':'auto',
               }}>
               <div style={{
-                width:full?58:42,height:full?58:42,borderRadius:'50%',
+                width:full?60:44,height:full?60:44,borderRadius:'50%',
                 background:`radial-gradient(circle at 35% 35%,${u.color}33,${u.color}11)`,
                 border:`2.5px solid ${u.color}`,
                 display:'flex',alignItems:'center',justifyContent:'center',
-                fontSize:full?28:20,'--gc':u.color,
-                animation:uid===myId?'glow 2.5s ease-in-out infinite':'none',
-                boxShadow:uid!==myId?`0 0 10px ${u.color}44`:undefined,
+                fontSize:full?30:22,
+                animation:uid===myId?'glowY 2.5s ease-in-out infinite':'none',
+                boxShadow:uid!==myId?`0 0 10px ${u.color}55`:undefined,
               }}>{u.avatar}</div>
               <div style={{
                 marginTop:3,fontSize:full?11:8,color:'white',
-                textShadow:`0 1px 6px ${u.color}99`,
-                background:'rgba(8,11,18,.9)',padding:'2px 7px',borderRadius:20,
-                maxWidth:full?84:62,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
-              }}>{uid===myId?'⭐ '+u.name:u.name}</div>
+                background:'rgba(7,9,31,.92)',padding:'2px 8px',borderRadius:20,
+                maxWidth:full?90:66,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
+                fontFamily:'Barlow,sans-serif',fontWeight:600,
+                border:`1px solid ${u.color}33`,
+              }}>
+                {uid===myId?'⭐ '+u.name:u.name}
+              </div>
             </div>
           ))}
         </div>
       );
     }
 
-    /* ══ APP ════════════════════════════════════════════════ */
+    /* ══ APP ═════════════════════════════════════════════════ */
     function App() {
-      /* vistas: loading | auth | setup | room | screen */
       const [view,      setView]      = useState('loading');
       const [authMode,  setAuthMode]  = useState('login');
       const [email,     setEmail]     = useState('');
@@ -221,7 +286,7 @@
       const [authLoad,  setAuthLoad]  = useState(false);
       const [name,      setName]      = useState('');
       const [avatar,    setAvatar]    = useState(null);
-      const [color,     setColor]     = useState('#6366f1');
+      const [color,     setColor]     = useState('#ffd000');
       const [tab,       setTab]       = useState('sala');
       const [users,     setUsers]     = useState({});
       const [msgs,      setMsgs]      = useState([]);
@@ -235,20 +300,35 @@
       const lastT   = useRef(0);
       const endRef  = useRef(null);
 
-      /* ── Auth listener ── */
+      /* ── Auth listener — con timeout para evitar carga infinita ── */
       useEffect(() => {
+        // Timeout de seguridad: si en 8s no responde, manda al login
+        const timeout = setTimeout(() => {
+          if (view === 'loading') {
+            console.warn('Auth timeout — redirigiendo a login');
+            setView('auth');
+          }
+        }, 8000);
+
         const unsub = auth.onAuthStateChanged(async user => {
+          clearTimeout(timeout);
           if (user) {
             UID.current = user.uid;
-            const snap = await db.ref(`profiles/${user.uid}`).get();
-            const profile = snap.val();
-            if (profile) {
-              setName(profile.name);
-              setAvatar(profile.avatar);
-              setColor(profile.color);
-              await joinRoom(user.uid, profile);
-              setView('room');
-            } else {
+            try {
+              const snap = await db.ref(`profiles/${user.uid}`).get();
+              const profile = snap.val();
+              if (profile) {
+                setName(profile.name || '');
+                setAvatar(profile.avatar || null);
+                setColor(profile.color || '#ffd000');
+                await joinRoom(user.uid, profile);
+                setView('room');
+              } else {
+                setView('setup');
+              }
+            } catch(err) {
+              console.error('Error cargando perfil:', err);
+              // Si no puede leer el perfil, igual entra al setup
               setView('setup');
             }
           } else {
@@ -256,34 +336,42 @@
             setView('auth');
           }
         });
-        return () => unsub();
+
+        return () => { clearTimeout(timeout); unsub(); };
       }, []);
 
       /* ── Firebase room listeners ── */
       useEffect(() => {
         if (view !== 'room' && view !== 'screen') return;
         const sid = SID.current, uid = UID.current;
+        if (!uid) return;
+
         const usersRef = db.ref(`rooms/${sid}/users`);
         usersRef.on('value', s => setUsers(s.val() || {}));
+
         const chatRef = db.ref(`rooms/${sid}/chat`);
         chatRef.on('value', s => {
           const val = s.val();
           if (val) setMsgs(Object.entries(val).map(([id,m])=>({id,...m})).sort((a,b)=>(a.ts||0)-(b.ts||0)));
           else setMsgs([]);
         });
+
         const attRef = db.ref(`attendance/${uid}`);
         attRef.on('value', s => setMyAtt(s.val() || {}));
+
         return () => { usersRef.off(); chatRef.off(); attRef.off(); };
       }, [view]);
 
       useEffect(() => {
-        if (tab==='chat') setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),50);
+        if (tab==='chat') setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),60);
       }, [msgs, tab]);
 
       const joinRoom = async (uid, profile) => {
         const uRef = db.ref(`rooms/${SID.current}/users/${uid}`);
-        await uRef.set({ name:profile.name, avatar:profile.avatar, color:profile.color,
-          x:48, y:48, joinedAt:Date.now() });
+        await uRef.set({
+          name:profile.name, avatar:profile.avatar, color:profile.color,
+          x:48, y:48, joinedAt:Date.now(),
+        });
         uRef.onDisconnect().remove();
         await db.ref(`attendance/${uid}/${SID.current}`).set({
           name:profile.name, avatar:profile.avatar, color:profile.color, timestamp:Date.now(),
@@ -297,26 +385,43 @@
         try {
           if (authMode==='login') await auth.signInWithEmailAndPassword(email.trim(), password);
           else await auth.createUserWithEmailAndPassword(email.trim(), password);
-        } catch(err) { setAuthError(getErr(err.code)); setAuthLoad(false); }
+        } catch(err) {
+          console.error(err);
+          setAuthError(getErr(err.code));
+          setAuthLoad(false);
+        }
       };
 
       const handleGoogle = async () => {
         setAuthLoad(true); setAuthError('');
         try {
-          await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        } catch(err) { setAuthError(getErr(err.code)); setAuthLoad(false); }
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await auth.signInWithPopup(provider);
+        } catch(err) {
+          console.error(err);
+          if (err.code && err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+            setAuthError(getErr(err.code));
+          }
+          setAuthLoad(false);
+        }
       };
 
       const handleSetup = async () => {
         if (!name.trim() || !avatar) return;
         const profile = { name:name.trim(), avatar, color };
-        await db.ref(`profiles/${UID.current}`).set(profile);
-        await joinRoom(UID.current, profile);
-        setView('room');
+        try {
+          await db.ref(`profiles/${UID.current}`).set(profile);
+          await joinRoom(UID.current, profile);
+          setView('room');
+        } catch(err) {
+          console.error(err);
+        }
       };
 
       const handleSignOut = async () => {
-        if (UID.current) await db.ref(`rooms/${SID.current}/users/${UID.current}`).remove();
+        if (UID.current) {
+          try { await db.ref(`rooms/${SID.current}/users/${UID.current}`).remove(); } catch(e){}
+        }
         await auth.signOut();
         setUsers({}); setMsgs([]); setMyAtt({});
       };
@@ -362,69 +467,118 @@
       })();
       const usersArr = Object.entries(users);
 
-      /* ── Estilos compartidos ── */
+      /* ── Estilos comunes ── */
+      const pageWrap = {
+        minHeight:'100vh', background:'var(--navy)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        padding:'20px 16px', overflowY:'auto', position:'relative',
+      };
       const cardStyle = {
-        width:'100%',maxWidth:420,
-        background:'linear-gradient(145deg,#0d1321,#111827)',
-        border:'1px solid rgba(99,102,241,.2)',borderRadius:22,padding:28,
-        boxShadow:'0 0 70px rgba(99,102,241,.12),0 4px 40px rgba(0,0,0,.6)',
+        width:'100%', maxWidth:400, position:'relative', zIndex:1,
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(255,208,0,.15)',
+        borderRadius:20, padding:'28px 24px',
+        boxShadow:'0 0 60px rgba(255,208,0,.06),0 8px 40px rgba(0,0,0,.7)',
         animation:'fadeUp .4s ease',
       };
-      const pageStyle = {
-        minHeight:'100vh',background:'#080b12',
-        display:'flex',alignItems:'center',justifyContent:'center',
-        padding:20,overflowY:'auto',
-        backgroundImage:'radial-gradient(ellipse at 50% 0%,rgba(99,102,241,.09),transparent 60%)',
-      };
       const inputStyle = {
-        width:'100%',padding:'11px 14px',borderRadius:10,
-        background:'#131b2e',border:'1px solid rgba(99,102,241,.2)',
-        color:'white',fontSize:14,
+        width:'100%', padding:'12px 14px', borderRadius:10,
+        background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,208,0,.15)',
+        color:'var(--white)', fontSize:14, fontFamily:'Barlow,sans-serif',
       };
       const labelStyle = {
-        fontSize:10,fontWeight:500,color:'#6b7280',
-        textTransform:'uppercase',letterSpacing:'.07em',
-        display:'block',marginBottom:6,
+        fontSize:10, fontWeight:600, color:'var(--muted)',
+        textTransform:'uppercase', letterSpacing:'.09em',
+        display:'block', marginBottom:6,
       };
-      const spinnerStyle = {
-        width:18,height:18,borderRadius:'50%',
-        border:'2px solid rgba(255,255,255,.3)',borderTopColor:'white',
-        animation:'spin .8s linear infinite',display:'inline-block',
-      };
+      const btnYellow = (disabled) => ({
+        width:'100%', padding:13, borderRadius:12, border:'none',
+        background: disabled ? 'var(--muted2)' : 'linear-gradient(135deg,#ffd000,#e6a800)',
+        color: disabled ? 'var(--muted)' : '#07091f',
+        fontSize:15, fontWeight:800, fontFamily:'Barlow Condensed,sans-serif',
+        letterSpacing:'.06em', textTransform:'uppercase',
+        boxShadow: disabled ? 'none' : '0 0 24px rgba(255,208,0,.35)',
+        display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+        transition:'all .2s',
+      });
 
       /* ════════ LOADING ════════ */
       if (view==='loading') return (
         <div style={{height:'100vh',display:'flex',flexDirection:'column',
-          alignItems:'center',justifyContent:'center',gap:16,background:'#080b12',
-          backgroundImage:'radial-gradient(ellipse at 50% 0%,rgba(99,102,241,.08),transparent 60%)'}}>
-          <div style={{fontSize:48}}>⛪</div>
-          <div style={{width:28,height:28,borderRadius:'50%',
-            border:'3px solid rgba(99,102,241,.2)',borderTopColor:'#6366f1',
-            animation:'spin .8s linear infinite'}}/>
-          <div style={{color:'#374151',fontSize:13}}>Cargando...</div>
+          alignItems:'center',justifyContent:'center',gap:20,
+          background:'var(--navy)',position:'relative',overflow:'hidden'}}>
+          <BgTriangles/>
+          <div style={{position:'relative',zIndex:1,textAlign:'center'}}>
+            <div style={{marginBottom:12}}>
+              <svg width="80" height="60" viewBox="0 0 80 60">
+                <polygon points="8,54 72,54 58,10" fill="#ffd000" opacity=".9"/>
+                <g stroke="#07091f" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M28 42 L28 18 Q28 15 31 15 L40 17 L40 42"/>
+                  <path d="M52 42 L52 18 Q52 15 49 15 L40 17 L40 42"/>
+                  <path d="M28 42 Q34 40 40 42 Q46 40 52 42"/>
+                  <line x1="32" y1="22" x2="38" y2="23"/>
+                  <line x1="32" y1="27" x2="38" y2="28"/>
+                  <line x1="42" y1="23" x2="48" y2="22"/>
+                  <line x1="42" y1="28" x2="48" y2="27"/>
+                </g>
+              </svg>
+            </div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:26,color:'#ffd000',letterSpacing:'.08em'}}>MARANATA CLASS</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>Las Condes</div>
+            <div style={{marginTop:20,display:'flex',justifyContent:'center'}}>
+              <div style={{width:32,height:32,borderRadius:'50%',
+                border:'3px solid rgba(255,208,0,.15)',borderTopColor:'#ffd000',
+                animation:'spin .8s linear infinite'}}/>
+            </div>
+          </div>
         </div>
       );
 
       /* ════════ AUTH ════════ */
       if (view==='auth') return (
-        <div style={pageStyle}>
+        <div style={pageWrap}>
+          <BgTriangles/>
           <div style={cardStyle}>
+            {/* Header */}
             <div style={{textAlign:'center',marginBottom:22}}>
-              <div style={{fontSize:44,marginBottom:8}}>⛪</div>
-              <h1 style={{fontFamily:'Syne,sans-serif',fontSize:24,fontWeight:800,
-                color:'white',letterSpacing:'-.02em'}}>Sala Joven</h1>
-              <p style={{color:'#4b5563',fontSize:13,marginTop:3}}>Adventista Las Condes</p>
+              <svg width="64" height="48" viewBox="0 0 80 60" style={{marginBottom:10}}>
+                <polygon points="8,54 72,54 58,10" fill="#ffd000" opacity=".9"/>
+                <g stroke="#07091f" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M28 42 L28 18 Q28 15 31 15 L40 17 L40 42"/>
+                  <path d="M52 42 L52 18 Q52 15 49 15 L40 17 L40 42"/>
+                  <path d="M28 42 Q34 40 40 42 Q46 40 52 42"/>
+                  <line x1="32" y1="22" x2="38" y2="23"/>
+                  <line x1="32" y1="27" x2="38" y2="28"/>
+                  <line x1="42" y1="23" x2="48" y2="22"/>
+                  <line x1="42" y1="28" x2="48" y2="27"/>
+                </g>
+              </svg>
+              <h1 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:28,color:'#ffd000',letterSpacing:'.05em',
+                textTransform:'uppercase',lineHeight:1}}>
+                MARANATA CLASS
+              </h1>
+              <p style={{color:'var(--muted)',fontSize:12,marginTop:4}}>
+                Adventista Las Condes
+              </p>
             </div>
 
             {/* Toggle */}
-            <div style={{display:'flex',background:'#0a0e1a',borderRadius:12,padding:4,
-              marginBottom:20,border:'1px solid rgba(99,102,241,.1)'}}>
-              {[{id:'login',l:'Ingresar'},{id:'register',l:'Crear cuenta'}].map(t=>(
+            <div style={{display:'flex',background:'rgba(255,255,255,.04)',
+              borderRadius:12,padding:4,marginBottom:20,
+              border:'1px solid rgba(255,208,0,.1)'}}>
+              {[{id:'login',l:'Ingresar'},{id:'register',l:'Registrarse'}].map(t=>(
                 <button key={t.id} onClick={()=>{setAuthMode(t.id);setAuthError('');}} style={{
-                  flex:1,padding:'8px 4px',borderRadius:9,border:'none',
-                  background:authMode===t.id?'linear-gradient(135deg,#6366f1,#4f46e5)':'transparent',
-                  color:authMode===t.id?'white':'#4b5563',
-                  fontSize:13,fontWeight:600,transition:'all .2s',
+                  flex:1,padding:'9px 4px',borderRadius:9,border:'none',
+                  background: authMode===t.id
+                    ? 'linear-gradient(135deg,#ffd000,#e6a800)'
+                    : 'transparent',
+                  color: authMode===t.id ? '#07091f' : 'var(--muted)',
+                  fontSize:13,fontWeight:800,
+                  fontFamily:'Barlow Condensed,sans-serif',
+                  letterSpacing:'.04em',textTransform:'uppercase',
+                  transition:'all .2s',
                 }}>{t.l}</button>
               ))}
             </div>
@@ -448,40 +602,35 @@
             {authError && (
               <div style={{background:'rgba(239,68,68,.08)',
                 border:'1px solid rgba(239,68,68,.2)',borderRadius:8,
-                padding:'9px 12px',marginBottom:14,fontSize:12,
-                color:'#fca5a5',lineHeight:1.4}}>
+                padding:'10px 12px',marginBottom:14,fontSize:12,
+                color:'#fca5a5',lineHeight:1.5}}>
                 ⚠️ {authError}
               </div>
             )}
 
             <button onClick={handleEmailAuth}
-              disabled={authLoad||!email.trim()||!password} style={{
-              width:'100%',padding:13,borderRadius:12,border:'none',
-              background:authLoad||!email.trim()||!password
-                ? '#1f2937'
-                : 'linear-gradient(135deg,#6366f1,#4f46e5)',
-              color:'white',fontSize:14,fontWeight:700,
-              fontFamily:'Syne,sans-serif',
-              boxShadow:!authLoad&&email.trim()&&password
-                ?'0 0 28px rgba(99,102,241,.4)':'none',
-              display:'flex',alignItems:'center',justifyContent:'center',gap:8,
-            }}>
+              disabled={authLoad||!email.trim()||!password}
+              style={btnYellow(authLoad||!email.trim()||!password)}>
               {authLoad
-                ? <div style={spinnerStyle}/>
+                ? <div style={{width:18,height:18,borderRadius:'50%',
+                    border:'2.5px solid rgba(7,9,31,.3)',borderTopColor:'#07091f',
+                    animation:'spin .8s linear infinite'}}/>
                 : authMode==='login' ? 'Ingresar →' : 'Crear cuenta →'}
             </button>
 
+            {/* Divisor */}
             <div style={{display:'flex',alignItems:'center',gap:10,margin:'16px 0'}}>
-              <div style={{flex:1,height:1,background:'rgba(99,102,241,.12)'}}/>
-              <span style={{fontSize:11,color:'#374151'}}>o continúa con</span>
-              <div style={{flex:1,height:1,background:'rgba(99,102,241,.12)'}}/>
+              <div style={{flex:1,height:1,background:'rgba(255,208,0,.1)'}}/>
+              <span style={{fontSize:11,color:'var(--muted)'}}>o continúa con</span>
+              <div style={{flex:1,height:1,background:'rgba(255,208,0,.1)'}}/>
             </div>
 
+            {/* Google */}
             <button onClick={handleGoogle} disabled={authLoad} style={{
               width:'100%',padding:12,borderRadius:12,border:'none',
               background:'white',color:'#111',fontSize:14,fontWeight:600,
               display:'flex',alignItems:'center',justifyContent:'center',gap:10,
-              boxShadow:'0 2px 12px rgba(0,0,0,.3)',
+              boxShadow:'0 2px 14px rgba(0,0,0,.4)',fontFamily:'Barlow,sans-serif',
             }}>
               <svg width="18" height="18" viewBox="0 0 48 48">
                 <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/>
@@ -491,38 +640,43 @@
               </svg>
               Continuar con Google
             </button>
+
+            <p style={{textAlign:'center',marginTop:12,fontSize:11,color:'var(--muted2)'}}>
+              Tu asistencia queda registrada automáticamente 📊
+            </p>
           </div>
         </div>
       );
 
-      /* ════════ SETUP (primera vez) ════════ */
+      /* ════════ SETUP ════════ */
       if (view==='setup') return (
-        <div style={pageStyle}>
+        <div style={pageWrap}>
+          <BgTriangles/>
           <div style={cardStyle}>
             <div style={{textAlign:'center',marginBottom:20}}>
-              <div style={{fontSize:38,marginBottom:6}}>👋</div>
-              <h2 style={{fontFamily:'Syne,sans-serif',fontSize:20,fontWeight:800,color:'white'}}>
+              <div style={{fontSize:40,marginBottom:8}}>👋</div>
+              <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:22,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.04em'}}>
                 ¡Bienvenido!
               </h2>
-              <p style={{color:'#4b5563',fontSize:13,marginTop:4}}>
-                Elige cómo quieres aparecer en la sala
+              <p style={{color:'var(--muted)',fontSize:13,marginTop:4}}>
+                Personaliza cómo apareces en la sala
               </p>
             </div>
 
             <div style={{marginBottom:14}}>
-              <label style={labelStyle}>Tu nombre</label>
+              <label style={labelStyle}>¿Cómo te llamas?</label>
               <input value={name} onChange={e=>setName(e.target.value)}
                 onKeyDown={e=>e.key==='Enter'&&handleSetup()}
-                placeholder="¿Cómo te llamas?"
-                style={inputStyle}/>
+                placeholder="Tu nombre" style={inputStyle}/>
             </div>
 
             <div style={{marginBottom:14}}>
-              <label style={labelStyle}>Tu avatar</label>
+              <label style={labelStyle}>Elige tu avatar</label>
               <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:6}}>
                 {AVATARS.map(a=>(
                   <button key={a} onClick={()=>setAvatar(a)} style={{
-                    background:avatar===a?'rgba(99,102,241,.18)':'rgba(255,255,255,.03)',
+                    background:avatar===a?'rgba(255,208,0,.15)':'rgba(255,255,255,.03)',
                     border:avatar===a?`2px solid ${color}`:'2px solid rgba(255,255,255,.06)',
                     borderRadius:10,padding:'8px 2px',fontSize:20,
                     display:'flex',alignItems:'center',justifyContent:'center',
@@ -545,17 +699,12 @@
               </div>
             </div>
 
-            <button onClick={handleSetup} disabled={!name.trim()||!avatar} style={{
-              width:'100%',padding:13,borderRadius:12,border:'none',
-              background:!name.trim()||!avatar
-                ?'#1f2937':`linear-gradient(135deg,${color},${color}cc)`,
-              color:'white',fontSize:15,fontWeight:700,fontFamily:'Syne,sans-serif',
-              boxShadow:!name.trim()||!avatar?'none':`0 0 28px ${color}44`,
-            }}>
+            <button onClick={handleSetup} disabled={!name.trim()||!avatar}
+              style={btnYellow(!name.trim()||!avatar)}>
               Entrar a la sala ✨
             </button>
-            <p style={{textAlign:'center',marginTop:10,fontSize:11,color:'#1f2937'}}>
-              Tu nombre y avatar se guardan para las próximas veces
+            <p style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--muted2)'}}>
+              Tu perfil queda guardado para las próximas veces
             </p>
           </div>
         </div>
@@ -567,35 +716,49 @@
           <RoomCanvas users={users} myId={null} onDragStart={null} full={true}/>
           <button onClick={()=>setView('room')} style={{
             position:'fixed',bottom:20,right:20,zIndex:100,
-            background:'rgba(8,11,18,.92)',border:'1px solid rgba(99,102,241,.3)',
-            color:'#a5b4fc',padding:'8px 16px',borderRadius:20,fontSize:12,
-          }}>✕ Salir</button>
+            background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.3)',
+            color:'#ffd000',padding:'8px 16px',borderRadius:20,fontSize:12,
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,letterSpacing:'.04em',
+          }}>✕ SALIR</button>
         </div>
       );
 
       /* ════════ ROOM ════════ */
       return (
-        <div style={{height:'100vh',display:'flex',flexDirection:'column',background:'#080b12'}}>
+        <div style={{height:'100vh',display:'flex',flexDirection:'column',background:'var(--navy)'}}>
 
-          <div style={{background:'#0a0e1a',borderBottom:'1px solid rgba(99,102,241,.1)',
-            padding:'8px 14px',display:'flex',alignItems:'center',
-            justifyContent:'space-between',flexShrink:0}}>
+          {/* Header */}
+          <div style={{
+            background:'linear-gradient(135deg,#0d1035,#0a0c28)',
+            borderBottom:'1px solid rgba(255,208,0,.12)',
+            padding:'8px 14px',
+            display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0,
+          }}>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
-              <span style={{fontSize:20}}>⛪</span>
+              <svg width="30" height="22" viewBox="0 0 80 60">
+                <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
+                <g stroke="#07091f" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M28 42 L28 18 Q28 15 31 15 L40 17 L40 42"/>
+                  <path d="M52 42 L52 18 Q52 15 49 15 L40 17 L40 42"/>
+                  <path d="M28 42 Q34 40 40 42 Q46 40 52 42"/>
+                </g>
+              </svg>
               <div>
-                <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,color:'white'}}>
-                  Sala Joven
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                  fontSize:15,color:'#ffd000',letterSpacing:'.05em',
+                  textTransform:'uppercase',lineHeight:1}}>
+                  MARANATA CLASS
                 </div>
-                <div style={{fontSize:10,color:'#374151'}}>
-                  {usersArr.length} en sala ·{' '}
-                  {new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short'})}
+                <div style={{fontSize:10,color:'var(--muted)'}}>
+                  {usersArr.length} en sala · {new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short'})}
                 </div>
               </div>
             </div>
             <div style={{display:'flex',gap:6,alignItems:'center'}}>
               <button onClick={()=>setView('screen')} style={{
-                background:'rgba(99,102,241,.1)',border:'1px solid rgba(99,102,241,.25)',
-                color:'#a5b4fc',padding:'6px 10px',borderRadius:20,fontSize:11,
+                background:'rgba(255,208,0,.08)',border:'1px solid rgba(255,208,0,.2)',
+                color:'#ffd000',padding:'6px 10px',borderRadius:20,fontSize:11,
+                fontFamily:'Barlow,sans-serif',
               }}>📺</button>
               <button onClick={handleSignOut} title="Cerrar sesión" style={{
                 background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.15)',
@@ -604,27 +767,33 @@
             </div>
           </div>
 
-          <div style={{background:'#0a0e1a',borderBottom:'1px solid rgba(99,102,241,.07)',
-            display:'flex',flexShrink:0}}>
+          {/* Tabs */}
+          <div style={{
+            background:'#0a0c28',
+            borderBottom:'1px solid rgba(255,208,0,.07)',
+            display:'flex',flexShrink:0,
+          }}>
             {[
-              {id:'sala',label:'🏠 Sala'},
-              {id:'chat',label:'💬 Chat'},
-              {id:'asistencia',label:'📊 Asist.'},
-              {id:'juegos',label:'🎮 Juegos'},
+              {id:'sala',       label:'🏠 Sala'},
+              {id:'chat',       label:'💬 Chat'},
+              {id:'asistencia', label:'📊 Asist.'},
+              {id:'juegos',     label:'🎮 Juegos'},
             ].map(t=>(
               <button key={t.id} onClick={()=>setTab(t.id)} style={{
-                flex:1,padding:'10px 4px',background:'none',border:'none',
-                fontFamily:'DM Sans,sans-serif',
-                color:tab===t.id?'#a5b4fc':'#374151',
-                fontSize:10,fontWeight:500,
-                borderBottom:tab===t.id?'2px solid #6366f1':'2px solid transparent',
+                flex:1, padding:'10px 4px', background:'none', border:'none',
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                color: tab===t.id ? '#ffd000' : 'var(--muted)',
+                fontSize:11, letterSpacing:'.04em', textTransform:'uppercase',
+                borderBottom: tab===t.id ? '2.5px solid #ffd000' : '2.5px solid transparent',
                 transition:'all .2s',
               }}>{t.label}</button>
             ))}
           </div>
 
+          {/* Contenido */}
           <div style={{flex:1,overflow:'hidden',position:'relative'}}>
 
+            {/* ── SALA ── */}
             {tab==='sala' && (
               <div ref={roomRef}
                 onMouseMove={onDragMove} onMouseUp={onDragEnd} onMouseLeave={onDragEnd}
@@ -635,12 +804,13 @@
               </div>
             )}
 
+            {/* ── CHAT ── */}
             {tab==='chat' && (
               <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
                 <div style={{flex:1,overflowY:'auto',padding:'12px 14px',
                   display:'flex',flexDirection:'column',gap:10}}>
-                  {msgs.length===0&&(
-                    <div style={{textAlign:'center',color:'#1f2937',fontSize:13,marginTop:40}}>
+                  {msgs.length===0 && (
+                    <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,marginTop:40}}>
                       Sé el primero en escribir 👋
                     </div>
                   )}
@@ -654,17 +824,21 @@
                           display:'flex',alignItems:'center',justifyContent:'center',fontSize:17}}>
                           {m.avatar}
                         </div>
-                        <div style={{maxWidth:'70%'}}>
+                        <div style={{maxWidth:'72%'}}>
                           <div style={{display:'flex',alignItems:'baseline',gap:6,marginBottom:3,
                             flexDirection:isMe?'row-reverse':'row'}}>
-                            <span style={{fontSize:11,fontWeight:600,color:m.color}}>{m.name}</span>
-                            <span style={{fontSize:10,color:'#374151'}}>{m.time}</span>
+                            <span style={{fontSize:11,fontWeight:700,color:m.color,
+                              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.02em'}}>
+                              {m.name}
+                            </span>
+                            <span style={{fontSize:10,color:'var(--muted)'}}>{m.time}</span>
                           </div>
                           <div style={{
-                            background:isMe?`${m.color}1a`:'#131b2e',padding:'8px 12px',
+                            background:isMe?`${m.color}18`:'rgba(255,255,255,.04)',
+                            padding:'8px 12px',
                             borderRadius:isMe?'12px 4px 12px 12px':'4px 12px 12px 12px',
-                            fontSize:13,color:'#d1d5db',lineHeight:1.5,
-                            border:isMe?`1px solid ${m.color}33`:'1px solid transparent',
+                            fontSize:13,color:'var(--white)',lineHeight:1.5,
+                            border:isMe?`1px solid ${m.color}33`:'1px solid rgba(255,255,255,.06)',
                             wordBreak:'break-word',
                           }}>{m.text}</div>
                         </div>
@@ -674,66 +848,89 @@
                   <div ref={endRef}/>
                 </div>
                 <div style={{padding:'10px 14px 14px',
-                  borderTop:'1px solid rgba(99,102,241,.08)',display:'flex',gap:8}}>
+                  borderTop:'1px solid rgba(255,208,0,.07)',display:'flex',gap:8}}>
                   <input value={chatIn} onChange={e=>setChatIn(e.target.value)}
                     onKeyDown={e=>e.key==='Enter'&&handleSend()}
                     placeholder="Escribe algo..."
                     style={{flex:1,padding:'10px 14px',borderRadius:20,
-                      background:'#131b2e',border:'1px solid rgba(99,102,241,.2)',
-                      color:'white',fontSize:13,outline:'none'}}/>
-                  <button onClick={handleSend} style={{background:'#6366f1',border:'none',
-                    borderRadius:20,color:'white',padding:'10px 18px',fontSize:18}}>↑</button>
+                      background:'rgba(255,255,255,.04)',
+                      border:'1px solid rgba(255,208,0,.15)',
+                      color:'white',fontSize:13,outline:'none',fontFamily:'Barlow,sans-serif'}}/>
+                  <button onClick={handleSend} style={{
+                    background:'linear-gradient(135deg,#ffd000,#e6a800)',
+                    border:'none',borderRadius:20,color:'#07091f',
+                    padding:'10px 18px',fontSize:18,fontWeight:900,
+                  }}>↑</button>
                 </div>
               </div>
             )}
 
+            {/* ── ASISTENCIA ── */}
             {tab==='asistencia' && (
               <div style={{overflowY:'auto',height:'100%',padding:14}}>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:18}}>
                   {[
-                    {label:'Esta clase',    value:usersArr.length, sub:'presentes',       color:'#22d3ee'},
-                    {label:'Tu asistencia', value:totalPresent,    sub:'clases este año', color:'#10b981'},
-                    {label:'Racha 🔥',      value:streak,           sub:'semanas seguidas',color:'#f59e0b'},
+                    {label:'Esta clase',    value:usersArr.length, sub:'presentes',        color:'#22d3ee'},
+                    {label:'Tu asistencia', value:totalPresent,    sub:'clases este año',  color:'#ffd000'},
+                    {label:'Racha 🔥',      value:streak,           sub:'semanas seguidas', color:'#fb923c'},
                   ].map(st=>(
-                    <div key={st.label} style={{background:'#0d1321',
-                      border:'1px solid rgba(99,102,241,.07)',
-                      borderLeft:`3px solid ${st.color}`,borderRadius:12,padding:12}}>
-                      <div style={{fontSize:10,color:'#4b5563',marginBottom:2}}>{st.label}</div>
-                      <div style={{fontSize:26,fontFamily:'Syne,sans-serif',
-                        fontWeight:800,color:st.color}}>{st.value}</div>
-                      <div style={{fontSize:10,color:'#374151'}}>{st.sub}</div>
+                    <div key={st.label} style={{
+                      background:'rgba(255,255,255,.03)',
+                      border:'1px solid rgba(255,255,255,.06)',
+                      borderLeft:`3px solid ${st.color}`,
+                      borderRadius:12,padding:12,
+                    }}>
+                      <div style={{fontSize:10,color:'var(--muted)',marginBottom:2,
+                        fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',
+                        textTransform:'uppercase'}}>{st.label}</div>
+                      <div style={{fontSize:28,fontFamily:'Barlow Condensed,sans-serif',
+                        fontWeight:900,color:st.color,lineHeight:1}}>{st.value}</div>
+                      <div style={{fontSize:10,color:'var(--muted2)',marginTop:2}}>{st.sub}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{fontSize:10,color:'#4b5563',textTransform:'uppercase',
-                  letterSpacing:'.07em',marginBottom:8}}>Presentes hoy</div>
+
+                <div style={{fontSize:10,fontWeight:700,color:'var(--muted)',textTransform:'uppercase',
+                  letterSpacing:'.08em',marginBottom:8,fontFamily:'Barlow Condensed,sans-serif'}}>
+                  Presentes hoy
+                </div>
+                {usersArr.length===0 && (
+                  <div style={{color:'var(--muted2)',fontSize:12,textAlign:'center',marginBottom:12}}>
+                    Nadie en sala todavía
+                  </div>
+                )}
                 {usersArr.map(([uid,u])=>(
                   <div key={uid} style={{display:'flex',alignItems:'center',gap:10,
-                    background:'#0d1321',padding:'8px 12px',borderRadius:10,marginBottom:6,
-                    border:`1px solid ${uid===UID.current?u.color+'33':'rgba(99,102,241,.07)'}`}}>
+                    background:'rgba(255,255,255,.03)',padding:'8px 12px',
+                    borderRadius:10,marginBottom:6,
+                    border:`1px solid ${uid===UID.current?u.color+'44':'rgba(255,255,255,.05)'}`}}>
                     <div style={{width:30,height:30,borderRadius:'50%',
                       background:`${u.color}22`,border:`1.5px solid ${u.color}`,
                       display:'flex',alignItems:'center',justifyContent:'center',
                       fontSize:15,flexShrink:0}}>{u.avatar}</div>
-                    <span style={{fontSize:13,color:'white',flex:1}}>
+                    <span style={{fontSize:13,color:'white',flex:1,fontFamily:'Barlow,sans-serif'}}>
                       {u.name}
-                      {uid===UID.current&&<span style={{color:u.color,fontSize:10}}> (tú)</span>}
+                      {uid===UID.current&&
+                        <span style={{color:u.color,fontSize:10,marginLeft:4}}>(tú)</span>}
                     </span>
-                    <span style={{fontSize:10,color:'#22d3ee',
-                      background:'rgba(34,211,238,.08)',padding:'2px 8px',borderRadius:20}}>✓</span>
+                    <span style={{fontSize:10,color:'#10b981',
+                      background:'rgba(16,185,129,.1)',padding:'2px 9px',borderRadius:20,
+                      fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>✓</span>
                   </div>
                 ))}
-                {attSessions.length>0&&(
+
+                {attSessions.length>0 && (
                   <div style={{marginTop:16}}>
-                    <div style={{fontSize:10,color:'#4b5563',textTransform:'uppercase',
-                      letterSpacing:'.07em',marginBottom:8}}>Tu historial</div>
+                    <div style={{fontSize:10,fontWeight:700,color:'var(--muted)',
+                      textTransform:'uppercase',letterSpacing:'.08em',marginBottom:8,
+                      fontFamily:'Barlow Condensed,sans-serif'}}>Tu historial</div>
                     <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                       {attSessions.slice(0,16).map(sid=>(
-                        <div key={sid} style={{background:'#0d1321',padding:'8px 10px',
-                          borderRadius:10,textAlign:'center',
+                        <div key={sid} style={{background:'rgba(255,255,255,.03)',
+                          padding:'8px 10px',borderRadius:10,textAlign:'center',
                           border:'1px solid rgba(16,185,129,.15)'}}>
                           <div style={{fontSize:14,marginBottom:2}}>✅</div>
-                          <div style={{fontSize:8,color:'#4b5563'}}>
+                          <div style={{fontSize:8,color:'var(--muted)'}}>
                             {new Date(sid+'T12:00:00').toLocaleDateString('es-CL',
                               {day:'numeric',month:'short'})}
                           </div>
@@ -745,21 +942,40 @@
               </div>
             )}
 
+            {/* ── JUEGOS ── */}
             {tab==='juegos' && (
               <div style={{height:'100%',display:'flex',flexDirection:'column',
                 alignItems:'center',justifyContent:'center',
-                gap:14,padding:24,textAlign:'center'}}>
-                <div style={{fontSize:52,filter:'drop-shadow(0 0 22px rgba(99,102,241,.45))'}}>🎮</div>
-                <h2 style={{fontFamily:'Syne,sans-serif',fontSize:20,fontWeight:800,color:'white'}}>
-                  Juegos · Próximamente
-                </h2>
-                <p style={{color:'#4b5563',fontSize:13,maxWidth:220,lineHeight:1.6}}>
-                  El profe está preparando algo especial 👀<br/>Vuelve pronto.
-                </p>
-                <div style={{background:'rgba(99,102,241,.08)',
-                  border:'1px solid rgba(99,102,241,.2)',
-                  borderRadius:12,padding:'10px 20px',color:'#6366f1',fontSize:12}}>
-                  🔒 Sala bloqueada
+                gap:14,padding:24,textAlign:'center',position:'relative',overflow:'hidden'}}>
+                <BgTriangles/>
+                <div style={{position:'relative',zIndex:1,display:'flex',flexDirection:'column',
+                  alignItems:'center',gap:14}}>
+                  <div style={{fontSize:52,filter:'drop-shadow(0 0 22px rgba(255,208,0,.5))'}}>
+                    🎮
+                  </div>
+                  <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontSize:24,
+                    fontWeight:900,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.06em'}}>
+                    Juegos · Próximamente
+                  </h2>
+                  <p style={{color:'var(--muted)',fontSize:13,maxWidth:220,lineHeight:1.6}}>
+                    El profe está preparando algo especial 👀<br/>Vuelve pronto.
+                  </p>
+                  <div style={{background:'rgba(255,208,0,.06)',
+                    border:'1px solid rgba(255,208,0,.2)',
+                    borderRadius:12,padding:'10px 20px',color:'#ffd000',fontSize:12,
+                    fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,letterSpacing:'.04em'}}>
+                    🔒 SALA BLOQUEADA
+                  </div>
+                  <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
+                    {['🃏 Trivia','🧩 Quiz','🎯 Retos','🎲 Azar'].map(g=>(
+                      <div key={g} style={{background:'rgba(255,255,255,.03)',
+                        border:'1px solid rgba(255,255,255,.06)',
+                        borderRadius:20,padding:'6px 14px',
+                        fontSize:11,color:'var(--muted)',fontFamily:'Barlow,sans-serif'}}>
+                        {g}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
