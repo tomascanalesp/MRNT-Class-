@@ -46,6 +46,13 @@
     @keyframes reactionFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.5)}}
     @keyframes timerTick{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
     @keyframes confettiSpin{to{transform:rotate(360deg) translateX(20px)}}
+    @keyframes answerPop{0%{transform:scale(.88);opacity:.6}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+    @keyframes correctFlash{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}50%{box-shadow:0 0 0 14px rgba(16,185,129,.35)}}
+    @keyframes wrongShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+    @keyframes countdownPop{0%{transform:scale(2.2);opacity:0}60%{transform:scale(.92)}100%{transform:scale(1);opacity:1}}
+    @keyframes crownBounce{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
+    @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+    @keyframes scoreUp{0%{opacity:0;transform:translateY(12px) scale(.8)}60%{transform:translateY(-4px) scale(1.1)}100%{opacity:1;transform:translateY(0) scale(1)}}
   </style>
 </head>
 <body>
@@ -886,7 +893,8 @@ function EditProfileModal({profile,onSave,onClose}){
 }
 
 /* ════════════════════════ MODAL ASISTENCIA ════════════════════════ */
-function AttendanceModal({myAtt,onClose}){
+function AttendanceModal({myAtt,gameHistory,onClose}){
+  const[activeTab,setActiveTab]=useState('asistencia');
   const sessions=Object.entries(myAtt||{}).sort((a,b)=>b[0].localeCompare(a[0]));
   // Agrupar por mes
   const byMonth={};
@@ -940,40 +948,103 @@ function AttendanceModal({myAtt,onClose}){
           ))}
         </div>
 
-        {sessions.length===0&&(
-          <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>
-            Aún no tienes asistencias registradas
-          </div>
-        )}
+        {/* Tabs */}
+        <div style={{display:'flex',background:'rgba(255,255,255,.04)',borderRadius:10,
+          padding:3,marginBottom:16,border:'1px solid rgba(255,208,0,.08)'}}>
+          {[{id:'asistencia',l:'📅 Asistencia'},{id:'juegos',l:'🏆 Juegos'}].map(t=>(
+            <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{
+              flex:1,padding:'7px 4px',borderRadius:8,border:'none',
+              background:activeTab===t.id?'linear-gradient(135deg,#ffd000,#e6a800)':'transparent',
+              color:activeTab===t.id?'#07091f':'var(--muted)',
+              fontSize:12,fontWeight:700,fontFamily:'Barlow Condensed,sans-serif',
+              letterSpacing:'.03em',textTransform:'uppercase',transition:'all .2s',
+            }}>{t.l}</button>
+          ))}
+        </div>
 
-        {/* Por mes */}
-        {Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([key,days])=>{
-          const[year,month]=key.split('-');
-          return(
-            <div key={key} style={{marginBottom:14}}>
-              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
-                fontSize:13,color:'var(--muted)',textTransform:'uppercase',
-                letterSpacing:'.07em',marginBottom:8}}>
-                {monthNames[parseInt(month)-1]} {year}
-              </div>
-              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                {days.map(sid=>(
-                  <div key={sid} style={{
-                    background:'rgba(16,185,129,.08)',padding:'7px 10px',
-                    borderRadius:10,textAlign:'center',
-                    border:'1px solid rgba(16,185,129,.2)',
-                  }}>
-                    <div style={{fontSize:16,marginBottom:2}}>✅</div>
-                    <div style={{fontSize:9,color:'#10b981',fontFamily:'Barlow Condensed,sans-serif'}}>
-                      {new Date(sid+'T12:00:00').toLocaleDateString('es-CL',
-                        {day:'numeric',month:'short'})}
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {activeTab==='asistencia'&&(<>
+          {sessions.length===0&&(
+            <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>
+              Aún no tienes asistencias registradas
             </div>
-          );
-        })}
+          )}
+          {Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([key,days])=>{
+            const[year,month]=key.split('-');
+            return(
+              <div key={key} style={{marginBottom:14}}>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                  fontSize:13,color:'var(--muted)',textTransform:'uppercase',
+                  letterSpacing:'.07em',marginBottom:8}}>
+                  {monthNames[parseInt(month)-1]} {year}
+                </div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {days.map(sid=>(
+                    <div key={sid} style={{background:'rgba(16,185,129,.08)',padding:'7px 10px',
+                      borderRadius:10,textAlign:'center',border:'1px solid rgba(16,185,129,.2)'}}>
+                      <div style={{fontSize:16,marginBottom:2}}>✅</div>
+                      <div style={{fontSize:9,color:'#10b981',fontFamily:'Barlow Condensed,sans-serif'}}>
+                        {new Date(sid+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </>)}
+
+        {activeTab==='juegos'&&(()=>{
+          const games=Object.entries(gameHistory||{})
+            .map(([id,g])=>({id,...g}))
+            .sort((a,b)=>b.date?.localeCompare(a.date||'')||0);
+          const wins=games.filter(g=>g.rank===1).length;
+          const top3=games.filter(g=>g.rank<=3).length;
+          return(<>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:16}}>
+              {[
+                {label:'Partidas',value:games.length,color:'#8b5cf6'},
+                {label:'🥇 Ganadas',value:wins,color:'#ffd000'},
+                {label:'🏅 Top 3',value:top3,color:'#f59e0b'},
+              ].map(st=>(
+                <div key={st.label} style={{background:'rgba(255,255,255,.03)',borderRadius:10,
+                  padding:'10px 8px',borderLeft:`3px solid ${st.color}`,textAlign:'center'}}>
+                  <div style={{fontSize:22,fontFamily:'Barlow Condensed,sans-serif',
+                    fontWeight:900,color:st.color,lineHeight:1}}>{st.value}</div>
+                  <div style={{fontSize:9,color:'var(--muted)',marginTop:3,
+                    textTransform:'uppercase',letterSpacing:'.05em'}}>{st.label}</div>
+                </div>
+              ))}
+            </div>
+            {games.length===0&&(
+              <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>
+                Aún no has jugado ningún juego
+              </div>
+            )}
+            {games.map(g=>(
+              <div key={g.id} style={{display:'flex',alignItems:'center',gap:12,
+                background:g.rank===1?'rgba(255,208,0,.07)':'rgba(255,255,255,.03)',
+                border:g.rank===1?'1px solid rgba(255,208,0,.2)':'1px solid rgba(255,255,255,.05)',
+                borderRadius:12,padding:'10px 14px',marginBottom:7}}>
+                <div style={{fontSize:22,width:28,textAlign:'center'}}>
+                  {g.rank===1?'🥇':g.rank===2?'🥈':g.rank===3?'🥉':`#${g.rank}`}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:11,color:'var(--muted)',
+                    fontFamily:'Barlow Condensed,sans-serif',textTransform:'uppercase',
+                    letterSpacing:'.05em'}}>
+                    {g.date?new Date(g.date+'T12:00:00').toLocaleDateString('es-CL',
+                      {day:'numeric',month:'short',year:'numeric'}):''}
+                  </div>
+                  <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>
+                    {g.rank}° de {g.totalPlayers} jugadores
+                  </div>
+                </div>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                  fontSize:20,color:'#ffd000'}}>{g.score} pts</div>
+              </div>
+            ))}
+          </>);
+        })()}
       </div>
     </div>
   );
@@ -1116,6 +1187,7 @@ function App(){
   const[myAtt,       setMyAtt]       =useState({});
   const[session,     setSession]     =useState(null);
   const[reactions,   setReactions]   =useState({});
+  const[gameHistory, setGameHistory] =useState({});
   const[chatIn,      setChatIn]      =useState('');
 
   const UID    =useRef(null);
@@ -1164,6 +1236,7 @@ function App(){
       att:   db.ref(`attendance/${uid}`),
       sess:  db.ref(`sessions/${sid}`),
       reac:  db.ref(`sessions/${sid}/reactions`),
+      hist:  db.ref(`gameHistory/${uid}`),
     };
     refs.users.on('value',s=>setUsers(s.val()||{}));
     refs.chat.on('value',s=>{
@@ -1174,6 +1247,7 @@ function App(){
     refs.att.on('value',s=>setMyAtt(s.val()||{}));
     refs.sess.on('value',s=>setSession(s.val()));
     refs.reac.on('value',s=>setReactions(s.val()||{}));
+    refs.hist.on('value',s=>setGameHistory(s.val()||{}));
     return()=>Object.values(refs).forEach(r=>r.off());
   },[view]);
 
@@ -1682,13 +1756,567 @@ function App(){
         />
       )}
 
+
+      {/* Kahoot Game */}
+      {(phase==='juegos'||isAdmin)&&(
+        <KahootController
+          session={session} users={users}
+          myId={UID.current} isAdmin={isAdmin}
+          SID={SID.current}
+        />
+      )}
+
       {/* Modales */}
       {editOpen&&<EditProfileModal profile={profile} onSave={saveProfile} onClose={()=>setEditOpen(false)}/>}
-      {attOpen&&<AttendanceModal myAtt={myAtt} onClose={()=>setAttOpen(false)}/>}
+      {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
     </div>
   );
 }
 
+
+/* ════════════════════════ KAHOOT: COLORES RESPUESTAS ════════════════════════ */
+const ANS_COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12'];
+const ANS_SHAPES=['▲','◆','●','■'];
+
+function Confetti(){
+  const pieces=React.useMemo(()=>Array.from({length:28},(_,i)=>({
+    id:i,x:Math.random()*100,delay:Math.random()*2,dur:2.5+Math.random()*2,
+    color:['#ffd000','#ec4899','#22d3ee','#10b981','#8b5cf6'][i%5],
+    size:6+Math.random()*8,
+  })),[]);
+  return(
+    <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:300,overflow:'hidden'}}>
+      {pieces.map(p=>(
+        <div key={p.id} style={{
+          position:'absolute',left:`${p.x}%`,top:-20,
+          width:p.size,height:p.size,background:p.color,borderRadius:p.size/4,
+          animation:`confettiFall ${p.dur}s ${p.delay}s ease-in forwards`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+function KahootQuestion({question,qIndex,total,myAnswer,onAnswer,timeLeft,gameState}){
+  const answered=myAnswer!==null&&myAnswer!==undefined;
+  const showResult=gameState==='results';
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+      display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
+        padding:'10px 16px',display:'flex',alignItems:'center',
+        justifyContent:'space-between',flexShrink:0,
+        borderBottom:'1px solid rgba(139,92,246,.2)'}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.07em'}}>
+          Pregunta {qIndex+1} / {total}
+        </div>
+        <div style={{width:44,height:44,borderRadius:'50%',
+          background:timeLeft<=5?'rgba(239,68,68,.15)':'rgba(139,92,246,.15)',
+          border:`2px solid ${timeLeft<=5?'#ef4444':'#8b5cf6'}`,
+          display:'flex',alignItems:'center',justifyContent:'center',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:18,
+          color:timeLeft<=5?'#ef4444':'#8b5cf6',
+          animation:timeLeft<=5&&!showResult?'timerTick .5s infinite':undefined,
+        }}>
+          {showResult?'✓':timeLeft}
+        </div>
+      </div>
+      {!showResult&&(
+        <div style={{height:5,background:'rgba(255,255,255,.06)',flexShrink:0}}>
+          <div style={{height:'100%',
+            background:timeLeft<=5?'#ef4444':'#8b5cf6',
+            width:`${(timeLeft/15)*100}%`,
+            transition:'width 1s linear',borderRadius:2}}/>
+        </div>
+      )}
+      <div style={{flex:'0 0 auto',padding:'14px 14px 10px',
+        display:'flex',alignItems:'center',justifyContent:'center',minHeight:85}}>
+        <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
+          border:'1px solid rgba(139,92,246,.2)',borderRadius:16,
+          padding:'14px 16px',textAlign:'center',width:'100%',maxWidth:500,
+          fontFamily:'Barlow,sans-serif',fontWeight:600,fontSize:16,
+          color:'var(--white)',lineHeight:1.4,
+          boxShadow:'0 4px 20px rgba(0,0,0,.4)'}}>
+          {question.text}
+        </div>
+      </div>
+      <div style={{flex:1,display:'grid',gridTemplateColumns:'1fr 1fr',
+        gap:10,padding:'0 12px 16px',alignContent:'start'}}>
+        {question.options.map((opt,i)=>{
+          const isMyAnswer=myAnswer===i;
+          const isCorrect=question.correct===i;
+          let bg=ANS_COLORS[i];
+          let border='transparent';
+          let badge=null;
+          if(showResult){
+            if(isCorrect){border='white';badge='✅';}
+            else{bg='rgba(255,255,255,.06)';border='rgba(255,255,255,.1)';}
+          } else if(answered&&!isMyAnswer){
+            bg='rgba(255,255,255,.06)';border='rgba(255,255,255,.08)';
+          }
+          return(
+            <button key={i} onClick={()=>!answered&&!showResult&&onAnswer(i)}
+              disabled={answered||showResult}
+              style={{background:bg,border:`2px solid ${border}`,
+                borderRadius:14,padding:'12px 8px',
+                display:'flex',flexDirection:'column',alignItems:'center',
+                justifyContent:'center',gap:5,minHeight:88,
+                color:'white',textAlign:'center',
+                fontFamily:'Barlow,sans-serif',fontWeight:600,fontSize:13,
+                boxShadow:isMyAnswer&&!showResult?`0 0 18px ${ANS_COLORS[i]}88`:
+                          isMyAnswer&&showResult&&isCorrect?'0 0 0 3px white':undefined,
+                animation:isMyAnswer&&!showResult?'answerPop .3s ease':undefined,
+                outline:isMyAnswer&&showResult&&!isCorrect?'3px solid #ef4444':undefined,
+                transition:'background .4s,border .4s',
+                cursor:answered||showResult?'default':'pointer'}}>
+              <span style={{fontSize:18,opacity:.7}}>{ANS_SHAPES[i]}</span>
+              <span style={{lineHeight:1.3}}>{opt}</span>
+              {badge&&<span style={{fontSize:16}}>{badge}</span>}
+              {showResult&&isMyAnswer&&!isCorrect&&<span style={{fontSize:16}}>❌</span>}
+            </button>
+          );
+        })}
+      </div>
+      {answered&&!showResult&&(
+        <div style={{position:'absolute',bottom:20,left:'50%',
+          transform:'translateX(-50%)',
+          background:'rgba(7,9,31,.95)',border:'1px solid rgba(139,92,246,.3)',
+          borderRadius:20,padding:'8px 20px',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:13,color:'#8b5cf6',letterSpacing:'.04em',textTransform:'uppercase'}}>
+          ✓ Enviada — esperando...
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KahootResultCard({question,myAnswer,pointsEarned,myScore,qIdx,total,isAdmin,onNext,onFinish}){
+  const correct=question.correct;
+  const isRight=myAnswer===correct;
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+      display:'flex',flexDirection:'column',alignItems:'center',
+      justifyContent:'center',padding:20,gap:14}}>
+      <div style={{width:'100%',maxWidth:360,
+        background:isRight?'linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.04))':'linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04))',
+        border:`2px solid ${isRight?'rgba(16,185,129,.4)':'rgba(239,68,68,.3)'}`,
+        borderRadius:20,padding:'18px 16px',textAlign:'center',
+        animation:'answerPop .4s ease'}}>
+        <div style={{fontSize:48,marginBottom:8}}>{isRight?'🎉':'😅'}</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:isRight?'#10b981':'#ef4444',
+          textTransform:'uppercase',letterSpacing:'.06em'}}>
+          {isRight?'¡Correcto!':'Incorrecto'}
+        </div>
+        <div style={{fontSize:12,color:'var(--muted)',marginTop:6}}>Respuesta correcta:</div>
+        <div style={{marginTop:6,background:ANS_COLORS[correct],borderRadius:10,
+          padding:'7px 14px',fontFamily:'Barlow,sans-serif',fontWeight:600,
+          fontSize:13,color:'white',display:'inline-block'}}>
+          {ANS_SHAPES[correct]} {question.options[correct]}
+        </div>
+      </div>
+      {isRight&&(
+        <div style={{display:'flex',alignItems:'center',gap:10,animation:'scoreUp .5s ease'}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:34,color:'#ffd000'}}>+{pointsEarned}</div>
+          <div style={{fontSize:13,color:'var(--muted)'}}>
+            puntos<br/>
+            <span style={{color:'var(--white)',fontWeight:700}}>Total: {myScore}</span>
+          </div>
+        </div>
+      )}
+      <div style={{fontSize:11,color:'var(--muted)'}}>Pregunta {qIdx+1} de {total}</div>
+      {isAdmin&&(
+        <div style={{display:'flex',gap:10,marginTop:4}}>
+          {qIdx+1<total?(
+            <button onClick={onNext} style={{background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+              border:'none',borderRadius:12,padding:'12px 26px',
+              color:'white',fontWeight:800,fontSize:14,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+              textTransform:'uppercase',boxShadow:'0 0 20px rgba(139,92,246,.4)'}}>
+              Siguiente →
+            </button>
+          ):(
+            <button onClick={onFinish} style={{background:'linear-gradient(135deg,#10b981,#059669)',
+              border:'none',borderRadius:12,padding:'12px 26px',
+              color:'white',fontWeight:800,fontSize:14,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+              textTransform:'uppercase',boxShadow:'0 0 20px rgba(16,185,129,.35)'}}>
+              Ver ganador 🏆
+            </button>
+          )}
+        </div>
+      )}
+      {!isAdmin&&(
+        <div style={{fontSize:12,color:'var(--muted)'}}>Esperando al profe...</div>
+      )}
+    </div>
+  );
+}
+
+function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
+  const sorted=Object.entries(scores||{})
+    .map(([uid,score])=>({uid,score,user:users[uid]||{name:'?',avatar:'👤',color:'#ffd000'}}))
+    .sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉'];
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:220,background:'var(--navy)',
+      display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      {isFinished&&<Confetti/>}
+      <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
+        padding:'14px 16px',textAlign:'center',flexShrink:0,
+        borderBottom:'1px solid rgba(255,208,0,.15)'}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.06em'}}>
+          {isFinished?'🏆 ¡Resultados finales!':'📊 Clasificación'}
+        </div>
+      </div>
+      {isFinished&&sorted[0]&&(
+        <div style={{padding:'16px',textAlign:'center',flexShrink:0}}>
+          <div style={{fontSize:36,animation:'crownBounce 1.5s infinite'}}>👑</div>
+          <AvatarBubble profile={sorted[0].user} size={68}/>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:24,color:'#ffd000',marginTop:8}}>{sorted[0].user.name}</div>
+          <div style={{fontSize:13,color:'#ffd000',opacity:.7}}>{sorted[0].score} puntos</div>
+        </div>
+      )}
+      <div style={{flex:1,overflowY:'auto',padding:'8px 14px 80px'}}>
+        {sorted.map((item,i)=>(
+          <div key={item.uid} style={{
+            display:'flex',alignItems:'center',gap:12,
+            background:i===0&&isFinished?'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))':'rgba(255,255,255,.03)',
+            border:i===0&&isFinished?'1px solid rgba(255,208,0,.25)':'1px solid rgba(255,255,255,.05)',
+            borderRadius:12,padding:'10px 14px',marginBottom:8,
+            animation:`scoreUp ${.1+i*.07}s ease`}}>
+            <div style={{width:28,textAlign:'center',
+              fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:i<3?22:16,color:i<3?'#ffd000':'var(--muted)'}}>
+              {i<3?medals[i]:i+1}
+            </div>
+            <AvatarBubble profile={item.user} size={34}/>
+            <div style={{flex:1,fontFamily:'Barlow,sans-serif',fontWeight:600,
+              fontSize:14,color:'white'}}>{item.user.name}</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:20,color:'#ffd000'}}>{item.score}</div>
+          </div>
+        ))}
+      </div>
+      {isAdmin&&isFinished&&(
+        <div style={{position:'absolute',bottom:20,left:'50%',transform:'translateX(-50%)'}}>
+          <button onClick={onClose} style={{
+            background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+            border:'none',borderRadius:14,padding:'13px 32px',
+            color:'white',fontWeight:800,fontSize:14,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+            textTransform:'uppercase',boxShadow:'0 0 22px rgba(139,92,246,.4)'}}>
+            Cerrar juego ✓
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KahootSetup({onStart,juegosCount}){
+  const[questions,setQuestions]=useState([{text:'',options:['','','',''],correct:0}]);
+  const[qIdx,setQIdx]=useState(0);
+  const q=questions[qIdx];
+  const updateQ=(f,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?{...x,[f]:v}:x));
+  const updateOpt=(oi,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?{...x,options:x.options.map((o,j)=>j===oi?v:o)}:x));
+  const addQ=()=>{setQuestions(qs=>[...qs,{text:'',options:['','','',''],correct:0}]);setQIdx(questions.length);};
+  const removeQ=()=>{if(questions.length===1) return;const nqs=questions.filter((_,i)=>i!==qIdx);setQuestions(nqs);setQIdx(Math.max(0,qIdx-1));};
+  const canStart=questions.every(q=>q.text.trim()&&q.options.every(o=>o.trim()));
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+      display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
+        padding:'12px 14px',borderBottom:'1px solid rgba(139,92,246,.2)',flexShrink:0}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:18,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.06em'}}>
+          🎮 Crear preguntas
+        </div>
+        <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>
+          {juegosCount} jugadores en sala de juegos
+        </div>
+      </div>
+      <div style={{display:'flex',gap:6,padding:'10px 14px',
+        overflowX:'auto',flexShrink:0,borderBottom:'1px solid rgba(255,255,255,.05)'}}>
+        {questions.map((_,i)=>(
+          <button key={i} onClick={()=>setQIdx(i)} style={{
+            width:32,height:32,borderRadius:8,border:'none',flexShrink:0,
+            background:qIdx===i?'#8b5cf6':'rgba(255,255,255,.06)',
+            color:'white',fontFamily:'Barlow Condensed,sans-serif',
+            fontWeight:700,fontSize:13}}>{i+1}</button>
+        ))}
+        <button onClick={addQ} style={{width:32,height:32,borderRadius:8,
+          border:'1px dashed rgba(255,255,255,.2)',background:'none',
+          color:'var(--muted)',fontSize:18,flexShrink:0}}>+</button>
+      </div>
+      <div style={{flex:1,overflowY:'auto',padding:'14px'}}>
+        <div style={{display:'flex',alignItems:'center',
+          justifyContent:'space-between',marginBottom:10}}>
+          <div style={{fontSize:12,fontWeight:700,color:'#8b5cf6',
+            fontFamily:'Barlow Condensed,sans-serif',textTransform:'uppercase',
+            letterSpacing:'.06em'}}>Pregunta {qIdx+1}</div>
+          {questions.length>1&&(
+            <button onClick={removeQ} style={{background:'rgba(239,68,68,.1)',
+              border:'1px solid rgba(239,68,68,.2)',borderRadius:8,
+              padding:'4px 10px',color:'#f87171',fontSize:11,
+              fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
+              🗑 Eliminar
+            </button>
+          )}
+        </div>
+        <textarea value={q.text} onChange={e=>updateQ('text',e.target.value)}
+          placeholder="Escribe la pregunta..."
+          rows={3} style={{width:'100%',padding:'11px 14px',borderRadius:10,
+            resize:'none',background:'rgba(255,255,255,.04)',
+            border:'1px solid rgba(139,92,246,.2)',color:'var(--white)',
+            fontSize:14,fontFamily:'Barlow,sans-serif',marginBottom:14,outline:'none'}}/>
+        <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',
+          textTransform:'uppercase',letterSpacing:'.07em',marginBottom:8,
+          fontFamily:'Barlow Condensed,sans-serif'}}>
+          Toca el botón de color para marcar la correcta
+        </div>
+        {q.options.map((opt,i)=>(
+          <div key={i} style={{display:'flex',gap:8,marginBottom:8,alignItems:'center'}}>
+            <button onClick={()=>updateQ('correct',i)} style={{
+              width:36,height:36,borderRadius:50,flexShrink:0,border:'none',
+              background:q.correct===i?ANS_COLORS[i]:`${ANS_COLORS[i]}28`,
+              fontSize:q.correct===i?14:13,color:'white',fontWeight:700,
+              boxShadow:q.correct===i?`0 0 12px ${ANS_COLORS[i]}77`:undefined,
+              transition:'all .2s'}}>
+              {q.correct===i?'✓':ANS_SHAPES[i]}
+            </button>
+            <input value={opt} onChange={e=>updateOpt(i,e.target.value)}
+              placeholder={`Opción ${i+1}`}
+              style={{flex:1,padding:'10px 12px',borderRadius:10,
+                background:`${ANS_COLORS[i]}18`,
+                border:`1px solid ${ANS_COLORS[i]}44`,
+                color:'var(--white)',fontSize:13,
+                fontFamily:'Barlow,sans-serif',outline:'none'}}/>
+          </div>
+        ))}
+      </div>
+      <div style={{padding:'12px 14px',borderTop:'1px solid rgba(255,255,255,.06)',flexShrink:0}}>
+        <button onClick={()=>canStart&&juegosCount>0&&onStart(questions)}
+          disabled={!canStart||juegosCount===0} style={{
+          width:'100%',padding:13,borderRadius:12,border:'none',
+          background:canStart&&juegosCount>0?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'var(--muted2)',
+          color:canStart&&juegosCount>0?'white':'var(--muted)',
+          fontSize:15,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
+          letterSpacing:'.06em',textTransform:'uppercase',
+          boxShadow:canStart&&juegosCount>0?'0 0 24px rgba(139,92,246,.4)':undefined}}>
+          {juegosCount===0?'Nadie en sala de juegos':
+           !canStart?'Completa todas las preguntas':
+           `🎮 Iniciar (${questions.length} preguntas)`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function KahootController({session,users,myId,isAdmin,SID}){
+  const game=session?.juegos;
+  const gState=game?.gameState;
+  const[timeLeft,setTimeLeft]=useState(15);
+  const[countdownDone,setCountdownDone]=useState(false);
+  const timerRef=useRef(null);
+  const questions=game?.questions||[];
+  const qIdx=game?.currentQ||0;
+  const currentQ=questions[qIdx];
+  const scores=game?.scores||{};
+  const myScore=scores[myId]||0;
+  const myAnswer=game?.answers?.[myId];
+  const juegosUsers=Object.entries(users).filter(([,u])=>u.zone==='juegos');
+
+  useEffect(()=>{
+    if(gState==='question'&&game?.qStartTime){
+      clearInterval(timerRef.current);
+      timerRef.current=setInterval(()=>{
+        const elapsed=Math.floor((Date.now()-game.qStartTime)/1000);
+        const left=Math.max(0,15-elapsed);
+        setTimeLeft(left);
+        if(left===0){
+          clearInterval(timerRef.current);
+          if(isAdmin) db.ref(`sessions/${SID}/juegos/gameState`).set('results');
+        }
+      },400);
+    }
+    return()=>clearInterval(timerRef.current);
+  },[gState,game?.qStartTime,isAdmin]);
+
+  useEffect(()=>{ setCountdownDone(false); },[qIdx]);
+
+  const handleAnswer=async(ansIdx)=>{
+    if(myAnswer!==null&&myAnswer!==undefined) return;
+    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):15;
+    const speed=Math.max(0,15-Math.min(elapsed,15));
+    const pts=currentQ?.correct===ansIdx?Math.round(100+speed*60):0;
+    await db.ref(`sessions/${SID}/juegos/answers/${myId}`).set(ansIdx);
+    if(pts>0) await db.ref(`sessions/${SID}/juegos/scores/${myId}`).transaction(c=>(c||0)+pts);
+  };
+
+  const nextQuestion=async()=>{
+    const next=qIdx+1;
+    await db.ref(`sessions/${SID}/juegos`).update({
+      currentQ:next,gameState:'starting',qStartTime:null,answers:{}
+    });
+  };
+
+  const finishGame=async()=>{
+    const fs=game?.scores||{};
+    const sorted=Object.entries(fs).sort((a,b)=>b[1]-a[1]);
+    const gid=`${SID}_${Date.now()}`;
+    await Promise.all(sorted.map(([uid,score],i)=>
+      db.ref(`gameHistory/${uid}/${gid}`).set({
+        date:SID,score,rank:i+1,totalPlayers:sorted.length,
+        name:users[uid]?.name||'?'
+      })
+    ));
+    await db.ref(`sessions/${SID}/juegos/gameState`).set('finished');
+  };
+
+  const closeGame=async()=>{
+    await db.ref(`sessions/${SID}`).update({phase:'waiting','juegos/active':false});
+  };
+
+  const myZone=users[myId]?.zone;
+  if(myZone!=='juegos'&&!isAdmin) return null;
+
+  // Admin: setup
+  if(isAdmin&&(!gState||gState==='idle')){
+    return(
+      <KahootSetup juegosCount={juegosUsers.length}
+        onStart={async(qs)=>{
+          await db.ref(`sessions/${SID}/juegos`).update({
+            active:true,gameState:'starting',questions:qs,
+            currentQ:0,qStartTime:null,answers:{},scores:{}
+          });
+        }}/>
+    );
+  }
+
+  // Countdown
+  if(gState==='starting'){
+    if(isAdmin&&!countdownDone){
+      return(
+        <div style={{position:'fixed',inset:0,zIndex:250,
+          background:'rgba(7,9,31,.95)',backdropFilter:'blur(6px)',
+          display:'flex',flexDirection:'column',alignItems:'center',
+          justifyContent:'center',gap:10}}>
+          <CountdownTimer from={3} onDone={async()=>{
+            setCountdownDone(true);
+            await db.ref(`sessions/${SID}/juegos`).update({
+              gameState:'question',qStartTime:Date.now()
+            });
+          }}/>
+        </div>
+      );
+    }
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:210,
+        background:'rgba(7,9,31,.96)',display:'flex',
+        alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12}}>
+        <div style={{fontSize:72,animation:'bounce .7s infinite'}}>🎮</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.06em'}}>
+          ¡Prepárate!
+        </div>
+        <Spinner size={28} color="#8b5cf6"/>
+      </div>
+    );
+  }
+
+  // Pregunta
+  if(gState==='question'&&currentQ){
+    return(
+      <KahootQuestion question={currentQ} qIndex={qIdx} total={questions.length}
+        myAnswer={myAnswer} onAnswer={handleAnswer}
+        timeLeft={timeLeft} gameState={gState}/>
+    );
+  }
+
+  // Resultados
+  if(gState==='results'&&currentQ){
+    const isRight=myAnswer===currentQ.correct;
+    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):15;
+    const speed=Math.max(0,15-Math.min(elapsed,15));
+    const pointsEarned=isRight?Math.round(100+speed*60):0;
+    return(
+      <KahootResultCard question={currentQ} myAnswer={myAnswer}
+        pointsEarned={pointsEarned} myScore={myScore}
+        qIdx={qIdx} total={questions.length}
+        isAdmin={isAdmin} onNext={nextQuestion} onFinish={finishGame}/>
+    );
+  }
+
+  // Leaderboard / Final
+  if(gState==='leaderboard'||gState==='finished'){
+    return(
+      <KahootLeaderboard scores={scores} users={users}
+        isAdmin={isAdmin} isFinished={gState==='finished'}
+        onClose={closeGame}/>
+    );
+  }
+
+  // Jugador esperando
+  if(!isAdmin){
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:190,
+        background:'rgba(7,9,31,.96)',display:'flex',flexDirection:'column',
+        alignItems:'center',justifyContent:'center',gap:16,padding:24,textAlign:'center'}}>
+        <div style={{fontSize:54,animation:'bounce 1.2s infinite'}}>🎮</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:24,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.05em'}}>
+          Sala de Juegos
+        </h2>
+        <p style={{color:'var(--muted)',fontSize:14,maxWidth:240,lineHeight:1.6}}>
+          Estás listo.<br/>El profe iniciará el juego pronto.
+        </p>
+        <div style={{display:'flex',flexWrap:'wrap',gap:8,
+          justifyContent:'center',maxWidth:280}}>
+          {juegosUsers.map(([uid,u])=>(
+            <div key={uid} style={{display:'flex',alignItems:'center',gap:6,
+              background:'rgba(139,92,246,.1)',borderRadius:20,padding:'4px 10px',
+              border:'1px solid rgba(139,92,246,.2)'}}>
+              <span style={{fontSize:13}}>{u.avatar||'👤'}</span>
+              <span style={{fontSize:11,color:'var(--white)'}}>{u.name}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{display:'flex',gap:4,alignItems:'center'}}>
+          <Spinner size={14} color="#8b5cf6"/>
+          <span style={{fontSize:11,color:'var(--muted)'}}>Esperando...</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
+function CountdownTimer({from,onDone}){
+  const[n,setN]=useState(from);
+  useEffect(()=>{
+    if(n<=0){onDone();return;}
+    const t=setTimeout(()=>setN(n-1),1000);
+    return()=>clearTimeout(t);
+  },[n]);
+  if(n<=0) return null;
+  return(
+    <>
+      <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+        fontSize:110,color:'#ffd000',lineHeight:1,
+        animation:'countdownPop .7s ease'}} key={n}>{n}</div>
+      <div style={{fontFamily:'Barlow Condensed,sans-serif',fontSize:18,
+        color:'var(--muted)',letterSpacing:'.1em',textTransform:'uppercase'}}>
+        Prepárate
+      </div>
+    </>
+  );
+}
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
