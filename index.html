@@ -53,6 +53,7 @@
     @keyframes crownBounce{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
     @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
     @keyframes scoreUp{0%{opacity:0;transform:translateY(12px) scale(.8)}60%{transform:translateY(-4px) scale(1.1)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes libraryCard{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
   </style>
 </head>
 <body>
@@ -81,6 +82,66 @@ const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','�
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
 
+/* ══ JUEGOS PRE-CARGADOS ══ */
+const SEMANA1_GAME = {
+  id: 'semana1',
+  name: 'Semana 1 — Apocalipsis 3:14-22',
+  emoji: '📖',
+  description: 'Un chequeo a tu realidad espiritual',
+  questions: [
+    {
+      text: '¿Cuál es el texto bíblico principal de la Semana 1?',
+      options: ['Apocalipsis 3:14-22','Juan 15:1-11','Jeremías 31:3-4','Hebreos 12:2-4'],
+      correct: 0
+    },
+    {
+      text: '¿Cómo llama la Biblia a los creyentes que no son ni fríos ni calientes?',
+      options: ['Tibios','Fervientes','Apáticos','Indiferentes'],
+      correct: 0
+    },
+    {
+      text: '¿Cómo se describe Jesús a sí mismo al comienzo del mensaje a Laodicea (Apocalipsis 3:14)?',
+      options: ['El testigo fiel y verdadero','El Buen Pastor','El Príncipe de paz','El Cordero de Dios'],
+      correct: 0
+    },
+    {
+      text: 'Según Apocalipsis 3:17, ¿qué creen los laodicenses de sí mismos?',
+      options: ['Que son ricos y no necesitan nada','Que son pobres y necesitados','Que están listos para el regreso de Cristo','Que son los más fieles de todas las iglesias'],
+      correct: 0
+    },
+    {
+      text: '¿Qué tres cosas ofrece Jesús a los laodicenses en Apocalipsis 3:18?',
+      options: ['Oro, vestiduras blancas y colirio','Pan, agua y abrigo','Fe, esperanza y amor','Oración, ayuno y estudio'],
+      correct: 0
+    },
+    {
+      text: 'Según Apocalipsis 3:20, ¿qué promete hacer Jesús si alguien le abre la puerta?',
+      options: ['Entrar y cenar juntos','Sanar todas sus enfermedades','Dar riquezas y prosperidad','Perdonar todos sus pecados en ese instante'],
+      correct: 0
+    },
+    {
+      text: '¿Qué promete Jesús al vencedor en Apocalipsis 3:21?',
+      options: ['Sentarse con él en su trono','Recibir una corona de oro','Vivir sin sufrimiento en el cielo','Conocer todos los secretos del universo'],
+      correct: 0
+    },
+    {
+      text: '¿Qué metáfora usa Jesús en Juan 15 para describir la relación íntima con sus seguidores?',
+      options: ['La vid y los pámpanos','El pastor y las ovejas','El padre y los hijos','El rey y sus siervos'],
+      correct: 0
+    },
+    {
+      text: '¿Cuántas veces se repite la palabra "permanecer" en Juan 15:1-11?',
+      options: ['Diez veces','Cinco veces','Tres veces','Siete veces'],
+      correct: 0
+    },
+    {
+      text: 'Según la lección, ¿qué representa la "savia" de la vid en nuestra vida espiritual?',
+      options: ['La obra del Espíritu Santo','La oración diaria','El estudio de la Biblia','La asistencia a la iglesia'],
+      correct: 0
+    }
+  ]
+};
+
 // Zonas de la sala
 const ZONES={
   lobby:  {label:'Lobby',      color:'#4a4f7a', bg:'rgba(74,79,122,.12)',  icon:'🏠', x1:0,   x2:100, y1:0, y2:100},
@@ -89,7 +150,7 @@ const ZONES={
   juegos: {label:'Juegos',            color:'#8b5cf6', bg:'rgba(139,92,246,.1)', icon:'🎮', x1:68, x2:97, y1:22, y2:90},
 };
 
-const PHASE_DURATIONS={confra:600,repaso:1800,juegos:900}; // segundos
+const PHASE_DURATIONS={confra:600,repaso:1800,juegos:900};
 
 const getSID=()=>new Date().toISOString().slice(0,10);
 const nowTime=()=>new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
@@ -107,7 +168,6 @@ const AUTH_ERRORS={
 };
 const getErr=code=>AUTH_ERRORS[code]||`Error: ${code}`;
 
-// Detectar zona según posición x,y
 const detectZone=(x,y)=>{
   for(const[key,z] of Object.entries(ZONES)){
     if(key==='lobby') continue;
@@ -116,7 +176,6 @@ const detectZone=(x,y)=>{
   return 'lobby';
 };
 
-// Comprimir imagen a base64
 const compressImage=(file,maxSize=200)=>new Promise(resolve=>{
   const canvas=document.createElement('canvas');
   const ctx=canvas.getContext('2d');
@@ -173,7 +232,6 @@ const Spinner=({size=20,color='#ffd000'})=>(
     borderTopColor:color,animation:'spin .8s linear infinite'}}/>
 );
 
-// Avatar (foto o emoji)
 const AvatarBubble=({profile,size=42,glow=false,isMe=false})=>{
   const c=profile.color||'#ffd000';
   return(
@@ -282,13 +340,11 @@ function RoomCanvas({users,myId,session,onDragStart,onDragMove,onDragEnd,roomRef
         backgroundSize:'44px 44px',
       }}>
 
-      {/* Luces ambientales */}
       <div style={{position:'absolute',top:'8%',left:'4%',width:'30%',height:'30%',borderRadius:'50%',
         background:'radial-gradient(circle,rgba(245,158,11,.04),transparent 70%)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',bottom:'12%',right:'4%',width:'28%',height:'28%',borderRadius:'50%',
         background:'radial-gradient(circle,rgba(139,92,246,.04),transparent 70%)',pointerEvents:'none'}}/>
 
-      {/* Pantalla proyección */}
       <div style={{
         position:'absolute',top:'2%',left:'50%',transform:'translateX(-50%)',
         width:full?'28%':'36%',minWidth:110,height:'8%',minHeight:28,
@@ -305,7 +361,6 @@ function RoomCanvas({users,myId,session,onDragStart,onDragMove,onDragEnd,roomRef
           :'📺 PANTALLA'}
       </div>
 
-      {/* Tres zonas */}
       {['confra','repaso','juegos'].map(key=>{
         const z=ZONES[key];
         const count=entries.filter(([,u])=>u.zone===key).length;
@@ -332,7 +387,6 @@ function RoomCanvas({users,myId,session,onDragStart,onDragMove,onDragEnd,roomRef
         );
       })}
 
-      {/* Hint arrastre */}
       {!full&&(
         <div style={{position:'absolute',bottom:6,left:0,right:0,textAlign:'center',
           fontSize:8,color:'var(--muted)',pointerEvents:'none'}}>
@@ -340,7 +394,6 @@ function RoomCanvas({users,myId,session,onDragStart,onDragMove,onDragEnd,roomRef
         </div>
       )}
 
-      {/* Overlay proyección */}
       {full&&(<>
         <div style={{position:'absolute',top:16,left:'50%',transform:'translateX(-50%)',
           background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.25)',
@@ -363,7 +416,6 @@ function RoomCanvas({users,myId,session,onDragStart,onDragMove,onDragEnd,roomRef
         </div>
       </>)}
 
-      {/* Avatares */}
       {entries.map(([uid,u])=>{
         const myReactions=reactions?.[uid]||{};
         const reactionCounts=REACTIONS.map(r=>({
@@ -382,7 +434,6 @@ function RoomCanvas({users,myId,session,onDragStart,onDragMove,onDragEnd,roomRef
               animation:uid===myId?'pop .45s ease':'none',
               pointerEvents:full?'none':'auto',
             }}>
-            {/* Reacciones flotantes */}
             {reactionCounts.length>0&&(
               <div style={{display:'flex',gap:2,marginBottom:2}}>
                 {reactionCounts.map(r=>(
@@ -439,7 +490,6 @@ function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myR
       display:'flex',flexDirection:'column',alignItems:'center',
       justifyContent:'center',padding:20,gap:16,
     }}>
-      {/* Quién habla */}
       <div style={{textAlign:'center',animation:'speakerPop .6s ease'}}>
         <div style={{fontSize:12,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
           color:'var(--muted)',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:12}}>
@@ -464,7 +514,6 @@ function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myR
         )}
       </div>
 
-      {/* Reacciones (solo los que NO son speaker) */}
       {!isSpeaker&&(
         <div style={{display:'flex',gap:10}}>
           {REACTIONS.map(r=>(
@@ -481,7 +530,6 @@ function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myR
         </div>
       )}
 
-      {/* Progreso */}
       <div style={{display:'flex',gap:6}}>
         {queue.map((_,i)=>(
           <div key={i} style={{
@@ -492,7 +540,6 @@ function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myR
         ))}
       </div>
 
-      {/* Botones acción */}
       {(isSpeaker||isAdmin)&&(
         <div style={{display:'flex',gap:10,flexWrap:'wrap',justifyContent:'center'}}>
           {remaining>0&&(
@@ -623,7 +670,6 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
 
   return(
     <>
-      {/* Botón flotante admin */}
       <button onClick={()=>setOpen(o=>!o)} style={{
         position:'fixed',bottom:20,right:20,zIndex:120,
         width:48,height:48,borderRadius:'50%',
@@ -655,7 +701,6 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
             </span>
           </div>
 
-          {/* Conteos por zona */}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,marginBottom:14}}>
             {[
               {label:'Confra',count:confraUsers.length,color:'#f59e0b'},
@@ -673,7 +718,6 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
             ))}
           </div>
 
-          {/* Acciones según fase */}
           <div style={{display:'flex',flexDirection:'column',gap:7}}>
             {phase==='waiting'&&(<>
               <button onClick={()=>{onStartConfra(confraUsers);setOpen(false);}}
@@ -791,7 +835,6 @@ function EditProfileModal({profile,onSave,onClose}){
             color:'var(--muted)',fontSize:20,padding:4}}>✕</button>
         </div>
 
-        {/* Foto de perfil */}
         <div style={{marginBottom:16,display:'flex',alignItems:'center',gap:14}}>
           <div style={{position:'relative',cursor:'pointer'}} onClick={()=>fileRef.current?.click()}>
             <AvatarBubble profile={{...profile,photo,avatar,color}} size={72}/>
@@ -827,7 +870,6 @@ function EditProfileModal({profile,onSave,onClose}){
           </div>
         </div>
 
-        {/* Nombre */}
         <div style={{marginBottom:12}}>
           <label style={{fontSize:10,fontWeight:700,color:'var(--muted)',
             textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:6,
@@ -840,7 +882,6 @@ function EditProfileModal({profile,onSave,onClose}){
               color:'var(--white)',fontSize:14,fontFamily:'Barlow,sans-serif'}}/>
         </div>
 
-        {/* Avatar */}
         <div style={{marginBottom:12}}>
           <label style={{fontSize:10,fontWeight:700,color:'var(--muted)',
             textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:6,
@@ -858,7 +899,6 @@ function EditProfileModal({profile,onSave,onClose}){
           </div>
         </div>
 
-        {/* Color */}
         <div style={{marginBottom:20}}>
           <label style={{fontSize:10,fontWeight:700,color:'var(--muted)',
             textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:8,
@@ -896,7 +936,6 @@ function EditProfileModal({profile,onSave,onClose}){
 function AttendanceModal({myAtt,gameHistory,onClose}){
   const[activeTab,setActiveTab]=useState('asistencia');
   const sessions=Object.entries(myAtt||{}).sort((a,b)=>b[0].localeCompare(a[0]));
-  // Agrupar por mes
   const byMonth={};
   sessions.forEach(([sid])=>{
     const d=new Date(sid+'T12:00:00');
@@ -929,7 +968,6 @@ function AttendanceModal({myAtt,gameHistory,onClose}){
             color:'var(--muted)',fontSize:20,padding:4}}>✕</button>
         </div>
 
-        {/* Resumen */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:18}}>
           {[
             {label:'Total clases',  value:sessions.length,    color:'#ffd000'},
@@ -948,7 +986,6 @@ function AttendanceModal({myAtt,gameHistory,onClose}){
           ))}
         </div>
 
-        {/* Tabs */}
         <div style={{display:'flex',background:'rgba(255,255,255,.04)',borderRadius:10,
           padding:3,marginBottom:16,border:'1px solid rgba(255,208,0,.08)'}}>
           {[{id:'asistencia',l:'📅 Asistencia'},{id:'juegos',l:'🏆 Juegos'}].map(t=>(
@@ -1050,7 +1087,7 @@ function AttendanceModal({myAtt,gameHistory,onClose}){
   );
 }
 
-/* ════════════════════════ SCREEN VIEW (PROYECCIÓN) ════════════════════════ */
+/* ════════════════════════ SCREEN VIEW ════════════════════════ */
 function ScreenView({users,session,msgs,reactions,onExit}){
   const phase=session?.phase||'waiting';
   const confra=session?.confra;
@@ -1064,14 +1101,12 @@ function ScreenView({users,session,msgs,reactions,onExit}){
 
   return(
     <div style={{position:'fixed',inset:0,background:'var(--navy)',overflow:'hidden'}}>
-      {/* Canvas con zonas */}
       <div ref={roomRef} style={{width:'100%',height:'100%'}}>
         <RoomCanvas users={users} myId={null} session={session}
           onDragStart={null} onDragMove={null} onDragEnd={null}
           roomRef={roomRef} full={true} reactions={reactions}/>
       </div>
 
-      {/* Panel fase activa - lado derecho */}
       {phase!=='waiting'&&(
         <div style={{
           position:'absolute',top:80,right:16,
@@ -1122,7 +1157,6 @@ function ScreenView({users,session,msgs,reactions,onExit}){
         </div>
       )}
 
-      {/* Chat del repaso en pantalla */}
       {phase==='repaso'&&<RepasoChatScreen msgs={msgs} session={session} users={users}/>}
 
       <button onClick={onExit} style={{
@@ -1162,7 +1196,6 @@ const btnYellow=(dis)=>({
 
 /* ════════════════════════ APP PRINCIPAL ════════════════════════ */
 function App(){
-  /* ── Vista y auth ── */
   const[view,        setView]        =useState('loading');
   const[authMode,    setAuthMode]    =useState('login');
   const[email,       setEmail]       =useState('');
@@ -1170,19 +1203,16 @@ function App(){
   const[authError,   setAuthError]   =useState('');
   const[authLoad,    setAuthLoad]    =useState(false);
 
-  /* ── Perfil ── */
   const[profile,     setProfile]     =useState({name:'',avatar:null,color:'#ffd000',photo:null});
   const[isAdmin,     setIsAdmin]     =useState(false);
   const[setupSaving, setSetupSaving] =useState(false);
   const[setupError,  setSetupError]  =useState('');
 
-  /* ── Modales ── */
   const[editOpen,    setEditOpen]    =useState(false);
   const[attOpen,     setAttOpen]     =useState(false);
-  const[endBanner,   setEndBanner]   =useState(null); // 'confra'|'repaso'|null
+  const[endBanner,   setEndBanner]   =useState(null);
   const[kahootOpen,  setKahootOpen]  =useState(false);
 
-  /* ── Sala ── */
   const[users,       setUsers]       =useState({});
   const[msgs,        setMsgs]        =useState([]);
   const[myAtt,       setMyAtt]       =useState({});
@@ -1198,13 +1228,20 @@ function App(){
   const lastT  =useRef(0);
   const endRef =useRef(null);
 
-  /* ── body class ── */
   useEffect(()=>{
     if(view==='room'||view==='screen') document.body.classList.add('in-room');
     else document.body.classList.remove('in-room');
   },[view]);
 
-  /* ── Auth listener ── */
+  /* Seed Semana 1 game to library if not exists */
+  useEffect(()=>{
+    db.ref('gameLibrary/semana1').once('value').then(snap=>{
+      if(!snap.exists()){
+        db.ref('gameLibrary/semana1').set(SEMANA1_GAME);
+      }
+    });
+  },[]);
+
   useEffect(()=>{
     const t=setTimeout(()=>{ if(view==='loading') setView('auth'); },8000);
     const unsub=auth.onAuthStateChanged(async user=>{
@@ -1226,13 +1263,10 @@ function App(){
     return()=>{ clearTimeout(t); unsub(); };
   },[]);
 
-  /* ── Firebase listeners sala ── */
   useEffect(()=>{
     if(view!=='room'&&view!=='screen') return;
     const sid=SID.current, uid=UID.current;
     if(!uid) return;
-    // Si el juego terminó (finished/idle) y kahootOpen era true, resetear
-    // (se maneja en closeGame)
     const refs={
       users: db.ref(`rooms/${sid}/users`),
       chat:  db.ref(`rooms/${sid}/chat`),
@@ -1254,13 +1288,11 @@ function App(){
     return()=>Object.values(refs).forEach(r=>r.off());
   },[view]);
 
-  /* ── Scroll chat ── */
   useEffect(()=>{
     if(session?.phase==='repaso')
       setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),60);
   },[msgs]);
 
-  /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
     const uRef=db.ref(`rooms/${SID.current}/users/${uid}`);
     await uRef.set({
@@ -1298,7 +1330,6 @@ function App(){
     setSetupSaving(false);
   };
 
-  /* ── Auth handlers ── */
   const handleEmailAuth=async()=>{
     if(!email.trim()||!password) return;
     setAuthLoad(true); setAuthError('');
@@ -1325,7 +1356,6 @@ function App(){
     setUsers({}); setMsgs([]); setMyAtt({}); setSession(null);
   };
 
-  /* ── Drag ── */
   const onDragStart=useCallback(e=>{e.preventDefault();isDrag.current=true;},[]);
   const onDragMove=useCallback(e=>{
     if(!isDrag.current||!roomRef.current) return;
@@ -1342,7 +1372,6 @@ function App(){
   },[]);
   const onDragEnd=useCallback(()=>{isDrag.current=false;},[]);
 
-  /* ── Chat ── */
   const handleSend=()=>{
     if(!chatIn.trim()) return;
     const me=users[UID.current];
@@ -1354,7 +1383,6 @@ function App(){
     });
   };
 
-  /* ── Reaccionar ── */
   const handleReact=(reactionId)=>{
     const speakerUid=session?.confra?.queue?.[session?.confra?.currentIdx||0];
     if(!speakerUid) return;
@@ -1366,17 +1394,11 @@ function App(){
     return reactions?.[speakerUid]?.[UID.current]||null;
   },[reactions,session]);
 
-  /* ── Admin: gestión de fases ── */
   const startConfra=async(confraUsers)=>{
     const queue=confraUsers.map(([uid])=>uid).sort(()=>Math.random()-.5);
     await db.ref(`sessions/${SID.current}`).set({
       phase:'confra',
-      confra:{
-        active:true,
-        queue,
-        currentIdx:0,
-        startTime:Date.now(),
-      }
+      confra:{active:true,queue,currentIdx:0,startTime:Date.now()},
     });
   };
 
@@ -1422,16 +1444,6 @@ function App(){
 
   const phase=session?.phase||'waiting';
   const usersArr=Object.entries(users);
-  const attSessions=Object.keys(myAtt).sort().reverse();
-  const streak=(()=>{
-    if(!attSessions.length) return 0;
-    let s=1;
-    for(let i=1;i<attSessions.length;i++){
-      if((new Date(attSessions[i-1])-new Date(attSessions[i]))/86400000<=10) s++;
-      else break;
-    }
-    return s;
-  })();
 
   /* ════ LOADING ════ */
   if(view==='loading') return(
@@ -1444,9 +1456,7 @@ function App(){
         <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
           fontSize:26,color:'#ffd000',letterSpacing:'.08em',marginTop:10}}>MARANATA CLASS</div>
         <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>Las Condes</div>
-        <div style={{marginTop:20,display:'flex',justifyContent:'center'}}>
-          <Spinner size={32}/>
-        </div>
+        <div style={{marginTop:20,display:'flex',justifyContent:'center'}}><Spinner size={32}/></div>
       </div>
     </div>
   );
@@ -1537,7 +1547,6 @@ function App(){
           </p>
         </div>
 
-        {/* Foto */}
         <div style={{display:'flex',justifyContent:'center',marginBottom:14}}>
           <div style={{position:'relative',cursor:'pointer'}}
             onClick={()=>document.getElementById('setupPhoto')?.click()}>
@@ -1623,7 +1632,6 @@ function App(){
     <div style={{position:'fixed',inset:0,display:'flex',flexDirection:'column',
       background:'var(--navy)'}}>
 
-      {/* ── HEADER ── */}
       <div style={{
         background:'linear-gradient(135deg,#0d1035,#0a0c28)',
         borderBottom:'1px solid rgba(255,208,0,.12)',
@@ -1632,7 +1640,6 @@ function App(){
         justifyContent:'space-between',flexShrink:0,
         minHeight:52,
       }}>
-        {/* Logo */}
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <svg width="26" height="19" viewBox="0 0 80 60">
             <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
@@ -1660,9 +1667,7 @@ function App(){
           </div>
         </div>
 
-        {/* Botones header */}
         <div style={{display:'flex',gap:5,alignItems:'center'}}>
-          {/* Avatar + editar */}
           <button onClick={()=>setEditOpen(true)} title="Editar perfil" style={{
             display:'flex',alignItems:'center',gap:5,
             background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
@@ -1677,21 +1682,18 @@ function App(){
             <span style={{fontSize:10}}>✏️</span>
           </button>
 
-          {/* Asistencia */}
           <button onClick={()=>setAttOpen(true)} title="Mi asistencia" style={{
             background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
             borderRadius:20,width:34,height:34,
             display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
           }}>📊</button>
 
-          {/* Proyectar */}
           <button onClick={()=>setView('screen')} title="Proyectar" style={{
             background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
             borderRadius:20,width:34,height:34,
             display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
           }}>📺</button>
 
-          {/* Cerrar sesión */}
           <button onClick={handleSignOut} title="Cerrar sesión" style={{
             background:'rgba(239,68,68,.07)',border:'1px solid rgba(239,68,68,.15)',
             borderRadius:20,width:34,height:34,
@@ -1700,7 +1702,6 @@ function App(){
         </div>
       </div>
 
-      {/* ── SALA (canvas con zonas) ── */}
       <div style={{flex:1,position:'relative',overflow:'hidden'}}>
         <RoomCanvas
           users={users} myId={UID.current} session={session}
@@ -1708,7 +1709,6 @@ function App(){
           roomRef={roomRef} full={false} reactions={reactions}
         />
 
-        {/* Chat del repaso (dentro de sala) */}
         {phase==='repaso'&&(
           <div style={{
             position:'absolute',bottom:0,left:0,right:0,
@@ -1730,7 +1730,6 @@ function App(){
         )}
       </div>
 
-      {/* Confraternización: speaker overlay */}
       {phase==='confra'&&session?.confra?.active&&(
         <ConfraSpeakerPanel
           session={session} users={users}
@@ -1740,12 +1739,10 @@ function App(){
         />
       )}
 
-      {/* Banner fin de actividad */}
       {endBanner&&(
         <ActivityEndBanner phase={endBanner} onDismiss={()=>setEndBanner(null)}/>
       )}
 
-      {/* Panel admin */}
       {isAdmin&&(
         <AdminPanel
           session={session} users={users}
@@ -1759,8 +1756,6 @@ function App(){
         />
       )}
 
-
-      {/* Kahoot Game */}
       {(kahootOpen||(phase==='juegos'&&session?.juegos?.active)||(session?.juegos?.gameState&&session?.juegos?.gameState!=='idle'))&&(
         <KahootController
           session={session} users={users}
@@ -1770,7 +1765,6 @@ function App(){
         />
       )}
 
-      {/* Modales */}
       {editOpen&&<EditProfileModal profile={profile} onSave={saveProfile} onClose={()=>setEditOpen(false)}/>}
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
     </div>
@@ -1797,6 +1791,191 @@ function Confetti(){
           animation:`confettiFall ${p.dur}s ${p.delay}s ease-in forwards`,
         }}/>
       ))}
+    </div>
+  );
+}
+
+/* ════════════════════════ GAME LIBRARY MODAL ════════════════════════ */
+function GameLibraryModal({onSelectGame,onCreateNew,onCancel,juegosCount}){
+  const[games,setGames]=useState({});
+  const[loading,setLoading]=useState(true);
+  const[deleting,setDeleting]=useState(null);
+  const[confirmDel,setConfirmDel]=useState(null);
+
+  useEffect(()=>{
+    const ref=db.ref('gameLibrary');
+    ref.on('value',s=>{
+      setGames(s.val()||{});
+      setLoading(false);
+    });
+    return()=>ref.off();
+  },[]);
+
+  const handleDelete=async(id)=>{
+    setDeleting(id);
+    await db.ref(`gameLibrary/${id}`).remove();
+    setDeleting(null);
+    setConfirmDel(null);
+  };
+
+  const gamesList=Object.entries(games).sort((a,b)=>a[0].localeCompare(b[0]));
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+      display:'flex',flexDirection:'column',overflow:'hidden'}}>
+
+      {/* Header */}
+      <div style={{
+        background:'linear-gradient(135deg,#0d1035,#141744)',
+        padding:'14px 16px',borderBottom:'1px solid rgba(139,92,246,.2)',flexShrink:0,
+      }}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:20,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.06em'}}>
+              🎮 Juegos guardados
+            </div>
+            <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>
+              {juegosCount} jugador{juegosCount!==1?'es':''} en sala de juegos
+            </div>
+          </div>
+          <button onClick={onCancel} style={{
+            background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.1)',
+            borderRadius:20,width:34,height:34,color:'var(--muted)',fontSize:18,
+            display:'flex',alignItems:'center',justifyContent:'center',
+          }}>✕</button>
+        </div>
+      </div>
+
+      {/* Lista de juegos */}
+      <div style={{flex:1,overflowY:'auto',padding:'14px 14px 6px'}}>
+        {loading&&(
+          <div style={{display:'flex',justifyContent:'center',paddingTop:40}}>
+            <Spinner size={28} color="#8b5cf6"/>
+          </div>
+        )}
+
+        {!loading&&gamesList.length===0&&(
+          <div style={{textAlign:'center',paddingTop:40,color:'var(--muted)',fontSize:13}}>
+            <div style={{fontSize:40,marginBottom:12}}>📭</div>
+            No tienes juegos guardados aún.<br/>¡Crea el primero!
+          </div>
+        )}
+
+        {!loading&&gamesList.map(([id,game],idx)=>(
+          <div key={id} style={{
+            background:'linear-gradient(135deg,rgba(139,92,246,.08),rgba(139,92,246,.03))',
+            border:'1px solid rgba(139,92,246,.2)',
+            borderRadius:14,padding:'12px 14px',marginBottom:10,
+            animation:`libraryCard ${.1+idx*.05}s ease both`,
+            display:'flex',alignItems:'center',gap:12,
+          }}>
+            {/* Emoji + info */}
+            <div style={{
+              width:48,height:48,borderRadius:12,flexShrink:0,
+              background:'rgba(139,92,246,.15)',border:'1px solid rgba(139,92,246,.3)',
+              display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,
+            }}>
+              {game.emoji||'🎮'}
+            </div>
+
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:15,color:'white',letterSpacing:'.01em',
+                overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                {game.name}
+              </div>
+              {game.description&&(
+                <div style={{fontSize:11,color:'var(--muted)',marginTop:2,
+                  overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                  {game.description}
+                </div>
+              )}
+              <div style={{fontSize:10,color:'rgba(139,92,246,.8)',marginTop:4,
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                textTransform:'uppercase',letterSpacing:'.05em'}}>
+                {(game.questions||[]).length} preguntas
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <div style={{display:'flex',flexDirection:'column',gap:5,flexShrink:0}}>
+              <button onClick={()=>onSelectGame(game)} style={{
+                background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+                border:'none',borderRadius:8,padding:'7px 12px',
+                color:'white',fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:800,fontSize:12,letterSpacing:'.04em',
+                textTransform:'uppercase',
+                boxShadow:'0 0 12px rgba(139,92,246,.35)',
+              }}>
+                ▶ Jugar
+              </button>
+              {id!=='semana1'&&(
+                <button onClick={()=>setConfirmDel(id)} style={{
+                  background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',
+                  borderRadius:8,padding:'5px 12px',
+                  color:'#f87171',fontFamily:'Barlow Condensed,sans-serif',
+                  fontWeight:700,fontSize:11,letterSpacing:'.03em',
+                }}>
+                  🗑 Borrar
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Botón crear nuevo */}
+      <div style={{padding:'12px 14px 20px',borderTop:'1px solid rgba(255,255,255,.06)',flexShrink:0}}>
+        <button onClick={onCreateNew} style={{
+          width:'100%',padding:13,borderRadius:12,border:'none',
+          background:'rgba(255,208,0,.08)',border:'1px dashed rgba(255,208,0,.3)',
+          color:'#ffd000',fontSize:14,fontWeight:800,
+          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',
+          textTransform:'uppercase',display:'flex',
+          alignItems:'center',justifyContent:'center',gap:8,
+        }}>
+          ✏️ Crear juego nuevo
+        </button>
+      </div>
+
+      {/* Confirm delete overlay */}
+      {confirmDel&&(
+        <div style={{
+          position:'absolute',inset:0,zIndex:10,
+          background:'rgba(7,9,31,.92)',backdropFilter:'blur(6px)',
+          display:'flex',flexDirection:'column',alignItems:'center',
+          justifyContent:'center',padding:24,gap:14,textAlign:'center',
+        }}>
+          <div style={{fontSize:44}}>🗑️</div>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:20,color:'#ef4444',textTransform:'uppercase'}}>
+            ¿Borrar este juego?
+          </div>
+          <div style={{fontSize:13,color:'var(--muted)',maxWidth:240,lineHeight:1.6}}>
+            "{games[confirmDel]?.name}" se eliminará permanentemente.
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={()=>setConfirmDel(null)} style={{
+              background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.15)',
+              borderRadius:10,padding:'10px 20px',color:'var(--white)',
+              fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:13,
+              textTransform:'uppercase',
+            }}>Cancelar</button>
+            <button onClick={()=>handleDelete(confirmDel)}
+              disabled={deleting===confirmDel} style={{
+              background:'rgba(239,68,68,.15)',border:'1px solid rgba(239,68,68,.4)',
+              borderRadius:10,padding:'10px 20px',color:'#ef4444',
+              fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:13,
+              textTransform:'uppercase',
+              display:'flex',alignItems:'center',gap:6,
+            }}>
+              {deleting===confirmDel?<Spinner size={14} color="#ef4444"/>:null}
+              Sí, borrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2023,28 +2202,78 @@ function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
   );
 }
 
-function KahootSetup({onStart,juegosCount,onCancel}){
-  const[questions,setQuestions]=useState([{text:'',options:['','','',''],correct:0}]);
+/* ════════════════════════ KAHOOT SETUP (CREAR NUEVO) ════════════════════════ */
+function KahootSetup({onStart,juegosCount,onCancel,initialQuestions}){
+  const[questions,setQuestions]=useState(
+    initialQuestions||[{text:'',options:['','','',''],correct:0}]
+  );
   const[qIdx,setQIdx]=useState(0);
+  const[gameName,setGameName]=useState('');
+  const[saving,setSaving]=useState(false);
+
   const q=questions[qIdx];
   const updateQ=(f,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?{...x,[f]:v}:x));
   const updateOpt=(oi,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?{...x,options:x.options.map((o,j)=>j===oi?v:o)}:x));
   const addQ=()=>{setQuestions(qs=>[...qs,{text:'',options:['','','',''],correct:0}]);setQIdx(questions.length);};
   const removeQ=()=>{if(questions.length===1) return;const nqs=questions.filter((_,i)=>i!==qIdx);setQuestions(nqs);setQIdx(Math.max(0,qIdx-1));};
   const canStart=questions.every(q=>q.text.trim()&&q.options.every(o=>o.trim()));
+
+  const handleStart=async()=>{
+    if(!canStart||juegosCount===0) return;
+    // Guardar en biblioteca si hay nombre
+    if(gameName.trim()){
+      setSaving(true);
+      const id='game_'+Date.now();
+      await db.ref(`gameLibrary/${id}`).set({
+        id,
+        name:gameName.trim(),
+        emoji:'🎮',
+        questions,
+        createdAt:Date.now(),
+      });
+      setSaving(false);
+    }
+    onStart(questions);
+  };
+
   return(
     <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
       display:'flex',flexDirection:'column',overflow:'hidden'}}>
       <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
-        padding:'12px 14px',borderBottom:'1px solid rgba(139,92,246,.2)',flexShrink:0}}>
-        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-          fontSize:18,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.06em'}}>
-          🎮 Crear preguntas
+        padding:'12px 14px',borderBottom:'1px solid rgba(139,92,246,.2)',flexShrink:0,
+        display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:18,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.06em'}}>
+            ✏️ Crear juego nuevo
+          </div>
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>
+            {juegosCount} jugadores en sala de juegos
+          </div>
         </div>
-        <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>
-          {juegosCount} jugadores en sala de juegos
-        </div>
+        <button onClick={onCancel} style={{
+          background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.1)',
+          borderRadius:20,width:32,height:32,color:'var(--muted)',fontSize:16,
+          display:'flex',alignItems:'center',justifyContent:'center',
+        }}>✕</button>
       </div>
+
+      {/* Nombre del juego */}
+      <div style={{padding:'12px 14px 0',flexShrink:0,
+        borderBottom:'1px solid rgba(255,255,255,.04)'}}>
+        <div style={{fontSize:10,fontWeight:700,color:'var(--muted)',
+          textTransform:'uppercase',letterSpacing:'.07em',marginBottom:6,
+          fontFamily:'Barlow Condensed,sans-serif'}}>
+          Nombre del juego (opcional — para guardarlo)
+        </div>
+        <input value={gameName} onChange={e=>setGameName(e.target.value)}
+          placeholder="Ej: Semana 2, Examen trimestral..."
+          style={{width:'100%',padding:'9px 14px',borderRadius:10,marginBottom:12,
+            background:'rgba(139,92,246,.08)',border:'1px solid rgba(139,92,246,.2)',
+            color:'var(--white)',fontSize:13,fontFamily:'Barlow,sans-serif',outline:'none'}}/>
+      </div>
+
+      {/* Selector de preguntas */}
       <div style={{display:'flex',gap:6,padding:'10px 14px',
         overflowX:'auto',flexShrink:0,borderBottom:'1px solid rgba(255,255,255,.05)'}}>
         {questions.map((_,i)=>(
@@ -2058,6 +2287,7 @@ function KahootSetup({onStart,juegosCount,onCancel}){
           border:'1px dashed rgba(255,255,255,.2)',background:'none',
           color:'var(--muted)',fontSize:18,flexShrink:0}}>+</button>
       </div>
+
       <div style={{flex:1,overflowY:'auto',padding:'14px'}}>
         <div style={{display:'flex',alignItems:'center',
           justifyContent:'space-between',marginBottom:10}}>
@@ -2104,36 +2334,37 @@ function KahootSetup({onStart,juegosCount,onCancel}){
           </div>
         ))}
       </div>
+
       <div style={{padding:'12px 14px',borderTop:'1px solid rgba(255,255,255,.06)',
         flexShrink:0,display:'flex',flexDirection:'column',gap:8}}>
-        <button onClick={()=>canStart&&juegosCount>0&&onStart(questions)}
-          disabled={!canStart||juegosCount===0} style={{
+        <button onClick={handleStart}
+          disabled={!canStart||juegosCount===0||saving} style={{
           width:'100%',padding:13,borderRadius:12,border:'none',
           background:canStart&&juegosCount>0?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'var(--muted2)',
           color:canStart&&juegosCount>0?'white':'var(--muted)',
           fontSize:15,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
           letterSpacing:'.06em',textTransform:'uppercase',
-          boxShadow:canStart&&juegosCount>0?'0 0 24px rgba(139,92,246,.4)':undefined}}>
-          {juegosCount===0?'Nadie en sala de juegos':
-           !canStart?'Completa todas las preguntas':
-           `🎮 Iniciar (${questions.length} preguntas)`}
+          boxShadow:canStart&&juegosCount>0?'0 0 24px rgba(139,92,246,.4)':undefined,
+          display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+        }}>
+          {saving?<><Spinner size={18} color="white"/>Guardando...</>
+           :juegosCount===0?'Nadie en sala de juegos'
+           :!canStart?'Completa todas las preguntas'
+           :`🎮 Iniciar${gameName.trim()?' y guardar':''} (${questions.length} preguntas)`}
         </button>
-        <button onClick={onCancel} style={{
-          width:'100%',padding:10,borderRadius:12,border:'none',
-          background:'rgba(255,255,255,.05)',color:'var(--muted)',
-          fontSize:13,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-          letterSpacing:'.04em',textTransform:'uppercase',
-        }}>✕ Cancelar</button>
       </div>
     </div>
   );
 }
 
+/* ════════════════════════ KAHOOT CONTROLLER ════════════════════════ */
 function KahootController({session,users,myId,isAdmin,SID,onClose}){
   const game=session?.juegos;
   const gState=game?.gameState;
   const[timeLeft,setTimeLeft]=useState(15);
   const[countdownDone,setCountdownDone]=useState(false);
+  // Biblioteca: 'library' | 'create' | null (juego en curso)
+  const[libraryView,setLibraryView]=useState('library');
   const timerRef=useRef(null);
   const questions=game?.questions||[];
   const qIdx=game?.currentQ||0;
@@ -2160,6 +2391,11 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
   },[gState,game?.qStartTime,isAdmin]);
 
   useEffect(()=>{ setCountdownDone(false); },[qIdx]);
+
+  // Reset library view when game ends
+  useEffect(()=>{
+    if(!gState||gState==='idle') setLibraryView('library');
+  },[gState]);
 
   const handleAnswer=async(ansIdx)=>{
     if(myAnswer!==null&&myAnswer!==undefined) return;
@@ -2192,26 +2428,48 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
 
   const closeGame=async()=>{
     await db.ref(`sessions/${SID}`).update({phase:'waiting','juegos/active':false});
+    if(onClose) onClose();
   };
 
   const myZone=users[myId]?.zone;
   if(myZone!=='juegos'&&!isAdmin) return null;
 
-  // Admin: setup
+  /* ── Admin: biblioteca de juegos ── */
   if(isAdmin&&(!gState||gState==='idle')){
-    return(
-      <KahootSetup juegosCount={juegosUsers.length}
-        onCancel={()=>{ if(onClose) onClose(); }}
-        onStart={async(qs)=>{
-          await db.ref(`sessions/${SID}/juegos`).update({
-            active:true,gameState:'starting',questions:qs,
-            currentQ:0,qStartTime:null,answers:{},scores:{}
-          });
-        }}/>
-    );
+    if(libraryView==='library'){
+      return(
+        <GameLibraryModal
+          juegosCount={juegosUsers.length}
+          onSelectGame={async(game)=>{
+            // Cargar preguntas del juego seleccionado y arrancar
+            await db.ref(`sessions/${SID}/juegos`).update({
+              active:true,gameState:'starting',
+              questions:game.questions,
+              currentQ:0,qStartTime:null,answers:{},scores:{}
+            });
+          }}
+          onCreateNew={()=>setLibraryView('create')}
+          onCancel={()=>{ if(onClose) onClose(); }}
+        />
+      );
+    }
+    if(libraryView==='create'){
+      return(
+        <KahootSetup
+          juegosCount={juegosUsers.length}
+          onCancel={()=>setLibraryView('library')}
+          onStart={async(qs)=>{
+            await db.ref(`sessions/${SID}/juegos`).update({
+              active:true,gameState:'starting',questions:qs,
+              currentQ:0,qStartTime:null,answers:{},scores:{}
+            });
+          }}
+        />
+      );
+    }
   }
 
-  // Countdown
+  /* Countdown */
   if(gState==='starting'){
     if(isAdmin&&!countdownDone){
       return(
@@ -2242,7 +2500,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     );
   }
 
-  // Pregunta
+  /* Pregunta */
   if(gState==='question'&&currentQ){
     return(
       <KahootQuestion question={currentQ} qIndex={qIdx} total={questions.length}
@@ -2251,7 +2509,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     );
   }
 
-  // Resultados
+  /* Resultados */
   if(gState==='results'&&currentQ){
     const isRight=myAnswer===currentQ.correct;
     const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):15;
@@ -2265,7 +2523,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     );
   }
 
-  // Leaderboard / Final
+  /* Leaderboard / Final */
   if(gState==='leaderboard'||gState==='finished'){
     return(
       <KahootLeaderboard scores={scores} users={users}
@@ -2274,7 +2532,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     );
   }
 
-  // Jugador esperando
+  /* Jugador esperando */
   if(!isAdmin){
     return(
       <div style={{position:'fixed',inset:0,zIndex:190,
@@ -2329,6 +2587,7 @@ function CountdownTimer({from,onDone}){
     </>
   );
 }
+
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
