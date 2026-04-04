@@ -1180,6 +1180,7 @@ function App(){
   const[editOpen,    setEditOpen]    =useState(false);
   const[attOpen,     setAttOpen]     =useState(false);
   const[endBanner,   setEndBanner]   =useState(null); // 'confra'|'repaso'|null
+  const[kahootOpen,  setKahootOpen]  =useState(false);
 
   /* ── Sala ── */
   const[users,       setUsers]       =useState({});
@@ -1230,6 +1231,8 @@ function App(){
     if(view!=='room'&&view!=='screen') return;
     const sid=SID.current, uid=UID.current;
     if(!uid) return;
+    // Si el juego terminó (finished/idle) y kahootOpen era true, resetear
+    // (se maneja en closeGame)
     const refs={
       users: db.ref(`rooms/${sid}/users`),
       chat:  db.ref(`rooms/${sid}/chat`),
@@ -1751,18 +1754,19 @@ function App(){
           onEndConfra={endConfra}
           onStartRepaso={startRepaso}
           onEndRepaso={endRepaso}
-          onStartJuegos={startJuegos}
+          onStartJuegos={()=>{startJuegos();setKahootOpen(true);}}
           onEndJuegos={endJuegos}
         />
       )}
 
 
       {/* Kahoot Game */}
-      {(phase==='juegos'||isAdmin)&&(
+      {(kahootOpen||(phase==='juegos'&&session?.juegos?.active)||(session?.juegos?.gameState&&session?.juegos?.gameState!=='idle'))&&(
         <KahootController
           session={session} users={users}
           myId={UID.current} isAdmin={isAdmin}
           SID={SID.current}
+          onClose={()=>setKahootOpen(false)}
         />
       )}
 
@@ -2019,7 +2023,7 @@ function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
   );
 }
 
-function KahootSetup({onStart,juegosCount}){
+function KahootSetup({onStart,juegosCount,onCancel}){
   const[questions,setQuestions]=useState([{text:'',options:['','','',''],correct:0}]);
   const[qIdx,setQIdx]=useState(0);
   const q=questions[qIdx];
@@ -2100,7 +2104,8 @@ function KahootSetup({onStart,juegosCount}){
           </div>
         ))}
       </div>
-      <div style={{padding:'12px 14px',borderTop:'1px solid rgba(255,255,255,.06)',flexShrink:0}}>
+      <div style={{padding:'12px 14px',borderTop:'1px solid rgba(255,255,255,.06)',
+        flexShrink:0,display:'flex',flexDirection:'column',gap:8}}>
         <button onClick={()=>canStart&&juegosCount>0&&onStart(questions)}
           disabled={!canStart||juegosCount===0} style={{
           width:'100%',padding:13,borderRadius:12,border:'none',
@@ -2113,12 +2118,18 @@ function KahootSetup({onStart,juegosCount}){
            !canStart?'Completa todas las preguntas':
            `🎮 Iniciar (${questions.length} preguntas)`}
         </button>
+        <button onClick={onCancel} style={{
+          width:'100%',padding:10,borderRadius:12,border:'none',
+          background:'rgba(255,255,255,.05)',color:'var(--muted)',
+          fontSize:13,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          letterSpacing:'.04em',textTransform:'uppercase',
+        }}>✕ Cancelar</button>
       </div>
     </div>
   );
 }
 
-function KahootController({session,users,myId,isAdmin,SID}){
+function KahootController({session,users,myId,isAdmin,SID,onClose}){
   const game=session?.juegos;
   const gState=game?.gameState;
   const[timeLeft,setTimeLeft]=useState(15);
@@ -2190,6 +2201,7 @@ function KahootController({session,users,myId,isAdmin,SID}){
   if(isAdmin&&(!gState||gState==='idle')){
     return(
       <KahootSetup juegosCount={juegosUsers.length}
+        onCancel={()=>{ if(onClose) onClose(); }}
         onStart={async(qs)=>{
           await db.ref(`sessions/${SID}/juegos`).update({
             active:true,gameState:'starting',questions:qs,
