@@ -1438,41 +1438,35 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
 
             {phase==='waiting'&&(<>
               <button onClick={()=>{onStartConfra(confraUsers);setOpen(false);}}
-                disabled={confraUsers.length===0} style={{
-                background:confraUsers.length?'linear-gradient(135deg,#f59e0b,#d97706)':'var(--muted2)',
+                disabled={allUsers.length===0} style={{
+                background:allUsers.length?'linear-gradient(135deg,#f59e0b,#d97706)':'var(--muted2)',
                 border:'none',borderRadius:10,padding:'10px',
-                color:confraUsers.length?'#07091f':'var(--muted)',
+                color:allUsers.length?'#07091f':'var(--muted)',
                 fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                 letterSpacing:'.04em',textTransform:'uppercase',
               }}>
-                🤝 Iniciar Confraternización ({confraUsers.length})
+                🤝 Confraternización {confraUsers.length>0?`(${confraUsers.length} en zona)`:`(${allUsers.length} en sala)`}
               </button>
               <button onClick={()=>{onStartRepaso();setOpen(false);}}
-                disabled={repasoUsers.length===0} style={{
-                background:repasoUsers.length?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'var(--muted2)',
+                disabled={allUsers.length===0} style={{
+                background:allUsers.length?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'var(--muted2)',
                 border:'none',borderRadius:10,padding:'10px',
-                color:repasoUsers.length?'white':'var(--muted)',
+                color:allUsers.length?'white':'var(--muted)',
                 fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                 letterSpacing:'.04em',textTransform:'uppercase',
               }}>
-                📖 Iniciar Repaso ({repasoUsers.length})
+                📖 Repaso {repasoUsers.length>0?`(${repasoUsers.length} en zona)`:`(${allUsers.length} en sala)`}
               </button>
               <button onClick={()=>{onStartJuegos();setOpen(false);}}
-                disabled={juegosUsers.length===0} style={{
-                background:juegosUsers.length?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'var(--muted2)',
+                disabled={allUsers.length===0} style={{
+                background:allUsers.length?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'var(--muted2)',
                 border:'none',borderRadius:10,padding:'10px',
-                color:juegosUsers.length?'white':'var(--muted)',
+                color:allUsers.length?'white':'var(--muted)',
                 fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                 letterSpacing:'.04em',textTransform:'uppercase',
               }}>
-                🎮 Iniciar Juegos ({juegosUsers.length})
+                🎮 Juegos {juegosUsers.length>0?`(${juegosUsers.length} en zona)`:`(${allUsers.length} en sala)`}
               </button>
-              {confraUsers.length===0&&repasoUsers.length===0&&juegosUsers.length===0&&allUsers.length>0&&(
-                <div style={{fontSize:10,color:'var(--muted)',textAlign:'center',
-                  padding:'4px 0',lineHeight:1.5}}>
-                  Los jóvenes deben mover su avatar a una zona para activar los botones
-                </div>
-              )}
             </>)}
 
             {phase==='confra'&&(<>
@@ -2402,16 +2396,21 @@ function App(){
 
   /* ── Admin: gestión de fases ── */
   const startConfra=async(confraUsers)=>{
-    const queue=confraUsers.map(([uid])=>uid).sort(()=>Math.random()-.5);
-    await db.ref(`sessions/${SID.current}`).set({
-      phase:'confra',
-      confra:{
-        active:true,
-        queue,
-        currentIdx:0,
-        startTime:Date.now(),
-      }
-    });
+    // Si nadie está en la zona confra, incluir a todos los de la sala
+    const participants=confraUsers.length>0 ? confraUsers : Object.entries(users);
+    if(participants.length===0) return;
+    const queue=participants.map(([uid])=>uid).sort(()=>Math.random()-.5);
+    try{
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'confra',
+        confra:{
+          active:true,
+          queue,
+          currentIdx:0,
+          startTime:Date.now(),
+        }
+      });
+    }catch(e){ console.error('Error iniciando confra:',e); }
   };
 
   const nextSpeaker=async()=>{
@@ -2432,10 +2431,12 @@ function App(){
   };
 
   const startRepaso=async()=>{
-    await db.ref(`sessions/${SID.current}`).set({
-      phase:'repaso',
-      repaso:{active:true,startTime:Date.now()},
-    });
+    try{
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'repaso',
+        repaso:{active:true,startTime:Date.now()},
+      });
+    }catch(e){console.error('Error iniciando repaso:',e);}
   };
 
   const endRepaso=async()=>{
@@ -2454,10 +2455,12 @@ function App(){
   };
 
   const startJuegos=async()=>{
-    await db.ref(`sessions/${SID.current}`).set({
-      phase:'juegos',
-      juegos:{active:true,startTime:Date.now()},
-    });
+    try{
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'juegos',
+        juegos:{active:true,startTime:Date.now()},
+      });
+    }catch(e){console.error('Error iniciando juegos:',e);}
   };
 
   const endJuegos=async()=>{
