@@ -621,14 +621,42 @@ function RoomCanvas({users,myId,session,selectedChar,onSelectChar,onMoveTo,roomR
 function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myReaction}){
   const confra=session?.confra;
   if(!confra?.active) return null;
-  const queue=confra.queue||[];
-  const idx=confra.currentIdx||0;
+
+  // Firebase a veces guarda arrays como {0:"uid1", 1:"uid2"} — normalizar
+  const rawQueue=confra.queue||[];
+  const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
+  const idx=typeof confra.currentIdx==='number'?confra.currentIdx:parseInt(confra.currentIdx||0);
   const speakerUid=queue[idx];
-  const speaker=users[speakerUid];
+  const speaker=speakerUid?users[speakerUid]:null;
   const isMe=speakerUid===myId;
   const remaining=queue.length-idx-1;
 
-  if(!speaker) return null;
+  // Si no hay speaker pero sí hay confra activa, mostrar pantalla de espera
+  if(!speaker){
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:150,
+        background:'rgba(7,9,31,.92)',backdropFilter:'blur(10px)',
+        display:'flex',flexDirection:'column',alignItems:'center',
+        justifyContent:'center',padding:24,gap:12,textAlign:'center'}}>
+        <div style={{fontSize:48}}>🤝</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'#f59e0b',textTransform:'uppercase',letterSpacing:'.05em'}}>
+          Confraternización iniciada
+        </div>
+        <div style={{fontSize:13,color:'var(--muted)',maxWidth:260,lineHeight:1.6}}>
+          Esperando al primer participante...
+        </div>
+        {isAdmin&&(
+          <button onClick={onEnd} style={{
+            marginTop:8,background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
+            borderRadius:12,padding:'10px 22px',color:'#ef4444',fontWeight:800,fontSize:13,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase'}}>
+            ✕ Cancelar
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const isLast=remaining===0;
 
@@ -2397,9 +2425,13 @@ function App(){
   /* ── Admin: gestión de fases ── */
   const startConfra=async(confraUsers)=>{
     // Si nadie está en la zona confra, incluir a todos los de la sala
-    const participants=confraUsers.length>0 ? confraUsers : Object.entries(users);
+    const participants=confraUsers.length>0?confraUsers:Object.entries(users);
     if(participants.length===0) return;
-    const queue=participants.map(([uid])=>uid).sort(()=>Math.random()-.5);
+    // Mezclar aleatoriamente
+    const uids=participants.map(([uid])=>uid).sort(()=>Math.random()-.5);
+    // Guardar como objeto indexado para evitar conversión de Firebase
+    const queue={};
+    uids.forEach((uid,i)=>{ queue[i]=uid; });
     try{
       await db.ref(`sessions/${SID.current}`).set({
         phase:'confra',
@@ -2416,8 +2448,10 @@ function App(){
   const nextSpeaker=async()=>{
     const confra=session?.confra;
     if(!confra) return;
+    const rawQueue=confra.queue||[];
+    const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
     const next=(confra.currentIdx||0)+1;
-    if(next>=confra.queue.length){
+    if(next>=queue.length){
       await endConfra();
     } else {
       await db.ref(`sessions/${SID.current}/confra/currentIdx`).set(next);
