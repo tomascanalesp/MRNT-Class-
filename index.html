@@ -430,20 +430,33 @@ function TimerDisplay({remaining,color='#ffd000',large=false}){
 }
 
 /* ════════════════════════ ROOM CANVAS ════════════════════════ */
-function RoomCanvas({users,myId,session,selectedChar,onSelectChar,onMoveTo,roomRef,full,reactions,moveTarget}){
+function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
   const entries=Object.entries(users);
   const phase=session?.phase||'waiting';
+  const isDrag=useRef(false);
+  const lastT=useRef(0);
 
-  const handleRoomClick=useCallback(e=>{
-    if(full||!selectedChar) return;
+  const handleDragStart=useCallback(e=>{
+    if(full) return;
+    e.preventDefault();
+    isDrag.current=true;
+  },[full]);
+
+  const handleDragMove=useCallback(e=>{
+    if(!isDrag.current||full) return;
+    const now=Date.now();
+    if(now-lastT.current<50) return;
+    lastT.current=now;
     const rect=roomRef.current?.getBoundingClientRect();
     if(!rect) return;
     const cx=e.touches?.[0]?.clientX??e.clientX;
     const cy=e.touches?.[0]?.clientY??e.clientY;
-    const x=Math.max(3,Math.min(95,((cx-rect.left)/rect.width)*100));
-    const y=Math.max(14,Math.min(92,((cy-rect.top)/rect.height)*100));
-    onMoveTo(x,y);
-  },[full,selectedChar,onMoveTo,roomRef]);
+    const x=Math.max(2,Math.min(96,((cx-rect.left)/rect.width)*100));
+    const y=Math.max(14,Math.min(94,((cy-rect.top)/rect.height)*100));
+    onDragMove(x,y);
+  },[full,onDragMove,roomRef]);
+
+  const handleDragEnd=useCallback(()=>{ isDrag.current=false; },[]);
 
   const zoneStyle=(key)=>{
     const z=ZONES[key];
@@ -466,11 +479,11 @@ function RoomCanvas({users,myId,session,selectedChar,onSelectChar,onMoveTo,roomR
   return(
     <div
       ref={roomRef}
-      onClick={handleRoomClick}
+      onMouseMove={handleDragMove} onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}
+      onTouchMove={handleDragMove} onTouchEnd={handleDragEnd}
       style={{
         width:'100%',height:'100%',position:'relative',overflow:'hidden',
-        background:'var(--navy)',userSelect:'none',
-        cursor:selectedChar&&!full?'crosshair':'default',
+        background:'var(--navy)',touchAction:'none',userSelect:'none',
         backgroundImage:`linear-gradient(rgba(255,208,0,.03) 1px,transparent 1px),
                          linear-gradient(90deg,rgba(255,208,0,.03) 1px,transparent 1px)`,
         backgroundSize:'44px 44px',
@@ -509,35 +522,13 @@ function RoomCanvas({users,myId,session,selectedChar,onSelectChar,onMoveTo,roomR
         );
       })}
 
-      {/* Hint de movimiento */}
-      {!full&&selectedChar&&(
-        <div style={{position:'absolute',bottom:0,left:0,right:0,
-          background:'linear-gradient(transparent,rgba(7,9,31,.9))',
-          padding:'8px 0 6px',display:'flex',alignItems:'center',justifyContent:'center',
-          pointerEvents:'none',zIndex:15}}>
-          <div style={{background:'rgba(255,208,0,.12)',border:'1px solid rgba(255,208,0,.3)',
-            borderRadius:20,padding:'5px 16px',fontFamily:'Barlow Condensed,sans-serif',
-            fontWeight:700,fontSize:11,color:'#ffd000',letterSpacing:'.05em',textTransform:'uppercase'}}>
-            ✦ Toca donde quieres ir
-          </div>
-        </div>
-      )}
-      {!full&&!selectedChar&&(
+      {/* Hint */}
+      {!full&&(
         <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
           fontSize:8,color:'var(--muted)',pointerEvents:'none',
           fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
-          Toca tu personaje para moverte
+          ✨ Arrastra tu avatar a una zona
         </div>
-      )}
-
-      {/* Ripple en destino */}
-      {moveTarget&&(
-        <div key={moveTarget.id} style={{
-          position:'absolute',left:`${moveTarget.x}%`,top:`${moveTarget.y}%`,
-          width:30,height:30,borderRadius:'50%',pointerEvents:'none',
-          border:'2px solid #ffd000',zIndex:20,
-          animation:'moveRipple .55s ease-out forwards',
-        }}/>
       )}
 
       {/* Overlay proyección */}
@@ -571,14 +562,14 @@ function RoomCanvas({users,myId,session,selectedChar,onSelectChar,onMoveTo,roomR
           count:Object.values(myReactionsOnUser).filter(v=>v&&typeof v==='object'?v[r.id]:v===r.id).length
         })).filter(r=>r.count>0);
         const isMine=uid===myId;
-        const isCharSelected=isMine&&selectedChar;
         return(
           <div key={uid}
-            onClick={isMine&&!full?(e)=>{e.stopPropagation();onSelectChar();}:undefined}
+            onMouseDown={isMine&&!full?handleDragStart:undefined}
+            onTouchStart={isMine&&!full?handleDragStart:undefined}
             style={{
               position:'absolute',left:`${u.x??50}%`,top:`${u.y??50}%`,
               transform:'translate(-50%,-50%)',
-              transition:`left .55s cubic-bezier(0.23,1,0.32,1), top .55s cubic-bezier(0.23,1,0.32,1)`,
+              transition:isDrag.current&&isMine?'none':'left .45s cubic-bezier(0.23,1,0.32,1), top .45s cubic-bezier(0.23,1,0.32,1)',
               display:'flex',flexDirection:'column',alignItems:'center',
               cursor:isMine&&!full?'grab':'default',
               zIndex:isMine?10:5,
@@ -1189,257 +1180,260 @@ function ActivityEndBanner({phase,onDismiss}){
 /* ════════════════════════ NUBE DE PALABRAS ════════════════════════ */
 const wordHash=w=>{let h=0;for(const c of w)h=(h*31+c.charCodeAt(0))|0;return Math.abs(h);};
 
-function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose}){
+function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
+  const[tab,setTab]=useState('escribir'); // 'escribir' | 'nube'
   const[input,setInput]=useState('');
   const[sending,setSending]=useState(false);
+  const[justSent,setJustSent]=useState(false);
   const inputRef=useRef(null);
 
   if(!wordcloud?.active) return null;
 
   const rawWords=wordcloud.words?Object.values(wordcloud.words):[];
-  const myCount=rawWords.filter(w=>w.uid===myId).length;
+  const myWords=rawWords.filter(w=>w.uid===myId);
+  const myCount=myWords.length;
   const MAX=5;
+  const canSend=myCount<MAX&&!sending;
 
   // Frecuencias
   const freq={};
   rawWords.forEach(w=>{
     const key=w.word.toLowerCase().trim();
-    if(!freq[key]) freq[key]={display:w.word,count:0,color:w.color||'#ffd000',uid:w.uid};
+    if(!freq[key]) freq[key]={display:w.word,count:0,color:w.color||'#3b82f6'};
     freq[key].count++;
-    freq[key].color=w.color||'#ffd000'; // último que envió
+    freq[key].color=w.color||'#3b82f6';
   });
-
   const sorted=Object.entries(freq).sort((a,b)=>b[1].count-a[1].count);
   const maxCount=sorted[0]?.[1].count||1;
-
-  const getFontSize=count=>{
-    if(maxCount===1) return 26;
-    const ratio=(count-1)/(maxCount-1);
-    return Math.round(17+ratio*55); // 17→72px
-  };
-  const getWeight=count=>count>=3?900:count>=2?800:600;
-  const getRotation=key=>{
-    const h=wordHash(key);
-    const opts=[0,0,0,-12,12,-20,20,-8,8]; // mayoría horizontal
-    return opts[h%opts.length];
-  };
-  const getGlow=(color,size)=>size>36?`0 0 ${size*.6}px ${color}55`:undefined;
+  const getFontSize=count=>Math.round(16+(maxCount===1?10:(count-1)/(maxCount-1))*52);
+  const getRotation=key=>{const h=wordHash(key);return[0,0,0,-15,15,-8,8][h%7];};
 
   const handleSend=async()=>{
     const w=input.trim();
-    if(!w||myCount>=MAX||sending) return;
+    if(!w||!canSend) return;
     setSending(true);
     const clean=w.replace(/\s+/g,' ').split(' ').slice(0,3).join(' ');
     await db.ref(`sessions/${SID}/wordcloud/words`).push({
-      word:clean,uid:myId,
-      color:users[myId]?.color||'#ffd000',
-      ts:Date.now(),
+      word:clean,uid:myId,color:users[myId]?.color||'#3b82f6',ts:Date.now(),
     });
-    setInput('');
-    setSending(false);
+    setInput('');setSending(false);setJustSent(true);
+    setTimeout(()=>setJustSent(false),1500);
     setTimeout(()=>inputRef.current?.focus(),60);
   };
 
-  const handleClear=async()=>{
-    await db.ref(`sessions/${SID}/wordcloud/words`).remove();
-  };
+  const handleClear=()=>db.ref(`sessions/${SID}/wordcloud/words`).remove();
   const handleStop=async()=>{
     await db.ref(`sessions/${SID}/wordcloud`).update({active:false});
-    if(onClose) onClose();
+    onClose&&onClose();
   };
 
-  const canSend=myCount<MAX&&!sending;
-  const remaining=MAX-myCount;
-
   return(
-    <div style={{position:'fixed',inset:0,zIndex:175,display:'flex',flexDirection:'column',
-      background:'radial-gradient(ellipse at 50% 40%,#0a0e2a,#07091f)',overflow:'hidden'}}>
-
-      {/* Fondo: estrellas/partículas decorativas */}
-      <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>
-        {[...Array(18)].map((_,i)=>(
-          <div key={i} style={{
-            position:'absolute',
-            left:`${(wordHash('star'+i)%95)+2}%`,
-            top:`${(wordHash('dot'+i)%88)+4}%`,
-            width:wordHash('s'+i)%3+1,height:wordHash('s'+i)%3+1,
-            borderRadius:'50%',background:'rgba(255,255,255,.15)',
-          }}/>
-        ))}
-      </div>
+    <div style={{position:'fixed',inset:0,zIndex:180,display:'flex',flexDirection:'column',
+      background:'var(--navy)'}}>
 
       {/* Header */}
-      <div style={{
-        background:'rgba(7,9,31,.9)',borderBottom:'1px solid rgba(255,208,0,.15)',
-        padding:'10px 14px',flexShrink:0,zIndex:2,
-        display:'flex',alignItems:'center',gap:10,
-      }}>
+      <div style={{background:'rgba(7,9,31,.98)',borderBottom:'1px solid rgba(59,130,246,.2)',
+        padding:'10px 14px',flexShrink:0,display:'flex',alignItems:'center',gap:10}}>
         <div style={{flex:1}}>
           <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-            fontSize:18,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.07em',
-            display:'flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:20}}>☁️</span> Nube de Palabras
-            {sorted.length>0&&(
-              <span style={{background:'rgba(255,208,0,.12)',border:'1px solid rgba(255,208,0,.25)',
-                borderRadius:20,padding:'2px 9px',fontSize:12,fontWeight:700,color:'#ffd000'}}>
-                {rawWords.length} enviadas
+            fontSize:16,color:'#3b82f6',textTransform:'uppercase',letterSpacing:'.06em',
+            display:'flex',alignItems:'center',gap:7}}>
+            <span>☁️</span> Nube de Palabras
+            {rawWords.length>0&&(
+              <span style={{background:'rgba(59,130,246,.15)',border:'1px solid rgba(59,130,246,.3)',
+                borderRadius:20,padding:'2px 8px',fontSize:11,color:'#3b82f6',fontWeight:700}}>
+                {rawWords.length}
               </span>
             )}
           </div>
-          <div style={{fontSize:10,color:'var(--muted)',marginTop:1}}>
-            {Object.keys(users).filter(u=>users[u].zone==='repaso').length} en sala · Repaso Bíblico
-          </div>
         </div>
-        {isAdmin&&(
-          <div style={{display:'flex',gap:6}}>
-            {sorted.length>0&&(
-              <button onClick={handleClear} style={{
-                background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.1)',
-                borderRadius:8,padding:'5px 10px',color:'var(--muted)',
-                fontSize:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                textTransform:'uppercase',letterSpacing:'.04em'}}>
-                🗑 Limpiar
-              </button>
+        <div style={{display:'flex',gap:6}}>
+          {isAdmin&&rawWords.length>0&&(
+            <button onClick={handleClear} style={{background:'rgba(255,255,255,.06)',
+              border:'1px solid rgba(255,255,255,.1)',borderRadius:8,padding:'5px 9px',
+              color:'var(--muted)',fontSize:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              textTransform:'uppercase'}}>🗑</button>
+          )}
+          {isAdmin&&(
+            <button onClick={handleStop} style={{background:'rgba(239,68,68,.1)',
+              border:'1px solid rgba(239,68,68,.25)',borderRadius:8,padding:'5px 9px',
+              color:'#f87171',fontSize:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              textTransform:'uppercase'}}>⏹ Terminar</button>
+          )}
+          {!isAdmin&&(
+            <button onClick={onClose} style={{background:'rgba(255,255,255,.06)',
+              border:'1px solid rgba(255,255,255,.1)',borderRadius:'50%',
+              width:30,height:30,color:'var(--muted)',fontSize:14,
+              display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:'flex',background:'rgba(255,255,255,.04)',borderRadius:0,
+        borderBottom:'1px solid rgba(255,255,255,.06)',flexShrink:0}}>
+        {[{id:'escribir',l:'✏️ Escribir'},{id:'nube',l:'☁️ Ver Nube'}].map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            flex:1,padding:'11px 4px',border:'none',background:'none',
+            color:tab===t.id?'#3b82f6':'var(--muted)',
+            fontWeight:700,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+            letterSpacing:'.04em',textTransform:'uppercase',
+            borderBottom:tab===t.id?'2px solid #3b82f6':'2px solid transparent',
+            transition:'all .15s'}}>
+            {t.l}
+            {t.id==='nube'&&sorted.length>0&&tab!=='nube'&&(
+              <span style={{marginLeft:6,background:'rgba(59,130,246,.2)',
+                borderRadius:20,padding:'1px 6px',fontSize:10,color:'#3b82f6'}}>{sorted.length}</span>
             )}
-            <button onClick={handleStop} style={{
-              background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.25)',
-              borderRadius:8,padding:'5px 10px',color:'#f87171',
-              fontSize:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-              textTransform:'uppercase',letterSpacing:'.04em'}}>
-              ⏹ Terminar
-            </button>
-          </div>
-        )}
-        {!isAdmin&&(
-          <button onClick={onClose} style={{background:'rgba(255,255,255,.06)',
-            border:'1px solid rgba(255,255,255,.1)',borderRadius:'50%',
-            width:30,height:30,color:'var(--muted)',fontSize:14,
-            display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-        )}
+          </button>
+        ))}
       </div>
 
-      {/* Nube */}
-      <div style={{
-        flex:1,position:'relative',display:'flex',
-        flexWrap:'wrap',alignItems:'center',justifyContent:'center',
-        alignContent:'center',
-        padding:'16px 20px',gap:'6px 10px',
-        overflowY:'auto',zIndex:1,
-      }}>
-        {sorted.length===0&&(
-          <div style={{textAlign:'center',opacity:.35,pointerEvents:'none'}}>
-            <div style={{fontSize:72,filter:'grayscale(1)'}}>☁️</div>
-            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
-              fontSize:16,color:'white',textTransform:'uppercase',letterSpacing:'.1em',marginTop:8}}>
-              Esperando palabras...
+      {/* TAB: ESCRIBIR */}
+      {tab==='escribir'&&(
+        <div style={{flex:1,display:'flex',flexDirection:'column',padding:'20px 16px',gap:16,overflowY:'auto'}}>
+          {/* Pregunta */}
+          {question&&(
+            <div style={{background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',
+              borderRadius:14,padding:'14px 16px',textAlign:'center'}}>
+              <div style={{fontSize:11,color:'rgba(59,130,246,.7)',fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:700,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:6}}>
+                📖 Pregunta del repaso
+              </div>
+              <div style={{fontSize:15,color:'var(--white)',lineHeight:1.6,fontWeight:500}}>
+                {question}
+              </div>
             </div>
-            <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>
-              Los jóvenes escriben abajo 👇
-            </div>
-          </div>
-        )}
-        {sorted.map(([key,data],idx)=>{
-          const sz=getFontSize(data.count);
-          const rot=getRotation(key);
-          const c=data.color;
-          return(
-            <span key={key} style={{
-              display:'inline-block',
-              fontSize:sz,
-              fontFamily:'Barlow Condensed,sans-serif',
-              fontWeight:getWeight(data.count),
-              color:c,
-              transform:`rotate(${rot}deg)`,
-              textShadow:getGlow(c,sz),
-              letterSpacing:'-.01em',
-              lineHeight:1.1,
-              padding:'2px 4px',
-              cursor:'default',
-              animation:`fadeUp ${.2+idx*.04}s ease both`,
-              transition:'font-size .6s cubic-bezier(0.23,1,0.32,1), text-shadow .6s',
-              userSelect:'none',
-              opacity:.88+Math.min(data.count/maxCount,.12),
-            }}>
-              {data.display}
-              {data.count>1&&sz>=32&&(
-                <span style={{
-                  fontSize:sz*.35,verticalAlign:'super',
-                  opacity:.65,fontWeight:700,marginLeft:2,
-                }}>
-                  {data.count}×
-                </span>
-              )}
-            </span>
-          );
-        })}
-      </div>
+          )}
 
-      {/* Input */}
-      <div style={{
-        background:'rgba(7,9,31,.96)',borderTop:'1px solid rgba(255,208,0,.1)',
-        padding:'10px 14px 18px',flexShrink:0,zIndex:2,
-      }}>
-        {canSend?(
-          <>
-            <div style={{fontSize:10,color:'var(--muted)',marginBottom:8,
-              fontFamily:'Barlow Condensed,sans-serif',textTransform:'uppercase',letterSpacing:'.06em',
-              display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span>Escribe una palabra o frase corta</span>
-              <span style={{color:'#ffd000',fontWeight:700}}>{remaining} envío{remaining!==1?'s':''} restante{remaining!==1?'s':''}</span>
-            </div>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={e=>setInput(e.target.value.slice(0,40))}
-                onKeyDown={e=>e.key==='Enter'&&handleSend()}
-                placeholder="Ej: fe, gracia, esperanza..."
-                autoComplete="off"
-                style={{flex:1,padding:'11px 16px',borderRadius:24,
-                  background:'rgba(255,255,255,.06)',
-                  border:`1px solid ${canSend?'rgba(255,208,0,.25)':'rgba(255,255,255,.08)'}`,
-                  color:'var(--white)',fontSize:15,outline:'none',
-                  fontFamily:'Barlow,sans-serif',fontWeight:500}}/>
-              <button onClick={handleSend} disabled={!input.trim()||sending} style={{
-                width:46,height:46,flexShrink:0,borderRadius:'50%',border:'none',
-                background:input.trim()&&!sending
-                  ?'linear-gradient(135deg,#ffd000,#e6a800)':'rgba(255,255,255,.06)',
-                color:input.trim()&&!sending?'#07091f':'var(--muted)',
-                fontSize:20,fontWeight:900,
-                display:'flex',alignItems:'center',justifyContent:'center',
-                boxShadow:input.trim()&&!sending?'0 0 18px rgba(255,208,0,.5)':undefined,
-                transition:'all .18s',
-              }}>
-                {sending?<Spinner size={18} color="#07091f"/>:'↑'}
-              </button>
-            </div>
-            {/* Mini-indicador de mis palabras */}
-            {myCount>0&&(
-              <div style={{marginTop:8,display:'flex',gap:5,flexWrap:'wrap'}}>
-                {rawWords.filter(w=>w.uid===myId).map((w,i)=>(
-                  <span key={i} style={{
-                    background:`${w.color||'#ffd000'}18`,
-                    border:`1px solid ${w.color||'#ffd000'}33`,
-                    borderRadius:20,padding:'2px 9px',
-                    fontSize:11,color:w.color||'#ffd000',
-                    fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                  }}>✓ {w.word}</span>
+          {/* Estado del usuario */}
+          <div style={{textAlign:'center'}}>
+            {myCount===0?(
+              <div style={{fontSize:13,color:'var(--muted)',lineHeight:1.6}}>
+                Escribe hasta <strong style={{color:'#3b82f6'}}>{MAX} palabras</strong> relacionadas con la pregunta
+              </div>
+            ):(
+              <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center'}}>
+                {myWords.map((w,i)=>(
+                  <span key={i} style={{background:`${w.color||'#3b82f6'}18`,
+                    border:`1px solid ${w.color||'#3b82f6'}44`,
+                    borderRadius:20,padding:'4px 12px',
+                    fontSize:13,color:w.color||'#3b82f6',fontWeight:600}}>
+                    ✓ {w.word}
+                  </span>
                 ))}
               </div>
             )}
-          </>
-        ):(
-          <div style={{textAlign:'center',padding:'10px 0'}}>
-            <div style={{fontSize:13,color:'#10b981',fontFamily:'Barlow Condensed,sans-serif',
-              fontWeight:700,letterSpacing:'.05em',textTransform:'uppercase'}}>
-              ✓ Enviaste todas tus palabras
-            </div>
-            <div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>
-              Observa la nube crecer en tiempo real 👆
-            </div>
           </div>
-        )}
-      </div>
+
+          {/* Input */}
+          {canSend?(
+            <>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <input ref={inputRef} value={input}
+                  onChange={e=>setInput(e.target.value.slice(0,30))}
+                  onKeyDown={e=>e.key==='Enter'&&handleSend()}
+                  placeholder="Escribe una palabra o frase corta..."
+                  autoFocus
+                  style={{flex:1,padding:'12px 16px',borderRadius:24,
+                    background:'rgba(255,255,255,.06)',border:'1px solid rgba(59,130,246,.25)',
+                    color:'var(--white)',fontSize:14,outline:'none',fontFamily:'Barlow,sans-serif'}}/>
+                <button onClick={handleSend} disabled={!input.trim()||sending} style={{
+                  width:46,height:46,flexShrink:0,borderRadius:'50%',border:'none',
+                  background:input.trim()&&!sending
+                    ?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'rgba(255,255,255,.06)',
+                  color:input.trim()&&!sending?'white':'var(--muted)',
+                  fontSize:20,display:'flex',alignItems:'center',justifyContent:'center',
+                  boxShadow:input.trim()&&!sending?'0 0 16px rgba(59,130,246,.4)':undefined}}>
+                  {sending?<Spinner size={18} color="white"/>:'↑'}
+                </button>
+              </div>
+              <div style={{textAlign:'right',fontSize:10,color:'var(--muted)'}}>
+                {MAX-myCount} envío{MAX-myCount!==1?'s':''} restante{MAX-myCount!==1?'s':''}
+              </div>
+            </>
+          ):(
+            <div style={{textAlign:'center',padding:'16px 0'}}>
+              <div style={{fontSize:22,marginBottom:8}}>✅</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:16,color:'#10b981',textTransform:'uppercase',letterSpacing:'.05em'}}>
+                ¡Gracias por participar!
+              </div>
+              <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>
+                Toca "Ver Nube" para ver el resultado en tiempo real
+              </div>
+              <button onClick={()=>setTab('nube')} style={{marginTop:12,
+                background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                border:'none',borderRadius:20,padding:'10px 24px',
+                color:'white',fontWeight:800,fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
+                boxShadow:'0 4px 16px rgba(59,130,246,.4)'}}>
+                ☁️ Ver Nube →
+              </button>
+            </div>
+          )}
+
+          {justSent&&(
+            <div style={{textAlign:'center',animation:'scoreUp .4s ease'}}>
+              <span style={{fontSize:13,color:'#10b981',fontWeight:700}}>
+                ✓ Palabra enviada
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: NUBE */}
+      {tab==='nube'&&(
+        <div style={{flex:1,display:'flex',flexWrap:'wrap',alignItems:'center',
+          justifyContent:'center',alignContent:'center',
+          padding:'16px 20px',gap:'6px 10px',overflowY:'auto',
+          background:'radial-gradient(ellipse at 50% 40%,#0a0e2a,#07091f)'}}>
+          {/* Stars bg */}
+          <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>
+            {[...Array(14)].map((_,i)=>(
+              <div key={i} style={{position:'absolute',
+                left:`${(wordHash('s'+i)%92)+3}%`,top:`${(wordHash('d'+i)%85)+5}%`,
+                width:wordHash('w'+i)%2+1,height:wordHash('w'+i)%2+1,
+                borderRadius:'50%',background:'rgba(255,255,255,.12)'}}/>
+            ))}
+          </div>
+
+          {sorted.length===0?(
+            <div style={{textAlign:'center',opacity:.4,position:'relative',zIndex:1}}>
+              <div style={{fontSize:64}}>☁️</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:15,color:'white',textTransform:'uppercase',letterSpacing:'.1em',marginTop:8}}>
+                Esperando palabras...
+              </div>
+            </div>
+          ):sorted.map(([key,data],i)=>{
+            const sz=getFontSize(data.count);
+            return(
+              <span key={key} style={{
+                display:'inline-block',position:'relative',zIndex:1,
+                fontSize:sz,fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:data.count>=3?900:data.count>=2?800:600,
+                color:data.color,
+                transform:`rotate(${getRotation(key)}deg)`,
+                textShadow:sz>36?`0 0 ${sz*.55}px ${data.color}55`:undefined,
+                letterSpacing:'-.01em',lineHeight:1.1,padding:'2px 4px',
+                animation:`fadeUp ${.15+i*.04}s ease both`,
+                transition:'font-size .5s cubic-bezier(0.23,1,0.32,1)',
+                userSelect:'none',cursor:'default',
+              }}>
+                {data.display}
+                {data.count>1&&sz>=30&&(
+                  <span style={{fontSize:sz*.32,verticalAlign:'super',
+                    opacity:.6,fontWeight:700,marginLeft:2}}>
+                    {data.count}×
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1572,15 +1566,24 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
               }}>✓ Finalizar confra</button>
             </>)}
 
-            {phase==='repaso'&&(
+            {phase==='repaso'&&(()=>{
+              const[wcQ,setWcQ]=useState('');
+              return(
               <div style={{display:'flex',flexDirection:'column',gap:7}}>
-                <button onClick={()=>{onToggleWordCloud();setOpen(false);}} style={{
+                {!session?.wordcloud?.active&&(
+                  <input value={wcQ} onChange={e=>setWcQ(e.target.value)}
+                    placeholder="Pregunta para la nube (opcional)..."
+                    style={{padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.05)',
+                      border:'1px solid rgba(59,130,246,.2)',color:'var(--white)',
+                      fontSize:11,fontFamily:'Barlow,sans-serif',outline:'none'}}/>
+                )}
+                <button onClick={()=>{onToggleWordCloud(wcQ);setOpen(false);setWcQ('');}} style={{
                   background:session?.wordcloud?.active
-                    ?'rgba(16,185,129,.1)':'linear-gradient(135deg,rgba(255,208,0,.15),rgba(255,208,0,.05))',
+                    ?'rgba(16,185,129,.1)':'linear-gradient(135deg,rgba(59,130,246,.25),rgba(59,130,246,.1))',
                   border:session?.wordcloud?.active
-                    ?'1px solid rgba(16,185,129,.3)':'1px solid rgba(255,208,0,.3)',
+                    ?'1px solid rgba(16,185,129,.3)':'1px solid rgba(59,130,246,.35)',
                   borderRadius:10,padding:'10px',
-                  color:session?.wordcloud?.active?'#10b981':'#ffd000',
+                  color:session?.wordcloud?.active?'#10b981':'#3b82f6',
                   fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                   letterSpacing:'.04em',textTransform:'uppercase'}}>
                   {session?.wordcloud?.active?'☁️ Ver / Cerrar Nube':'☁️ Iniciar Nube de Palabras'}
@@ -1591,7 +1594,8 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
                   fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
                 }}>⏹ Finalizar Repaso</button>
               </div>
-            )}
+              );
+            })()}
 
             {phase==='juegos'&&(
               <button onClick={()=>{onEndJuegos();setOpen(false);}} style={{
@@ -2276,8 +2280,8 @@ function App(){
 
 
   /* ── Click-to-move ── */
-  const[selectedChar,setSelectedChar]=useState(false);
-  const[moveTarget,  setMoveTarget]  =useState(null);
+  const[selectedChar,setSelectedChar]=useState(false); // keep for compat but unused
+  const[moveTarget,  setMoveTarget]  =useState(null);  // keep for compat but unused
   const[repasoChatOpen,setRepasoChatOpen]=useState(false);
   const[wordCloudOpen, setWordCloudOpen] =useState(false);
 
@@ -2349,8 +2353,8 @@ function App(){
     if(!session) return;
     const p=session.phase||'waiting';
 
-    // Repaso
-    if(p==='repaso') setRepasoChatOpen(true);
+    // Repaso — auto-abrir chat para todos
+    if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
 
     // Confra — poblar localConfra para TODOS (admin ya lo tiene, no-admins lo obtienen acá)
     if(p==='confra'&&session.confra){
@@ -2365,8 +2369,10 @@ function App(){
       });
     }
 
-    // Nube de palabras
+    // Nube de palabras — auto-abre para todos cuando el admin la inicia
     if(session.wordcloud?.active) setWordCloudOpen(true);
+    // Si se desactivó, cerrar
+    if(session.wordcloud?.active===false) setWordCloudOpen(false);
 
     // Limpiar todo al volver a waiting
     if(p==='waiting'){
@@ -2462,23 +2468,12 @@ function App(){
   };
 
   /* ── Click-to-move ── */
-  const handleSelectChar=useCallback(()=>{
-    setSelectedChar(s=>!s);
-  },[]);
-
-  const handleMoveTo=useCallback((x,y)=>{
+  /* ── Drag to move ── */
+  const handleDragMove=useCallback((x,y)=>{
     const uid=UID.current;
     if(!uid) return;
     const zone=detectZone(x,y);
-    db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone,walking:true});
-    clearTimeout(mtTimer.current);
-    setMoveTarget({x,y,id:Date.now()});
-    mtTimer.current=setTimeout(()=>setMoveTarget(null),600);
-    clearTimeout(walkTimer.current);
-    setSelectedChar(false);
-    walkTimer.current=setTimeout(()=>{
-      db.ref(`rooms/${SID.current}/users/${uid}/walking`).set(false);
-    },750);
+    db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
   },[]);
 
   /* ── Chat ── */
@@ -2584,12 +2579,14 @@ function App(){
     setEndBanner('repaso');
   };
 
-  const toggleWordCloud=async()=>{
+  const toggleWordCloud=async(question='')=>{
     const isActive=session?.wordcloud?.active;
     if(isActive){
       setWordCloudOpen(o=>!o);
     } else {
-      await db.ref(`sessions/${SID.current}/wordcloud`).set({active:true,words:{}});
+      await db.ref(`sessions/${SID.current}/wordcloud`).set({
+        active:true,words:{},question:question||''
+      });
       setWordCloudOpen(true);
     }
   };
@@ -2974,11 +2971,8 @@ function App(){
       <div style={{flex:1,position:'relative',overflow:'hidden'}}>
         <RoomCanvas
           users={users} myId={UID.current} session={session}
-          selectedChar={selectedChar}
-          onSelectChar={handleSelectChar}
-          onMoveTo={handleMoveTo}
+          onDragMove={handleDragMove}
           roomRef={roomRef} full={false} reactions={reactions}
-          moveTarget={moveTarget}
         />
 
         {/* Repaso: botón flotante para abrir chat */}
@@ -3055,26 +3049,11 @@ function App(){
         />
       )}
 
-      {/* Repaso: botón flotante para abrir nube (no-admin, cuando está activa) */}
-      {phase==='repaso'&&session?.wordcloud?.active&&!wordCloudOpen&&(
-        <button onClick={()=>setWordCloudOpen(true)} style={{
-          position:'fixed',bottom:isAdmin?76:16,right:isAdmin?76:16,zIndex:119,
-          background:'linear-gradient(135deg,#ffd000,#e6a800)',
-          border:'none',borderRadius:24,padding:'10px 20px',
-          color:'#07091f',fontWeight:900,fontSize:13,
-          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
-          display:'flex',alignItems:'center',gap:8,
-          boxShadow:'0 4px 20px rgba(255,208,0,.5)',
-          animation:'glowY 2s ease-in-out infinite',
-        }}>
-          <span style={{fontSize:18}}>☁️</span> Nube de Palabras
-        </button>
-      )}
-
-      {/* Word Cloud overlay */}
+      {/* Word Cloud — auto-abre para todos, solo usuarios en repaso */}
       {wordCloudOpen&&phase==='repaso'&&session?.wordcloud?.active&&(
         <WordCloudActivity
           wordcloud={session.wordcloud}
+          question={session.wordcloud?.question||''}
           myId={UID.current} users={users}
           isAdmin={isAdmin} SID={SID.current}
           onClose={()=>setWordCloudOpen(false)}
