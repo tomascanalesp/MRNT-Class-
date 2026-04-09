@@ -623,17 +623,18 @@ function RoomCanvas({users,myId,session,selectedChar,onSelectChar,onMoveTo,roomR
 /* ════════════════════════ CONFRA: SPEAKER PANEL ════════════════════════ */
 function ConfraSpeakerPanel({session,localConfra,users,myId,isAdmin,onNext,onEnd,onReact,myReactions,allReactions}){
   const confra=session?.confra;
-  const isActive=(confra?.active)||(localConfra?.active);
+  // Activo si Firebase dice confra O si localConfra está seteado (admin inmediato)
+  const isActive=session?.phase==='confra'||confra?.active||localConfra?.active;
   if(!isActive) return null;
 
-  // Usar datos locales si Firebase aún no respondió
-  const rawQueue=confra?.queue||localConfra?.queue||[];
+  // Queue: Firebase primero, localConfra como fallback
+  const rawQueue=confra?.queue||localConfra?.queue||{};
   const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
   const idx=typeof confra?.currentIdx==='number'?confra.currentIdx:(localConfra?.currentIdx||0);
   const speakerUid=queue[idx];
   const speaker=speakerUid?users[speakerUid]:null;
   const isMe=speakerUid===myId;
-  const remaining=queue.length-idx-1;
+  const remaining=Math.max(0,queue.length-idx-1);
 
   if(!speaker){
     return(
@@ -2343,28 +2344,38 @@ function App(){
     return()=>Object.values(refs).forEach(r=>r.off());
   },[view]);
 
-  /* ── Scroll chat ── */
+  /* ── Sincronizar estado de actividades desde Firebase ── */
   useEffect(()=>{
-    if(session?.phase==='repaso') setRepasoChatOpen(true);
-    else if(session?.phase==='waiting'){ setRepasoChatOpen(false); setWordCloudOpen(false); setConfraOpen(false); setLocalConfra(null); }
-    if(session?.phase==='confra'&&session?.confra?.active){
+    if(!session) return;
+    const p=session.phase||'waiting';
+
+    // Repaso
+    if(p==='repaso') setRepasoChatOpen(true);
+
+    // Confra — poblar localConfra para TODOS (admin ya lo tiene, no-admins lo obtienen acá)
+    if(p==='confra'&&session.confra){
       setConfraOpen(true);
-      // Poblar localConfra desde Firebase (para todos los usuarios)
-      const fbConfra=session.confra;
-      const rawQueue=fbConfra.queue||{};
-      const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
+      const fbQ=session.confra.queue||{};
+      const queue=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
       setLocalConfra({
         active:true,
         queue,
-        currentIdx:typeof fbConfra.currentIdx==='number'?fbConfra.currentIdx:0,
-        startTime:fbConfra.startTime,
+        currentIdx:typeof session.confra.currentIdx==='number'?session.confra.currentIdx:0,
+        startTime:session.confra.startTime,
       });
     }
-  },[session?.phase, session?.confra?.active, session?.confra?.currentIdx]);
 
-  useEffect(()=>{
-    if(session?.wordcloud?.active) setWordCloudOpen(true);
-  },[session?.wordcloud?.active]);
+    // Nube de palabras
+    if(session.wordcloud?.active) setWordCloudOpen(true);
+
+    // Limpiar todo al volver a waiting
+    if(p==='waiting'){
+      setConfraOpen(false);
+      setLocalConfra(null);
+      setRepasoChatOpen(false);
+      setWordCloudOpen(false);
+    }
+  },[session]);
 
   /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
@@ -2552,7 +2563,8 @@ function App(){
   const endConfra=async()=>{
     setConfraOpen(false);
     setLocalConfra(null);
-    await db.ref(`sessions/${SID.current}`).update({phase:'waiting','confra/active':false});
+    // set() para limpiar completamente y que todos los listeners vean phase:waiting
+    await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
     setEndBanner('confra');
   };
 
@@ -2990,7 +3002,8 @@ function App(){
       </div>
 
       {/* Confraternización: speaker overlay */}
-      {(confraOpen||(phase==='confra'&&session?.confra?.active))&&(
+      {/* Confraternización: speaker overlay — se muestra en TODOS los dispositivos */}
+      {(confraOpen||session?.phase==='confra')&&(
         <ConfraSpeakerPanel
           session={session} localConfra={localConfra}
           users={users}
