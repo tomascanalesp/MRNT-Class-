@@ -3079,9 +3079,39 @@ function App(){
 }
 
 
-/* ════════════════════════ KAHOOT: COLORES RESPUESTAS ════════════════════════ */
+/* ════════════════════════ KAHOOT: COLORES / TIMER / BIBLIOTECA ════════════════════════ */
 const ANS_COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12'];
 const ANS_SHAPES=['▲','◆','●','■'];
+const GAME_TIMER=30;
+
+const GAME_LIBRARY=[{
+  id:'semana2',
+  title:'Semana 2',
+  subtitle:'Juan 17 — El carácter de Dios',
+  icon:'📖',
+  questions:[
+    {text:'¿Cuál es el pasaje bíblico principal de la segunda semana de estudio?',
+     options:['Apocalipsis 3:14-22','Juan 17','Romanos 8:1-11','Mateo 5:1-12'],correct:1},
+    {text:'Según Juan 17:3, ¿qué nos da la vida eterna?',
+     options:['Obedecer los mandamientos','Ser bautizados','Conocer a Dios y a Jesucristo','Leer la Biblia cada día'],correct:2},
+    {text:'¿Cómo llama Jesús a su Padre en Juan 17:11?',
+     options:['Padre poderoso','Padre eterno','Padre fiel','Padre santo'],correct:3},
+    {text:'Según 1 Juan 4:8, ¿cuál es la identidad esencial de Dios?',
+     options:['Dios es poderoso','Dios es fiel','Dios es amor','Dios es justo'],correct:2},
+    {text:'¿Qué palabra hebrea describe el amor del pacto de Dios: lealtad, protección y ternura?',
+     options:['Shalom','Hesed','Torah','Elohim'],correct:1},
+    {text:'¿Qué proclaman los cuatro seres vivientes ante el trono de Dios en Apocalipsis 4:8?',
+     options:['"¡Gloria, gloria, gloria!"','"¡Amén, amén, amén!"','"¡Santo, santo, santo!"','"¡Aleluya, aleluya, aleluya!"'],correct:2},
+    {text:'¿Quién fue el primero en poner en tela de juicio el carácter de Dios?',
+     options:['Adán','Eva','Lucifer / Satanás','Caín'],correct:2},
+    {text:'¿En qué Evangelio se enfatiza más la divinidad de Cristo e invita al renacimiento espiritual?',
+     options:['Mateo','Marcos','Lucas','Juan'],correct:3},
+    {text:'¿Qué nombre significa "Dios con nosotros" según Mateo 1:23?',
+     options:['Yahweh','Adonai','Emanuel / Immanuel','Jehová-Jireh'],correct:2},
+    {text:'¿Qué prometió Jesús en Mateo 28:20 antes de ascender al cielo?',
+     options:['"Volveré pronto a buscarlos"','"Estaré con ustedes todos los días, hasta el fin del mundo"','"Les enviaré al Espíritu Santo en mi lugar"','"Los llevaré conmigo al cielo"'],correct:1},
+  ]
+}];
 
 function Confetti(){
   const pieces=React.useMemo(()=>Array.from({length:28},(_,i)=>({
@@ -3105,6 +3135,7 @@ function Confetti(){
 function KahootQuestion({question,qIndex,total,myAnswer,onAnswer,timeLeft,gameState}){
   const answered=myAnswer!==null&&myAnswer!==undefined;
   const showResult=gameState==='results';
+  const urgent=timeLeft<=8;
   return(
     <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
       display:'flex',flexDirection:'column',overflow:'hidden'}}>
@@ -3117,12 +3148,12 @@ function KahootQuestion({question,qIndex,total,myAnswer,onAnswer,timeLeft,gameSt
           Pregunta {qIndex+1} / {total}
         </div>
         <div style={{width:44,height:44,borderRadius:'50%',
-          background:timeLeft<=5?'rgba(239,68,68,.15)':'rgba(139,92,246,.15)',
-          border:`2px solid ${timeLeft<=5?'#ef4444':'#8b5cf6'}`,
+          background:urgent?'rgba(239,68,68,.15)':'rgba(139,92,246,.15)',
+          border:`2px solid ${urgent?'#ef4444':'#8b5cf6'}`,
           display:'flex',alignItems:'center',justifyContent:'center',
           fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:18,
-          color:timeLeft<=5?'#ef4444':'#8b5cf6',
-          animation:timeLeft<=5&&!showResult?'timerTick .5s infinite':undefined,
+          color:urgent?'#ef4444':'#8b5cf6',
+          animation:urgent&&!showResult?'timerTick .5s infinite':undefined,
         }}>
           {showResult?'✓':timeLeft}
         </div>
@@ -3130,8 +3161,8 @@ function KahootQuestion({question,qIndex,total,myAnswer,onAnswer,timeLeft,gameSt
       {!showResult&&(
         <div style={{height:5,background:'rgba(255,255,255,.06)',flexShrink:0}}>
           <div style={{height:'100%',
-            background:timeLeft<=5?'#ef4444':'#8b5cf6',
-            width:`${(timeLeft/15)*100}%`,
+            background:urgent?'#ef4444':'#8b5cf6',
+            width:`${(timeLeft/GAME_TIMER)*100}%`,
             transition:'width 1s linear',borderRadius:2}}/>
         </div>
       )}
@@ -3263,35 +3294,27 @@ function KahootResultCard({question,myAnswer,pointsEarned,myScore,qIdx,total,isA
 
 function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
   const sorted=Object.entries(scores||{})
-    .map(([uid,score])=>({uid,score,user:users[uid]||{name:'?',avatar:'👤',color:'#ffd000'}}))
+    .map(([uid,score])=>({uid,score,user:users[uid]||{name:'?',avatar:'👤',color:'#8b5cf6'}}))
     .sort((a,b)=>b.score-a.score);
   const medals=['🥇','🥈','🥉'];
   return(
-    <div style={{position:'fixed',inset:0,zIndex:220,background:'var(--navy)',
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
       display:'flex',flexDirection:'column',overflow:'hidden'}}>
       {isFinished&&<Confetti/>}
       <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
-        padding:'14px 16px',textAlign:'center',flexShrink:0,
+        padding:'14px 20px',flexShrink:0,textAlign:'center',
         borderBottom:'1px solid rgba(255,208,0,.15)'}}>
         <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-          fontSize:22,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.06em'}}>
-          {isFinished?'🏆 ¡Resultados finales!':'📊 Clasificación'}
+          fontSize:22,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.08em'}}>
+          {isFinished?'🏆 Resultados Finales':'Marcador'}
         </div>
       </div>
-      {isFinished&&sorted[0]&&(
-        <div style={{padding:'16px',textAlign:'center',flexShrink:0}}>
-          <div style={{fontSize:36,animation:'crownBounce 1.5s infinite'}}>👑</div>
-          <AvatarBubble profile={sorted[0].user} size={68}/>
-          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-            fontSize:24,color:'#ffd000',marginTop:8}}>{sorted[0].user.name}</div>
-          <div style={{fontSize:13,color:'#ffd000',opacity:.7}}>{sorted[0].score} puntos</div>
-        </div>
-      )}
-      <div style={{flex:1,overflowY:'auto',padding:'8px 14px 80px'}}>
+      <div style={{flex:1,overflowY:'auto',padding:'16px 16px 80px'}}>
         {sorted.map((item,i)=>(
           <div key={item.uid} style={{
             display:'flex',alignItems:'center',gap:12,
-            background:i===0&&isFinished?'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))':'rgba(255,255,255,.03)',
+            background:i===0&&isFinished?
+              'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))':'rgba(255,255,255,.03)',
             border:i===0&&isFinished?'1px solid rgba(255,208,0,.25)':'1px solid rgba(255,255,255,.05)',
             borderRadius:12,padding:'10px 14px',marginBottom:8,
             animation:`scoreUp ${.1+i*.07}s ease`}}>
@@ -3324,78 +3347,132 @@ function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
   );
 }
 
+function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onCancel}){
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,
+      background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',
+      display:'flex',flexDirection:'column',alignItems:'center',
+      justifyContent:'center',padding:24,gap:16,overflowY:'auto'}}>
+      <div style={{textAlign:'center',marginBottom:4}}>
+        <div style={{fontSize:42,marginBottom:8}}>🎮</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:26,color:'white',textTransform:'uppercase',letterSpacing:'.06em',margin:0}}>
+          Seleccionar Juego
+        </h2>
+        <p style={{color:'var(--muted)',fontSize:13,marginTop:6}}>
+          {juegosCount} jugador{juegosCount!==1?'es':''} en sala de juegos
+        </p>
+      </div>
+      {GAME_LIBRARY.map(game=>(
+        <button key={game.id} onClick={()=>onSelectLibrary(game.questions)}
+          style={{width:'100%',maxWidth:380,
+            background:'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))',
+            border:'1px solid rgba(255,208,0,.3)',borderRadius:20,
+            padding:'16px 20px',textAlign:'left',cursor:'pointer',
+            display:'flex',alignItems:'center',gap:16,
+            boxShadow:'0 0 24px rgba(255,208,0,.08)'}}>
+          <span style={{fontSize:38,flexShrink:0}}>{game.icon}</span>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+              {game.title}
+            </div>
+            <div style={{fontFamily:'Barlow,sans-serif',fontSize:13,
+              color:'var(--white)',marginTop:3,lineHeight:1.4}}>{game.subtitle}</div>
+            <div style={{fontSize:11,color:'var(--muted)',marginTop:5,display:'flex',gap:10}}>
+              <span>📝 {game.questions.length} preguntas</span>
+              <span>⏱ {GAME_TIMER}s por pregunta</span>
+            </div>
+          </div>
+          <span style={{fontSize:20,color:'#ffd000',opacity:.6}}>›</span>
+        </button>
+      ))}
+      <button onClick={onCreateNew}
+        style={{width:'100%',maxWidth:380,
+          background:'rgba(139,92,246,.1)',border:'1px solid rgba(139,92,246,.25)',
+          borderRadius:20,padding:'14px 20px',textAlign:'left',cursor:'pointer',
+          display:'flex',alignItems:'center',gap:16}}>
+        <span style={{fontSize:32,flexShrink:0}}>✏️</span>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:18,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            Crear nuevo juego
+          </div>
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:3}}>
+            Ingresa tus propias preguntas
+          </div>
+        </div>
+        <span style={{fontSize:20,color:'#8b5cf6',opacity:.6}}>›</span>
+      </button>
+      <button onClick={onCancel} style={{
+        background:'none',border:'none',color:'var(--muted)',
+        fontSize:13,fontFamily:'Barlow,sans-serif',cursor:'pointer',
+        padding:'8px 16px',marginTop:4}}>
+        ✕ Cancelar
+      </button>
+    </div>
+  );
+}
+
 function KahootSetup({onStart,juegosCount,onCancel}){
   const[questions,setQuestions]=useState([{text:'',options:['','','',''],correct:0}]);
   const[qIdx,setQIdx]=useState(0);
   const q=questions[qIdx];
   const updateQ=(f,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?{...x,[f]:v}:x));
-  const updateOpt=(oi,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?{...x,options:x.options.map((o,j)=>j===oi?v:o)}:x));
-  const addQ=()=>{setQuestions(qs=>[...qs,{text:'',options:['','','',''],correct:0}]);setQIdx(questions.length);};
-  const removeQ=()=>{if(questions.length===1) return;const nqs=questions.filter((_,i)=>i!==qIdx);setQuestions(nqs);setQIdx(Math.max(0,qIdx-1));};
+  const updateOpt=(oi,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?
+    {...x,options:x.options.map((o,j)=>j===oi?v:o)}:x));
+  const addQ=()=>{ setQuestions(qs=>[...qs,{text:'',options:['','','',''],correct:0}]); setQIdx(questions.length); };
   const canStart=questions.every(q=>q.text.trim()&&q.options.every(o=>o.trim()));
   return(
-    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+    <div style={{position:'fixed',inset:0,zIndex:250,
+      background:'rgba(7,9,31,.97)',backdropFilter:'blur(6px)',
       display:'flex',flexDirection:'column',overflow:'hidden'}}>
-      <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
-        padding:'12px 14px',borderBottom:'1px solid rgba(139,92,246,.2)',flexShrink:0}}>
+      <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,.06)',
+        flexShrink:0,display:'flex',alignItems:'center',gap:12}}>
+        <button onClick={onCancel} style={{background:'none',border:'none',
+          color:'var(--muted)',fontSize:22,cursor:'pointer',padding:'0 4px',lineHeight:1}}>‹</button>
         <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-          fontSize:18,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.06em'}}>
-          🎮 Crear preguntas
+          fontSize:18,color:'white',textTransform:'uppercase',letterSpacing:'.06em'}}>
+          Crear Juego
         </div>
-        <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>
-          {juegosCount} jugadores en sala de juegos
-        </div>
-      </div>
-      <div style={{display:'flex',gap:6,padding:'10px 14px',
-        overflowX:'auto',flexShrink:0,borderBottom:'1px solid rgba(255,255,255,.05)'}}>
-        {questions.map((_,i)=>(
-          <button key={i} onClick={()=>setQIdx(i)} style={{
-            width:32,height:32,borderRadius:8,border:'none',flexShrink:0,
-            background:qIdx===i?'#8b5cf6':'rgba(255,255,255,.06)',
-            color:'white',fontFamily:'Barlow Condensed,sans-serif',
-            fontWeight:700,fontSize:13}}>{i+1}</button>
-        ))}
-        <button onClick={addQ} style={{width:32,height:32,borderRadius:8,
-          border:'1px dashed rgba(255,255,255,.2)',background:'none',
-          color:'var(--muted)',fontSize:18,flexShrink:0}}>+</button>
-      </div>
-      <div style={{flex:1,overflowY:'auto',padding:'14px'}}>
-        <div style={{display:'flex',alignItems:'center',
-          justifyContent:'space-between',marginBottom:10}}>
-          <div style={{fontSize:12,fontWeight:700,color:'#8b5cf6',
-            fontFamily:'Barlow Condensed,sans-serif',textTransform:'uppercase',
-            letterSpacing:'.06em'}}>Pregunta {qIdx+1}</div>
-          {questions.length>1&&(
-            <button onClick={removeQ} style={{background:'rgba(239,68,68,.1)',
-              border:'1px solid rgba(239,68,68,.2)',borderRadius:8,
-              padding:'4px 10px',color:'#f87171',fontSize:11,
-              fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
-              🗑 Eliminar
+        <div style={{marginLeft:'auto',display:'flex',gap:8,flexWrap:'wrap'}}>
+          {questions.map((_,i)=>(
+            <button key={i} onClick={()=>setQIdx(i)}
+              style={{width:28,height:28,borderRadius:8,border:'none',
+                background:i===qIdx?'#8b5cf6':'rgba(255,255,255,.1)',
+                color:'white',fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:700,fontSize:12,cursor:'pointer'}}>
+              {i+1}
             </button>
-          )}
+          ))}
+          <button onClick={addQ} style={{width:28,height:28,borderRadius:8,border:'none',
+            background:'rgba(255,255,255,.06)',color:'var(--muted)',
+            fontSize:16,cursor:'pointer'}}>+</button>
         </div>
-        <textarea value={q.text} onChange={e=>updateQ('text',e.target.value)}
-          placeholder="Escribe la pregunta..."
-          rows={3} style={{width:'100%',padding:'11px 14px',borderRadius:10,
-            resize:'none',background:'rgba(255,255,255,.04)',
-            border:'1px solid rgba(139,92,246,.2)',color:'var(--white)',
-            fontSize:14,fontFamily:'Barlow,sans-serif',marginBottom:14,outline:'none'}}/>
-        <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',
-          textTransform:'uppercase',letterSpacing:'.07em',marginBottom:8,
-          fontFamily:'Barlow Condensed,sans-serif'}}>
-          Toca el botón de color para marcar la correcta
+      </div>
+      <div style={{flex:1,overflowY:'auto',padding:16}}>
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:11,color:'var(--muted)',marginBottom:6,
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,letterSpacing:'.05em',
+            textTransform:'uppercase'}}>Pregunta {qIdx+1}</div>
+          <textarea value={q.text} onChange={e=>updateQ('text',e.target.value)}
+            placeholder="Escribe la pregunta aquí..."
+            style={{width:'100%',background:'rgba(255,255,255,.05)',
+              border:'1px solid rgba(255,255,255,.1)',borderRadius:12,
+              color:'var(--white)',fontSize:14,fontFamily:'Barlow,sans-serif',
+              padding:'12px 14px',resize:'none',height:72,lineHeight:1.4}}/>
         </div>
-        {q.options.map((opt,i)=>(
-          <div key={i} style={{display:'flex',gap:8,marginBottom:8,alignItems:'center'}}>
-            <button onClick={()=>updateQ('correct',i)} style={{
-              width:36,height:36,borderRadius:50,flexShrink:0,border:'none',
-              background:q.correct===i?ANS_COLORS[i]:`${ANS_COLORS[i]}28`,
-              fontSize:q.correct===i?14:13,color:'white',fontWeight:700,
-              boxShadow:q.correct===i?`0 0 12px ${ANS_COLORS[i]}77`:undefined,
-              transition:'all .2s'}}>
+        {[0,1,2,3].map(i=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+            <button onClick={()=>updateQ('correct',i)}
+              style={{width:34,height:34,borderRadius:8,border:'none',flexShrink:0,
+                background:q.correct===i?ANS_COLORS[i]:`${ANS_COLORS[i]}28`,
+                color:'white',fontSize:14,fontWeight:700,cursor:'pointer',
+                boxShadow:q.correct===i?`0 0 12px ${ANS_COLORS[i]}77`:undefined,
+                transition:'background .2s'}}>
               {q.correct===i?'✓':ANS_SHAPES[i]}
             </button>
-            <input value={opt} onChange={e=>updateOpt(i,e.target.value)}
+            <input value={q.options[i]} onChange={e=>updateOpt(i,e.target.value)}
               placeholder={`Opción ${i+1}`}
               style={{flex:1,padding:'10px 12px',borderRadius:10,
                 background:`${ANS_COLORS[i]}18`,
@@ -3423,8 +3500,7 @@ function KahootSetup({onStart,juegosCount,onCancel}){
           width:'100%',padding:10,borderRadius:12,border:'none',
           background:'rgba(255,255,255,.05)',color:'var(--muted)',
           fontSize:13,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-          letterSpacing:'.04em',textTransform:'uppercase',
-        }}>✕ Cancelar</button>
+          letterSpacing:'.04em',textTransform:'uppercase'}}>✕ Cancelar</button>
       </div>
     </div>
   );
@@ -3433,8 +3509,9 @@ function KahootSetup({onStart,juegosCount,onCancel}){
 function KahootController({session,users,myId,isAdmin,SID,onClose}){
   const game=session?.juegos;
   const gState=game?.gameState;
-  const[timeLeft,setTimeLeft]=useState(15);
+  const[timeLeft,setTimeLeft]=useState(GAME_TIMER);
   const[countdownDone,setCountdownDone]=useState(false);
+  const[showSetup,setShowSetup]=useState(false);
   const timerRef=useRef(null);
   const questions=game?.questions||[];
   const qIdx=game?.currentQ||0;
@@ -3449,7 +3526,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
       clearInterval(timerRef.current);
       timerRef.current=setInterval(()=>{
         const elapsed=Math.floor((Date.now()-game.qStartTime)/1000);
-        const left=Math.max(0,15-elapsed);
+        const left=Math.max(0,GAME_TIMER-elapsed);
         setTimeLeft(left);
         if(left===0){
           clearInterval(timerRef.current);
@@ -3464,9 +3541,9 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
 
   const handleAnswer=async(ansIdx)=>{
     if(myAnswer!==null&&myAnswer!==undefined) return;
-    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):15;
-    const speed=Math.max(0,15-Math.min(elapsed,15));
-    const pts=currentQ?.correct===ansIdx?Math.round(100+speed*60):0;
+    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):GAME_TIMER;
+    const speed=Math.max(0,GAME_TIMER-Math.min(elapsed,GAME_TIMER));
+    const pts=currentQ?.correct===ansIdx?Math.round(100+speed*30):0;
     await db.ref(`sessions/${SID}/juegos/answers/${myId}`).set(ansIdx);
     if(pts>0) await db.ref(`sessions/${SID}/juegos/scores/${myId}`).transaction(c=>(c||0)+pts);
   };
@@ -3491,6 +3568,22 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     await db.ref(`sessions/${SID}/juegos/gameState`).set('finished');
   };
 
+  const skipQuestion=async()=>{
+    const next=qIdx+1;
+    if(next<questions.length){
+      await db.ref(`sessions/${SID}/juegos`).update({
+        currentQ:next,gameState:'starting',qStartTime:null,answers:{}
+      });
+    } else {
+      await finishGame();
+    }
+  };
+
+  const endTimeNow=async()=>{
+    clearInterval(timerRef.current);
+    await db.ref(`sessions/${SID}/juegos/gameState`).set('results');
+  };
+
   const closeGame=async()=>{
     await db.ref(`sessions/${SID}`).update({phase:'waiting','juegos/active':false});
   };
@@ -3498,21 +3591,36 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
   const myZone=users[myId]?.zone;
   if(myZone!=='juegos'&&!isAdmin) return null;
 
-  // Admin: setup
+  /* ── Admin: menú de selección / setup ── */
   if(isAdmin&&(!gState||gState==='idle')){
+    if(showSetup){
+      return(
+        <KahootSetup juegosCount={juegosUsers.length}
+          onCancel={()=>setShowSetup(false)}
+          onStart={async(qs)=>{
+            await db.ref(`sessions/${SID}/juegos`).update({
+              active:true,gameState:'starting',questions:qs,
+              currentQ:0,qStartTime:null,answers:{},scores:{}
+            });
+          }}/>
+      );
+    }
     return(
-      <KahootSetup juegosCount={juegosUsers.length}
-        onCancel={()=>{ if(onClose) onClose(); }}
-        onStart={async(qs)=>{
+      <GameSelectMenu
+        juegosCount={juegosUsers.length}
+        onSelectLibrary={async(qs)=>{
           await db.ref(`sessions/${SID}/juegos`).update({
             active:true,gameState:'starting',questions:qs,
             currentQ:0,qStartTime:null,answers:{},scores:{}
           });
-        }}/>
+        }}
+        onCreateNew={()=>setShowSetup(true)}
+        onCancel={()=>{ if(onClose) onClose(); }}
+      />
     );
   }
 
-  // Countdown
+  /* ── Countdown ── */
   if(gState==='starting'){
     if(isAdmin&&!countdownDone){
       return(
@@ -3543,21 +3651,44 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     );
   }
 
-  // Pregunta
+  /* ── Pregunta activa ── */
   if(gState==='question'&&currentQ){
     return(
-      <KahootQuestion question={currentQ} qIndex={qIdx} total={questions.length}
-        myAnswer={myAnswer} onAnswer={handleAnswer}
-        timeLeft={timeLeft} gameState={gState}/>
+      <>
+        <KahootQuestion question={currentQ} qIndex={qIdx} total={questions.length}
+          myAnswer={myAnswer} onAnswer={handleAnswer}
+          timeLeft={timeLeft} gameState={gState}/>
+        {isAdmin&&(
+          <div style={{position:'fixed',bottom:24,left:0,right:0,zIndex:300,
+            display:'flex',justifyContent:'center',gap:10,padding:'0 16px'}}>
+            <button onClick={endTimeNow}
+              style={{background:'rgba(239,68,68,.92)',border:'none',borderRadius:14,
+                padding:'11px 20px',color:'white',fontWeight:800,fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                textTransform:'uppercase',boxShadow:'0 4px 18px rgba(239,68,68,.45)',
+                cursor:'pointer'}}>
+              ⏰ Terminar tiempo
+            </button>
+            <button onClick={skipQuestion}
+              style={{background:'rgba(139,92,246,.92)',border:'none',borderRadius:14,
+                padding:'11px 20px',color:'white',fontWeight:800,fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                textTransform:'uppercase',boxShadow:'0 4px 18px rgba(139,92,246,.45)',
+                cursor:'pointer'}}>
+              ⏭ Saltar
+            </button>
+          </div>
+        )}
+      </>
     );
   }
 
-  // Resultados
+  /* ── Resultados de pregunta ── */
   if(gState==='results'&&currentQ){
     const isRight=myAnswer===currentQ.correct;
-    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):15;
-    const speed=Math.max(0,15-Math.min(elapsed,15));
-    const pointsEarned=isRight?Math.round(100+speed*60):0;
+    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):GAME_TIMER;
+    const speed=Math.max(0,GAME_TIMER-Math.min(elapsed,GAME_TIMER));
+    const pointsEarned=isRight?Math.round(100+speed*30):0;
     return(
       <KahootResultCard question={currentQ} myAnswer={myAnswer}
         pointsEarned={pointsEarned} myScore={myScore}
@@ -3566,7 +3697,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     );
   }
 
-  // Leaderboard / Final
+  /* ── Leaderboard / Final ── */
   if(gState==='leaderboard'||gState==='finished'){
     return(
       <KahootLeaderboard scores={scores} users={users}
@@ -3575,7 +3706,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     );
   }
 
-  // Jugador esperando
+  /* ── Jugador esperando ── */
   if(!isAdmin){
     return(
       <div style={{position:'fixed',inset:0,zIndex:190,
@@ -3589,26 +3720,14 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
         <p style={{color:'var(--muted)',fontSize:14,maxWidth:240,lineHeight:1.6}}>
           Estás listo.<br/>El profe iniciará el juego pronto.
         </p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:8,
-          justifyContent:'center',maxWidth:280}}>
-          {juegosUsers.map(([uid,u])=>(
-            <div key={uid} style={{display:'flex',alignItems:'center',gap:6,
-              background:'rgba(139,92,246,.1)',borderRadius:20,padding:'4px 10px',
-              border:'1px solid rgba(139,92,246,.2)'}}>
-              <span style={{fontSize:13}}>{u.avatar||'👤'}</span>
-              <span style={{fontSize:11,color:'var(--white)'}}>{u.name}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{display:'flex',gap:4,alignItems:'center'}}>
-          <Spinner size={14} color="#8b5cf6"/>
-          <span style={{fontSize:11,color:'var(--muted)'}}>Esperando...</span>
-        </div>
       </div>
     );
   }
+
   return null;
 }
+
+
 
 function CountdownTimer({from,onDone}){
   const[n,setN]=useState(from);
