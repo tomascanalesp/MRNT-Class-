@@ -523,11 +523,18 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       })}
 
       {/* Hint */}
-      {!full&&(
+      {!full&&phase==='waiting'&&(
         <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
           fontSize:8,color:'var(--muted)',pointerEvents:'none',
           fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
           ✨ Arrastra tu avatar a una zona
+        </div>
+      )}
+      {!full&&phase!=='waiting'&&(
+        <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
+          fontSize:8,color:'rgba(239,68,68,.5)',pointerEvents:'none',
+          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
+          🔒 Movimiento bloqueado durante la actividad
         </div>
       )}
 
@@ -734,40 +741,59 @@ function ConfraSpeakerPanel({session,localConfra,users,myId,isAdmin,onNext,onEnd
         const hasAny=Object.values(totals).some(v=>v>0);
         return(
           <div style={{width:'100%',maxWidth:360}}>
+            {/* Totales acumulados */}
+            {hasAny&&(
+              <div style={{display:'flex',gap:6,flexWrap:'wrap',
+                justifyContent:'center',marginBottom:10}}>
+                {REACTIONS.filter(r=>totals[r.id]>0).map(r=>(
+                  <div key={r.id} style={{
+                    background:'rgba(255,255,255,.08)',
+                    border:`1px solid ${speaker.color||'#ffd000'}33`,
+                    borderRadius:20,padding:'4px 10px',
+                    display:'flex',alignItems:'center',gap:4,
+                    animation:'slideIn .2s ease',
+                  }}>
+                    <span style={{fontSize:16}}>{r.e}</span>
+                    <span style={{fontSize:13,fontWeight:800,
+                      color:speaker.color||'#ffd000',
+                      fontFamily:'Barlow Condensed,sans-serif'}}>{totals[r.id]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Botones para los que no son el speaker */}
             {!isMe&&(
               <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
                 {REACTIONS.map(r=>{
                   const selected=!!(myReactions&&myReactions[r.id]);
-                  const total=totals[r.id]||0;
                   return(
-                    <div key={r.id} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
-                      <button
-                        key={r.id+(selected?'_on':'_off')}
-                        onClick={()=>onReact(r.id)} style={{
+                    <div key={r.id} style={{position:'relative'}}>
+                      <button onClick={()=>onReact(r.id)} style={{
                         background:selected
                           ?`${speaker.color||'#ffd000'}28`
                           :'rgba(255,255,255,.05)',
                         border:selected
                           ?`2px solid ${speaker.color||'#ffd000'}`
                           :'2px solid rgba(255,255,255,.12)',
-                        borderRadius:50,width:52,height:52,fontSize:26,
+                        borderRadius:50,width:52,height:52,fontSize:24,
                         display:'flex',alignItems:'center',justifyContent:'center',
-                        boxShadow:selected?`0 0 18px ${speaker.color||'#ffd000'}66`:undefined,
-                        transition:'border .15s, background .15s, box-shadow .15s',
-                        animation:selected?'reactionPop .35s ease forwards':'none',
+                        boxShadow:selected?`0 0 16px ${speaker.color||'#ffd000'}55`:undefined,
+                        transition:'all .18s',
+                        flexDirection:'column',gap:0,
+                        animation:selected?'reactionPop .35s ease':'none',
                       }}>
                         {r.e}
+                        {selected&&(
+                          <div style={{
+                            position:'absolute',top:-5,right:-5,
+                            width:16,height:16,borderRadius:'50%',
+                            background:speaker.color||'#ffd000',
+                            display:'flex',alignItems:'center',justifyContent:'center',
+                            fontSize:9,fontWeight:900,color:'#07091f',
+                          }}>✓</div>
+                        )}
                       </button>
-                      {total>0&&(
-                        <span style={{
-                          fontSize:11,fontWeight:800,
-                          color:selected?speaker.color||'#ffd000':'rgba(255,255,255,.5)',
-                          fontFamily:'Barlow Condensed,sans-serif',
-                          animation:'scoreUp .3s ease',
-                        }}>{total}</span>
-                      )}
                     </div>
                   );
                 })}
@@ -2323,49 +2349,32 @@ function App(){
       else setMsgs([]);
     });
     refs.att.on('value',s=>setMyAtt(s.val()||{}));
-    refs.sess.on('value',s=>setSession(s.val()));
+    refs.sess.on('value',s=>{
+      const val=s.val();
+      setSession(val);
+      // Sincronizar UI directamente aquí para todos los usuarios
+      if(!val) return;
+      const p=val.phase||'waiting';
+      if(p==='confra'&&val.confra?.active){
+        const fbQ=val.confra.queue||{};
+        const queue=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
+        setLocalConfra({active:true,queue,
+          currentIdx:typeof val.confra.currentIdx==='number'?val.confra.currentIdx:0,
+          startTime:val.confra.startTime});
+        setConfraOpen(true);
+      }
+      if(p==='repaso'&&val.repaso?.active) setRepasoChatOpen(true);
+      if(val.wordcloud?.active) setWordCloudOpen(true);
+      if(p==='waiting'){
+        setConfraOpen(false); setLocalConfra(null);
+        setRepasoChatOpen(false); setWordCloudOpen(false);
+      }
+    });
     refs.reac.on('value',s=>setReactions(s.val()||{}));
     refs.hist.on('value',s=>setGameHistory(s.val()||{}));
     return()=>Object.values(refs).forEach(r=>r.off());
   },[view]);
 
-  /* ── Sincronizar estado de actividades desde Firebase ── */
-  useEffect(()=>{
-    if(!session) return;
-    const p=session.phase||'waiting';
-
-    if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
-
-    if(p==='confra'&&session.confra){
-      setConfraOpen(true);
-      const fbQ=session.confra.queue||{};
-      const queue=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
-      setLocalConfra({
-        active:true,
-        queue,
-        currentIdx:typeof session.confra.currentIdx==='number'?session.confra.currentIdx:0,
-        startTime:session.confra.startTime,
-      });
-    }
-
-    if(session.wordcloud?.active) setWordCloudOpen(true);
-    if(session.wordcloud?.active===false) setWordCloudOpen(false);
-
-    if(p==='waiting'){
-      setConfraOpen(false);
-      setLocalConfra(null);
-      setRepasoChatOpen(false);
-      setWordCloudOpen(false);
-    }
-  // Dependencias explícitas para que React detecte cambios anidados de Firebase
-  // eslint-disable-next-line
-  },[
-    session?.phase,
-    session?.confra?.active,
-    session?.confra?.currentIdx,
-    session?.repaso?.active,
-    session?.wordcloud?.active,
-  ]);
 
   /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
@@ -2452,13 +2461,17 @@ function App(){
   };
 
   /* ── Click-to-move ── */
-  /* ── Drag to move ── */
+  /* ── Drag to move — bloqueado durante actividades activas ── */
   const handleDragMove=useCallback((x,y)=>{
     const uid=UID.current;
     if(!uid) return;
+    // No mover durante confra, repaso o juegos activos
+    const p=session?.phase||'waiting';
+    if(p!=='waiting') return;
     const zone=detectZone(x,y);
     db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
-  },[]);
+  // eslint-disable-next-line
+  },[session?.phase]);
 
   /* ── Chat ── */
   const handleSend=(text,extra={})=>{
