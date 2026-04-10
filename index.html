@@ -523,7 +523,7 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       })}
 
       {/* Hint */}
-      {!full&&phase==='waiting'&&(
+      {!full&&(
         <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
           fontSize:8,color:'var(--muted)',pointerEvents:'none',
           fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
@@ -532,9 +532,9 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       )}
       {!full&&phase!=='waiting'&&(
         <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
-          fontSize:8,color:'rgba(239,68,68,.5)',pointerEvents:'none',
+          fontSize:8,color:'rgba(239,68,68,.55)',pointerEvents:'none',
           fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
-          🔒 Movimiento bloqueado durante la actividad
+          🔒 Movimiento bloqueado
         </div>
       )}
 
@@ -2298,6 +2298,7 @@ function App(){
   const walkTimer=useRef(null);
   const mtTimer  =useRef(null);
   const endRef   =useRef(null);
+  const phaseRef =useRef('waiting'); // siempre actualizado, sin closures viejas
 
   /* ── body class ── */
   useEffect(()=>{
@@ -2352,13 +2353,13 @@ function App(){
     refs.sess.on('value',s=>{
       const val=s.val();
       setSession(val);
-      // Sincronizar UI directamente aquí para todos los usuarios
+      const p=(val?.phase)||'waiting';
+      phaseRef.current=p;  // actualizar ref inmediatamente
       if(!val) return;
-      const p=val.phase||'waiting';
-      if(p==='confra'&&val.confra?.active){
+      if(p==='confra'&&val.confra){
         const fbQ=val.confra.queue||{};
-        const queue=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
-        setLocalConfra({active:true,queue,
+        const q=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
+        setLocalConfra({active:true,queue:q,
           currentIdx:typeof val.confra.currentIdx==='number'?val.confra.currentIdx:0,
           startTime:val.confra.startTime});
         setConfraOpen(true);
@@ -2366,15 +2367,16 @@ function App(){
       if(p==='repaso'&&val.repaso?.active) setRepasoChatOpen(true);
       if(val.wordcloud?.active) setWordCloudOpen(true);
       if(p==='waiting'){
-        setConfraOpen(false); setLocalConfra(null);
-        setRepasoChatOpen(false); setWordCloudOpen(false);
+        setConfraOpen(c=>c?false:c);
+        setLocalConfra(l=>l?null:l);
+        setRepasoChatOpen(r=>r?false:r);
+        setWordCloudOpen(w=>w?false:w);
       }
     });
     refs.reac.on('value',s=>setReactions(s.val()||{}));
     refs.hist.on('value',s=>setGameHistory(s.val()||{}));
     return()=>Object.values(refs).forEach(r=>r.off());
   },[view]);
-
 
   /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
@@ -2460,18 +2462,14 @@ function App(){
     setUsers({}); setMsgs([]); setMyAtt({}); setSession(null);
   };
 
-  /* ── Click-to-move ── */
-  /* ── Drag to move — bloqueado durante actividades activas ── */
+  /* ── Drag to move — bloqueado durante actividades ── */
   const handleDragMove=useCallback((x,y)=>{
     const uid=UID.current;
     if(!uid) return;
-    // No mover durante confra, repaso o juegos activos
-    const p=session?.phase||'waiting';
-    if(p!=='waiting') return;
+    if(phaseRef.current!=='waiting') return; // bloqueado
     const zone=detectZone(x,y);
     db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
-  // eslint-disable-next-line
-  },[session?.phase]);
+  },[]);
 
   /* ── Chat ── */
   const handleSend=(text,extra={})=>{
