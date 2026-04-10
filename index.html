@@ -2500,8 +2500,10 @@ function App(){
 
   /* ── Admin: gestión de fases ── */
   const startConfra=async(confraUsers)=>{
-    if(confraUsers.length===0) return;
-    const uids=confraUsers.map(([uid])=>uid).sort(()=>Math.random()-.5);
+    // Usar zona confra si hay gente, sino todos en sala
+    const participants=confraUsers.length>0?confraUsers:Object.entries(users);
+    if(participants.length===0) return;
+    const uids=participants.map(([uid])=>uid).sort(()=>Math.random()-.5);
     const queueObj={};
     uids.forEach((uid,i)=>{ queueObj[i]=uid; });
     try{
