@@ -734,59 +734,40 @@ function ConfraSpeakerPanel({session,localConfra,users,myId,isAdmin,onNext,onEnd
         const hasAny=Object.values(totals).some(v=>v>0);
         return(
           <div style={{width:'100%',maxWidth:360}}>
-            {/* Totales acumulados */}
-            {hasAny&&(
-              <div style={{display:'flex',gap:6,flexWrap:'wrap',
-                justifyContent:'center',marginBottom:10}}>
-                {REACTIONS.filter(r=>totals[r.id]>0).map(r=>(
-                  <div key={r.id} style={{
-                    background:'rgba(255,255,255,.08)',
-                    border:`1px solid ${speaker.color||'#ffd000'}33`,
-                    borderRadius:20,padding:'4px 10px',
-                    display:'flex',alignItems:'center',gap:4,
-                    animation:'slideIn .2s ease',
-                  }}>
-                    <span style={{fontSize:16}}>{r.e}</span>
-                    <span style={{fontSize:13,fontWeight:800,
-                      color:speaker.color||'#ffd000',
-                      fontFamily:'Barlow Condensed,sans-serif'}}>{totals[r.id]}</span>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {/* Botones para los que no son el speaker */}
             {!isMe&&(
               <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
                 {REACTIONS.map(r=>{
                   const selected=!!(myReactions&&myReactions[r.id]);
+                  const total=totals[r.id]||0;
                   return(
-                    <div key={r.id} style={{position:'relative'}}>
-                      <button onClick={()=>onReact(r.id)} style={{
+                    <div key={r.id} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+                      <button
+                        key={r.id+(selected?'_on':'_off')}
+                        onClick={()=>onReact(r.id)} style={{
                         background:selected
                           ?`${speaker.color||'#ffd000'}28`
                           :'rgba(255,255,255,.05)',
                         border:selected
                           ?`2px solid ${speaker.color||'#ffd000'}`
                           :'2px solid rgba(255,255,255,.12)',
-                        borderRadius:50,width:52,height:52,fontSize:24,
+                        borderRadius:50,width:52,height:52,fontSize:26,
                         display:'flex',alignItems:'center',justifyContent:'center',
-                        boxShadow:selected?`0 0 16px ${speaker.color||'#ffd000'}55`:undefined,
-                        transition:'all .18s',
-                        flexDirection:'column',gap:0,
-                        animation:selected?'reactionPop .35s ease':'none',
+                        boxShadow:selected?`0 0 18px ${speaker.color||'#ffd000'}66`:undefined,
+                        transition:'border .15s, background .15s, box-shadow .15s',
+                        animation:selected?'reactionPop .35s ease forwards':'none',
                       }}>
                         {r.e}
-                        {selected&&(
-                          <div style={{
-                            position:'absolute',top:-5,right:-5,
-                            width:16,height:16,borderRadius:'50%',
-                            background:speaker.color||'#ffd000',
-                            display:'flex',alignItems:'center',justifyContent:'center',
-                            fontSize:9,fontWeight:900,color:'#07091f',
-                          }}>✓</div>
-                        )}
                       </button>
+                      {total>0&&(
+                        <span style={{
+                          fontSize:11,fontWeight:800,
+                          color:selected?speaker.color||'#ffd000':'rgba(255,255,255,.5)',
+                          fontFamily:'Barlow Condensed,sans-serif',
+                          animation:'scoreUp .3s ease',
+                        }}>{total}</span>
+                      )}
                     </div>
                   );
                 })}
@@ -2353,10 +2334,8 @@ function App(){
     if(!session) return;
     const p=session.phase||'waiting';
 
-    // Repaso — auto-abrir chat para todos
     if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
 
-    // Confra — poblar localConfra para TODOS (admin ya lo tiene, no-admins lo obtienen acá)
     if(p==='confra'&&session.confra){
       setConfraOpen(true);
       const fbQ=session.confra.queue||{};
@@ -2369,19 +2348,24 @@ function App(){
       });
     }
 
-    // Nube de palabras — auto-abre para todos cuando el admin la inicia
     if(session.wordcloud?.active) setWordCloudOpen(true);
-    // Si se desactivó, cerrar
     if(session.wordcloud?.active===false) setWordCloudOpen(false);
 
-    // Limpiar todo al volver a waiting
     if(p==='waiting'){
       setConfraOpen(false);
       setLocalConfra(null);
       setRepasoChatOpen(false);
       setWordCloudOpen(false);
     }
-  },[session]);
+  // Dependencias explícitas para que React detecte cambios anidados de Firebase
+  // eslint-disable-next-line
+  },[
+    session?.phase,
+    session?.confra?.active,
+    session?.confra?.currentIdx,
+    session?.repaso?.active,
+    session?.wordcloud?.active,
+  ]);
 
   /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
