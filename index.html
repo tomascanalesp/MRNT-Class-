@@ -1513,14 +1513,12 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
               fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
             }}>📊 Ver estadísticas globales</button>
 
-            {/* Reiniciar sesión — siempre visible si hay fase activa */}
-            {phase!=='waiting'&&(
-              <button onClick={()=>{onResetSession();setOpen(false);}} style={{
-                background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',
-                borderRadius:10,padding:'9px',color:'#f87171',fontWeight:800,fontSize:12,
-                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
-              }}>🔄 Reiniciar sesión</button>
-            )}
+            {/* Reiniciar sesión — SIEMPRE visible */}
+            <button onClick={()=>{onResetSession();setOpen(false);}} style={{
+              background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',
+              borderRadius:10,padding:'9px',color:'#f87171',fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+            }}>🔄 Reiniciar sesión</button>
 
             <div style={{height:1,background:'rgba(255,255,255,.06)'}}/>
 
