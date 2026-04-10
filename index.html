@@ -1445,6 +1445,7 @@ function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
 function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onOpenStats,onToggleWordCloud,onResetSession}){
   const[open,setOpen]=useState(false);
+  const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
   const allUsers=Object.entries(users);
   const confraUsers=Object.entries(users).filter(([,u])=>u.zone==='confra');
@@ -1570,9 +1571,7 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
               }}>✓ Finalizar confra</button>
             </>)}
 
-            {phase==='repaso'&&(()=>{
-              const[wcQ,setWcQ]=useState('');
-              return(
+            {phase==='repaso'&&(
               <div style={{display:'flex',flexDirection:'column',gap:7}}>
                 {!session?.wordcloud?.active&&(
                   <input value={wcQ} onChange={e=>setWcQ(e.target.value)}
@@ -1598,8 +1597,7 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
                   fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
                 }}>⏹ Finalizar Repaso</button>
               </div>
-              );
-            })()}
+            )}
 
             {phase==='juegos'&&(
               <button onClick={()=>{onEndJuegos();setOpen(false);}} style={{
