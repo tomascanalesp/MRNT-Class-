@@ -1518,7 +1518,7 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
             <div style={{height:1,background:'rgba(255,255,255,.06)'}}/>
 
             {phase==='waiting'&&(<>
-              <button onClick={()=>{onStartConfra(confraUsers);setOpen(false);}}
+              <button onClick={()=>{onStartConfra(confraUsers.length>0?confraUsers:allUsers);setOpen(false);}}
                 disabled={allUsers.length===0} style={{
                 background:allUsers.length?'linear-gradient(135deg,#f59e0b,#d97706)':'var(--muted2)',
                 border:'none',borderRadius:10,padding:'10px',
@@ -2505,12 +2505,18 @@ function App(){
     const uids=confraUsers.map(([uid])=>uid).sort(()=>Math.random()-.5);
     const queueObj={};
     uids.forEach((uid,i)=>{ queueObj[i]=uid; });
+    const confraData={active:true,queue:queueObj,currentIdx:0,startTime:Date.now()};
+    const optimistic={phase:'confra',confra:confraData};
+    // Actualización optimista: panel aparece inmediatamente sin esperar el echo de Firebase
+    sessionRef.current=optimistic;
+    setSession(optimistic);
     try{
-      await db.ref(`sessions/${SID.current}`).set({
-        phase:'confra',
-        confra:{active:true, queue:queueObj, currentIdx:0, startTime:Date.now()}
-      });
-    }catch(e){ console.error('Error iniciando confra:',e); }
+      await db.ref(`sessions/${SID.current}`).set(optimistic);
+    }catch(e){
+      console.error('Error iniciando confra:',e);
+      sessionRef.current=null;
+      setSession(null);
+    }
   };
 
   const nextSpeaker=async()=>{
@@ -2529,6 +2535,7 @@ function App(){
   };
 
   const endConfra=async()=>{
+    await db.ref(`sessions/${SID.current}`).remove();
     await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
     setEndBanner('confra');
   };
@@ -2575,9 +2582,16 @@ function App(){
   };
 
   const resetSession=async()=>{
-    await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    // Actualizar estado local inmediatamente
+    sessionRef.current={phase:'waiting'};
+    setSession({phase:'waiting'});
     setWordCloudOpen(false);
     setRepasoChatOpen(false);
+    // Luego sincronizar con Firebase
+    try{
+      await db.ref(`sessions/${SID.current}`).remove();
+      await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    }catch(e){ console.error('Error reiniciando sesión:',e); }
   };
 
   const phase=session?.phase||'waiting';
