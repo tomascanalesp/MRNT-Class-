@@ -523,18 +523,11 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       })}
 
       {/* Hint */}
-      {!full&&phase==='waiting'&&(
+      {!full&&(
         <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
           fontSize:8,color:'var(--muted)',pointerEvents:'none',
           fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
           ✨ Arrastra tu avatar a una zona
-        </div>
-      )}
-      {!full&&phase!=='waiting'&&(
-        <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
-          fontSize:8,color:'rgba(239,68,68,.5)',pointerEvents:'none',
-          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
-          🔒 Movimiento bloqueado
         </div>
       )}
 
@@ -622,7 +615,6 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
 function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myReactions,allReactions}){
   const confra=session?.confra;
   if(session?.phase!=='confra'||!confra) return null;
-
   const rawQueue=confra.queue||{};
   const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
   const idx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
@@ -1513,12 +1505,14 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
               fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
             }}>📊 Ver estadísticas globales</button>
 
-            {/* Reiniciar sesión — SIEMPRE visible */}
-            <button onClick={()=>{onResetSession();setOpen(false);}} style={{
-              background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',
-              borderRadius:10,padding:'9px',color:'#f87171',fontWeight:800,fontSize:12,
-              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
-            }}>🔄 Reiniciar sesión</button>
+            {/* Reiniciar sesión — siempre visible si hay fase activa */}
+            {phase!=='waiting'&&(
+              <button onClick={()=>{onResetSession();setOpen(false);}} style={{
+                background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',
+                borderRadius:10,padding:'9px',color:'#f87171',fontWeight:800,fontSize:12,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+              }}>🔄 Reiniciar sesión</button>
+            )}
 
             <div style={{height:1,background:'rgba(255,255,255,.06)'}}/>
 
@@ -2267,6 +2261,8 @@ function App(){
   const[adminStats,  setAdminStats]  =useState(false);
   const[endBanner,   setEndBanner]   =useState(null);
   const[kahootOpen,  setKahootOpen]  =useState(false);
+  const[confraOpen,  setConfraOpen]  =useState(false);
+  const[localConfra, setLocalConfra] =useState(null); // {queue, currentIdx}
 
   /* ── Sala ── */
   const[users,       setUsers]       =useState({});
@@ -2289,7 +2285,6 @@ function App(){
   const walkTimer=useRef(null);
   const mtTimer  =useRef(null);
   const endRef   =useRef(null);
-  const sessionRef=useRef(null);
 
   /* ── body class ── */
   useEffect(()=>{
@@ -2341,24 +2336,45 @@ function App(){
       else setMsgs([]);
     });
     refs.att.on('value',s=>setMyAtt(s.val()||{}));
-    refs.sess.on('value',s=>{
-      const val=s.val();
-      sessionRef.current=val;
-      setSession(val);
-    });
+    refs.sess.on('value',s=>setSession(s.val()));
     refs.reac.on('value',s=>setReactions(s.val()||{}));
     refs.hist.on('value',s=>setGameHistory(s.val()||{}));
     return()=>Object.values(refs).forEach(r=>r.off());
   },[view]);
 
-  /* ── Sincronizar repaso/wordcloud desde Firebase ── */
+  /* ── Sincronizar estado de actividades desde Firebase ── */
   useEffect(()=>{
     if(!session) return;
     const p=session.phase||'waiting';
+
+    // Repaso — auto-abrir chat para todos
     if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
+
+    // Confra — poblar localConfra para TODOS (admin ya lo tiene, no-admins lo obtienen acá)
+    if(p==='confra'&&session.confra){
+      setConfraOpen(true);
+      const fbQ=session.confra.queue||{};
+      const queue=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
+      setLocalConfra({
+        active:true,
+        queue,
+        currentIdx:typeof session.confra.currentIdx==='number'?session.confra.currentIdx:0,
+        startTime:session.confra.startTime,
+      });
+    }
+
+    // Nube de palabras — auto-abre para todos cuando el admin la inicia
     if(session.wordcloud?.active) setWordCloudOpen(true);
+    // Si se desactivó, cerrar
     if(session.wordcloud?.active===false) setWordCloudOpen(false);
-    if(p==='waiting'){ setRepasoChatOpen(false); setWordCloudOpen(false); }
+
+    // Limpiar todo al volver a waiting
+    if(p==='waiting'){
+      setConfraOpen(false);
+      setLocalConfra(null);
+      setRepasoChatOpen(false);
+      setWordCloudOpen(false);
+    }
   },[session]);
 
   /* ── Helpers ── */
@@ -2450,8 +2466,6 @@ function App(){
   const handleDragMove=useCallback((x,y)=>{
     const uid=UID.current;
     if(!uid) return;
-    // Bloquear movimiento durante actividades activas
-    if(sessionRef.current&&sessionRef.current.phase&&sessionRef.current.phase!=='waiting') return;
     const zone=detectZone(x,y);
     db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
   },[]);
@@ -2473,9 +2487,16 @@ function App(){
 
   /* ── Reaccionar ── */
   const handleReact=async(reactionId)=>{
-    const confraQ=session?.confra?.queue||{};
+    const speakerUid=session?.confra?.queue
+      ??(localConfra?.queue
+        ?localConfra.queue[localConfra.currentIdx||0]
+        :null);
+    // Get speakerUid properly from queue
+    const confraQ=session?.confra?.queue||localConfra?.queue||[];
     const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-    const cIdx=typeof session?.confra?.currentIdx==='number'?session.confra.currentIdx:0;
+    const cIdx=typeof session?.confra?.currentIdx==='number'
+      ?session.confra.currentIdx
+      :(localConfra?.currentIdx||0);
     const sUid=qArr[cIdx];
     if(!sUid) return;
     const ref=db.ref(`sessions/${SID.current}/reactions/${sUid}/${UID.current}/${reactionId}`);
@@ -2486,17 +2507,17 @@ function App(){
 
   // Set of reaction ids the current user has selected for current speaker
   const myReactions=useMemo(()=>{
-    const confraQ=session?.confra?.queue||{};
+    const confraQ=session?.confra?.queue||localConfra?.queue||[];
     const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-    const cIdx=typeof session?.confra?.currentIdx==='number'?session.confra.currentIdx:0;
+    const cIdx=typeof session?.confra?.currentIdx==='number'
+      ?session.confra.currentIdx:(localConfra?.currentIdx||0);
     const sUid=qArr[cIdx];
     if(!sUid) return {};
     return reactions?.[sUid]?.[UID.current]||{};
-  },[reactions,session]);
+  },[reactions,session,localConfra]);
 
   /* ── Admin: gestión de fases ── */
   const startConfra=async(confraUsers)=>{
-    // Usar zona confra si hay gente, sino todos en sala
     const participants=confraUsers.length>0?confraUsers:Object.entries(users);
     if(participants.length===0) return;
     const uids=participants.map(([uid])=>uid).sort(()=>Math.random()-.5);
@@ -2512,19 +2533,22 @@ function App(){
 
   const nextSpeaker=async()=>{
     const confra=session?.confra;
-    if(!confra) return;
-    const rawQueue=confra.queue||{};
+    const rawQueue=confra?.queue||localConfra?.queue||[];
     const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
-    const next=(typeof confra.currentIdx==='number'?confra.currentIdx:0)+1;
+    const currentIdx=typeof confra?.currentIdx==='number'?confra.currentIdx:(localConfra?.currentIdx||0);
+    const next=currentIdx+1;
     if(next>=queue.length){
       await endConfra();
     } else {
+      setLocalConfra(p=>p?{...p,currentIdx:next}:null);
       await db.ref(`sessions/${SID.current}/confra/currentIdx`).set(next);
       await db.ref(`sessions/${SID.current}/reactions`).remove();
     }
   };
 
   const endConfra=async()=>{
+    setConfraOpen(false);
+    setLocalConfra(null);
     // set() para limpiar completamente y que todos los listeners vean phase:waiting
     await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
     setEndBanner('confra');
@@ -2573,6 +2597,8 @@ function App(){
 
   const resetSession=async()=>{
     await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    setConfraOpen(false);
+    setLocalConfra(null);
     setWordCloudOpen(false);
     setRepasoChatOpen(false);
   };
@@ -2964,15 +2990,17 @@ function App(){
       {/* Confraternización: speaker overlay — se muestra en TODOS los dispositivos */}
       {session?.phase==='confra'&&(
         <ConfraSpeakerPanel
-          session={session} users={users}
+          session={session}
+          users={users}
           myId={UID.current} isAdmin={isAdmin}
           onNext={nextSpeaker} onEnd={endConfra}
           onReact={handleReact}
           myReactions={myReactions}
           allReactions={(()=>{
-            const confraQ=session?.confra?.queue||{};
+            const confraQ=session?.confra?.queue||localConfra?.queue||[];
             const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-            const cIdx=typeof session?.confra?.currentIdx==='number'?session.confra.currentIdx:0;
+            const cIdx=typeof session?.confra?.currentIdx==='number'
+              ?session.confra.currentIdx:(localConfra?.currentIdx||0);
             const sUid=qArr[cIdx];
             return sUid?reactions?.[sUid]||{}:{};
           })()}
