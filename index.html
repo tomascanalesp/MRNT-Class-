@@ -1505,14 +1505,12 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
               fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
             }}>📊 Ver estadísticas globales</button>
 
-            {/* Reiniciar sesión — siempre visible si hay fase activa */}
-            {phase!=='waiting'&&(
-              <button onClick={()=>{onResetSession();setOpen(false);}} style={{
-                background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',
-                borderRadius:10,padding:'9px',color:'#f87171',fontWeight:800,fontSize:12,
-                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
-              }}>🔄 Reiniciar sesión</button>
-            )}
+            {/* Reiniciar sesión — siempre visible */}
+            <button onClick={()=>{onResetSession();setOpen(false);}} style={{
+              background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',
+              borderRadius:10,padding:'9px',color:'#f87171',fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+            }}>🔄 Reiniciar sesión</button>
 
             <div style={{height:1,background:'rgba(255,255,255,.06)'}}/>
 
@@ -2487,34 +2485,25 @@ function App(){
 
   /* ── Reaccionar ── */
   const handleReact=async(reactionId)=>{
-    const speakerUid=session?.confra?.queue
-      ??(localConfra?.queue
-        ?localConfra.queue[localConfra.currentIdx||0]
-        :null);
-    // Get speakerUid properly from queue
-    const confraQ=session?.confra?.queue||localConfra?.queue||[];
+    const confraQ=session?.confra?.queue||{};
     const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-    const cIdx=typeof session?.confra?.currentIdx==='number'
-      ?session.confra.currentIdx
-      :(localConfra?.currentIdx||0);
+    const cIdx=typeof session?.confra?.currentIdx==='number'?session.confra.currentIdx:0;
     const sUid=qArr[cIdx];
     if(!sUid) return;
     const ref=db.ref(`sessions/${SID.current}/reactions/${sUid}/${UID.current}/${reactionId}`);
     const snap=await ref.get();
-    if(snap.val()) ref.remove(); // toggle off
-    else ref.set(true);          // toggle on
+    if(snap.val()) ref.remove();
+    else ref.set(true);
   };
 
-  // Set of reaction ids the current user has selected for current speaker
   const myReactions=useMemo(()=>{
-    const confraQ=session?.confra?.queue||localConfra?.queue||[];
+    const confraQ=session?.confra?.queue||{};
     const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-    const cIdx=typeof session?.confra?.currentIdx==='number'
-      ?session.confra.currentIdx:(localConfra?.currentIdx||0);
+    const cIdx=typeof session?.confra?.currentIdx==='number'?session.confra.currentIdx:0;
     const sUid=qArr[cIdx];
     if(!sUid) return {};
     return reactions?.[sUid]?.[UID.current]||{};
-  },[reactions,session,localConfra]);
+  },[reactions,session]);
 
   /* ── Admin: gestión de fases ── */
   const startConfra=async(confraUsers)=>{
@@ -2533,9 +2522,10 @@ function App(){
 
   const nextSpeaker=async()=>{
     const confra=session?.confra;
-    const rawQueue=confra?.queue||localConfra?.queue||[];
+    if(!confra) return;
+    const rawQueue=confra.queue||{};
     const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
-    const currentIdx=typeof confra?.currentIdx==='number'?confra.currentIdx:(localConfra?.currentIdx||0);
+    const currentIdx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
     const next=currentIdx+1;
     if(next>=queue.length){
       await endConfra();
@@ -2997,10 +2987,10 @@ function App(){
           onReact={handleReact}
           myReactions={myReactions}
           allReactions={(()=>{
-            const confraQ=session?.confra?.queue||localConfra?.queue||[];
+            const confraQ=session?.confra?.queue||{};
             const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
             const cIdx=typeof session?.confra?.currentIdx==='number'
-              ?session.confra.currentIdx:(localConfra?.currentIdx||0);
+              ?session.confra.currentIdx:0;
             const sUid=qArr[cIdx];
             return sUid?reactions?.[sUid]||{}:{};
           })()}
