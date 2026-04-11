@@ -1,0 +1,3746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="theme-color" content="#07091f"/>
+  <title>Maranata Class · Las Condes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root{
+      --navy:#07091f;--navy2:#0d1035;--navy3:#141744;
+      --yellow:#ffd000;--white:#f0f2ff;
+      --muted:#4a4f7a;--muted2:#2a2f5a;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;
+      -webkit-tap-highlight-color:transparent;min-height:100vh}
+    body.in-room,body.in-room #root{height:100%;overflow:hidden}
+    input,textarea{outline:none;transition:border-color .2s,box-shadow .2s}
+    input:focus,textarea:focus{border-color:var(--yellow)!important;
+      box-shadow:0 0 0 3px rgba(255,208,0,.15)!important}
+    button{transition:opacity .15s,transform .1s;cursor:pointer}
+    button:active{opacity:.85;transform:scale(.97)}
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    @keyframes glowY{0%,100%{box-shadow:0 0 12px rgba(255,208,0,.4)}50%{box-shadow:0 0 28px rgba(255,208,0,.7)}}
+    @keyframes pop{0%{transform:translate(-50%,-50%) scale(.4)}70%{transform:translate(-50%,-50%) scale(1.15)}100%{transform:translate(-50%,-50%) scale(1)}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes triPulse{0%,100%{opacity:.15}50%{opacity:.28}}
+    @keyframes modalIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes speakerPop{0%{opacity:0;transform:scale(.5) translateY(30px)}60%{transform:scale(1.08) translateY(-5px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes reactionFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.5)}}
+    @keyframes timerTick{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+    @keyframes confettiSpin{to{transform:rotate(360deg) translateX(20px)}}
+    @keyframes answerPop{0%{transform:scale(.88);opacity:.6}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+    @keyframes correctFlash{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}50%{box-shadow:0 0 0 14px rgba(16,185,129,.35)}}
+    @keyframes wrongShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+    @keyframes countdownPop{0%{transform:scale(2.2);opacity:0}60%{transform:scale(.92)}100%{transform:scale(1);opacity:1}}
+    @keyframes crownBounce{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
+    @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+    @keyframes scoreUp{0%{opacity:0;transform:translateY(12px) scale(.8)}60%{transform:translateY(-4px) scale(1.1)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes reactionPop{0%{transform:scale(1)}30%{transform:scale(1.55)}60%{transform:scale(.9)}100%{transform:scale(1)}}
+    @keyframes reactionFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-55px) scale(1.6)}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  const firebaseConfig={
+    apiKey:"AIzaSyBVxSunkMPoNtma8Zkc4WQMudl0m2di-5o",
+    authDomain:"mrnt-class.firebaseapp.com",
+    databaseURL:"https://mrnt-class-default-rtdb.firebaseio.com",
+    projectId:"mrnt-class",
+    storageBucket:"mrnt-class.firebasestorage.app",
+    messagingSenderId:"1050908552799",
+    appId:"1:1050908552799:web:f81c53ccea104ad91d75ea",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth=firebase.auth();
+  const db=firebase.database();
+  const storage=firebase.storage();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+  /* ── EmailJS (correo bienvenida) ──────────────────────────────
+     Pasos para configurar:
+     1. Crea cuenta gratis en https://www.emailjs.com  (200 emails/mes gratis)
+     2. Dashboard → Email Services → Add Service → Gmail  (conecta el correo de la iglesia)
+        Copia el "Service ID" → pega en EMAILJS_SERVICE_ID
+     3. Dashboard → Email Templates → Create New Template
+        - "To email":   {{to_email}}
+        - "To name":    {{to_name}}
+        - "Subject":    {{subject}}
+        - Activa "HTML content" y pega en el body: {{{html_body}}}
+        Copia el "Template ID" → pega en EMAILJS_TEMPLATE_ID
+     4. Dashboard → Account → Public Key → pega en EMAILJS_PUBLIC_KEY
+  ──────────────────────────────────────────────────────────────*/
+  const EMAILJS_SERVICE_ID  = 'service_yczb7rn';
+  const EMAILJS_TEMPLATE_ID = 'template_t8izci5';
+  const EMAILJS_PUBLIC_KEY  = 'YBvr8UJciOIrsFqMI';
+
+</script>
+<script type="text/babel">
+const{useState,useRef,useEffect,useCallback,useMemo}=React;
+
+/* ════════════════════════ CONSTANTES ════════════════════════ */
+const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
+const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
+const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
+
+// Zonas de la sala
+const ZONES={
+  lobby:  {label:'Lobby',      color:'#4a4f7a', bg:'rgba(74,79,122,.12)',  icon:'🏠', x1:0,   x2:100, y1:0, y2:100},
+  confra: {label:'Confraternización', color:'#f59e0b', bg:'rgba(245,158,11,.1)', icon:'🤝', x1:2,  x2:30, y1:22, y2:90},
+  repaso: {label:'Repaso Bíblico',    color:'#3b82f6', bg:'rgba(59,130,246,.1)', icon:'📖', x1:35, x2:64, y1:22, y2:90},
+  juegos: {label:'Juegos',            color:'#8b5cf6', bg:'rgba(139,92,246,.1)', icon:'🎮', x1:68, x2:97, y1:22, y2:90},
+};
+
+const PHASE_DURATIONS={confra:600,repaso:1800,juegos:900}; // segundos
+
+const getSID=()=>new Date().toISOString().slice(0,10);
+const nowTime=()=>new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+
+const AUTH_ERRORS={
+  'auth/user-not-found':'No existe una cuenta con ese correo',
+  'auth/wrong-password':'Contraseña incorrecta',
+  'auth/email-already-in-use':'Ese correo ya tiene una cuenta',
+  'auth/invalid-email':'El correo no es válido',
+  'auth/weak-password':'La contraseña debe tener al menos 6 caracteres',
+  'auth/too-many-requests':'Demasiados intentos. Espera unos minutos',
+  'auth/invalid-credential':'Correo o contraseña incorrectos',
+  'auth/popup-closed-by-user':'',
+  'auth/cancelled-popup-request':'',
+};
+const getErr=code=>AUTH_ERRORS[code]||`Error: ${code}`;
+
+// Detectar zona según posición x,y
+const detectZone=(x,y)=>{
+  for(const[key,z] of Object.entries(ZONES)){
+    if(key==='lobby') continue;
+    if(x>=z.x1&&x<=z.x2&&y>=z.y1&&y<=z.y2) return key;
+  }
+  return 'lobby';
+};
+
+// Comprimir imagen a base64
+const compressImage=(file,maxSize=200)=>new Promise(resolve=>{
+  const canvas=document.createElement('canvas');
+  const ctx=canvas.getContext('2d');
+  const img=new Image();
+  const url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const ratio=Math.min(maxSize/img.width,maxSize/img.height);
+    canvas.width=img.width*ratio;
+    canvas.height=img.height*ratio;
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    URL.revokeObjectURL(url);
+    resolve(canvas.toDataURL('image/jpeg',0.6));
+  };
+  img.src=url;
+});
+
+const formatTime=s=>{
+  const abs=Math.abs(s);
+  const m=Math.floor(abs/60).toString().padStart(2,'0');
+  const sec=(abs%60).toString().padStart(2,'0');
+  return `${s<0?'-':''}${m}:${sec}`;
+};
+
+/* ════════════════════════ CORREO BIENVENIDA ════════════════════════ */
+const buildWelcomeHTML=(name,email)=>`
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Bienvenido a Maranata Class</title></head>
+<body style="margin:0;padding:0;background:#07091f;font-family:'Segoe UI',Arial,sans-serif;">
+
+<!-- Wrapper -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#07091f;min-height:100vh;">
+<tr><td align="center" style="padding:32px 16px;">
+
+<!-- Card -->
+<table width="100%" style="max-width:560px;background:linear-gradient(160deg,#0d1035,#0a0c28);border-radius:20px;overflow:hidden;border:1px solid rgba(255,208,0,.18);box-shadow:0 0 60px rgba(255,208,0,.07);">
+
+  <!-- Header dorado -->
+  <tr>
+    <td style="background:linear-gradient(135deg,#1a1640,#0f1230);padding:36px 32px 28px;text-align:center;border-bottom:1px solid rgba(255,208,0,.15);">
+      <!-- Logo triángulo -->
+      <div style="margin:0 auto 16px;width:64px;height:48px;">
+        <svg width="64" height="48" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
+          <g stroke="#07091f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
+            <path d="M52 42L52 18Q52 15 49 15L40 17L40 42"/>
+            <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
+            <line x1="32" y1="22" x2="38" y2="23"/><line x1="32" y1="27" x2="38" y2="28"/>
+            <line x1="42" y1="23" x2="48" y2="22"/><line x1="42" y1="28" x2="48" y2="27"/>
+          </g>
+        </svg>
+      </div>
+      <div style="font-family:'Barlow Condensed','Arial Black',Arial,sans-serif;font-weight:900;font-size:28px;color:#ffd000;letter-spacing:.1em;text-transform:uppercase;line-height:1;">
+        MARANATA CLASS
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:.06em;">
+        IGLESIA ADVENTISTA · LAS CONDES
+      </div>
+    </td>
+  </tr>
+
+  <!-- Cuerpo principal -->
+  <tr>
+    <td style="padding:36px 36px 28px;">
+
+      <!-- Saludo -->
+      <div style="font-size:32px;text-align:center;margin-bottom:16px;">🎉</div>
+      <h1 style="margin:0 0 10px;font-size:24px;font-weight:800;color:#ffffff;text-align:center;line-height:1.3;">
+        ¡Bienvenido${name?`,<br/><span style="color:#ffd000;">${name.split(' ')[0]}</span>`:''}!
+      </h1>
+      <p style="margin:0 0 24px;font-size:15px;color:rgba(255,255,255,.75);text-align:center;line-height:1.7;">
+        Ya eres parte de <strong style="color:#ffd000;">Maranata Class</strong>, la sala virtual de los jóvenes adventistas de Las Condes.
+      </p>
+
+      <!-- Divisor -->
+      <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,208,0,.3),transparent);margin:0 0 28px;"></div>
+
+      <!-- Cards de funciones -->
+      <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;">
+        ¿QUÉ PUEDES HACER?
+      </p>
+
+      <!-- Card 1 -->
+      <table width="100%" style="margin-bottom:10px;">
+        <tr>
+          <td width="48" style="vertical-align:top;padding-top:4px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);text-align:center;line-height:42px;font-size:20px;">🤝</div>
+          </td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <div style="font-size:14px;font-weight:700;color:#ffffff;margin-bottom:3px;">Confraternizar</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;">Comparte tu semana, pedidos de oración y agradecimientos con el grupo.</div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Card 2 -->
+      <table width="100%" style="margin-bottom:10px;">
+        <tr>
+          <td width="48" style="vertical-align:top;padding-top:4px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);text-align:center;line-height:42px;font-size:20px;">📖</div>
+          </td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <div style="font-size:14px;font-weight:700;color:#ffffff;margin-bottom:3px;">Repaso Bíblico</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;">Participa en el chat, nube de palabras y dinámicas de la lección del sábado.</div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Card 3 -->
+      <table width="100%" style="margin-bottom:28px;">
+        <tr>
+          <td width="48" style="vertical-align:top;padding-top:4px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);text-align:center;line-height:42px;font-size:20px;">🎮</div>
+          </td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <div style="font-size:14px;font-weight:700;color:#ffffff;margin-bottom:3px;">Juegos & Kahoot</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;">Compite con los demás jóvenes en el Kahoot bíblico de cada semana.</div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Botón CTA -->
+      <div style="text-align:center;margin-bottom:28px;">
+        <a href="https://mrntclasslascondes.netlify.app" style="display:inline-block;background:linear-gradient(135deg,#ffd000,#e6a800);color:#07091f;text-decoration:none;font-weight:800;font-size:15px;padding:14px 36px;border-radius:50px;letter-spacing:.06em;text-transform:uppercase;font-family:'Arial Black',Arial,sans-serif;box-shadow:0 4px 20px rgba(255,208,0,.35);">
+          Entrar a la sala →
+        </a>
+      </div>
+
+      <!-- Cita bíblica -->
+      <div style="background:rgba(255,208,0,.06);border:1px solid rgba(255,208,0,.15);border-left:4px solid #ffd000;border-radius:4px 12px 12px 4px;padding:16px 20px;margin-bottom:0;">
+        <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.7;font-style:italic;">
+          "Porque donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos."
+        </div>
+        <div style="font-size:11px;color:#ffd000;font-weight:700;margin-top:8px;letter-spacing:.04em;">
+          — Mateo 18:20
+        </div>
+      </div>
+
+    </td>
+  </tr>
+
+  <!-- Footer -->
+  <tr>
+    <td style="padding:20px 36px 28px;border-top:1px solid rgba(255,255,255,.06);text-align:center;">
+      <div style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.7;">
+        Este correo fue enviado a <span style="color:rgba(255,255,255,.5);">${email}</span><br/>
+        Iglesia Adventista del Séptimo Día · Las Condes, Santiago<br/>
+        <span style="color:rgba(255,208,0,.4);">Maranata Class ·</span>
+        <span style="color:rgba(255,255,255,.2);"> sábados de 9:00 AM</span>
+      </div>
+    </td>
+  </tr>
+
+</table>
+<!-- End Card -->
+
+</td></tr>
+</table>
+<!-- End Wrapper -->
+</body></html>`;
+
+const sendWelcomeEmail=async(toEmail,toName)=>{
+  if(!toEmail) return;
+  // Si los IDs no están configurados todavía, silenciosamente no hace nada
+  if(typeof EMAILJS_SERVICE_ID==='undefined'||EMAILJS_SERVICE_ID==='TU_SERVICE_ID') return;
+  try{
+    await fetch('https://api.emailjs.com/api/v1.0/email/send',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        service_id:EMAILJS_SERVICE_ID,
+        template_id:EMAILJS_TEMPLATE_ID,
+        user_id:EMAILJS_PUBLIC_KEY,
+        template_params:{
+          to_email:toEmail,
+          to_name:toName||toEmail.split('@')[0],
+          subject:'¡Bienvenido a Maranata Class! 🎉',
+          html_body:buildWelcomeHTML(toName||'',toEmail),
+        },
+      }),
+    });
+  }catch(e){ console.warn('Email bienvenida no enviado:',e); }
+};
+
+/* ════════════════════════ COMPONENTES BASE ════════════════════════ */
+const BgTriangles=()=>(
+  <div style={{position:'fixed',inset:0,overflow:'hidden',pointerEvents:'none',zIndex:0}}>
+    <div style={{position:'absolute',top:'-10%',right:'-5%',width:'55%',height:'70%',
+      background:'linear-gradient(135deg,rgba(255,208,0,.07),transparent 60%)',
+      clipPath:'polygon(100% 0,100% 100%,0 100%)',animation:'triPulse 4s ease-in-out infinite'}}/>
+    <div style={{position:'absolute',bottom:'-5%',left:'-8%',width:'45%',height:'55%',
+      background:'linear-gradient(315deg,rgba(99,102,241,.05),transparent 60%)',
+      clipPath:'polygon(0 0,100% 100%,0 100%)',animation:'triPulse 6s ease-in-out infinite'}}/>
+  </div>
+);
+
+const BookLogo=({size=60})=>(
+  <svg width={size} height={size*.75} viewBox="0 0 80 60">
+    <polygon points="8,54 72,54 58,10" fill="#ffd000" opacity=".95"/>
+    <g stroke="#07091f" strokeWidth="2.8" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
+      <path d="M52 42L52 18Q52 15 49 15L40 17L40 42"/>
+      <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
+      <line x1="32" y1="22" x2="38" y2="23"/>
+      <line x1="32" y1="27" x2="38" y2="28"/>
+      <line x1="42" y1="23" x2="48" y2="22"/>
+      <line x1="42" y1="28" x2="48" y2="27"/>
+    </g>
+  </svg>
+);
+
+const Spinner=({size=20,color='#ffd000'})=>(
+  <div style={{width:size,height:size,borderRadius:'50%',flexShrink:0,
+    border:`${Math.max(2,size/10)}px solid ${color}22`,
+    borderTopColor:color,animation:'spin .8s linear infinite'}}/>
+);
+
+// Avatar (foto o emoji)
+const AvatarBubble=({profile,size=42,glow=false,isMe=false})=>{
+  const c=profile.color||'#ffd000';
+  return(
+    <div style={{
+      width:size,height:size,borderRadius:'50%',flexShrink:0,
+      border:`2.5px solid ${c}`,
+      background:`radial-gradient(circle at 35% 35%,${c}33,${c}11)`,
+      display:'flex',alignItems:'center',justifyContent:'center',
+      fontSize:profile.photo?undefined:size*.48,
+      overflow:'hidden',
+      animation:glow?'glowY 2.5s ease-in-out infinite':undefined,
+      boxShadow:isMe?undefined:`0 0 10px ${c}44`,
+    }}>
+      {profile.photo
+        ? <img src={profile.photo} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>
+        : <span>{profile.avatar||'👤'}</span>
+      }
+    </div>
+  );
+};
+
+/* ════════════════════════ TIMER ════════════════════════ */
+function useTimer(startTime,duration){
+  const[elapsed,setElapsed]=useState(0);
+  useEffect(()=>{
+    if(!startTime) return;
+    const iv=setInterval(()=>{
+      setElapsed(Math.floor((Date.now()-startTime)/1000));
+    },1000);
+    return()=>clearInterval(iv);
+  },[startTime]);
+  const remaining=duration-elapsed;
+  return{elapsed,remaining,over:remaining<=0};
+}
+
+function TimerDisplay({remaining,color='#ffd000',large=false}){
+  const abs=Math.abs(remaining);
+  const over=remaining<0;
+  const s=large?72:36;
+  const stroke=large?7:4;
+  const r=(s-stroke)/2;
+  const circ=2*Math.PI*r;
+  const pct=over?0:Math.max(0,remaining/(PHASE_DURATIONS.confra||600));
+  return(
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+      <div style={{position:'relative',width:s*2,height:s*2}}>
+        <svg width={s*2} height={s*2} style={{transform:'rotate(-90deg)'}}>
+          <circle cx={s} cy={s} r={r} fill="none"
+            stroke="rgba(255,255,255,.08)" strokeWidth={stroke}/>
+          <circle cx={s} cy={s} r={r} fill="none"
+            stroke={over?'#ef4444':color} strokeWidth={stroke}
+            strokeDasharray={circ} strokeDashoffset={circ*(1-pct)}
+            strokeLinecap="round"
+            style={{transition:'stroke-dashoffset 1s linear'}}/>
+        </svg>
+        <div style={{
+          position:'absolute',inset:0,display:'flex',alignItems:'center',
+          justifyContent:'center',flexDirection:'column',
+        }}>
+          <span style={{
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:large?28:14,color:over?'#ef4444':color,letterSpacing:'-.02em',
+            animation:over?'timerTick 1s infinite':undefined,
+          }}>
+            {over?'-':''}{formatTime(abs)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════ ROOM CANVAS ════════════════════════ */
+function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
+  const entries=Object.entries(users);
+  const phase=session?.phase||'waiting';
+  const isDrag=useRef(false);
+  const lastT=useRef(0);
+
+  const handleDragStart=useCallback(e=>{
+    if(full) return;
+    e.preventDefault();
+    isDrag.current=true;
+  },[full]);
+
+  const handleDragMove=useCallback(e=>{
+    if(!isDrag.current||full) return;
+    const now=Date.now();
+    if(now-lastT.current<50) return;
+    lastT.current=now;
+    const rect=roomRef.current?.getBoundingClientRect();
+    if(!rect) return;
+    const cx=e.touches?.[0]?.clientX??e.clientX;
+    const cy=e.touches?.[0]?.clientY??e.clientY;
+    const x=Math.max(2,Math.min(96,((cx-rect.left)/rect.width)*100));
+    const y=Math.max(14,Math.min(94,((cy-rect.top)/rect.height)*100));
+    onDragMove(x,y);
+  },[full,onDragMove,roomRef]);
+
+  const handleDragEnd=useCallback(()=>{ isDrag.current=false; },[]);
+
+  const zoneStyle=(key)=>{
+    const z=ZONES[key];
+    const isActive=phase===key;
+    return{
+      position:'absolute',
+      left:`${z.x1}%`,top:`${z.y1}%`,
+      width:`${z.x2-z.x1}%`,height:`${z.y2-z.y1}%`,
+      background:isActive?`${z.bg.replace('.1','.18')}`:`${z.bg}`,
+      border:`1.5px solid ${isActive?z.color+'88':z.color+'33'}`,
+      borderRadius:12,
+      display:'flex',flexDirection:'column',
+      alignItems:'center',justifyContent:'flex-start',
+      paddingTop:8,
+      transition:'all .3s',
+      boxShadow:isActive?`0 0 18px ${z.color}22`:undefined,
+    };
+  };
+
+  return(
+    <div
+      ref={roomRef}
+      onMouseMove={handleDragMove} onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}
+      onTouchMove={handleDragMove} onTouchEnd={handleDragEnd}
+      style={{
+        width:'100%',height:'100%',position:'relative',overflow:'hidden',
+        background:'var(--navy)',touchAction:'none',userSelect:'none',
+        backgroundImage:`linear-gradient(rgba(255,208,0,.03) 1px,transparent 1px),
+                         linear-gradient(90deg,rgba(255,208,0,.03) 1px,transparent 1px)`,
+        backgroundSize:'44px 44px',
+      }}>
+
+      {/* Luces ambientales */}
+      <div style={{position:'absolute',top:'8%',left:'4%',width:'30%',height:'30%',borderRadius:'50%',
+        background:'radial-gradient(circle,rgba(245,158,11,.04),transparent 70%)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',bottom:'12%',right:'4%',width:'28%',height:'28%',borderRadius:'50%',
+        background:'radial-gradient(circle,rgba(139,92,246,.04),transparent 70%)',pointerEvents:'none'}}/>
+
+      {/* Tres zonas */}
+      {['confra','repaso','juegos'].map(key=>{
+        const z=ZONES[key];
+        const count=entries.filter(([,u])=>u.zone===key).length;
+        return(
+          <div key={key} style={zoneStyle(key)}>
+            <div style={{
+              fontSize:full?13:8,fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+              color:z.color,textTransform:'uppercase',letterSpacing:'.06em',
+              textShadow:`0 0 10px ${z.color}55`,
+              display:'flex',alignItems:'center',gap:4,
+            }}>
+              <span>{z.icon}</span>
+              <span style={{maxWidth:'90%',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                {full?z.label:z.label.split(' ')[0]}
+              </span>
+            </div>
+            {count>0&&(
+              <div style={{fontSize:9,color:`${z.color}88`,marginTop:2,
+                fontFamily:'Barlow Condensed,sans-serif'}}>
+                {count} {count===1?'joven':'jóvenes'}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Hint */}
+      {!full&&(
+        <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
+          fontSize:8,color:'var(--muted)',pointerEvents:'none',
+          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
+          ✨ Arrastra tu avatar a una zona
+        </div>
+      )}
+
+      {/* Overlay proyección */}
+      {full&&(<>
+        <div style={{position:'absolute',top:16,left:'50%',transform:'translateX(-50%)',
+          background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.25)',
+          borderRadius:14,padding:'8px 22px',textAlign:'center',
+          backdropFilter:'blur(10px)',zIndex:20}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:20,
+            color:'#ffd000',letterSpacing:'.05em',textTransform:'uppercase'}}>MARANATA CLASS</div>
+          <div style={{fontSize:10,color:'var(--muted)'}}>
+            {new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})}
+          </div>
+        </div>
+        <div style={{position:'absolute',bottom:18,left:'50%',transform:'translateX(-50%)',
+          background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.2)',
+          borderRadius:20,padding:'6px 18px',display:'flex',alignItems:'center',gap:8,zIndex:20}}>
+          <div style={{width:7,height:7,borderRadius:'50%',background:'#ffd000',
+            animation:'pulse 1.5s infinite'}}/>
+          <span style={{color:'#ffd000',fontSize:12,fontFamily:'Barlow Condensed',fontWeight:700}}>
+            {entries.length} JÓVENES EN SALA
+          </span>
+        </div>
+      </>)}
+
+      {/* Personajes */}
+      {entries.map(([uid,u])=>{
+        const myReactionsOnUser=reactions?.[uid]||{};
+        const reactionCounts=REACTIONS.map(r=>({
+          ...r,
+          count:Object.values(myReactionsOnUser).filter(v=>v&&typeof v==='object'?v[r.id]:v===r.id).length
+        })).filter(r=>r.count>0);
+        const isMine=uid===myId;
+        return(
+          <div key={uid}
+            onMouseDown={isMine&&!full?handleDragStart:undefined}
+            onTouchStart={isMine&&!full?handleDragStart:undefined}
+            style={{
+              position:'absolute',left:`${u.x??50}%`,top:`${u.y??50}%`,
+              transform:'translate(-50%,-50%)',
+              transition:isDrag.current&&isMine?'none':'left .45s cubic-bezier(0.23,1,0.32,1), top .45s cubic-bezier(0.23,1,0.32,1)',
+              display:'flex',flexDirection:'column',alignItems:'center',
+              cursor:isMine&&!full?'grab':'default',
+              zIndex:isMine?10:5,
+              animation:uid===myId?'pop .45s ease':'none',
+              pointerEvents:full?'none':'auto',
+            }}>
+            {reactionCounts.length>0&&(
+              <div style={{display:'flex',gap:2,marginBottom:2}}>
+                {reactionCounts.map(r=>(
+                  <div key={r.id} style={{
+                    background:'rgba(7,9,31,.85)',borderRadius:20,
+                    padding:'1px 5px',fontSize:full?13:9,
+                    display:'flex',alignItems:'center',gap:2,
+                    border:'1px solid rgba(255,255,255,.1)',
+                  }}>
+                    <span>{r.e}</span>
+                    <span style={{fontSize:full?10:7,color:'#ffd000',
+                      fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
+                      {r.count>1?r.count:''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <AvatarBubble profile={u} size={full?58:42} glow={uid===myId} isMe={uid===myId}/>
+            <div style={{
+              marginTop:-2,fontSize:full?11:8,color:'white',
+              background:'rgba(7,9,31,.92)',padding:'2px 8px',borderRadius:20,
+              maxWidth:full?90:64,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
+              fontFamily:'Barlow,sans-serif',fontWeight:600,
+              border:`1px solid ${u.color||'#ffd000'}33`,
+            }}>
+              {uid===myId?'⭐ '+u.name:u.name}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ════════════════════════ CONFRA: SPEAKER PANEL ════════════════════════ */
+function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myReactions,allReactions}){
+  const confra=session?.confra;
+  if(session?.phase!=='confra'||!confra) return null;
+  const rawQueue=confra.queue||{};
+  const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
+  const idx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
+  const speakerUid=queue[idx];
+  const speaker=speakerUid?users[speakerUid]:null;
+  const isMe=speakerUid===myId;
+  const remaining=Math.max(0,queue.length-idx-1);
+
+  if(!speaker){
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:150,
+        background:'rgba(7,9,31,.96)',backdropFilter:'blur(12px)',
+        display:'flex',flexDirection:'column',alignItems:'center',
+        justifyContent:'center',padding:24,gap:12,textAlign:'center'}}>
+        <div style={{fontSize:52,animation:'bounce 1s infinite'}}>🤝</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:20,color:'#f59e0b',textTransform:'uppercase',letterSpacing:'.05em'}}>
+          Iniciando confraternización...
+        </div>
+        <div style={{fontSize:13,color:'var(--muted)'}}>Un momento por favor</div>
+        {isAdmin&&(
+          <button onClick={onEnd} style={{marginTop:8,
+            background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
+            borderRadius:12,padding:'10px 22px',color:'#ef4444',fontWeight:800,fontSize:13,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase'}}>
+            ✕ Cancelar
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const isLast=remaining===0;
+
+  return(
+    <div style={{
+      position:'fixed',inset:0,zIndex:150,
+      background:'rgba(7,9,31,.92)',backdropFilter:'blur(10px)',
+      display:'flex',flexDirection:'column',alignItems:'center',
+      justifyContent:'center',padding:'20px 16px',gap:14,
+      overflowY:'auto',
+    }}>
+
+      {/* Chip de estado */}
+      <div style={{
+        background:'rgba(245,158,11,.1)',border:'1px solid rgba(245,158,11,.3)',
+        borderRadius:20,padding:'5px 16px',
+        fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+        fontSize:11,color:'#f59e0b',letterSpacing:'.1em',textTransform:'uppercase',
+        display:'flex',alignItems:'center',gap:6,
+      }}>
+        <span style={{width:6,height:6,borderRadius:'50%',background:'#f59e0b',
+          display:'inline-block',animation:'pulse 1.5s infinite'}}/>
+        Confraternización · {idx+1} de {queue.length}
+      </div>
+
+      {/* Tarjeta del speaker */}
+      <div style={{
+        background:'linear-gradient(145deg,rgba(245,158,11,.08),rgba(7,9,31,.6))',
+        border:`2px solid ${speaker.color||'#f59e0b'}55`,
+        borderRadius:22,padding:'22px 20px',
+        textAlign:'center',width:'100%',maxWidth:340,
+        animation:'speakerPop .55s ease',
+        boxShadow:`0 0 40px ${speaker.color||'#f59e0b'}18`,
+      }}>
+        {/* Personaje */}
+        <div style={{display:'flex',justifyContent:'center',marginBottom:10}}>
+          <AvatarBubble profile={speaker} size={90} glow={true}/>
+        </div>
+
+        {/* Nombre */}
+        <div style={{
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:30,letterSpacing:'-.01em',
+          color:speaker.color||'#ffd000',
+          textShadow:`0 0 20px ${speaker.color||'#ffd000'}66`,
+        }}>
+          {isMe?'¡Es tu turno!':speaker.name}
+        </div>
+        {!isMe&&(
+          <div style={{fontSize:12,color:'var(--muted)',marginTop:2,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em'}}>
+            está compartiendo
+          </div>
+        )}
+
+        {/* Pregunta */}
+        <div style={{
+          marginTop:14,
+          background:'rgba(255,255,255,.04)',
+          border:'1px solid rgba(255,255,255,.08)',
+          borderRadius:14,padding:'12px 14px',
+          fontSize:14,color:'var(--white)',lineHeight:1.55,
+          fontStyle:'italic',
+        }}>
+          🙏 {isMe
+            ? '¿Quieres contarnos, pedir o agradecer algo?'
+            : `¿Quieres contarnos, pedir o agradecer algo, ${speaker.name.split(' ')[0]}?`}
+        </div>
+      </div>
+
+      {/* Reacciones acumuladas — visibles para todos */}
+      {(()=>{
+        // Calcular totales por tipo
+        const speakerReactions=allReactions||{};
+        const totals={};
+        REACTIONS.forEach(r=>{totals[r.id]=0;});
+        Object.values(speakerReactions).forEach(userRxns=>{
+          if(userRxns&&typeof userRxns==='object'){
+            Object.keys(userRxns).forEach(rid=>{if(totals[rid]!==undefined)totals[rid]++;});
+          }
+        });
+        const hasAny=Object.values(totals).some(v=>v>0);
+        return(
+          <div style={{width:'100%',maxWidth:360}}>
+            {/* Totales acumulados */}
+            {hasAny&&(
+              <div style={{display:'flex',gap:6,flexWrap:'wrap',
+                justifyContent:'center',marginBottom:10}}>
+                {REACTIONS.filter(r=>totals[r.id]>0).map(r=>(
+                  <div key={r.id} style={{
+                    background:'rgba(255,255,255,.08)',
+                    border:`1px solid ${speaker.color||'#ffd000'}33`,
+                    borderRadius:20,padding:'4px 10px',
+                    display:'flex',alignItems:'center',gap:4,
+                    animation:'slideIn .2s ease',
+                  }}>
+                    <span style={{fontSize:16}}>{r.e}</span>
+                    <span style={{fontSize:13,fontWeight:800,
+                      color:speaker.color||'#ffd000',
+                      fontFamily:'Barlow Condensed,sans-serif'}}>{totals[r.id]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Botones para los que no son el speaker */}
+            {!isMe&&(
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
+                {REACTIONS.map(r=>{
+                  const selected=!!(myReactions&&myReactions[r.id]);
+                  return(
+                    <div key={r.id} style={{position:'relative'}}>
+                      <button onClick={()=>onReact(r.id)} style={{
+                        background:selected
+                          ?`${speaker.color||'#ffd000'}28`
+                          :'rgba(255,255,255,.05)',
+                        border:selected
+                          ?`2px solid ${speaker.color||'#ffd000'}`
+                          :'2px solid rgba(255,255,255,.12)',
+                        borderRadius:50,width:52,height:52,fontSize:24,
+                        display:'flex',alignItems:'center',justifyContent:'center',
+                        boxShadow:selected?`0 0 16px ${speaker.color||'#ffd000'}55`:undefined,
+                        transition:'all .18s',
+                        flexDirection:'column',gap:0,
+                        animation:selected?'reactionPop .35s ease':'none',
+                      }}>
+                        {r.e}
+                        {selected&&(
+                          <div style={{
+                            position:'absolute',top:-5,right:-5,
+                            width:16,height:16,borderRadius:'50%',
+                            background:speaker.color||'#ffd000',
+                            display:'flex',alignItems:'center',justifyContent:'center',
+                            fontSize:9,fontWeight:900,color:'#07091f',
+                          }}>✓</div>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {!isMe&&!isAdmin&&(
+              <div style={{fontSize:10,color:'var(--muted)',textAlign:'center',
+                marginTop:6}}>
+                Puedes seleccionar varias 👆
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Progreso — puntitos */}
+      <div style={{display:'flex',gap:7,alignItems:'center'}}>
+        {queue.map((_,i)=>(
+          <div key={i} style={{
+            width:i===idx?22:8,height:8,borderRadius:4,
+            background:i<idx?'#10b981':i===idx?speaker.color||'#ffd000':'rgba(255,255,255,.12)',
+            transition:'all .35s cubic-bezier(0.23,1,0.32,1)',
+          }}/>
+        ))}
+      </div>
+
+      {/* Botón del speaker: terminar turno */}
+      {isMe&&(
+        <button onClick={isLast?onEnd:onNext} style={{
+          background:`linear-gradient(135deg,${speaker.color||'#ffd000'},${speaker.color||'#ffd000'}bb)`,
+          border:'none',borderRadius:14,padding:'14px 32px',
+          color:'#07091f',fontWeight:900,fontSize:16,
+          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
+          boxShadow:`0 0 28px ${speaker.color||'#ffd000'}44`,
+          marginTop:4,
+        }}>
+          {isLast?'Listo, todos compartieron ✨':'Terminé → Siguiente'}
+        </button>
+      )}
+
+      {/* Botones del admin */}
+      {isAdmin&&(
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
+          {!isLast&&(
+            <button onClick={onNext} style={{
+              background:'rgba(245,158,11,.12)',border:'1px solid rgba(245,158,11,.35)',
+              borderRadius:12,padding:'10px 20px',
+              color:'#f59e0b',fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+            }}>⏭ Saltar</button>
+          )}
+          <button onClick={onEnd} style={{
+            background:'rgba(16,185,129,.1)',border:'1px solid rgba(16,185,129,.3)',
+            borderRadius:12,padding:'10px 20px',
+            color:'#10b981',fontWeight:800,fontSize:12,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+          }}>✓ Finalizar confra</button>
+        </div>
+      )}
+
+      {/* Instrucción si no es speaker ni admin */}
+      {!isMe&&!isAdmin&&(
+        <div style={{
+          background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.07)',
+          borderRadius:12,padding:'8px 16px',fontSize:11,color:'var(--muted)',
+          textAlign:'center',maxWidth:280,lineHeight:1.5,
+        }}>
+          Cuando {speaker.name.split(' ')[0]} termine, tocará el botón para pasar al siguiente
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════ REPASO: CHAT PANTALLA ════════════════════════ */
+function RepasoChatScreen({msgs,session,users}){
+  const repaso=session?.repaso;
+  if(!repaso?.active) return null;
+  const recent=msgs.slice(-6);
+  return(
+    <div style={{
+      position:'absolute',bottom:80,left:'50%',transform:'translateX(-50%)',
+      width:'82%',maxWidth:520,zIndex:30,pointerEvents:'none',
+    }}>
+      {recent.map((m,i)=>(
+        <div key={m.id||i} style={{display:'flex',gap:8,marginBottom:6,animation:'slideIn .25s ease'}}>
+          <div style={{width:26,height:26,borderRadius:'50%',flexShrink:0,
+            background:`${m.color||'#3b82f6'}22`,border:`1.5px solid ${m.color||'#3b82f6'}`,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,overflow:'hidden'}}>
+            {m.photo?<img src={m.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+              :<span>{m.avatar||'👤'}</span>}
+          </div>
+          <div style={{background:'rgba(7,9,31,.93)',padding:'6px 12px',
+            borderRadius:'4px 12px 12px 12px',
+            border:`1px solid ${m.color||'#3b82f6'}33`,backdropFilter:'blur(4px)',
+            maxWidth:'85%'}}>
+            <span style={{fontSize:11,fontWeight:700,color:m.color||'#3b82f6',
+              fontFamily:'Barlow Condensed,sans-serif',marginRight:6}}>{m.name}</span>
+            {m.type==='image'&&m.imageData
+              ?<img src={m.imageData} style={{display:'block',maxWidth:160,borderRadius:8,marginTop:4}}/>
+              :<span style={{fontSize:13,color:'white'}}>{m.text}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ════════════════════════ REPASO: CHAT COMPLETO ════════════════════════ */
+const QUICK_EMOJIS=['😊','🙏','❤️','👍','🔥','✨','😂','🤔','📖','🙌','💪','👏','🎉','✝️','🕊️','💡'];
+
+function RepasoChat({msgs,session,myId,users,onSend,onClose}){
+  const repaso=session?.repaso;
+  const{remaining}=useTimer(repaso?.startTime,PHASE_DURATIONS.repaso);
+  const[text,setText]=useState('');
+  const[showEmojis,setShowEmojis]=useState(false);
+  const[imgLoading,setImgLoading]=useState(false);
+  const endRef=useRef(null);
+  const inputRef=useRef(null);
+  const fileRef=useRef(null);
+
+  useEffect(()=>{
+    setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),60);
+  },[msgs.length]);
+
+  const send=(t,extra={})=>{
+    if(!t&&!extra.imageData) return;
+    onSend(t,extra);
+    setText('');
+    setShowEmojis(false);
+    inputRef.current?.focus();
+  };
+
+  const handleImg=async(e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    setImgLoading(true);
+    e.target.value='';
+    const b64=await compressImage(f,480);
+    send('',{type:'image',imageData:b64});
+    setImgLoading(false);
+  };
+
+  const isOver=remaining<=0;
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:155,display:'flex',flexDirection:'column',
+      background:'var(--navy)'}}>
+
+      {/* Header */}
+      <div style={{
+        background:'linear-gradient(135deg,#0d1035,#0a1950)',
+        borderBottom:'1px solid rgba(59,130,246,.2)',
+        padding:'10px 14px',flexShrink:0,
+        display:'flex',alignItems:'center',gap:10,
+      }}>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:17,color:'#3b82f6',textTransform:'uppercase',letterSpacing:'.05em',
+            display:'flex',alignItems:'center',gap:7}}>
+            <span style={{width:8,height:8,borderRadius:'50%',background:'#3b82f6',
+              display:'inline-block',animation:isOver?undefined:'pulse 1.5s infinite'}}/>
+            📖 Repaso Bíblico
+          </div>
+          <div style={{fontSize:10,color:'var(--muted)',marginTop:1}}>
+            {Object.values(users).filter(u=>u.zone==='repaso').length} en sala ·{' '}
+            <span style={{color:isOver?'#ef4444':'#3b82f6',fontWeight:600}}>
+              {isOver?'Tiempo extra':'Tiempo: '+formatTime(remaining)}
+            </span>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:6,alignItems:'center'}}>
+          <div style={{display:'flex',gap:3}}>
+            {Object.values(users).filter(u=>u.zone==='repaso').slice(0,5).map((u,i)=>(
+              <div key={i} style={{width:24,height:24,borderRadius:'50%',
+                background:`${u.color||'#3b82f6'}22`,border:`1.5px solid ${u.color||'#3b82f6'}`,
+                display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,
+                overflow:'hidden',marginLeft:i>0?-6:0}}>
+                {u.photo?<img src={u.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  :<span>{u.avatar||'👤'}</span>}
+              </div>
+            ))}
+          </div>
+          <button onClick={onClose} style={{background:'rgba(255,255,255,.06)',
+            border:'1px solid rgba(255,255,255,.1)',borderRadius:'50%',
+            width:30,height:30,color:'var(--muted)',fontSize:14,
+            display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+        </div>
+      </div>
+
+      {/* Mensajes */}
+      <div style={{flex:1,overflowY:'auto',padding:'12px 14px',display:'flex',
+        flexDirection:'column',gap:10}}>
+        {msgs.length===0&&(
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',
+            justifyContent:'center',height:'100%',gap:10,opacity:.5}}>
+            <div style={{fontSize:40}}>📖</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              fontSize:14,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.06em',
+              textAlign:'center'}}>
+              Sé el primero en comentar
+            </div>
+          </div>
+        )}
+        {msgs.map(m=>{
+          const isMe=m.uid===myId;
+          const c=m.color||'#3b82f6';
+          return(
+            <div key={m.id} style={{display:'flex',gap:8,
+              flexDirection:isMe?'row-reverse':'row',animation:'slideIn .2s ease'}}>
+              {/* Avatar */}
+              <div style={{width:32,height:32,borderRadius:'50%',flexShrink:0,alignSelf:'flex-end',
+                background:`${c}22`,border:`1.5px solid ${c}`,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontSize:15,overflow:'hidden'}}>
+                {m.photo?<img src={m.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  :<span>{m.avatar||'👤'}</span>}
+              </div>
+              <div style={{maxWidth:'72%'}}>
+                {/* Name + time */}
+                <div style={{display:'flex',alignItems:'baseline',gap:5,marginBottom:3,
+                  flexDirection:isMe?'row-reverse':'row'}}>
+                  <span style={{fontSize:11,fontWeight:700,color:c,
+                    fontFamily:'Barlow Condensed,sans-serif'}}>{isMe?'Tú':m.name}</span>
+                  <span style={{fontSize:9,color:'var(--muted)'}}>{m.time}</span>
+                  {m.tag&&(
+                    <span style={{fontSize:9,background:`${c}22`,color:c,
+                      border:`1px solid ${c}44`,borderRadius:10,padding:'1px 6px',
+                      fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
+                      {m.tag}
+                    </span>
+                  )}
+                </div>
+                {/* Bubble */}
+                <div style={{
+                  background:isMe?`${c}18`:'rgba(255,255,255,.05)',
+                  border:`1px solid ${isMe?c+'44':'rgba(255,255,255,.08)'}`,
+                  padding:m.type==='image'?6:'8px 12px',
+                  borderRadius:isMe?'12px 4px 12px 12px':'4px 12px 12px 12px',
+                  fontSize:13,color:'var(--white)',lineHeight:1.5,wordBreak:'break-word',
+                }}>
+                  {m.type==='image'&&m.imageData
+                    ?<img src={m.imageData} alt="" style={{
+                        maxWidth:'100%',maxHeight:220,borderRadius:8,display:'block'}}/>
+                    :<span>{m.text}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={endRef}/>
+      </div>
+
+      {/* Emoji picker */}
+      {showEmojis&&(
+        <div style={{padding:'8px 14px',borderTop:'1px solid rgba(59,130,246,.1)',
+          background:'rgba(7,9,31,.98)',flexShrink:0,
+          display:'flex',flexWrap:'wrap',gap:6}}>
+          {QUICK_EMOJIS.map(e=>(
+            <button key={e} onClick={()=>send(text+e)}
+              style={{background:'none',border:'none',fontSize:22,
+                padding:'2px 3px',borderRadius:6,
+                transition:'transform .1s'}}>
+              {e}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input bar */}
+      <div style={{padding:'10px 12px 14px',borderTop:'1px solid rgba(59,130,246,.12)',
+        background:'rgba(7,9,31,.98)',flexShrink:0}}>
+
+        {/* Tag buttons */}
+        <div style={{display:'flex',gap:5,marginBottom:8,overflowX:'auto',paddingBottom:2}}>
+          {[
+            {label:'❓ Pregunta',tag:'Pregunta',color:'#f59e0b'},
+            {label:'💬 Comentario',tag:'Comentario',color:'#3b82f6'},
+            {label:'📝 Reflexión',tag:'Reflexión',color:'#10b981'},
+            {label:'🙏 Oración',tag:'Oración',color:'#8b5cf6'},
+          ].map(t=>(
+            <button key={t.tag}
+              onClick={()=>text.trim()&&send(text,{tag:t.tag})}
+              style={{
+                background:`${t.color}14`,border:`1px solid ${t.color}44`,
+                borderRadius:20,padding:'4px 10px',
+                color:t.color,fontSize:10,fontWeight:700,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                whiteSpace:'nowrap',flexShrink:0,
+              }}>{t.label}</button>
+          ))}
+        </div>
+
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          {/* Imagen */}
+          <button onClick={()=>fileRef.current?.click()}
+            disabled={imgLoading}
+            style={{width:38,height:38,flexShrink:0,borderRadius:'50%',
+              background:'rgba(59,130,246,.1)',border:'1px solid rgba(59,130,246,.25)',
+              color:'#3b82f6',fontSize:17,
+              display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {imgLoading?<Spinner size={16} color="#3b82f6"/>:'🖼️'}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*"
+            onChange={handleImg} style={{display:'none'}}/>
+
+          {/* Emoji */}
+          <button onClick={()=>setShowEmojis(s=>!s)} style={{
+            width:38,height:38,flexShrink:0,borderRadius:'50%',
+            background:showEmojis?'rgba(59,130,246,.2)':'rgba(59,130,246,.1)',
+            border:`1px solid rgba(59,130,246,${showEmojis?.4:.25})`,
+            color:'#3b82f6',fontSize:18,
+            display:'flex',alignItems:'center',justifyContent:'center'}}>
+            😊
+          </button>
+
+          {/* Text input */}
+          <input
+            ref={inputRef}
+            value={text}
+            onChange={e=>setText(e.target.value)}
+            onKeyDown={e=>{
+              if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(text);}
+            }}
+            placeholder="Escribe tu pregunta o comentario..."
+            style={{flex:1,padding:'10px 14px',borderRadius:22,
+              background:'rgba(255,255,255,.05)',border:'1px solid rgba(59,130,246,.2)',
+              color:'var(--white)',fontSize:13,outline:'none',
+              fontFamily:'Barlow,sans-serif'}}/>
+
+          {/* Send */}
+          <button onClick={()=>send(text)}
+            disabled={!text.trim()}
+            style={{width:38,height:38,flexShrink:0,borderRadius:'50%',
+              background:text.trim()?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'rgba(255,255,255,.05)',
+              border:'none',color:'white',fontSize:17,fontWeight:900,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              boxShadow:text.trim()?'0 0 14px rgba(59,130,246,.4)':undefined}}>
+            ↑
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════ FIN DE ACTIVIDAD ════════════════════════ */
+function ActivityEndBanner({phase,onDismiss}){
+  const msgs={
+    confra:{
+      title:'¡Confraternización completada!',
+      msg:'Muevan su ícono a la sala de Repaso Bíblico 📖',
+      color:'#f59e0b',
+    },
+    repaso:{
+      title:'¡Repaso finalizado!',
+      msg:'Muevan su ícono a la sala de Juegos 🎮',
+      color:'#3b82f6',
+    },
+  };
+  const info=msgs[phase];
+  if(!info) return null;
+  return(
+    <div style={{
+      position:'fixed',inset:0,zIndex:160,
+      background:'rgba(7,9,31,.9)',backdropFilter:'blur(8px)',
+      display:'flex',flexDirection:'column',alignItems:'center',
+      justifyContent:'center',gap:14,padding:24,textAlign:'center',
+    }}>
+      <div style={{fontSize:60,animation:'bounce 1s infinite'}}>🎉</div>
+      <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+        fontSize:26,color:info.color,textTransform:'uppercase',letterSpacing:'.04em'}}>
+        {info.title}
+      </h2>
+      <p style={{color:'var(--white)',fontSize:16,maxWidth:280,lineHeight:1.6}}>
+        {info.msg}
+      </p>
+      <button onClick={onDismiss} style={{
+        background:`linear-gradient(135deg,${info.color},${info.color}cc)`,
+        border:'none',borderRadius:12,padding:'12px 28px',
+        color:'#07091f',fontWeight:800,fontSize:14,
+        fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+        marginTop:8,
+      }}>
+        Entendido ✓
+      </button>
+    </div>
+  );
+}
+
+/* ════════════════════════ NUBE DE PALABRAS ════════════════════════ */
+const wordHash=w=>{let h=0;for(const c of w)h=(h*31+c.charCodeAt(0))|0;return Math.abs(h);};
+
+function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
+  const[tab,setTab]=useState('escribir'); // 'escribir' | 'nube'
+  const[input,setInput]=useState('');
+  const[sending,setSending]=useState(false);
+  const[justSent,setJustSent]=useState(false);
+  const inputRef=useRef(null);
+
+  if(!wordcloud?.active) return null;
+
+  const rawWords=wordcloud.words?Object.values(wordcloud.words):[];
+  const myWords=rawWords.filter(w=>w.uid===myId);
+  const myCount=myWords.length;
+  const MAX=5;
+  const canSend=myCount<MAX&&!sending;
+
+  // Frecuencias
+  const freq={};
+  rawWords.forEach(w=>{
+    const key=w.word.toLowerCase().trim();
+    if(!freq[key]) freq[key]={display:w.word,count:0,color:w.color||'#3b82f6'};
+    freq[key].count++;
+    freq[key].color=w.color||'#3b82f6';
+  });
+  const sorted=Object.entries(freq).sort((a,b)=>b[1].count-a[1].count);
+  const maxCount=sorted[0]?.[1].count||1;
+  const getFontSize=count=>Math.round(16+(maxCount===1?10:(count-1)/(maxCount-1))*52);
+  const getRotation=key=>{const h=wordHash(key);return[0,0,0,-15,15,-8,8][h%7];};
+
+  const handleSend=async()=>{
+    const w=input.trim();
+    if(!w||!canSend) return;
+    setSending(true);
+    const clean=w.replace(/\s+/g,' ').split(' ').slice(0,3).join(' ');
+    await db.ref(`sessions/${SID}/wordcloud/words`).push({
+      word:clean,uid:myId,color:users[myId]?.color||'#3b82f6',ts:Date.now(),
+    });
+    setInput('');setSending(false);setJustSent(true);
+    setTimeout(()=>setJustSent(false),1500);
+    setTimeout(()=>inputRef.current?.focus(),60);
+  };
+
+  const handleClear=()=>db.ref(`sessions/${SID}/wordcloud/words`).remove();
+  const handleStop=async()=>{
+    await db.ref(`sessions/${SID}/wordcloud`).update({active:false});
+    onClose&&onClose();
+  };
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:180,display:'flex',flexDirection:'column',
+      background:'var(--navy)'}}>
+
+      {/* Header */}
+      <div style={{background:'rgba(7,9,31,.98)',borderBottom:'1px solid rgba(59,130,246,.2)',
+        padding:'10px 14px',flexShrink:0,display:'flex',alignItems:'center',gap:10}}>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:16,color:'#3b82f6',textTransform:'uppercase',letterSpacing:'.06em',
+            display:'flex',alignItems:'center',gap:7}}>
+            <span>☁️</span> Nube de Palabras
+            {rawWords.length>0&&(
+              <span style={{background:'rgba(59,130,246,.15)',border:'1px solid rgba(59,130,246,.3)',
+                borderRadius:20,padding:'2px 8px',fontSize:11,color:'#3b82f6',fontWeight:700}}>
+                {rawWords.length}
+              </span>
+            )}
+          </div>
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          {isAdmin&&rawWords.length>0&&(
+            <button onClick={handleClear} style={{background:'rgba(255,255,255,.06)',
+              border:'1px solid rgba(255,255,255,.1)',borderRadius:8,padding:'5px 9px',
+              color:'var(--muted)',fontSize:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              textTransform:'uppercase'}}>🗑</button>
+          )}
+          {isAdmin&&(
+            <button onClick={handleStop} style={{background:'rgba(239,68,68,.1)',
+              border:'1px solid rgba(239,68,68,.25)',borderRadius:8,padding:'5px 9px',
+              color:'#f87171',fontSize:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              textTransform:'uppercase'}}>⏹ Terminar</button>
+          )}
+          {!isAdmin&&(
+            <button onClick={onClose} style={{background:'rgba(255,255,255,.06)',
+              border:'1px solid rgba(255,255,255,.1)',borderRadius:'50%',
+              width:30,height:30,color:'var(--muted)',fontSize:14,
+              display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:'flex',background:'rgba(255,255,255,.04)',borderRadius:0,
+        borderBottom:'1px solid rgba(255,255,255,.06)',flexShrink:0}}>
+        {[{id:'escribir',l:'✏️ Escribir'},{id:'nube',l:'☁️ Ver Nube'}].map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            flex:1,padding:'11px 4px',border:'none',background:'none',
+            color:tab===t.id?'#3b82f6':'var(--muted)',
+            fontWeight:700,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+            letterSpacing:'.04em',textTransform:'uppercase',
+            borderBottom:tab===t.id?'2px solid #3b82f6':'2px solid transparent',
+            transition:'all .15s'}}>
+            {t.l}
+            {t.id==='nube'&&sorted.length>0&&tab!=='nube'&&(
+              <span style={{marginLeft:6,background:'rgba(59,130,246,.2)',
+                borderRadius:20,padding:'1px 6px',fontSize:10,color:'#3b82f6'}}>{sorted.length}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* TAB: ESCRIBIR */}
+      {tab==='escribir'&&(
+        <div style={{flex:1,display:'flex',flexDirection:'column',padding:'20px 16px',gap:16,overflowY:'auto'}}>
+          {/* Pregunta */}
+          {question&&(
+            <div style={{background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',
+              borderRadius:14,padding:'14px 16px',textAlign:'center'}}>
+              <div style={{fontSize:11,color:'rgba(59,130,246,.7)',fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:700,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:6}}>
+                📖 Pregunta del repaso
+              </div>
+              <div style={{fontSize:15,color:'var(--white)',lineHeight:1.6,fontWeight:500}}>
+                {question}
+              </div>
+            </div>
+          )}
+
+          {/* Estado del usuario */}
+          <div style={{textAlign:'center'}}>
+            {myCount===0?(
+              <div style={{fontSize:13,color:'var(--muted)',lineHeight:1.6}}>
+                Escribe hasta <strong style={{color:'#3b82f6'}}>{MAX} palabras</strong> relacionadas con la pregunta
+              </div>
+            ):(
+              <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center'}}>
+                {myWords.map((w,i)=>(
+                  <span key={i} style={{background:`${w.color||'#3b82f6'}18`,
+                    border:`1px solid ${w.color||'#3b82f6'}44`,
+                    borderRadius:20,padding:'4px 12px',
+                    fontSize:13,color:w.color||'#3b82f6',fontWeight:600}}>
+                    ✓ {w.word}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Input */}
+          {canSend?(
+            <>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <input ref={inputRef} value={input}
+                  onChange={e=>setInput(e.target.value.slice(0,30))}
+                  onKeyDown={e=>e.key==='Enter'&&handleSend()}
+                  placeholder="Escribe una palabra o frase corta..."
+                  autoFocus
+                  style={{flex:1,padding:'12px 16px',borderRadius:24,
+                    background:'rgba(255,255,255,.06)',border:'1px solid rgba(59,130,246,.25)',
+                    color:'var(--white)',fontSize:14,outline:'none',fontFamily:'Barlow,sans-serif'}}/>
+                <button onClick={handleSend} disabled={!input.trim()||sending} style={{
+                  width:46,height:46,flexShrink:0,borderRadius:'50%',border:'none',
+                  background:input.trim()&&!sending
+                    ?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'rgba(255,255,255,.06)',
+                  color:input.trim()&&!sending?'white':'var(--muted)',
+                  fontSize:20,display:'flex',alignItems:'center',justifyContent:'center',
+                  boxShadow:input.trim()&&!sending?'0 0 16px rgba(59,130,246,.4)':undefined}}>
+                  {sending?<Spinner size={18} color="white"/>:'↑'}
+                </button>
+              </div>
+              <div style={{textAlign:'right',fontSize:10,color:'var(--muted)'}}>
+                {MAX-myCount} envío{MAX-myCount!==1?'s':''} restante{MAX-myCount!==1?'s':''}
+              </div>
+            </>
+          ):(
+            <div style={{textAlign:'center',padding:'16px 0'}}>
+              <div style={{fontSize:22,marginBottom:8}}>✅</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:16,color:'#10b981',textTransform:'uppercase',letterSpacing:'.05em'}}>
+                ¡Gracias por participar!
+              </div>
+              <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>
+                Toca "Ver Nube" para ver el resultado en tiempo real
+              </div>
+              <button onClick={()=>setTab('nube')} style={{marginTop:12,
+                background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                border:'none',borderRadius:20,padding:'10px 24px',
+                color:'white',fontWeight:800,fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
+                boxShadow:'0 4px 16px rgba(59,130,246,.4)'}}>
+                ☁️ Ver Nube →
+              </button>
+            </div>
+          )}
+
+          {justSent&&(
+            <div style={{textAlign:'center',animation:'scoreUp .4s ease'}}>
+              <span style={{fontSize:13,color:'#10b981',fontWeight:700}}>
+                ✓ Palabra enviada
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: NUBE */}
+      {tab==='nube'&&(
+        <div style={{flex:1,display:'flex',flexWrap:'wrap',alignItems:'center',
+          justifyContent:'center',alignContent:'center',
+          padding:'16px 20px',gap:'6px 10px',overflowY:'auto',
+          background:'radial-gradient(ellipse at 50% 40%,#0a0e2a,#07091f)'}}>
+          {/* Stars bg */}
+          <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>
+            {[...Array(14)].map((_,i)=>(
+              <div key={i} style={{position:'absolute',
+                left:`${(wordHash('s'+i)%92)+3}%`,top:`${(wordHash('d'+i)%85)+5}%`,
+                width:wordHash('w'+i)%2+1,height:wordHash('w'+i)%2+1,
+                borderRadius:'50%',background:'rgba(255,255,255,.12)'}}/>
+            ))}
+          </div>
+
+          {sorted.length===0?(
+            <div style={{textAlign:'center',opacity:.4,position:'relative',zIndex:1}}>
+              <div style={{fontSize:64}}>☁️</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:15,color:'white',textTransform:'uppercase',letterSpacing:'.1em',marginTop:8}}>
+                Esperando palabras...
+              </div>
+            </div>
+          ):sorted.map(([key,data],i)=>{
+            const sz=getFontSize(data.count);
+            return(
+              <span key={key} style={{
+                display:'inline-block',position:'relative',zIndex:1,
+                fontSize:sz,fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:data.count>=3?900:data.count>=2?800:600,
+                color:data.color,
+                transform:`rotate(${getRotation(key)}deg)`,
+                textShadow:sz>36?`0 0 ${sz*.55}px ${data.color}55`:undefined,
+                letterSpacing:'-.01em',lineHeight:1.1,padding:'2px 4px',
+                animation:`fadeUp ${.15+i*.04}s ease both`,
+                transition:'font-size .5s cubic-bezier(0.23,1,0.32,1)',
+                userSelect:'none',cursor:'default',
+              }}>
+                {data.display}
+                {data.count>1&&sz>=30&&(
+                  <span style={{fontSize:sz*.32,verticalAlign:'super',
+                    opacity:.6,fontWeight:700,marginLeft:2}}>
+                    {data.count}×
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════ ADMIN PANEL ════════════════════════ */
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onOpenStats,onToggleWordCloud,onResetSession}){
+  const[open,setOpen]=useState(false);
+  const[wcQ,setWcQ]=useState('');
+  const phase=session?.phase||'waiting';
+  const allUsers=Object.entries(users);
+  const confraUsers=Object.entries(users).filter(([,u])=>u.zone==='confra');
+  const repasoUsers=Object.entries(users).filter(([,u])=>u.zone==='repaso');
+  const juegosUsers=Object.entries(users).filter(([,u])=>u.zone==='juegos');
+
+  const phaseColor={waiting:'var(--muted)',confra:'#f59e0b',repaso:'#3b82f6',juegos:'#8b5cf6'}[phase];
+
+  return(
+    <>
+      <button onClick={()=>setOpen(o=>!o)} style={{
+        position:'fixed',bottom:20,right:20,zIndex:120,
+        width:48,height:48,borderRadius:'50%',
+        background:'linear-gradient(135deg,#ffd000,#e6a800)',
+        border:'none',fontSize:20,
+        boxShadow:'0 4px 20px rgba(255,208,0,.4)',
+        display:'flex',alignItems:'center',justifyContent:'center',
+      }}>
+        {open?'✕':'⚙️'}
+      </button>
+
+      {open&&(
+        <div style={{
+          position:'fixed',bottom:78,right:16,zIndex:120,
+          width:288,background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+          border:'1px solid rgba(255,208,0,.2)',borderRadius:16,
+          padding:16,boxShadow:'0 8px 40px rgba(0,0,0,.7)',
+          animation:'modalIn .2s ease',
+        }}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:14,color:'#ffd000',textTransform:'uppercase',
+            letterSpacing:'.06em',marginBottom:12,
+            display:'flex',alignItems:'center',gap:8}}>
+            <span>⚙️ Panel Admin</span>
+            <span style={{fontSize:11,color:phaseColor,
+              background:`${phaseColor}22`,padding:'2px 8px',borderRadius:20,
+              border:`1px solid ${phaseColor}44`}}>
+              {phase.toUpperCase()}
+            </span>
+          </div>
+
+          {/* Conteos por zona */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,marginBottom:14}}>
+            {[
+              {label:'Confra',count:confraUsers.length,color:'#f59e0b'},
+              {label:'Repaso',count:repasoUsers.length,color:'#3b82f6'},
+              {label:'Juegos',count:juegosUsers.length,color:'#8b5cf6'},
+            ].map(z=>(
+              <div key={z.label} style={{background:'rgba(255,255,255,.04)',
+                borderRadius:8,padding:'6px 4px',textAlign:'center',
+                border:`1px solid ${z.color}22`}}>
+                <div style={{fontSize:18,fontFamily:'Barlow Condensed,sans-serif',
+                  fontWeight:900,color:z.color}}>{z.count}</div>
+                <div style={{fontSize:8,color:'var(--muted)',textTransform:'uppercase',
+                  letterSpacing:'.04em'}}>{z.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Acciones según fase */}
+          <div style={{display:'flex',flexDirection:'column',gap:7}}>
+            <button onClick={()=>{onOpenStats();setOpen(false);}} style={{
+              background:'rgba(255,208,0,.07)',border:'1px solid rgba(255,208,0,.2)',
+              borderRadius:10,padding:'9px',color:'#ffd000',fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+            }}>📊 Ver estadísticas globales</button>
+
+            {/* Reiniciar sesión — siempre visible si hay fase activa */}
+            {phase!=='waiting'&&(
+              <button onClick={()=>{onResetSession();setOpen(false);}} style={{
+                background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',
+                borderRadius:10,padding:'9px',color:'#f87171',fontWeight:800,fontSize:12,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+              }}>🔄 Reiniciar sesión</button>
+            )}
+
+            <div style={{height:1,background:'rgba(255,255,255,.06)'}}/>
+
+            {phase==='waiting'&&(<>
+              <button onClick={()=>{onStartConfra(confraUsers);setOpen(false);}}
+                disabled={allUsers.length===0} style={{
+                background:allUsers.length?'linear-gradient(135deg,#f59e0b,#d97706)':'var(--muted2)',
+                border:'none',borderRadius:10,padding:'10px',
+                color:allUsers.length?'#07091f':'var(--muted)',
+                fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                letterSpacing:'.04em',textTransform:'uppercase',
+              }}>
+                🤝 Confraternización {confraUsers.length>0?`(${confraUsers.length} en zona)`:`(${allUsers.length} en sala)`}
+              </button>
+              <button onClick={()=>{onStartRepaso();setOpen(false);}}
+                disabled={allUsers.length===0} style={{
+                background:allUsers.length?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'var(--muted2)',
+                border:'none',borderRadius:10,padding:'10px',
+                color:allUsers.length?'white':'var(--muted)',
+                fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                letterSpacing:'.04em',textTransform:'uppercase',
+              }}>
+                📖 Repaso {repasoUsers.length>0?`(${repasoUsers.length} en zona)`:`(${allUsers.length} en sala)`}
+              </button>
+              <button onClick={()=>{onStartJuegos();setOpen(false);}}
+                disabled={allUsers.length===0} style={{
+                background:allUsers.length?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'var(--muted2)',
+                border:'none',borderRadius:10,padding:'10px',
+                color:allUsers.length?'white':'var(--muted)',
+                fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                letterSpacing:'.04em',textTransform:'uppercase',
+              }}>
+                🎮 Juegos {juegosUsers.length>0?`(${juegosUsers.length} en zona)`:`(${allUsers.length} en sala)`}
+              </button>
+            </>)}
+
+            {phase==='confra'&&(<>
+              <button onClick={()=>{onNextSpeaker();}} style={{
+                background:'linear-gradient(135deg,#f59e0b,#d97706)',
+                border:'none',borderRadius:10,padding:'10px',
+                color:'#07091f',fontWeight:800,fontSize:12,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+              }}>→ Siguiente persona</button>
+              <button onClick={()=>{onEndConfra();setOpen(false);}} style={{
+                background:'rgba(16,185,129,.1)',border:'1px solid rgba(16,185,129,.3)',
+                borderRadius:10,padding:'10px',color:'#10b981',fontWeight:800,fontSize:12,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+              }}>✓ Finalizar confra</button>
+            </>)}
+
+            {phase==='repaso'&&(
+              <div style={{display:'flex',flexDirection:'column',gap:7}}>
+                {!session?.wordcloud?.active&&(
+                  <input value={wcQ} onChange={e=>setWcQ(e.target.value)}
+                    placeholder="Pregunta para la nube (opcional)..."
+                    style={{padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.05)',
+                      border:'1px solid rgba(59,130,246,.2)',color:'var(--white)',
+                      fontSize:11,fontFamily:'Barlow,sans-serif',outline:'none'}}/>
+                )}
+                <button onClick={()=>{onToggleWordCloud(wcQ);setOpen(false);setWcQ('');}} style={{
+                  background:session?.wordcloud?.active
+                    ?'rgba(16,185,129,.1)':'linear-gradient(135deg,rgba(59,130,246,.25),rgba(59,130,246,.1))',
+                  border:session?.wordcloud?.active
+                    ?'1px solid rgba(16,185,129,.3)':'1px solid rgba(59,130,246,.35)',
+                  borderRadius:10,padding:'10px',
+                  color:session?.wordcloud?.active?'#10b981':'#3b82f6',
+                  fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                  letterSpacing:'.04em',textTransform:'uppercase'}}>
+                  {session?.wordcloud?.active?'☁️ Ver / Cerrar Nube':'☁️ Iniciar Nube de Palabras'}
+                </button>
+                <button onClick={()=>{onEndRepaso();setOpen(false);}} style={{
+                  background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
+                  borderRadius:10,padding:'10px',color:'#ef4444',fontWeight:800,fontSize:12,
+                  fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+                }}>⏹ Finalizar Repaso</button>
+              </div>
+            )}
+
+            {phase==='juegos'&&(
+              <button onClick={()=>{onEndJuegos();setOpen(false);}} style={{
+                background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
+                borderRadius:10,padding:'10px',color:'#ef4444',fontWeight:800,fontSize:12,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+              }}>⏹ Finalizar Juegos</button>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+/* ════════════════════════ MODAL EDITAR PERFIL ════════════════════════ */
+function EditProfileModal({profile,onSave,onClose}){
+  const[name,  setName]  =useState(profile.name  ||'');
+  const[avatar,setAvatar]=useState(profile.avatar||null);
+  const[color, setColor] =useState(profile.color ||'#ffd000');
+  const[photo, setPhoto] =useState(profile.photo ||null);
+  const[saving,setSaving]=useState(false);
+  const[err,   setErr]   =useState('');
+  const fileRef=useRef();
+
+  const handlePhoto=async(e)=>{
+    const f=e.target.files[0];
+    if(!f) return;
+    setSaving(true);
+    const base64=await compressImage(f,200);
+    setPhoto(base64);
+    setSaving(false);
+  };
+
+  const handleSave=async()=>{
+    if(!name.trim()||saving) return;
+    setSaving(true);
+    try{ await onSave({name:name.trim(),avatar,color,photo}); }
+    catch(e){ setErr('Error al guardar. Intenta de nuevo.'); setSaving(false); }
+  };
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,
+      display:'flex',alignItems:'flex-end',justifyContent:'center',
+      background:'rgba(0,0,0,.75)',backdropFilter:'blur(4px)'}}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{width:'100%',maxWidth:480,overflowY:'auto',maxHeight:'90vh',
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(255,208,0,.2)',
+        borderRadius:'20px 20px 0 0',padding:'20px 20px 32px',
+        animation:'modalIn .3s ease'}}>
+        <div style={{width:40,height:4,borderRadius:2,
+          background:'rgba(255,208,0,.2)',margin:'0 auto 16px'}}/>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          <h3 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            Editar perfil
+          </h3>
+          <button onClick={onClose} style={{background:'none',border:'none',
+            color:'var(--muted)',fontSize:20,padding:4}}>✕</button>
+        </div>
+
+        {/* Foto de perfil */}
+        <div style={{marginBottom:16,display:'flex',alignItems:'center',gap:14}}>
+          <div style={{position:'relative',cursor:'pointer'}} onClick={()=>fileRef.current?.click()}>
+            <AvatarBubble profile={{...profile,photo,avatar,color}} size={72}/>
+            <div style={{
+              position:'absolute',bottom:-2,right:-2,
+              width:22,height:22,borderRadius:'50%',
+              background:'#ffd000',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              fontSize:12,color:'#07091f',fontWeight:800,
+            }}>📷</div>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,color:'var(--white)',marginBottom:6}}>Foto de perfil</div>
+            <div style={{display:'flex',gap:6}}>
+              <button onClick={()=>fileRef.current?.click()} style={{
+                background:'rgba(255,208,0,.08)',border:'1px solid rgba(255,208,0,.2)',
+                borderRadius:8,padding:'6px 10px',color:'#ffd000',fontSize:11,
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              }}>📁 Subir foto</button>
+              {photo&&(
+                <button onClick={()=>setPhoto(null)} style={{
+                  background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',
+                  borderRadius:8,padding:'6px 10px',color:'#f87171',fontSize:11,
+                  fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                }}>Quitar</button>
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*"
+              onChange={handlePhoto} style={{display:'none'}}/>
+            <div style={{fontSize:10,color:'var(--muted)',marginTop:4}}>
+              También puedes usar un avatar de abajo
+            </div>
+          </div>
+        </div>
+
+        {/* Nombre */}
+        <div style={{marginBottom:12}}>
+          <label style={{fontSize:10,fontWeight:700,color:'var(--muted)',
+            textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:6,
+            fontFamily:'Barlow Condensed,sans-serif'}}>Nombre en la sala</label>
+          <input value={name} onChange={e=>setName(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&handleSave()}
+            placeholder="¿Cómo quieres que te vean?"
+            style={{width:'100%',padding:'11px 14px',borderRadius:10,
+              background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,208,0,.15)',
+              color:'var(--white)',fontSize:14,fontFamily:'Barlow,sans-serif'}}/>
+        </div>
+
+        {/* Avatar */}
+        <div style={{marginBottom:12}}>
+          <label style={{fontSize:10,fontWeight:700,color:'var(--muted)',
+            textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:6,
+            fontFamily:'Barlow Condensed,sans-serif'}}>Avatar (si no usas foto)</label>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:5}}>
+            {AVATARS.map(a=>(
+              <button key={a} onClick={()=>setAvatar(a)} style={{
+                background:avatar===a?'rgba(255,208,0,.15)':'rgba(255,255,255,.03)',
+                border:avatar===a?`2px solid ${color}`:'2px solid rgba(255,255,255,.06)',
+                borderRadius:10,padding:'7px 2px',fontSize:19,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                boxShadow:avatar===a?`0 0 12px ${color}55`:'none',transition:'all .15s',
+              }}>{a}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Color */}
+        <div style={{marginBottom:20}}>
+          <label style={{fontSize:10,fontWeight:700,color:'var(--muted)',
+            textTransform:'uppercase',letterSpacing:'.08em',display:'block',marginBottom:8,
+            fontFamily:'Barlow Condensed,sans-serif'}}>Color de aura</label>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {COLORS.map(c=>(
+              <div key={c} onClick={()=>setColor(c)} style={{
+                width:28,height:28,borderRadius:'50%',background:c,cursor:'pointer',
+                border:color===c?'3px solid white':'3px solid transparent',
+                boxShadow:color===c?`0 0 14px ${c}`:'none',transition:'all .15s',
+              }}/>
+            ))}
+          </div>
+        </div>
+
+        {err&&<div style={{marginBottom:10,color:'#fca5a5',fontSize:12,
+          background:'rgba(239,68,68,.08)',borderRadius:8,padding:'8px 12px'}}>⚠️ {err}</div>}
+
+        <button onClick={handleSave} disabled={!name.trim()||saving} style={{
+          width:'100%',padding:13,borderRadius:12,border:'none',
+          background:!name.trim()||saving?'var(--muted2)':'linear-gradient(135deg,#ffd000,#e6a800)',
+          color:!name.trim()||saving?'var(--muted)':'#07091f',
+          fontSize:15,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
+          letterSpacing:'.06em',textTransform:'uppercase',
+          display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+        }}>
+          {saving?<><Spinner size={18} color="#07091f"/>Guardando...</>:'Guardar cambios ✓'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════ MODAL ASISTENCIA ════════════════════════ */
+function AttendanceModal({myAtt,gameHistory,onClose}){
+  const[activeTab,setActiveTab]=useState('asistencia');
+  const sessions=Object.entries(myAtt||{}).sort((a,b)=>b[0].localeCompare(a[0]));
+  // Agrupar por mes
+  const byMonth={};
+  sessions.forEach(([sid])=>{
+    const d=new Date(sid+'T12:00:00');
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(!byMonth[key]) byMonth[key]=[];
+    byMonth[key].push(sid);
+  });
+
+  const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,
+      display:'flex',alignItems:'flex-end',justifyContent:'center',
+      background:'rgba(0,0,0,.75)',backdropFilter:'blur(4px)'}}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{width:'100%',maxWidth:480,maxHeight:'85vh',overflowY:'auto',
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(255,208,0,.2)',
+        borderRadius:'20px 20px 0 0',padding:'20px 18px 32px',
+        animation:'modalIn .3s ease'}}>
+        <div style={{width:40,height:4,borderRadius:2,
+          background:'rgba(255,208,0,.2)',margin:'0 auto 16px'}}/>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          <h3 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            📊 Mi asistencia
+          </h3>
+          <button onClick={onClose} style={{background:'none',border:'none',
+            color:'var(--muted)',fontSize:20,padding:4}}>✕</button>
+        </div>
+
+        {/* Resumen */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:18}}>
+          {[
+            {label:'Total clases',  value:sessions.length,    color:'#ffd000'},
+            {label:'Este año',      value:sessions.filter(([s])=>s.startsWith(new Date().getFullYear().toString())).length, color:'#10b981'},
+            {label:'Último mes',    value:Object.values(byMonth)[0]?.length||0, color:'#22d3ee'},
+          ].map(st=>(
+            <div key={st.label} style={{
+              background:'rgba(255,255,255,.03)',borderRadius:10,padding:'10px 8px',
+              borderLeft:`3px solid ${st.color}`,textAlign:'center',
+            }}>
+              <div style={{fontSize:24,fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:900,color:st.color,lineHeight:1}}>{st.value}</div>
+              <div style={{fontSize:9,color:'var(--muted)',marginTop:3,
+                textTransform:'uppercase',letterSpacing:'.05em'}}>{st.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <div style={{display:'flex',background:'rgba(255,255,255,.04)',borderRadius:10,
+          padding:3,marginBottom:16,border:'1px solid rgba(255,208,0,.08)'}}>
+          {[{id:'asistencia',l:'📅 Asistencia'},{id:'juegos',l:'🏆 Juegos'}].map(t=>(
+            <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{
+              flex:1,padding:'7px 4px',borderRadius:8,border:'none',
+              background:activeTab===t.id?'linear-gradient(135deg,#ffd000,#e6a800)':'transparent',
+              color:activeTab===t.id?'#07091f':'var(--muted)',
+              fontSize:12,fontWeight:700,fontFamily:'Barlow Condensed,sans-serif',
+              letterSpacing:'.03em',textTransform:'uppercase',transition:'all .2s',
+            }}>{t.l}</button>
+          ))}
+        </div>
+
+        {activeTab==='asistencia'&&(<>
+          {sessions.length===0&&(
+            <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>
+              Aún no tienes asistencias registradas
+            </div>
+          )}
+          {Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([key,days])=>{
+            const[year,month]=key.split('-');
+            return(
+              <div key={key} style={{marginBottom:14}}>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                  fontSize:13,color:'var(--muted)',textTransform:'uppercase',
+                  letterSpacing:'.07em',marginBottom:8}}>
+                  {monthNames[parseInt(month)-1]} {year}
+                </div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {days.map(sid=>(
+                    <div key={sid} style={{background:'rgba(16,185,129,.08)',padding:'7px 10px',
+                      borderRadius:10,textAlign:'center',border:'1px solid rgba(16,185,129,.2)'}}>
+                      <div style={{fontSize:16,marginBottom:2}}>✅</div>
+                      <div style={{fontSize:9,color:'#10b981',fontFamily:'Barlow Condensed,sans-serif'}}>
+                        {new Date(sid+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </>)}
+
+        {activeTab==='juegos'&&(()=>{
+          const games=Object.entries(gameHistory||{})
+            .map(([id,g])=>({id,...g}))
+            .sort((a,b)=>b.date?.localeCompare(a.date||'')||0);
+          const wins=games.filter(g=>g.rank===1).length;
+          const top3=games.filter(g=>g.rank<=3).length;
+          return(<>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:16}}>
+              {[
+                {label:'Partidas',value:games.length,color:'#8b5cf6'},
+                {label:'🥇 Ganadas',value:wins,color:'#ffd000'},
+                {label:'🏅 Top 3',value:top3,color:'#f59e0b'},
+              ].map(st=>(
+                <div key={st.label} style={{background:'rgba(255,255,255,.03)',borderRadius:10,
+                  padding:'10px 8px',borderLeft:`3px solid ${st.color}`,textAlign:'center'}}>
+                  <div style={{fontSize:22,fontFamily:'Barlow Condensed,sans-serif',
+                    fontWeight:900,color:st.color,lineHeight:1}}>{st.value}</div>
+                  <div style={{fontSize:9,color:'var(--muted)',marginTop:3,
+                    textTransform:'uppercase',letterSpacing:'.05em'}}>{st.label}</div>
+                </div>
+              ))}
+            </div>
+            {games.length===0&&(
+              <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>
+                Aún no has jugado ningún juego
+              </div>
+            )}
+            {games.map(g=>(
+              <div key={g.id} style={{display:'flex',alignItems:'center',gap:12,
+                background:g.rank===1?'rgba(255,208,0,.07)':'rgba(255,255,255,.03)',
+                border:g.rank===1?'1px solid rgba(255,208,0,.2)':'1px solid rgba(255,255,255,.05)',
+                borderRadius:12,padding:'10px 14px',marginBottom:7}}>
+                <div style={{fontSize:22,width:28,textAlign:'center'}}>
+                  {g.rank===1?'🥇':g.rank===2?'🥈':g.rank===3?'🥉':`#${g.rank}`}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:11,color:'var(--muted)',
+                    fontFamily:'Barlow Condensed,sans-serif',textTransform:'uppercase',
+                    letterSpacing:'.05em'}}>
+                    {g.date?new Date(g.date+'T12:00:00').toLocaleDateString('es-CL',
+                      {day:'numeric',month:'short',year:'numeric'}):''}
+                  </div>
+                  <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>
+                    {g.rank}° de {g.totalPlayers} jugadores
+                  </div>
+                </div>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                  fontSize:20,color:'#ffd000'}}>{g.score} pts</div>
+              </div>
+            ))}
+          </>);
+        })()}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════ ADMIN STATS MODAL ════════════════════════ */
+function AdminStatsModal({onClose}){
+  const[data,setData]=useState([]);
+  const[loading,setLoading]=useState(true);
+  const[selected,setSelected]=useState(null);
+  const[tab,setTab]=useState('jovenes');
+  const[search,setSearch]=useState('');
+  const monthNames=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  useEffect(()=>{
+    Promise.all([
+      db.ref('profiles').get(),
+      db.ref('attendance').get(),
+      db.ref('gameHistory').get(),
+    ]).then(([pSnap,aSnap,gSnap])=>{
+      const profiles=pSnap.val()||{};
+      const attendance=aSnap.val()||{};
+      const history=gSnap.val()||{};
+      const list=Object.entries(profiles)
+        .filter(([,p])=>p&&p.name)
+        .map(([uid,p])=>({
+          uid,...p,
+          attCount:Object.keys(attendance[uid]||{}).length,
+          attThisYear:Object.keys(attendance[uid]||{}).filter(s=>s.startsWith(new Date().getFullYear().toString())).length,
+          attSessions:Object.keys(attendance[uid]||{}).sort().reverse(),
+          gameCount:Object.keys(history[uid]||{}).length,
+          gameWins:Object.values(history[uid]||{}).filter(g=>g.rank===1).length,
+          gameTop3:Object.values(history[uid]||{}).filter(g=>g.rank<=3).length,
+          games:Object.entries(history[uid]||{}).map(([id,g])=>({id,...g})).sort((a,b)=>b.date?.localeCompare(a.date||'')||0),
+        }))
+        .sort((a,b)=>b.attCount-a.attCount);
+      setData(list);
+      setLoading(false);
+    }).catch(()=>setLoading(false));
+  },[]);
+
+  const filtered=data.filter(u=>u.name?.toLowerCase().includes(search.toLowerCase()));
+  const gameRankings=[...data].sort((a,b)=>(b.gameWins-a.gameWins)||(b.gameTop3-a.gameTop3)||(b.gameCount-a.gameCount));
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:210,
+      display:'flex',alignItems:'flex-end',justifyContent:'center',
+      background:'rgba(0,0,0,.8)',backdropFilter:'blur(6px)'}}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{width:'100%',maxWidth:520,maxHeight:'90vh',overflowY:'auto',
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(255,208,0,.2)',
+        borderRadius:'22px 22px 0 0',padding:'18px 18px 32px',
+        animation:'modalIn .28s ease'}}>
+        <div style={{width:40,height:4,borderRadius:2,background:'rgba(255,208,0,.2)',margin:'0 auto 14px'}}/>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+          <h3 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:20,
+            color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            📊 Estadísticas Globales
+          </h3>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'var(--muted)',fontSize:20,padding:4}}>✕</button>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:16}}>
+          {[
+            {label:'Jóvenes',value:data.length,icon:'👥',color:'#ffd000'},
+            {label:'Asistencias',value:data.reduce((s,u)=>s+u.attCount,0),icon:'📅',color:'#10b981'},
+            {label:'Partidas',value:data.reduce((s,u)=>s+u.gameCount,0),icon:'🎮',color:'#8b5cf6'},
+          ].map(st=>(
+            <div key={st.label} style={{background:'rgba(255,255,255,.04)',borderRadius:12,
+              padding:'10px 8px',textAlign:'center',
+              border:`1px solid ${st.color}22`,borderTop:`3px solid ${st.color}`}}>
+              <div style={{fontSize:20,marginBottom:4}}>{st.icon}</div>
+              <div style={{fontSize:22,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                color:st.color,lineHeight:1}}>{st.value}</div>
+              <div style={{fontSize:9,color:'var(--muted)',marginTop:3,
+                textTransform:'uppercase',letterSpacing:'.05em'}}>{st.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{display:'flex',background:'rgba(255,255,255,.04)',borderRadius:10,
+          padding:3,marginBottom:14,border:'1px solid rgba(255,208,0,.08)'}}>
+          {[{id:'jovenes',l:'👥 Jóvenes'},{id:'rankings',l:'🏆 Rankings'}].map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{
+              flex:1,padding:'7px 4px',borderRadius:8,border:'none',
+              background:tab===t.id?'linear-gradient(135deg,#ffd000,#e6a800)':'transparent',
+              color:tab===t.id?'#07091f':'var(--muted)',
+              fontSize:12,fontWeight:700,fontFamily:'Barlow Condensed,sans-serif',
+              letterSpacing:'.03em',textTransform:'uppercase',transition:'all .2s'}}>
+              {t.l}
+            </button>
+          ))}
+        </div>
+
+        {loading&&(<div style={{display:'flex',justifyContent:'center',padding:'30px 0'}}><Spinner size={28}/></div>)}
+
+        {!loading&&tab==='jovenes'&&(<>
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="🔍 Buscar joven..."
+            style={{width:'100%',padding:'9px 14px',borderRadius:10,
+              background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,208,0,.15)',
+              color:'var(--white)',fontSize:13,fontFamily:'Barlow,sans-serif',
+              marginBottom:12,outline:'none'}}/>
+
+          {selected&&(()=>{
+            const u=data.find(x=>x.uid===selected);
+            if(!u) return null;
+            const byMonth={};
+            u.attSessions.forEach(sid=>{
+              const d=new Date(sid+'T12:00:00');
+              const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+              if(!byMonth[key]) byMonth[key]=[];
+              byMonth[key].push(sid);
+            });
+            return(
+              <div style={{background:'rgba(255,255,255,.03)',borderRadius:14,
+                padding:14,marginBottom:12,border:'1px solid rgba(255,208,0,.12)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                  <AvatarBubble profile={u} size={40}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:14,color:'white'}}>{u.name}</div>
+                    <div style={{fontSize:10,color:'var(--muted)'}}>{u.isAdmin?'👑 Admin':'Joven'}</div>
+                  </div>
+                  <button onClick={()=>setSelected(null)} style={{background:'none',border:'none',color:'var(--muted)',fontSize:18}}>✕</button>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:12}}>
+                  {[
+                    {l:'Clases',v:u.attCount,c:'#ffd000'},
+                    {l:'Este año',v:u.attThisYear,c:'#10b981'},
+                    {l:'🎮 Jugadas',v:u.gameCount,c:'#8b5cf6'},
+                    {l:'🥇 Ganadas',v:u.gameWins,c:'#f59e0b'},
+                  ].map(st=>(
+                    <div key={st.l} style={{background:'rgba(255,255,255,.03)',
+                      borderRadius:8,padding:'7px 4px',textAlign:'center',borderTop:`2px solid ${st.c}`}}>
+                      <div style={{fontSize:18,fontFamily:'Barlow Condensed,sans-serif',
+                        fontWeight:900,color:st.c}}>{st.v}</div>
+                      <div style={{fontSize:8,color:'var(--muted)',textTransform:'uppercase',
+                        letterSpacing:'.04em'}}>{st.l}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{fontSize:10,color:'var(--muted)',fontFamily:'Barlow Condensed,sans-serif',
+                  textTransform:'uppercase',letterSpacing:'.06em',marginBottom:6}}>Asistencias</div>
+                {Object.entries(byMonth).slice(0,3).map(([key,days])=>{
+                  const[yr,mo]=key.split('-');
+                  return(
+                    <div key={key} style={{marginBottom:7}}>
+                      <div style={{fontSize:9,color:'var(--muted)',marginBottom:3}}>
+                        {monthNames[parseInt(mo)-1]} {yr}
+                      </div>
+                      <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                        {days.map(sid=>(
+                          <div key={sid} style={{background:'rgba(16,185,129,.1)',
+                            border:'1px solid rgba(16,185,129,.2)',
+                            borderRadius:6,padding:'3px 7px',fontSize:9,color:'#10b981'}}>
+                            ✅ {new Date(sid+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {filtered.map((u,i)=>(
+            <div key={u.uid} onClick={()=>setSelected(u.uid===selected?null:u.uid)}
+              style={{
+                display:'flex',alignItems:'center',gap:10,
+                background:selected===u.uid?'rgba(255,208,0,.07)':'rgba(255,255,255,.025)',
+                border:selected===u.uid?'1px solid rgba(255,208,0,.2)':'1px solid rgba(255,255,255,.05)',
+                borderRadius:12,padding:'10px 12px',marginBottom:6,cursor:'pointer',transition:'all .18s',
+              }}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:14,color:'var(--muted)',width:20,textAlign:'center'}}>{i+1}</div>
+              <AvatarBubble profile={u} size={34}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:600,color:'white'}}>{u.name}</div>
+                <div style={{fontSize:10,color:'var(--muted)'}}>{u.isAdmin?'👑 Admin · ':''}{u.attCount} clases · {u.gameWins} 🥇</div>
+              </div>
+              <div style={{background:'rgba(255,208,0,.1)',borderRadius:8,
+                padding:'2px 8px',fontSize:11,fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:700,color:'#ffd000'}}>{u.attCount}</div>
+            </div>
+          ))}
+          {filtered.length===0&&<div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>Sin resultados</div>}
+        </>)}
+
+        {!loading&&tab==='rankings'&&(<>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+            fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.07em',marginBottom:10}}>
+            🏆 Ranking de Juegos
+          </div>
+          {gameRankings.filter(u=>u.gameCount>0).map((u,i)=>(
+            <div key={u.uid} style={{display:'flex',alignItems:'center',gap:10,
+              background:i===0?'rgba(255,208,0,.08)':'rgba(255,255,255,.025)',
+              border:i===0?'1px solid rgba(255,208,0,.2)':'1px solid rgba(255,255,255,.05)',
+              borderRadius:12,padding:'10px 12px',marginBottom:6}}>
+              <div style={{fontSize:i<3?20:14,width:28,textAlign:'center'}}>
+                {i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`}
+              </div>
+              <AvatarBubble profile={u} size={34}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:600,color:'white'}}>{u.name}</div>
+                <div style={{fontSize:10,color:'var(--muted)'}}>{u.gameCount} partidas · 🏅 {u.gameTop3} top3</div>
+              </div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:18,color:'#ffd000'}}>{u.gameWins}🥇</div>
+            </div>
+          ))}
+          {gameRankings.filter(u=>u.gameCount>0).length===0&&(
+            <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>Nadie ha jugado aún</div>
+          )}
+        </>)}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════ SCREEN VIEW (PROYECCIÓN) ════════════════════════ */
+function ScreenView({users,session,msgs,reactions,onExit}){
+  const phase=session?.phase||'waiting';
+  const confra=session?.confra;
+  const repaso=session?.repaso;
+  const roomRef=useRef();
+  const{remaining:confraRemaining}=useTimer(confra?.startTime,PHASE_DURATIONS.confra);
+  const{remaining:repasoRemaining}=useTimer(repaso?.startTime,PHASE_DURATIONS.repaso);
+
+  const speakerUid=confra?.active?confra?.queue?.[confra?.currentIdx||0]:null;
+  const speaker=speakerUid?users[speakerUid]:null;
+
+  return(
+    <div style={{position:'fixed',inset:0,background:'var(--navy)',overflow:'hidden'}}>
+      {/* Canvas con zonas */}
+      <div ref={roomRef} style={{width:'100%',height:'100%'}}>
+        <RoomCanvas users={users} myId={null} session={session}
+          selectedChar={false} onSelectChar={()=>{}} onMoveTo={()=>{}}
+          roomRef={roomRef} full={true} reactions={reactions} moveTarget={null}/>
+      </div>
+
+      {/* Panel fase activa - lado derecho */}
+      {phase!=='waiting'&&(
+        <div style={{
+          position:'absolute',top:80,right:16,
+          width:160,
+          background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.2)',
+          borderRadius:14,padding:14,zIndex:40,
+        }}>
+          {phase==='confra'&&(
+            <>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:11,color:'#f59e0b',textTransform:'uppercase',
+                letterSpacing:'.07em',marginBottom:10}}>🤝 Confraternización</div>
+              <TimerDisplay remaining={confraRemaining} color="#f59e0b"/>
+              {speaker&&(
+                <div style={{marginTop:10,textAlign:'center'}}>
+                  <AvatarBubble profile={speaker} size={40}/>
+                  <div style={{fontSize:11,color:'white',marginTop:4,
+                    fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
+                    {speaker.name}
+                  </div>
+                  <div style={{fontSize:9,color:'#f59e0b80'}}>compartiendo</div>
+                </div>
+              )}
+            </>
+          )}
+          {phase==='repaso'&&(
+            <>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:11,color:'#3b82f6',textTransform:'uppercase',
+                letterSpacing:'.07em',marginBottom:10}}>📖 Repaso Bíblico</div>
+              <TimerDisplay remaining={repasoRemaining} color="#3b82f6"/>
+              {repasoRemaining<=0&&(
+                <div style={{marginTop:8,fontSize:10,color:'#ef4444',
+                  fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                  textAlign:'center',animation:'pulse 1s infinite'}}>
+                  TIEMPO EXTRA
+                </div>
+              )}
+            </>
+          )}
+          {phase==='juegos'&&(
+            <div style={{textAlign:'center'}}>
+              <div style={{fontSize:36,marginBottom:4}}>🎮</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:13,color:'#8b5cf6',textTransform:'uppercase'}}>¡JUEGOS!</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chat del repaso en pantalla */}
+      {phase==='repaso'&&<RepasoChatScreen msgs={msgs} session={session} users={users}/>}
+
+      <button onClick={onExit} style={{
+        position:'fixed',bottom:20,right:20,zIndex:100,
+        background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.3)',
+        color:'#ffd000',padding:'8px 16px',borderRadius:20,fontSize:12,
+        fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,letterSpacing:'.04em',
+      }}>✕ SALIR</button>
+    </div>
+  );
+}
+
+/* ════════════════════════ SHARED STYLES ════════════════════════ */
+const pageWrap={minHeight:'100vh',background:'var(--navy)',display:'flex',
+  alignItems:'flex-start',justifyContent:'center',
+  padding:'24px 16px 40px',position:'relative'};
+const cardStyle={width:'100%',maxWidth:400,position:'relative',zIndex:1,
+  background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+  border:'1px solid rgba(255,208,0,.15)',borderRadius:20,padding:'28px 22px',
+  boxShadow:'0 0 60px rgba(255,208,0,.06),0 8px 40px rgba(0,0,0,.7)',
+  animation:'fadeUp .4s ease'};
+const inputStyle={width:'100%',padding:'12px 14px',borderRadius:10,
+  background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,208,0,.15)',
+  color:'var(--white)',fontSize:14,fontFamily:'Barlow,sans-serif'};
+const labelStyle={fontSize:10,fontWeight:700,color:'var(--muted)',
+  textTransform:'uppercase',letterSpacing:'.09em',display:'block',marginBottom:6,
+  fontFamily:'Barlow Condensed,sans-serif'};
+const btnYellow=(dis)=>({
+  width:'100%',padding:13,borderRadius:12,border:'none',
+  background:dis?'var(--muted2)':'linear-gradient(135deg,#ffd000,#e6a800)',
+  color:dis?'var(--muted)':'#07091f',
+  fontSize:15,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
+  letterSpacing:'.06em',textTransform:'uppercase',
+  boxShadow:dis?'none':'0 0 24px rgba(255,208,0,.35)',
+  display:'flex',alignItems:'center',justifyContent:'center',gap:8,transition:'all .2s',
+});
+
+/* ════════════════════════ APP PRINCIPAL ════════════════════════ */
+function App(){
+  /* ── Vista y auth ── */
+  const[view,        setView]        =useState('loading');
+  const[authMode,    setAuthMode]    =useState('login');
+  const[email,       setEmail]       =useState('');
+  const[password,    setPassword]    =useState('');
+  const[authError,   setAuthError]   =useState('');
+  const[authLoad,    setAuthLoad]    =useState(false);
+  const[resetMode,   setResetMode]   =useState(false);
+  const[resetSent,   setResetSent]   =useState(false);
+
+  /* ── Perfil ── */
+  const[profile,     setProfile]     =useState({name:'',avatar:null,color:'#ffd000',photo:null});
+  const[isAdmin,     setIsAdmin]     =useState(false);
+  const[setupSaving, setSetupSaving] =useState(false);
+  const[setupError,  setSetupError]  =useState('');
+
+  /* ── Modales ── */
+  const[editOpen,    setEditOpen]    =useState(false);
+  const[attOpen,     setAttOpen]     =useState(false);
+  const[adminStats,  setAdminStats]  =useState(false);
+  const[endBanner,   setEndBanner]   =useState(null);
+  const[kahootOpen,  setKahootOpen]  =useState(false);
+  const[confraOpen,  setConfraOpen]  =useState(false);
+  const[localConfra, setLocalConfra] =useState(null); // {queue, currentIdx}
+
+  /* ── Sala ── */
+  const[users,       setUsers]       =useState({});
+  const[msgs,        setMsgs]        =useState([]);
+  const[myAtt,       setMyAtt]       =useState({});
+  const[session,     setSession]     =useState(null);
+  const[reactions,   setReactions]   =useState({});
+  const[gameHistory, setGameHistory] =useState({});
+
+
+  /* ── Click-to-move ── */
+  const[selectedChar,setSelectedChar]=useState(false); // keep for compat but unused
+  const[moveTarget,  setMoveTarget]  =useState(null);  // keep for compat but unused
+  const[repasoChatOpen,setRepasoChatOpen]=useState(false);
+  const[wordCloudOpen, setWordCloudOpen] =useState(false);
+
+  const UID      =useRef(null);
+  const SID      =useRef(getSID());
+  const roomRef  =useRef(null);
+  const walkTimer=useRef(null);
+  const mtTimer  =useRef(null);
+  const endRef   =useRef(null);
+
+  /* ── body class ── */
+  useEffect(()=>{
+    if(view==='room'||view==='screen') document.body.classList.add('in-room');
+    else document.body.classList.remove('in-room');
+  },[view]);
+
+  /* ── Auth listener ── */
+  useEffect(()=>{
+    const t=setTimeout(()=>{ if(view==='loading') setView('auth'); },8000);
+    const unsub=auth.onAuthStateChanged(async user=>{
+      clearTimeout(t);
+      if(user){
+        UID.current=user.uid;
+        try{
+          const snap=await db.ref(`profiles/${user.uid}`).get();
+          const p=snap.val();
+          if(p&&p.name){
+            setProfile(p);
+            setIsAdmin(!!p.isAdmin);
+            await joinRoom(user.uid,p);
+            setView('room');
+          } else setView('setup');
+        } catch(e){ console.error(e); setView('setup'); }
+      } else { UID.current=null; setView('auth'); }
+    });
+    return()=>{ clearTimeout(t); unsub(); };
+  },[]);
+
+  /* ── Firebase listeners sala ── */
+  useEffect(()=>{
+    if(view!=='room'&&view!=='screen') return;
+    const sid=SID.current, uid=UID.current;
+    if(!uid) return;
+    // Si el juego terminó (finished/idle) y kahootOpen era true, resetear
+    // (se maneja en closeGame)
+    const refs={
+      users: db.ref(`rooms/${sid}/users`),
+      chat:  db.ref(`rooms/${sid}/chat`),
+      att:   db.ref(`attendance/${uid}`),
+      sess:  db.ref(`sessions/${sid}`),
+      reac:  db.ref(`sessions/${sid}/reactions`),
+      hist:  db.ref(`gameHistory/${uid}`),
+    };
+    refs.users.on('value',s=>setUsers(s.val()||{}));
+    refs.chat.on('value',s=>{
+      const v=s.val();
+      if(v) setMsgs(Object.entries(v).map(([id,m])=>({id,...m})).sort((a,b)=>(a.ts||0)-(b.ts||0)));
+      else setMsgs([]);
+    });
+    refs.att.on('value',s=>setMyAtt(s.val()||{}));
+    refs.sess.on('value',s=>setSession(s.val()));
+    refs.reac.on('value',s=>setReactions(s.val()||{}));
+    refs.hist.on('value',s=>setGameHistory(s.val()||{}));
+    return()=>Object.values(refs).forEach(r=>r.off());
+  },[view]);
+
+  /* ── Sincronizar estado de actividades desde Firebase ── */
+  useEffect(()=>{
+    if(!session) return;
+    const p=session.phase||'waiting';
+
+    // Repaso — auto-abrir chat para todos
+    if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
+
+    // Confra — poblar localConfra para TODOS (admin ya lo tiene, no-admins lo obtienen acá)
+    if(p==='confra'&&session.confra){
+      setConfraOpen(true);
+      const fbQ=session.confra.queue||{};
+      const queue=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
+      setLocalConfra({
+        active:true,
+        queue,
+        currentIdx:typeof session.confra.currentIdx==='number'?session.confra.currentIdx:0,
+        startTime:session.confra.startTime,
+      });
+    }
+
+    // Nube de palabras — auto-abre para todos cuando el admin la inicia
+    if(session.wordcloud?.active) setWordCloudOpen(true);
+    // Si se desactivó, cerrar
+    if(session.wordcloud?.active===false) setWordCloudOpen(false);
+
+    // Limpiar todo al volver a waiting
+    if(p==='waiting'){
+      setConfraOpen(false);
+      setLocalConfra(null);
+      setRepasoChatOpen(false);
+      setWordCloudOpen(false);
+    }
+  },[session]);
+
+  /* ── Helpers ── */
+  const joinRoom=async(uid,p)=>{
+    const uRef=db.ref(`rooms/${SID.current}/users/${uid}`);
+    await uRef.set({
+      name:p.name,avatar:p.avatar,color:p.color,photo:p.photo||null,
+      zone:'lobby',x:48,y:48,joinedAt:Date.now(),walking:false,
+    });
+    uRef.onDisconnect().remove();
+    await db.ref(`attendance/${uid}/${SID.current}`).set({
+      name:p.name,avatar:p.avatar,color:p.color,timestamp:Date.now(),
+    });
+  };
+
+  const saveProfile=async(newProfile)=>{
+    const uid=UID.current;
+    if(!uid) return;
+    setSetupSaving(true); setSetupError('');
+    try{
+      await db.ref(`profiles/${uid}`).set({...newProfile,isAdmin:isAdmin||false});
+      try{
+        await db.ref(`rooms/${SID.current}/users/${uid}`).update({
+          name:newProfile.name,avatar:newProfile.avatar,
+          color:newProfile.color,photo:newProfile.photo||null,
+        });
+      }catch(e){}
+      setProfile(newProfile);
+      setEditOpen(false);
+      if(view==='setup'){
+        await joinRoom(uid,newProfile);
+        // Solo enviar si es la primera vez (perfil recién creado)
+        const emailKey=auth.currentUser?.email||'';
+        sendWelcomeEmail(emailKey, newProfile.name);
+        setView('room');
+      }
+    }catch(e){
+      console.error(e);
+      setSetupError('No se pudo guardar. Verifica tu conexión.');
+    }
+    setSetupSaving(false);
+  };
+
+  /* ── Auth handlers ── */
+  const handleEmailAuth=async()=>{
+    if(!email.trim()||!password) return;
+    setAuthLoad(true); setAuthError('');
+    try{
+      if(authMode==='login'){
+        await auth.signInWithEmailAndPassword(email.trim(),password);
+      } else {
+        await auth.createUserWithEmailAndPassword(email.trim(),password);
+        // El correo de bienvenida se envía en saveProfile (cuando ya tenemos el nombre)
+      }
+    }catch(e){ setAuthError(getErr(e.code)); setAuthLoad(false); }
+  };
+
+  const handleReset=async()=>{
+    if(!email.trim()) return;
+    setAuthLoad(true); setAuthError('');
+    try{
+      await auth.sendPasswordResetEmail(email.trim());
+      setResetSent(true);
+    }catch(e){
+      setAuthError(getErr(e.code)||'No se pudo enviar el correo. Verifica el email.');
+    }
+    setAuthLoad(false);
+  };
+
+  const handleGoogle=async()=>{
+    setAuthLoad(true); setAuthError('');
+    try{
+      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    }catch(e){
+      if(e.code&&!['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code))
+        setAuthError(getErr(e.code));
+      setAuthLoad(false);
+    }
+  };
+
+  const handleSignOut=async()=>{
+    try{ await db.ref(`rooms/${SID.current}/users/${UID.current}`).remove(); }catch(e){}
+    await auth.signOut();
+    setUsers({}); setMsgs([]); setMyAtt({}); setSession(null);
+  };
+
+  /* ── Click-to-move ── */
+  /* ── Drag to move ── */
+  const handleDragMove=useCallback((x,y)=>{
+    const uid=UID.current;
+    if(!uid) return;
+    const zone=detectZone(x,y);
+    db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
+  },[]);
+
+  /* ── Chat ── */
+  const handleSend=(text,extra={})=>{
+    if(!text?.trim()&&!extra.imageData) return;
+    const me=users[UID.current];
+    if(!me) return;
+    db.ref(`rooms/${SID.current}/chat`).push({
+      name:me.name,avatar:me.avatar,color:me.color,photo:me.photo||null,
+      text:text?.trim()||'',
+      type:extra.type||'text',
+      imageData:extra.imageData||null,
+      tag:extra.tag||null,
+      time:nowTime(),ts:Date.now(),uid:UID.current,
+    });
+  };
+
+  /* ── Reaccionar ── */
+  const handleReact=async(reactionId)=>{
+    const speakerUid=session?.confra?.queue
+      ??(localConfra?.queue
+        ?localConfra.queue[localConfra.currentIdx||0]
+        :null);
+    // Get speakerUid properly from queue
+    const confraQ=session?.confra?.queue||localConfra?.queue||[];
+    const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
+    const cIdx=typeof session?.confra?.currentIdx==='number'
+      ?session.confra.currentIdx
+      :(localConfra?.currentIdx||0);
+    const sUid=qArr[cIdx];
+    if(!sUid) return;
+    const ref=db.ref(`sessions/${SID.current}/reactions/${sUid}/${UID.current}/${reactionId}`);
+    const snap=await ref.get();
+    if(snap.val()) ref.remove(); // toggle off
+    else ref.set(true);          // toggle on
+  };
+
+  // Set of reaction ids the current user has selected for current speaker
+  const myReactions=useMemo(()=>{
+    const confraQ=session?.confra?.queue||localConfra?.queue||[];
+    const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
+    const cIdx=typeof session?.confra?.currentIdx==='number'
+      ?session.confra.currentIdx:(localConfra?.currentIdx||0);
+    const sUid=qArr[cIdx];
+    if(!sUid) return {};
+    return reactions?.[sUid]?.[UID.current]||{};
+  },[reactions,session,localConfra]);
+
+  /* ── Admin: gestión de fases ── */
+  const startConfra=async(confraUsers)=>{
+    const participants=confraUsers.length>0?confraUsers:Object.entries(users);
+    if(participants.length===0) return;
+    const uids=participants.map(([uid])=>uid).sort(()=>Math.random()-.5);
+    const queueObj={};
+    uids.forEach((uid,i)=>{ queueObj[i]=uid; });
+    try{
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'confra',
+        confra:{active:true, queue:queueObj, currentIdx:0, startTime:Date.now()}
+      });
+    }catch(e){ console.error('Error iniciando confra:',e); }
+  };
+
+  const nextSpeaker=async()=>{
+    const confra=session?.confra;
+    const rawQueue=confra?.queue||localConfra?.queue||[];
+    const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
+    const currentIdx=typeof confra?.currentIdx==='number'?confra.currentIdx:(localConfra?.currentIdx||0);
+    const next=currentIdx+1;
+    if(next>=queue.length){
+      await endConfra();
+    } else {
+      setLocalConfra(p=>p?{...p,currentIdx:next}:null);
+      await db.ref(`sessions/${SID.current}/confra/currentIdx`).set(next);
+      await db.ref(`sessions/${SID.current}/reactions`).remove();
+    }
+  };
+
+  const endConfra=async()=>{
+    setConfraOpen(false);
+    setLocalConfra(null);
+    // set() para limpiar completamente y que todos los listeners vean phase:waiting
+    await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    setEndBanner('confra');
+  };
+
+  const startRepaso=async()=>{
+    // Activar UI inmediatamente
+    setRepasoChatOpen(true);
+    try{
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'repaso',
+        repaso:{active:true,startTime:Date.now()},
+      });
+    }catch(e){ console.error('Error iniciando repaso:',e); }
+  };
+
+  const endRepaso=async()=>{
+    await db.ref(`sessions/${SID.current}`).update({phase:'waiting','repaso/active':false,'wordcloud/active':false});
+    setEndBanner('repaso');
+  };
+
+  const toggleWordCloud=async(question='')=>{
+    const isActive=session?.wordcloud?.active;
+    if(isActive){
+      setWordCloudOpen(o=>!o);
+    } else {
+      await db.ref(`sessions/${SID.current}/wordcloud`).set({
+        active:true,words:{},question:question||''
+      });
+      setWordCloudOpen(true);
+    }
+  };
+
+  const startJuegos=async()=>{
+    try{
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'juegos',
+        juegos:{active:true,startTime:Date.now()},
+      });
+    }catch(e){console.error('Error iniciando juegos:',e);}
+  };
+
+  const endJuegos=async()=>{
+    await db.ref(`sessions/${SID.current}`).update({phase:'waiting','juegos/active':false});
+  };
+
+  const resetSession=async()=>{
+    await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    setConfraOpen(false);
+    setLocalConfra(null);
+    setWordCloudOpen(false);
+    setRepasoChatOpen(false);
+  };
+
+  const phase=session?.phase||'waiting';
+  const usersArr=Object.entries(users);
+  const attSessions=Object.keys(myAtt).sort().reverse();
+  const streak=(()=>{
+    if(!attSessions.length) return 0;
+    let s=1;
+    for(let i=1;i<attSessions.length;i++){
+      if((new Date(attSessions[i-1])-new Date(attSessions[i]))/86400000<=10) s++;
+      else break;
+    }
+    return s;
+  })();
+
+  /* ════ LOADING ════ */
+  if(view==='loading') return(
+    <div style={{height:'100vh',display:'flex',flexDirection:'column',
+      alignItems:'center',justifyContent:'center',gap:20,
+      background:'var(--navy)',position:'relative',overflow:'hidden'}}>
+      <BgTriangles/>
+      <div style={{position:'relative',zIndex:1,textAlign:'center'}}>
+        <BookLogo size={80}/>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:26,color:'#ffd000',letterSpacing:'.08em',marginTop:10}}>MARANATA CLASS</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>Las Condes</div>
+        <div style={{marginTop:20,display:'flex',justifyContent:'center'}}>
+          <Spinner size={32}/>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ════ AUTH ════ */
+  if(view==='auth') return(
+    <div style={pageWrap}>
+      <BgTriangles/>
+      <div style={cardStyle}>
+        <div style={{textAlign:'center',marginBottom:22}}>
+          <BookLogo size={70}/>
+          <h1 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:28,color:'#ffd000',letterSpacing:'.05em',
+            textTransform:'uppercase',lineHeight:1,marginTop:8}}>MARANATA CLASS</h1>
+          <p style={{color:'var(--muted)',fontSize:12,marginTop:4}}>Adventista Las Condes</p>
+        </div>
+        <div style={{display:'flex',background:'rgba(255,255,255,.04)',
+          borderRadius:12,padding:4,marginBottom:20,
+          border:'1px solid rgba(255,208,0,.1)'}}>
+          {[{id:'login',l:'Ingresar'},{id:'register',l:'Registrarse'}].map(t=>(
+            <button key={t.id} onClick={()=>{setAuthMode(t.id);setAuthError('');setResetMode(false);setResetSent(false);}} style={{
+              flex:1,padding:'9px 4px',borderRadius:9,border:'none',
+              background:authMode===t.id&&!resetMode?'linear-gradient(135deg,#ffd000,#e6a800)':'transparent',
+              color:authMode===t.id&&!resetMode?'#07091f':'var(--muted)',
+              fontSize:13,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
+              letterSpacing:'.04em',textTransform:'uppercase',transition:'all .2s',
+            }}>{t.l}</button>
+          ))}
+        </div>
+
+        {/* ── MODO RECUPERAR CONTRASEÑA ── */}
+        {resetMode ? (
+          resetSent ? (
+            <div style={{textAlign:'center',padding:'10px 0 8px'}}>
+              <div style={{fontSize:52,marginBottom:12}}>📩</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:18,color:'#10b981',textTransform:'uppercase',letterSpacing:'.04em',
+                marginBottom:8}}>¡Correo enviado!</div>
+              <div style={{fontSize:13,color:'var(--white)',lineHeight:1.6,marginBottom:6}}>
+                Revisa tu bandeja de entrada en
+              </div>
+              <div style={{fontWeight:700,color:'#ffd000',fontSize:14,marginBottom:16,
+                wordBreak:'break-all'}}>{email}</div>
+              <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5,marginBottom:20}}>
+                Si no aparece, revisa la carpeta de Spam.
+                El enlace expira en 1 hora.
+              </div>
+              <button onClick={()=>{setResetMode(false);setResetSent(false);setAuthError('');}} style={{
+                background:'linear-gradient(135deg,#ffd000,#e6a800)',
+                border:'none',borderRadius:12,padding:'12px 28px',
+                color:'#07091f',fontWeight:800,fontSize:14,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
+              }}>Volver al inicio ←</button>
+            </div>
+          ) : (
+            <>
+              <div style={{textAlign:'center',marginBottom:16}}>
+                <div style={{fontSize:36,marginBottom:6}}>🔑</div>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                  fontSize:17,color:'var(--white)',textTransform:'uppercase',letterSpacing:'.04em'}}>
+                  Recuperar contraseña
+                </div>
+                <div style={{fontSize:12,color:'var(--muted)',marginTop:4,lineHeight:1.5}}>
+                  Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.
+                </div>
+              </div>
+              <div style={{marginBottom:authError?10:18}}>
+                <label style={labelStyle}>Correo electrónico</label>
+                <input type="email" value={email}
+                  onChange={e=>{setEmail(e.target.value);setAuthError('');}}
+                  onKeyDown={e=>e.key==='Enter'&&handleReset()}
+                  placeholder="tucorreo@gmail.com" style={inputStyle}/>
+              </div>
+              {authError&&(
+                <div style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',
+                  borderRadius:8,padding:'10px 12px',marginBottom:14,
+                  fontSize:12,color:'#fca5a5',lineHeight:1.5}}>⚠️ {authError}</div>
+              )}
+              <button onClick={handleReset} disabled={authLoad||!email.trim()}
+                style={btnYellow(authLoad||!email.trim())}>
+                {authLoad?<Spinner size={18} color="#07091f"/>:'Enviar correo de recuperación →'}
+              </button>
+              <button onClick={()=>{setResetMode(false);setAuthError('');}} style={{
+                width:'100%',padding:'10px',marginTop:10,borderRadius:12,border:'none',
+                background:'none',color:'var(--muted)',fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              }}>← Volver</button>
+            </>
+          )
+        ) : (
+          /* ── MODO NORMAL (login / registro) ── */
+          <>
+            <div style={{marginBottom:12}}>
+              <label style={labelStyle}>Correo electrónico</label>
+              <input type="email" value={email}
+                onChange={e=>{setEmail(e.target.value);setAuthError('');}}
+                onKeyDown={e=>e.key==='Enter'&&handleEmailAuth()}
+                placeholder="tucorreo@gmail.com" style={inputStyle}/>
+            </div>
+            <div style={{marginBottom:4}}>
+              <label style={labelStyle}>Contraseña</label>
+              <input type="password" value={password}
+                onChange={e=>{setPassword(e.target.value);setAuthError('');}}
+                onKeyDown={e=>e.key==='Enter'&&handleEmailAuth()}
+                placeholder="••••••••" style={inputStyle}/>
+            </div>
+            {/* Link olvidé contraseña — solo en login */}
+            {authMode==='login'&&(
+              <div style={{textAlign:'right',marginBottom:authError?10:16}}>
+                <button onClick={()=>{setResetMode(true);setAuthError('');setResetSent(false);}} style={{
+                  background:'none',border:'none',color:'rgba(255,208,0,.6)',
+                  fontSize:11,cursor:'pointer',fontFamily:'Barlow,sans-serif',
+                  textDecoration:'underline',padding:'2px 0',
+                }}>¿Olvidaste tu contraseña?</button>
+              </div>
+            )}
+            {authError&&(
+              <div style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',
+                borderRadius:8,padding:'10px 12px',marginBottom:14,
+                fontSize:12,color:'#fca5a5',lineHeight:1.5}}>⚠️ {authError}</div>
+            )}
+            <button onClick={handleEmailAuth} disabled={authLoad||!email.trim()||!password}
+              style={btnYellow(authLoad||!email.trim()||!password)}>
+              {authLoad?<Spinner size={18} color="#07091f"/>
+                :authMode==='login'?'Ingresar →':'Crear cuenta →'}
+            </button>
+            <div style={{display:'flex',alignItems:'center',gap:10,margin:'16px 0'}}>
+              <div style={{flex:1,height:1,background:'rgba(255,208,0,.1)'}}/>
+              <span style={{fontSize:11,color:'var(--muted)'}}>o continúa con</span>
+              <div style={{flex:1,height:1,background:'rgba(255,208,0,.1)'}}/>
+            </div>
+            <button onClick={handleGoogle} disabled={authLoad} style={{
+              width:'100%',padding:12,borderRadius:12,border:'none',
+              background:'white',color:'#111',fontSize:14,fontWeight:600,
+              display:'flex',alignItems:'center',justifyContent:'center',gap:10,
+              boxShadow:'0 2px 14px rgba(0,0,0,.4)',fontFamily:'Barlow,sans-serif',
+            }}>
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.4-4z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.6-2.9-11.3-7.1l-6.6 5.1C9.7 39.6 16.3 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/>
+              </svg>
+              Continuar con Google
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  /* ════ SETUP ════ */
+  if(view==='setup') return(
+    <div style={pageWrap}>
+      <BgTriangles/>
+      <div style={cardStyle}>
+        <div style={{textAlign:'center',marginBottom:18}}>
+          <div style={{fontSize:40,marginBottom:8}}>👋</div>
+          <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:22,
+            color:'#ffd000',textTransform:'uppercase',letterSpacing:'.04em'}}>¡Bienvenido!</h2>
+          <p style={{color:'var(--muted)',fontSize:12,marginTop:4}}>
+            Personaliza tu perfil. Podrás cambiarlo después.
+          </p>
+        </div>
+
+        {/* Foto */}
+        <div style={{display:'flex',justifyContent:'center',marginBottom:14}}>
+          <div style={{position:'relative',cursor:'pointer'}}
+            onClick={()=>document.getElementById('setupPhoto')?.click()}>
+            <AvatarBubble profile={profile} size={70}/>
+            <div style={{position:'absolute',bottom:-2,right:-2,width:22,height:22,
+              borderRadius:'50%',background:'#ffd000',display:'flex',
+              alignItems:'center',justifyContent:'center',fontSize:12,color:'#07091f'}}>
+              📷
+            </div>
+          </div>
+          <input id="setupPhoto" type="file" accept="image/*"
+            style={{display:'none'}}
+            onChange={async e=>{
+              const f=e.target.files[0]; if(!f) return;
+              const b64=await compressImage(f,200);
+              setProfile(p=>({...p,photo:b64}));
+            }}/>
+        </div>
+
+        <div style={{marginBottom:12}}>
+          <label style={labelStyle}>Nombre en la sala</label>
+          <input value={profile.name}
+            onChange={e=>setProfile(p=>({...p,name:e.target.value}))}
+            placeholder="¿Cómo quieres que te vean?"
+            style={inputStyle}/>
+        </div>
+        <div style={{marginBottom:12}}>
+          <label style={labelStyle}>Avatar (si no usas foto)</label>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:5}}>
+            {AVATARS.map(a=>(
+              <button key={a} onClick={()=>setProfile(p=>({...p,avatar:a}))} style={{
+                background:profile.avatar===a?'rgba(255,208,0,.15)':'rgba(255,255,255,.03)',
+                border:profile.avatar===a?`2px solid ${profile.color}`:'2px solid rgba(255,255,255,.06)',
+                borderRadius:10,padding:'7px 2px',fontSize:19,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                transition:'all .15s',
+              }}>{a}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{marginBottom:20}}>
+          <label style={labelStyle}>Color de aura</label>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {COLORS.map(c=>(
+              <div key={c} onClick={()=>setProfile(p=>({...p,color:c}))} style={{
+                width:28,height:28,borderRadius:'50%',background:c,cursor:'pointer',
+                border:profile.color===c?'3px solid white':'3px solid transparent',
+                boxShadow:profile.color===c?`0 0 14px ${c}`:'none',transition:'all .15s',
+              }}/>
+            ))}
+          </div>
+        </div>
+        <button onClick={()=>saveProfile(profile)}
+          disabled={!profile.name.trim()||setupSaving}
+          style={btnYellow(!profile.name.trim()||setupSaving)}>
+          {setupSaving
+            ?<><Spinner size={18} color="#07091f"/>Guardando...</>
+            :'Entrar a la sala ✨'}
+        </button>
+        {setupError&&(
+          <div style={{marginTop:10,color:'#fca5a5',fontSize:12,
+            background:'rgba(239,68,68,.08)',borderRadius:8,padding:'9px 12px'}}>
+            ⚠️ {setupError}
+          </div>
+        )}
+        <p style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--muted2)'}}>
+          Tu perfil se guarda para siempre
+        </p>
+      </div>
+    </div>
+  );
+
+  /* ════ SCREEN ════ */
+  if(view==='screen') return(
+    <ScreenView
+      users={users} session={session} msgs={msgs} reactions={reactions}
+      onExit={()=>setView('room')}
+    />
+  );
+
+  /* ════ ROOM ════ */
+  return(
+    <div style={{position:'fixed',inset:0,display:'flex',flexDirection:'column',
+      background:'var(--navy)'}}>
+
+      {/* ── HEADER ── */}
+      <div style={{
+        background:'linear-gradient(135deg,#0d1035,#0a0c28)',
+        borderBottom:'1px solid rgba(255,208,0,.12)',
+        padding:'8px 12px',
+        display:'flex',alignItems:'center',
+        justifyContent:'space-between',flexShrink:0,
+        minHeight:52,
+      }}>
+        {/* Logo */}
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <svg width="26" height="19" viewBox="0 0 80 60">
+            <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
+            <g stroke="#07091f" strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
+              <path d="M52 42L52 18Q52 15 49 15L40 17L40 42"/>
+              <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
+            </g>
+          </svg>
+          <div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:14,color:'#ffd000',letterSpacing:'.05em',
+              textTransform:'uppercase',lineHeight:1}}>
+              MARANATA CLASS
+            </div>
+            <div style={{fontSize:9,color:'var(--muted)'}}>
+              {usersArr.length} en sala
+              {phase!=='waiting'&&<span style={{
+                marginLeft:6,color:ZONES[phase]?.color||'#ffd000',
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              }}>
+                · {ZONES[phase]?.icon} {ZONES[phase]?.label}
+              </span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Botones header */}
+        <div style={{display:'flex',gap:5,alignItems:'center'}}>
+          {/* Avatar + editar */}
+          <button onClick={()=>setEditOpen(true)} title="Editar perfil" style={{
+            display:'flex',alignItems:'center',gap:5,
+            background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
+            borderRadius:20,padding:'4px 8px',
+          }}>
+            <AvatarBubble profile={profile} size={26}/>
+            <span style={{fontSize:9,color:'#ffd000',fontFamily:'Barlow Condensed,sans-serif',
+              fontWeight:700,maxWidth:55,overflow:'hidden',textOverflow:'ellipsis',
+              whiteSpace:'nowrap'}}>
+              {profile.name||'Yo'}
+            </span>
+            <span style={{fontSize:10}}>✏️</span>
+          </button>
+
+          {/* Asistencia */}
+          <button onClick={()=>setAttOpen(true)} title="Mi asistencia" style={{
+            background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
+            borderRadius:20,width:34,height:34,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
+          }}>📊</button>
+
+          {/* Proyectar */}
+          <button onClick={()=>setView('screen')} title="Proyectar" style={{
+            background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
+            borderRadius:20,width:34,height:34,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
+          }}>📺</button>
+
+          {/* Cerrar sesión */}
+          <button onClick={handleSignOut} title="Cerrar sesión" style={{
+            background:'rgba(239,68,68,.07)',border:'1px solid rgba(239,68,68,.15)',
+            borderRadius:20,width:34,height:34,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
+          }}>↩</button>
+        </div>
+      </div>
+
+      {/* ── SALA (canvas con zonas) ── */}
+      <div style={{flex:1,position:'relative',overflow:'hidden'}}>
+        <RoomCanvas
+          users={users} myId={UID.current} session={session}
+          onDragMove={handleDragMove}
+          roomRef={roomRef} full={false} reactions={reactions}
+        />
+
+        {/* Repaso: botón flotante para abrir chat */}
+        {phase==='repaso'&&!repasoChatOpen&&(
+          <button onClick={()=>setRepasoChatOpen(true)} style={{
+            position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',
+            background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+            border:'none',borderRadius:24,padding:'10px 22px',
+            color:'white',fontWeight:800,fontSize:13,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
+            display:'flex',alignItems:'center',gap:8,zIndex:20,
+            boxShadow:'0 4px 20px rgba(59,130,246,.5)',
+          }}>
+            <span style={{fontSize:16}}>💬</span> Abrir Chat del Repaso
+            {msgs.length>0&&(
+              <span style={{background:'rgba(255,255,255,.25)',borderRadius:20,
+                padding:'1px 7px',fontSize:11}}>{msgs.length}</span>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Confraternización: speaker overlay */}
+      {/* Confraternización: speaker overlay — se muestra en TODOS los dispositivos */}
+      {session?.phase==='confra'&&(
+        <ConfraSpeakerPanel
+          session={session}
+          users={users}
+          myId={UID.current} isAdmin={isAdmin}
+          onNext={nextSpeaker} onEnd={endConfra}
+          onReact={handleReact}
+          myReactions={myReactions}
+          allReactions={(()=>{
+            const confraQ=session?.confra?.queue||localConfra?.queue||[];
+            const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
+            const cIdx=typeof session?.confra?.currentIdx==='number'
+              ?session.confra.currentIdx:(localConfra?.currentIdx||0);
+            const sUid=qArr[cIdx];
+            return sUid?reactions?.[sUid]||{}:{};
+          })()}
+        />
+      )}
+
+      {/* Banner fin de actividad */}
+      {endBanner&&(
+        <ActivityEndBanner phase={endBanner} onDismiss={()=>setEndBanner(null)}/>
+      )}
+
+      {/* Panel admin */}
+      {isAdmin&&(
+        <AdminPanel
+          session={session} users={users}
+          onStartConfra={startConfra}
+          onNextSpeaker={nextSpeaker}
+          onEndConfra={endConfra}
+          onStartRepaso={startRepaso}
+          onEndRepaso={endRepaso}
+          onStartJuegos={()=>{startJuegos();setKahootOpen(true);}}
+          onEndJuegos={endJuegos}
+          onOpenStats={()=>setAdminStats(true)}
+          onToggleWordCloud={toggleWordCloud}
+          onResetSession={resetSession}
+        />
+      )}
+
+
+      {/* Kahoot Game */}
+      {(kahootOpen||(phase==='juegos'&&session?.juegos?.active)||(session?.juegos?.gameState&&session?.juegos?.gameState!=='idle'))&&(
+        <KahootController
+          session={session} users={users}
+          myId={UID.current} isAdmin={isAdmin}
+          SID={SID.current}
+          onClose={()=>setKahootOpen(false)}
+        />
+      )}
+
+      {/* Word Cloud — auto-abre para todos, solo usuarios en repaso */}
+      {wordCloudOpen&&phase==='repaso'&&session?.wordcloud?.active&&(
+        <WordCloudActivity
+          wordcloud={session.wordcloud}
+          question={session.wordcloud?.question||''}
+          myId={UID.current} users={users}
+          isAdmin={isAdmin} SID={SID.current}
+          onClose={()=>setWordCloudOpen(false)}
+        />
+      )}
+
+      {/* Modales */}
+      {editOpen&&<EditProfileModal profile={profile} onSave={saveProfile} onClose={()=>setEditOpen(false)}/>}
+      {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
+      {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
+
+      {/* Repaso Chat */}
+      {repasoChatOpen&&phase==='repaso'&&(
+        <RepasoChat
+          msgs={msgs} session={session}
+          myId={UID.current} users={users}
+          onSend={handleSend}
+          onClose={()=>setRepasoChatOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+
+/* ════════════════════════ KAHOOT: COLORES / TIMER / BIBLIOTECA ════════════════════════ */
+const ANS_COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12'];
+const ANS_SHAPES=['▲','◆','●','■'];
+const GAME_TIMER=30;
+
+const GAME_LIBRARY=[{
+  id:'semana2',
+  title:'Semana 2',
+  subtitle:'Juan 17 — El carácter de Dios',
+  icon:'📖',
+  questions:[
+    {text:'¿Cuál es el pasaje bíblico principal de la segunda semana de estudio?',
+     options:['Apocalipsis 3:14-22','Juan 17','Romanos 8:1-11','Mateo 5:1-12'],correct:1},
+    {text:'Según Juan 17:3, ¿qué nos da la vida eterna?',
+     options:['Obedecer los mandamientos','Ser bautizados','Conocer a Dios y a Jesucristo','Leer la Biblia cada día'],correct:2},
+    {text:'¿Cómo llama Jesús a su Padre en Juan 17:11?',
+     options:['Padre poderoso','Padre eterno','Padre fiel','Padre santo'],correct:3},
+    {text:'Según 1 Juan 4:8, ¿cuál es la identidad esencial de Dios?',
+     options:['Dios es poderoso','Dios es fiel','Dios es amor','Dios es justo'],correct:2},
+    {text:'¿Qué palabra hebrea describe el amor del pacto de Dios: lealtad, protección y ternura?',
+     options:['Shalom','Hesed','Torah','Elohim'],correct:1},
+    {text:'¿Qué proclaman los cuatro seres vivientes ante el trono de Dios en Apocalipsis 4:8?',
+     options:['"¡Gloria, gloria, gloria!"','"¡Amén, amén, amén!"','"¡Santo, santo, santo!"','"¡Aleluya, aleluya, aleluya!"'],correct:2},
+    {text:'¿Quién fue el primero en poner en tela de juicio el carácter de Dios?',
+     options:['Adán','Eva','Lucifer / Satanás','Caín'],correct:2},
+    {text:'¿En qué Evangelio se enfatiza más la divinidad de Cristo e invita al renacimiento espiritual?',
+     options:['Mateo','Marcos','Lucas','Juan'],correct:3},
+    {text:'¿Qué nombre significa "Dios con nosotros" según Mateo 1:23?',
+     options:['Yahweh','Adonai','Emanuel / Immanuel','Jehová-Jireh'],correct:2},
+    {text:'¿Qué prometió Jesús en Mateo 28:20 antes de ascender al cielo?',
+     options:['"Volveré pronto a buscarlos"','"Estaré con ustedes todos los días, hasta el fin del mundo"','"Les enviaré al Espíritu Santo en mi lugar"','"Los llevaré conmigo al cielo"'],correct:1},
+  ]
+}];
+
+function Confetti(){
+  const pieces=React.useMemo(()=>Array.from({length:28},(_,i)=>({
+    id:i,x:Math.random()*100,delay:Math.random()*2,dur:2.5+Math.random()*2,
+    color:['#ffd000','#ec4899','#22d3ee','#10b981','#8b5cf6'][i%5],
+    size:6+Math.random()*8,
+  })),[]);
+  return(
+    <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:300,overflow:'hidden'}}>
+      {pieces.map(p=>(
+        <div key={p.id} style={{
+          position:'absolute',left:`${p.x}%`,top:-20,
+          width:p.size,height:p.size,background:p.color,borderRadius:p.size/4,
+          animation:`confettiFall ${p.dur}s ${p.delay}s ease-in forwards`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+function KahootQuestion({question,qIndex,total,myAnswer,onAnswer,timeLeft,gameState}){
+  const answered=myAnswer!==null&&myAnswer!==undefined;
+  const showResult=gameState==='results';
+  const urgent=timeLeft<=8;
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+      display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
+        padding:'10px 16px',display:'flex',alignItems:'center',
+        justifyContent:'space-between',flexShrink:0,
+        borderBottom:'1px solid rgba(139,92,246,.2)'}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.07em'}}>
+          Pregunta {qIndex+1} / {total}
+        </div>
+        <div style={{width:44,height:44,borderRadius:'50%',
+          background:urgent?'rgba(239,68,68,.15)':'rgba(139,92,246,.15)',
+          border:`2px solid ${urgent?'#ef4444':'#8b5cf6'}`,
+          display:'flex',alignItems:'center',justifyContent:'center',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:18,
+          color:urgent?'#ef4444':'#8b5cf6',
+          animation:urgent&&!showResult?'timerTick .5s infinite':undefined,
+        }}>
+          {showResult?'✓':timeLeft}
+        </div>
+      </div>
+      {!showResult&&(
+        <div style={{height:5,background:'rgba(255,255,255,.06)',flexShrink:0}}>
+          <div style={{height:'100%',
+            background:urgent?'#ef4444':'#8b5cf6',
+            width:`${(timeLeft/GAME_TIMER)*100}%`,
+            transition:'width 1s linear',borderRadius:2}}/>
+        </div>
+      )}
+      <div style={{flex:'0 0 auto',padding:'14px 14px 10px',
+        display:'flex',alignItems:'center',justifyContent:'center',minHeight:85}}>
+        <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
+          border:'1px solid rgba(139,92,246,.2)',borderRadius:16,
+          padding:'14px 16px',textAlign:'center',width:'100%',maxWidth:500,
+          fontFamily:'Barlow,sans-serif',fontWeight:600,fontSize:16,
+          color:'var(--white)',lineHeight:1.4,
+          boxShadow:'0 4px 20px rgba(0,0,0,.4)'}}>
+          {question.text}
+        </div>
+      </div>
+      <div style={{flex:1,display:'grid',gridTemplateColumns:'1fr 1fr',
+        gap:10,padding:'0 12px 16px',alignContent:'start'}}>
+        {question.options.map((opt,i)=>{
+          const isMyAnswer=myAnswer===i;
+          const isCorrect=question.correct===i;
+          let bg=ANS_COLORS[i];
+          let border='transparent';
+          let badge=null;
+          if(showResult){
+            if(isCorrect){border='white';badge='✅';}
+            else{bg='rgba(255,255,255,.06)';border='rgba(255,255,255,.1)';}
+          } else if(answered&&!isMyAnswer){
+            bg='rgba(255,255,255,.06)';border='rgba(255,255,255,.08)';
+          }
+          return(
+            <button key={i} onClick={()=>!answered&&!showResult&&onAnswer(i)}
+              disabled={answered||showResult}
+              style={{background:bg,border:`2px solid ${border}`,
+                borderRadius:14,padding:'12px 8px',
+                display:'flex',flexDirection:'column',alignItems:'center',
+                justifyContent:'center',gap:5,minHeight:88,
+                color:'white',textAlign:'center',
+                fontFamily:'Barlow,sans-serif',fontWeight:600,fontSize:13,
+                boxShadow:isMyAnswer&&!showResult?`0 0 18px ${ANS_COLORS[i]}88`:
+                          isMyAnswer&&showResult&&isCorrect?'0 0 0 3px white':undefined,
+                animation:isMyAnswer&&!showResult?'answerPop .3s ease':undefined,
+                outline:isMyAnswer&&showResult&&!isCorrect?'3px solid #ef4444':undefined,
+                transition:'background .4s,border .4s',
+                cursor:answered||showResult?'default':'pointer'}}>
+              <span style={{fontSize:18,opacity:.7}}>{ANS_SHAPES[i]}</span>
+              <span style={{lineHeight:1.3}}>{opt}</span>
+              {badge&&<span style={{fontSize:16}}>{badge}</span>}
+              {showResult&&isMyAnswer&&!isCorrect&&<span style={{fontSize:16}}>❌</span>}
+            </button>
+          );
+        })}
+      </div>
+      {answered&&!showResult&&(
+        <div style={{position:'absolute',bottom:20,left:'50%',
+          transform:'translateX(-50%)',
+          background:'rgba(7,9,31,.95)',border:'1px solid rgba(139,92,246,.3)',
+          borderRadius:20,padding:'8px 20px',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:13,color:'#8b5cf6',letterSpacing:'.04em',textTransform:'uppercase'}}>
+          ✓ Enviada — esperando...
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KahootResultCard({question,myAnswer,pointsEarned,myScore,qIdx,total,isAdmin,onNext,onFinish}){
+  const correct=question.correct;
+  const isRight=myAnswer===correct;
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+      display:'flex',flexDirection:'column',alignItems:'center',
+      justifyContent:'center',padding:20,gap:14}}>
+      <div style={{width:'100%',maxWidth:360,
+        background:isRight?'linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.04))':'linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04))',
+        border:`2px solid ${isRight?'rgba(16,185,129,.4)':'rgba(239,68,68,.3)'}`,
+        borderRadius:20,padding:'18px 16px',textAlign:'center',
+        animation:'answerPop .4s ease'}}>
+        <div style={{fontSize:48,marginBottom:8}}>{isRight?'🎉':'😅'}</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:isRight?'#10b981':'#ef4444',
+          textTransform:'uppercase',letterSpacing:'.06em'}}>
+          {isRight?'¡Correcto!':'Incorrecto'}
+        </div>
+        <div style={{fontSize:12,color:'var(--muted)',marginTop:6}}>Respuesta correcta:</div>
+        <div style={{marginTop:6,background:ANS_COLORS[correct],borderRadius:10,
+          padding:'7px 14px',fontFamily:'Barlow,sans-serif',fontWeight:600,
+          fontSize:13,color:'white',display:'inline-block'}}>
+          {ANS_SHAPES[correct]} {question.options[correct]}
+        </div>
+      </div>
+      {isRight&&(
+        <div style={{display:'flex',alignItems:'center',gap:10,animation:'scoreUp .5s ease'}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:34,color:'#ffd000'}}>+{pointsEarned}</div>
+          <div style={{fontSize:13,color:'var(--muted)'}}>
+            puntos<br/>
+            <span style={{color:'var(--white)',fontWeight:700}}>Total: {myScore}</span>
+          </div>
+        </div>
+      )}
+      <div style={{fontSize:11,color:'var(--muted)'}}>Pregunta {qIdx+1} de {total}</div>
+      {isAdmin&&(
+        <div style={{display:'flex',gap:10,marginTop:4}}>
+          {qIdx+1<total?(
+            <button onClick={onNext} style={{background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+              border:'none',borderRadius:12,padding:'12px 26px',
+              color:'white',fontWeight:800,fontSize:14,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+              textTransform:'uppercase',boxShadow:'0 0 20px rgba(139,92,246,.4)'}}>
+              Siguiente →
+            </button>
+          ):(
+            <button onClick={onFinish} style={{background:'linear-gradient(135deg,#10b981,#059669)',
+              border:'none',borderRadius:12,padding:'12px 26px',
+              color:'white',fontWeight:800,fontSize:14,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+              textTransform:'uppercase',boxShadow:'0 0 20px rgba(16,185,129,.35)'}}>
+              Ver ganador 🏆
+            </button>
+          )}
+        </div>
+      )}
+      {!isAdmin&&(
+        <div style={{fontSize:12,color:'var(--muted)'}}>Esperando al profe...</div>
+      )}
+    </div>
+  );
+}
+
+function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
+  const sorted=Object.entries(scores||{})
+    .map(([uid,score])=>({uid,score,user:users[uid]||{name:'?',avatar:'👤',color:'#8b5cf6'}}))
+    .sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉'];
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
+      display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      {isFinished&&<Confetti/>}
+      <div style={{background:'linear-gradient(135deg,#0d1035,#141744)',
+        padding:'14px 20px',flexShrink:0,textAlign:'center',
+        borderBottom:'1px solid rgba(255,208,0,.15)'}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.08em'}}>
+          {isFinished?'🏆 Resultados Finales':'Marcador'}
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:'auto',padding:'16px 16px 80px'}}>
+        {sorted.map((item,i)=>(
+          <div key={item.uid} style={{
+            display:'flex',alignItems:'center',gap:12,
+            background:i===0&&isFinished?
+              'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))':'rgba(255,255,255,.03)',
+            border:i===0&&isFinished?'1px solid rgba(255,208,0,.25)':'1px solid rgba(255,255,255,.05)',
+            borderRadius:12,padding:'10px 14px',marginBottom:8,
+            animation:`scoreUp ${.1+i*.07}s ease`}}>
+            <div style={{width:28,textAlign:'center',
+              fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:i<3?22:16,color:i<3?'#ffd000':'var(--muted)'}}>
+              {i<3?medals[i]:i+1}
+            </div>
+            <AvatarBubble profile={item.user} size={34}/>
+            <div style={{flex:1,fontFamily:'Barlow,sans-serif',fontWeight:600,
+              fontSize:14,color:'white'}}>{item.user.name}</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:20,color:'#ffd000'}}>{item.score}</div>
+          </div>
+        ))}
+      </div>
+      {isAdmin&&isFinished&&(
+        <div style={{position:'absolute',bottom:20,left:'50%',transform:'translateX(-50%)'}}>
+          <button onClick={onClose} style={{
+            background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+            border:'none',borderRadius:14,padding:'13px 32px',
+            color:'white',fontWeight:800,fontSize:14,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+            textTransform:'uppercase',boxShadow:'0 0 22px rgba(139,92,246,.4)'}}>
+            Cerrar juego ✓
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onCancel}){
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,
+      background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',
+      display:'flex',flexDirection:'column',alignItems:'center',
+      justifyContent:'center',padding:24,gap:16,overflowY:'auto'}}>
+      <div style={{textAlign:'center',marginBottom:4}}>
+        <div style={{fontSize:42,marginBottom:8}}>🎮</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:26,color:'white',textTransform:'uppercase',letterSpacing:'.06em',margin:0}}>
+          Seleccionar Juego
+        </h2>
+        <p style={{color:'var(--muted)',fontSize:13,marginTop:6}}>
+          {juegosCount} jugador{juegosCount!==1?'es':''} en sala de juegos
+        </p>
+      </div>
+      {GAME_LIBRARY.map(game=>(
+        <button key={game.id} onClick={()=>onSelectLibrary(game.questions)}
+          style={{width:'100%',maxWidth:380,
+            background:'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))',
+            border:'1px solid rgba(255,208,0,.3)',borderRadius:20,
+            padding:'16px 20px',textAlign:'left',cursor:'pointer',
+            display:'flex',alignItems:'center',gap:16,
+            boxShadow:'0 0 24px rgba(255,208,0,.08)'}}>
+          <span style={{fontSize:38,flexShrink:0}}>{game.icon}</span>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+              {game.title}
+            </div>
+            <div style={{fontFamily:'Barlow,sans-serif',fontSize:13,
+              color:'var(--white)',marginTop:3,lineHeight:1.4}}>{game.subtitle}</div>
+            <div style={{fontSize:11,color:'var(--muted)',marginTop:5,display:'flex',gap:10}}>
+              <span>📝 {game.questions.length} preguntas</span>
+              <span>⏱ {GAME_TIMER}s por pregunta</span>
+            </div>
+          </div>
+          <span style={{fontSize:20,color:'#ffd000',opacity:.6}}>›</span>
+        </button>
+      ))}
+      <button onClick={onCreateNew}
+        style={{width:'100%',maxWidth:380,
+          background:'rgba(139,92,246,.1)',border:'1px solid rgba(139,92,246,.25)',
+          borderRadius:20,padding:'14px 20px',textAlign:'left',cursor:'pointer',
+          display:'flex',alignItems:'center',gap:16}}>
+        <span style={{fontSize:32,flexShrink:0}}>✏️</span>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:18,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            Crear nuevo juego
+          </div>
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:3}}>
+            Ingresa tus propias preguntas
+          </div>
+        </div>
+        <span style={{fontSize:20,color:'#8b5cf6',opacity:.6}}>›</span>
+      </button>
+      <button onClick={onCancel} style={{
+        background:'none',border:'none',color:'var(--muted)',
+        fontSize:13,fontFamily:'Barlow,sans-serif',cursor:'pointer',
+        padding:'8px 16px',marginTop:4}}>
+        ✕ Cancelar
+      </button>
+    </div>
+  );
+}
+
+function KahootSetup({onStart,juegosCount,onCancel}){
+  const[questions,setQuestions]=useState([{text:'',options:['','','',''],correct:0}]);
+  const[qIdx,setQIdx]=useState(0);
+  const q=questions[qIdx];
+  const updateQ=(f,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?{...x,[f]:v}:x));
+  const updateOpt=(oi,v)=>setQuestions(qs=>qs.map((x,i)=>i===qIdx?
+    {...x,options:x.options.map((o,j)=>j===oi?v:o)}:x));
+  const addQ=()=>{ setQuestions(qs=>[...qs,{text:'',options:['','','',''],correct:0}]); setQIdx(questions.length); };
+  const canStart=questions.every(q=>q.text.trim()&&q.options.every(o=>o.trim()));
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,
+      background:'rgba(7,9,31,.97)',backdropFilter:'blur(6px)',
+      display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,.06)',
+        flexShrink:0,display:'flex',alignItems:'center',gap:12}}>
+        <button onClick={onCancel} style={{background:'none',border:'none',
+          color:'var(--muted)',fontSize:22,cursor:'pointer',padding:'0 4px',lineHeight:1}}>‹</button>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:18,color:'white',textTransform:'uppercase',letterSpacing:'.06em'}}>
+          Crear Juego
+        </div>
+        <div style={{marginLeft:'auto',display:'flex',gap:8,flexWrap:'wrap'}}>
+          {questions.map((_,i)=>(
+            <button key={i} onClick={()=>setQIdx(i)}
+              style={{width:28,height:28,borderRadius:8,border:'none',
+                background:i===qIdx?'#8b5cf6':'rgba(255,255,255,.1)',
+                color:'white',fontFamily:'Barlow Condensed,sans-serif',
+                fontWeight:700,fontSize:12,cursor:'pointer'}}>
+              {i+1}
+            </button>
+          ))}
+          <button onClick={addQ} style={{width:28,height:28,borderRadius:8,border:'none',
+            background:'rgba(255,255,255,.06)',color:'var(--muted)',
+            fontSize:16,cursor:'pointer'}}>+</button>
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:'auto',padding:16}}>
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:11,color:'var(--muted)',marginBottom:6,
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,letterSpacing:'.05em',
+            textTransform:'uppercase'}}>Pregunta {qIdx+1}</div>
+          <textarea value={q.text} onChange={e=>updateQ('text',e.target.value)}
+            placeholder="Escribe la pregunta aquí..."
+            style={{width:'100%',background:'rgba(255,255,255,.05)',
+              border:'1px solid rgba(255,255,255,.1)',borderRadius:12,
+              color:'var(--white)',fontSize:14,fontFamily:'Barlow,sans-serif',
+              padding:'12px 14px',resize:'none',height:72,lineHeight:1.4}}/>
+        </div>
+        {[0,1,2,3].map(i=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+            <button onClick={()=>updateQ('correct',i)}
+              style={{width:34,height:34,borderRadius:8,border:'none',flexShrink:0,
+                background:q.correct===i?ANS_COLORS[i]:`${ANS_COLORS[i]}28`,
+                color:'white',fontSize:14,fontWeight:700,cursor:'pointer',
+                boxShadow:q.correct===i?`0 0 12px ${ANS_COLORS[i]}77`:undefined,
+                transition:'background .2s'}}>
+              {q.correct===i?'✓':ANS_SHAPES[i]}
+            </button>
+            <input value={q.options[i]} onChange={e=>updateOpt(i,e.target.value)}
+              placeholder={`Opción ${i+1}`}
+              style={{flex:1,padding:'10px 12px',borderRadius:10,
+                background:`${ANS_COLORS[i]}18`,
+                border:`1px solid ${ANS_COLORS[i]}44`,
+                color:'var(--white)',fontSize:13,
+                fontFamily:'Barlow,sans-serif',outline:'none'}}/>
+          </div>
+        ))}
+      </div>
+      <div style={{padding:'12px 14px',borderTop:'1px solid rgba(255,255,255,.06)',
+        flexShrink:0,display:'flex',flexDirection:'column',gap:8}}>
+        <button onClick={()=>canStart&&juegosCount>0&&onStart(questions)}
+          disabled={!canStart||juegosCount===0} style={{
+          width:'100%',padding:13,borderRadius:12,border:'none',
+          background:canStart&&juegosCount>0?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'var(--muted2)',
+          color:canStart&&juegosCount>0?'white':'var(--muted)',
+          fontSize:15,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
+          letterSpacing:'.06em',textTransform:'uppercase',
+          boxShadow:canStart&&juegosCount>0?'0 0 24px rgba(139,92,246,.4)':undefined}}>
+          {juegosCount===0?'Nadie en sala de juegos':
+           !canStart?'Completa todas las preguntas':
+           `🎮 Iniciar (${questions.length} preguntas)`}
+        </button>
+        <button onClick={onCancel} style={{
+          width:'100%',padding:10,borderRadius:12,border:'none',
+          background:'rgba(255,255,255,.05)',color:'var(--muted)',
+          fontSize:13,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          letterSpacing:'.04em',textTransform:'uppercase'}}>✕ Cancelar</button>
+      </div>
+    </div>
+  );
+}
+
+function KahootController({session,users,myId,isAdmin,SID,onClose}){
+  const game=session?.juegos;
+  const gState=game?.gameState;
+  const[timeLeft,setTimeLeft]=useState(GAME_TIMER);
+  const[countdownDone,setCountdownDone]=useState(false);
+  const[showSetup,setShowSetup]=useState(false);
+  const timerRef=useRef(null);
+  const questions=game?.questions||[];
+  const qIdx=game?.currentQ||0;
+  const currentQ=questions[qIdx];
+  const scores=game?.scores||{};
+  const myScore=scores[myId]||0;
+  const myAnswer=game?.answers?.[myId];
+  const juegosUsers=Object.entries(users).filter(([,u])=>u.zone==='juegos');
+
+  useEffect(()=>{
+    if(gState==='question'&&game?.qStartTime){
+      clearInterval(timerRef.current);
+      timerRef.current=setInterval(()=>{
+        const elapsed=Math.floor((Date.now()-game.qStartTime)/1000);
+        const left=Math.max(0,GAME_TIMER-elapsed);
+        setTimeLeft(left);
+        if(left===0){
+          clearInterval(timerRef.current);
+          if(isAdmin) db.ref(`sessions/${SID}/juegos/gameState`).set('results');
+        }
+      },400);
+    }
+    return()=>clearInterval(timerRef.current);
+  },[gState,game?.qStartTime,isAdmin]);
+
+  useEffect(()=>{ setCountdownDone(false); },[qIdx]);
+
+  const handleAnswer=async(ansIdx)=>{
+    if(myAnswer!==null&&myAnswer!==undefined) return;
+    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):GAME_TIMER;
+    const speed=Math.max(0,GAME_TIMER-Math.min(elapsed,GAME_TIMER));
+    const pts=currentQ?.correct===ansIdx?Math.round(100+speed*30):0;
+    await db.ref(`sessions/${SID}/juegos/answers/${myId}`).set(ansIdx);
+    if(pts>0) await db.ref(`sessions/${SID}/juegos/scores/${myId}`).transaction(c=>(c||0)+pts);
+  };
+
+  const nextQuestion=async()=>{
+    const next=qIdx+1;
+    await db.ref(`sessions/${SID}/juegos`).update({
+      currentQ:next,gameState:'starting',qStartTime:null,answers:{}
+    });
+  };
+
+  const finishGame=async()=>{
+    const fs=game?.scores||{};
+    const sorted=Object.entries(fs).sort((a,b)=>b[1]-a[1]);
+    const gid=`${SID}_${Date.now()}`;
+    await Promise.all(sorted.map(([uid,score],i)=>
+      db.ref(`gameHistory/${uid}/${gid}`).set({
+        date:SID,score,rank:i+1,totalPlayers:sorted.length,
+        name:users[uid]?.name||'?'
+      })
+    ));
+    await db.ref(`sessions/${SID}/juegos/gameState`).set('finished');
+  };
+
+  const skipQuestion=async()=>{
+    const next=qIdx+1;
+    if(next<questions.length){
+      await db.ref(`sessions/${SID}/juegos`).update({
+        currentQ:next,gameState:'starting',qStartTime:null,answers:{}
+      });
+    } else {
+      await finishGame();
+    }
+  };
+
+  const endTimeNow=async()=>{
+    clearInterval(timerRef.current);
+    await db.ref(`sessions/${SID}/juegos/gameState`).set('results');
+  };
+
+  const closeGame=async()=>{
+    await db.ref(`sessions/${SID}`).update({phase:'waiting','juegos/active':false});
+  };
+
+  const myZone=users[myId]?.zone;
+  if(myZone!=='juegos'&&!isAdmin) return null;
+
+  /* ── Admin: menú de selección / setup ── */
+  if(isAdmin&&(!gState||gState==='idle')){
+    if(showSetup){
+      return(
+        <KahootSetup juegosCount={juegosUsers.length}
+          onCancel={()=>setShowSetup(false)}
+          onStart={async(qs)=>{
+            await db.ref(`sessions/${SID}/juegos`).update({
+              active:true,gameState:'starting',questions:qs,
+              currentQ:0,qStartTime:null,answers:{},scores:{}
+            });
+          }}/>
+      );
+    }
+    return(
+      <GameSelectMenu
+        juegosCount={juegosUsers.length}
+        onSelectLibrary={async(qs)=>{
+          await db.ref(`sessions/${SID}/juegos`).update({
+            active:true,gameState:'starting',questions:qs,
+            currentQ:0,qStartTime:null,answers:{},scores:{}
+          });
+        }}
+        onCreateNew={()=>setShowSetup(true)}
+        onCancel={()=>{ if(onClose) onClose(); }}
+      />
+    );
+  }
+
+  /* ── Countdown ── */
+  if(gState==='starting'){
+    if(isAdmin&&!countdownDone){
+      return(
+        <div style={{position:'fixed',inset:0,zIndex:250,
+          background:'rgba(7,9,31,.95)',backdropFilter:'blur(6px)',
+          display:'flex',flexDirection:'column',alignItems:'center',
+          justifyContent:'center',gap:10}}>
+          <CountdownTimer from={3} onDone={async()=>{
+            setCountdownDone(true);
+            await db.ref(`sessions/${SID}/juegos`).update({
+              gameState:'question',qStartTime:Date.now()
+            });
+          }}/>
+        </div>
+      );
+    }
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:210,
+        background:'rgba(7,9,31,.96)',display:'flex',
+        alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12}}>
+        <div style={{fontSize:72,animation:'bounce .7s infinite'}}>🎮</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.06em'}}>
+          ¡Prepárate!
+        </div>
+        <Spinner size={28} color="#8b5cf6"/>
+      </div>
+    );
+  }
+
+  /* ── Pregunta activa ── */
+  if(gState==='question'&&currentQ){
+    return(
+      <>
+        <KahootQuestion question={currentQ} qIndex={qIdx} total={questions.length}
+          myAnswer={myAnswer} onAnswer={handleAnswer}
+          timeLeft={timeLeft} gameState={gState}/>
+        {isAdmin&&(
+          <div style={{position:'fixed',bottom:24,left:0,right:0,zIndex:300,
+            display:'flex',justifyContent:'center',gap:10,padding:'0 16px'}}>
+            <button onClick={endTimeNow}
+              style={{background:'rgba(239,68,68,.92)',border:'none',borderRadius:14,
+                padding:'11px 20px',color:'white',fontWeight:800,fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                textTransform:'uppercase',boxShadow:'0 4px 18px rgba(239,68,68,.45)',
+                cursor:'pointer'}}>
+              ⏰ Terminar tiempo
+            </button>
+            <button onClick={skipQuestion}
+              style={{background:'rgba(139,92,246,.92)',border:'none',borderRadius:14,
+                padding:'11px 20px',color:'white',fontWeight:800,fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                textTransform:'uppercase',boxShadow:'0 4px 18px rgba(139,92,246,.45)',
+                cursor:'pointer'}}>
+              ⏭ Saltar
+            </button>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  /* ── Resultados de pregunta ── */
+  if(gState==='results'&&currentQ){
+    const isRight=myAnswer===currentQ.correct;
+    const elapsed=game?.qStartTime?Math.floor((Date.now()-game.qStartTime)/1000):GAME_TIMER;
+    const speed=Math.max(0,GAME_TIMER-Math.min(elapsed,GAME_TIMER));
+    const pointsEarned=isRight?Math.round(100+speed*30):0;
+    return(
+      <KahootResultCard question={currentQ} myAnswer={myAnswer}
+        pointsEarned={pointsEarned} myScore={myScore}
+        qIdx={qIdx} total={questions.length}
+        isAdmin={isAdmin} onNext={nextQuestion} onFinish={finishGame}/>
+    );
+  }
+
+  /* ── Leaderboard / Final ── */
+  if(gState==='leaderboard'||gState==='finished'){
+    return(
+      <KahootLeaderboard scores={scores} users={users}
+        isAdmin={isAdmin} isFinished={gState==='finished'}
+        onClose={closeGame}/>
+    );
+  }
+
+  /* ── Jugador esperando ── */
+  if(!isAdmin){
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:190,
+        background:'rgba(7,9,31,.96)',display:'flex',flexDirection:'column',
+        alignItems:'center',justifyContent:'center',gap:16,padding:24,textAlign:'center'}}>
+        <div style={{fontSize:54,animation:'bounce 1.2s infinite'}}>🎮</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:24,color:'#8b5cf6',textTransform:'uppercase',letterSpacing:'.05em'}}>
+          Sala de Juegos
+        </h2>
+        <p style={{color:'var(--muted)',fontSize:14,maxWidth:240,lineHeight:1.6}}>
+          Estás listo.<br/>El profe iniciará el juego pronto.
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+
+
+function CountdownTimer({from,onDone}){
+  const[n,setN]=useState(from);
+  useEffect(()=>{
+    if(n<=0){onDone();return;}
+    const t=setTimeout(()=>setN(n-1),1000);
+    return()=>clearTimeout(t);
+  },[n]);
+  if(n<=0) return null;
+  return(
+    <>
+      <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+        fontSize:110,color:'#ffd000',lineHeight:1,
+        animation:'countdownPop .7s ease'}} key={n}>{n}</div>
+      <div style={{fontFamily:'Barlow Condensed,sans-serif',fontSize:18,
+        color:'var(--muted)',letterSpacing:'.1em',textTransform:'uppercase'}}>
+        Prepárate
+      </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
