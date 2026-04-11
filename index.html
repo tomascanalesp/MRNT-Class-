@@ -613,8 +613,11 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
 
 /* ════════════════════════ CONFRA: SPEAKER PANEL ════════════════════════ */
 function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myReactions,allReactions}){
-  const confra=session?.confra;
-  if(session?.phase!=='confra'||!confra) return null;
+  // Lee SOLO de session.confra — que viene de Firebase igual para todos
+  if(session?.phase!=='confra') return null;
+  const confra=session.confra;
+  if(!confra) return null;
+
   const rawQueue=confra.queue||{};
   const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
   const idx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
@@ -1579,7 +1582,7 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
                   color:session?.wordcloud?.active?'#10b981':'#3b82f6',
                   fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                   letterSpacing:'.04em',textTransform:'uppercase'}}>
-                  {session?.wordcloud?.active?'☁️ Ver / Cerrar Nube':'☁️ Iniciar Nube de Palabras'}
+                  {session?.wordcloud?.active?'☁️ Cerrar Nube':'☁️ Iniciar Nube de Palabras'}
                 </button>
                 <button onClick={()=>{onEndRepaso();setOpen(false);}} style={{
                   background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
@@ -2259,8 +2262,6 @@ function App(){
   const[adminStats,  setAdminStats]  =useState(false);
   const[endBanner,   setEndBanner]   =useState(null);
   const[kahootOpen,  setKahootOpen]  =useState(false);
-  const[confraOpen,  setConfraOpen]  =useState(false);
-  const[localConfra, setLocalConfra] =useState(null); // {queue, currentIdx}
 
   /* ── Sala ── */
   const[users,       setUsers]       =useState({});
@@ -2280,9 +2281,7 @@ function App(){
   const UID      =useRef(null);
   const SID      =useRef(getSID());
   const roomRef  =useRef(null);
-  const walkTimer=useRef(null);
-  const mtTimer  =useRef(null);
-  const endRef   =useRef(null);
+  const sessionRef=useRef(null); // espejo ref de session para drag handler sin closures
 
   /* ── body class ── */
   useEffect(()=>{
@@ -2334,7 +2333,11 @@ function App(){
       else setMsgs([]);
     });
     refs.att.on('value',s=>setMyAtt(s.val()||{}));
-    refs.sess.on('value',s=>setSession(s.val()));
+    refs.sess.on('value',s=>{
+      const val=s.val();
+      sessionRef.current=val; // actualizar ref para drag handler
+      setSession(val);
+    });
     refs.reac.on('value',s=>setReactions(s.val()||{}));
     refs.hist.on('value',s=>setGameHistory(s.val()||{}));
     return()=>Object.values(refs).forEach(r=>r.off());
@@ -2348,28 +2351,13 @@ function App(){
     // Repaso — auto-abrir chat para todos
     if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
 
-    // Confra — poblar localConfra para TODOS (admin ya lo tiene, no-admins lo obtienen acá)
-    if(p==='confra'&&session.confra){
-      setConfraOpen(true);
-      const fbQ=session.confra.queue||{};
-      const queue=Array.isArray(fbQ)?fbQ:Object.values(fbQ);
-      setLocalConfra({
-        active:true,
-        queue,
-        currentIdx:typeof session.confra.currentIdx==='number'?session.confra.currentIdx:0,
-        startTime:session.confra.startTime,
-      });
-    }
-
     // Nube de palabras — auto-abre para todos cuando el admin la inicia
-    if(session.wordcloud?.active) setWordCloudOpen(true);
+    if(session.wordcloud?.active===true) setWordCloudOpen(true);
     // Si se desactivó, cerrar
     if(session.wordcloud?.active===false) setWordCloudOpen(false);
 
     // Limpiar todo al volver a waiting
     if(p==='waiting'){
-      setConfraOpen(false);
-      setLocalConfra(null);
       setRepasoChatOpen(false);
       setWordCloudOpen(false);
     }
@@ -2459,11 +2447,12 @@ function App(){
     setUsers({}); setMsgs([]); setMyAtt({}); setSession(null);
   };
 
-  /* ── Click-to-move ── */
   /* ── Drag to move ── */
   const handleDragMove=useCallback((x,y)=>{
     const uid=UID.current;
     if(!uid) return;
+    // Bloquear movimiento durante fases activas
+    if(sessionRef.current?.phase&&sessionRef.current.phase!=='waiting') return;
     const zone=detectZone(x,y);
     db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
   },[]);
@@ -2485,9 +2474,11 @@ function App(){
 
   /* ── Reaccionar ── */
   const handleReact=async(reactionId)=>{
-    const confraQ=session?.confra?.queue||{};
-    const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-    const cIdx=typeof session?.confra?.currentIdx==='number'?session.confra.currentIdx:0;
+    const confra=session?.confra;
+    if(!confra) return;
+    const rawQueue=confra.queue||{};
+    const qArr=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
+    const cIdx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
     const sUid=qArr[cIdx];
     if(!sUid) return;
     const ref=db.ref(`sessions/${SID.current}/reactions/${sUid}/${UID.current}/${reactionId}`);
@@ -2496,10 +2487,13 @@ function App(){
     else ref.set(true);
   };
 
+  // Reacciones del usuario actual para el speaker actual
   const myReactions=useMemo(()=>{
-    const confraQ=session?.confra?.queue||{};
-    const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-    const cIdx=typeof session?.confra?.currentIdx==='number'?session.confra.currentIdx:0;
+    const confra=session?.confra;
+    if(!confra) return {};
+    const rawQueue=confra.queue||{};
+    const qArr=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
+    const cIdx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
     const sUid=qArr[cIdx];
     if(!sUid) return {};
     return reactions?.[sUid]?.[UID.current]||{};
@@ -2507,9 +2501,8 @@ function App(){
 
   /* ── Admin: gestión de fases ── */
   const startConfra=async(confraUsers)=>{
-    const participants=confraUsers.length>0?confraUsers:Object.entries(users);
-    if(participants.length===0) return;
-    const uids=participants.map(([uid])=>uid).sort(()=>Math.random()-.5);
+    if(confraUsers.length===0) return;
+    const uids=confraUsers.map(([uid])=>uid).sort(()=>Math.random()-.5);
     const queueObj={};
     uids.forEach((uid,i)=>{ queueObj[i]=uid; });
     try{
@@ -2530,16 +2523,12 @@ function App(){
     if(next>=queue.length){
       await endConfra();
     } else {
-      setLocalConfra(p=>p?{...p,currentIdx:next}:null);
       await db.ref(`sessions/${SID.current}/confra/currentIdx`).set(next);
       await db.ref(`sessions/${SID.current}/reactions`).remove();
     }
   };
 
   const endConfra=async()=>{
-    setConfraOpen(false);
-    setLocalConfra(null);
-    // set() para limpiar completamente y que todos los listeners vean phase:waiting
     await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
     setEndBanner('confra');
   };
@@ -2563,12 +2552,12 @@ function App(){
   const toggleWordCloud=async(question='')=>{
     const isActive=session?.wordcloud?.active;
     if(isActive){
-      setWordCloudOpen(o=>!o);
+      // Cerrar en Firebase — el useEffect se encarga de cerrar el modal en todos los clientes
+      await db.ref(`sessions/${SID.current}/wordcloud/active`).set(false);
     } else {
       await db.ref(`sessions/${SID.current}/wordcloud`).set({
         active:true,words:{},question:question||''
       });
-      setWordCloudOpen(true);
     }
   };
 
@@ -2587,8 +2576,6 @@ function App(){
 
   const resetSession=async()=>{
     await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
-    setConfraOpen(false);
-    setLocalConfra(null);
     setWordCloudOpen(false);
     setRepasoChatOpen(false);
   };
@@ -2976,8 +2963,7 @@ function App(){
         )}
       </div>
 
-      {/* Confraternización: speaker overlay */}
-      {/* Confraternización: speaker overlay — se muestra en TODOS los dispositivos */}
+      {/* Confraternización: speaker overlay — visible para TODOS cuando phase=confra */}
       {session?.phase==='confra'&&(
         <ConfraSpeakerPanel
           session={session}
@@ -2987,10 +2973,11 @@ function App(){
           onReact={handleReact}
           myReactions={myReactions}
           allReactions={(()=>{
-            const confraQ=session?.confra?.queue||{};
-            const qArr=Array.isArray(confraQ)?confraQ:Object.values(confraQ);
-            const cIdx=typeof session?.confra?.currentIdx==='number'
-              ?session.confra.currentIdx:0;
+            const confra=session?.confra;
+            if(!confra) return {};
+            const rawQueue=confra.queue||{};
+            const qArr=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
+            const cIdx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
             const sUid=qArr[cIdx];
             return sUid?reactions?.[sUid]||{}:{};
           })()}
@@ -3011,7 +2998,7 @@ function App(){
           onEndConfra={endConfra}
           onStartRepaso={startRepaso}
           onEndRepaso={endRepaso}
-          onStartJuegos={()=>{startJuegos();setKahootOpen(true);}}
+          onStartJuegos={startJuegos}
           onEndJuegos={endJuegos}
           onOpenStats={()=>setAdminStats(true)}
           onToggleWordCloud={toggleWordCloud}
@@ -3021,7 +3008,7 @@ function App(){
 
 
       {/* Kahoot Game */}
-      {(kahootOpen||(phase==='juegos'&&session?.juegos?.active)||(session?.juegos?.gameState&&session?.juegos?.gameState!=='idle'))&&(
+      {phase==='juegos'&&(
         <KahootController
           session={session} users={users}
           myId={UID.current} isAdmin={isAdmin}
