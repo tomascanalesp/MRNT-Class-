@@ -2344,19 +2344,18 @@ function App(){
     if(!session) return;
     const p=session.phase||'waiting';
 
-    // Confra — abrir para TODOS (no-admins) cuando Firebase confirma
+    // Confra — abrir para todos cuando Firebase confirma (admin ya lo abrió optimistamente)
     if(p==='confra'&&session.confra) setConfraOpen(true);
 
     // Repaso — auto-abrir chat para todos
     if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
 
-    // Nube de palabras — auto-abre para todos cuando el admin la inicia
+    // Nube de palabras
     if(session.wordcloud?.active===true) setWordCloudOpen(true);
     if(session.wordcloud?.active===false) setWordCloudOpen(false);
 
-    // Limpiar todo al volver a waiting
+    // Solo cerrar repaso/wordcloud al volver a waiting — NO confraOpen (se cierra solo via endConfra/resetSession)
     if(p==='waiting'){
-      setConfraOpen(false);
       setRepasoChatOpen(false);
       setWordCloudOpen(false);
     }
@@ -2534,7 +2533,6 @@ function App(){
 
   const endConfra=async()=>{
     setConfraOpen(false);
-    await db.ref(`sessions/${SID.current}`).remove();
     await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
     setEndBanner('confra');
   };
@@ -2585,7 +2583,6 @@ function App(){
     setWordCloudOpen(false);
     setRepasoChatOpen(false);
     try{
-      await db.ref(`sessions/${SID.current}`).remove();
       await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
     }catch(e){ console.error('Error reiniciando sesión:',e); }
   };
@@ -2973,8 +2970,11 @@ function App(){
         )}
       </div>
 
-      {/* Confraternización: confraOpen=true para admin (inmediato) o para todos (cuando Firebase confirma) */}
-      {confraOpen&&(
+      {/* Confraternización:
+          - Admin: confraOpen=true inmediato (optimista) antes del echo de Firebase
+          - Todos: session.phase==='confra' cuando Firebase confirma
+          - Se cierra: endConfra/resetSession ponen confraOpen=false Y session vuelve a waiting */}
+      {(confraOpen||session?.phase==='confra')&&(
         <ConfraSpeakerPanel
           session={session}
           users={users}
