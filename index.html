@@ -2315,12 +2315,13 @@ function App(){
     // Si el juego terminó (finished/idle) y kahootOpen era true, resetear
     // (se maneja en closeGame)
     const refs={
-      users: db.ref(`rooms/${sid}/users`),
-      chat:  db.ref(`rooms/${sid}/chat`),
-      att:   db.ref(`attendance/${uid}`),
-      sess:  db.ref(`sessions/${sid}`),
-      reac:  db.ref(`sessions/${sid}/reactions`),
-      hist:  db.ref(`gameHistory/${uid}`),
+      users:  db.ref(`rooms/${sid}/users`),
+      chat:   db.ref(`rooms/${sid}/chat`),
+      att:    db.ref(`attendance/${uid}`),
+      sess:   db.ref(`sessions/${sid}`),
+      reac:   db.ref(`sessions/${sid}/reactions`),
+      hist:   db.ref(`gameHistory/${uid}`),
+      banner: db.ref(`sessions/${sid}/lastBanner`),
     };
     refs.users.on('value',s=>setUsers(s.val()||{}));
     refs.chat.on('value',s=>{
@@ -2331,11 +2332,19 @@ function App(){
     refs.att.on('value',s=>setMyAtt(s.val()||{}));
     refs.sess.on('value',s=>{
       const val=s.val();
-      sessionRef.current=val; // actualizar ref para drag handler
+      sessionRef.current=val;
       setSession(val);
     });
     refs.reac.on('value',s=>setReactions(s.val()||{}));
     refs.hist.on('value',s=>setGameHistory(s.val()||{}));
+    // Listener dedicado para el banner — se dispara directamente en todos los clientes
+    let bannerInitialized=false;
+    refs.banner.on('value',s=>{
+      const val=s.val();
+      // Ignorar el valor inicial al montar (para no mostrar banners de sesiones pasadas)
+      if(!bannerInitialized){ bannerInitialized=true; return; }
+      if(val) setEndBanner(val);
+    });
     return()=>Object.values(refs).forEach(r=>r.off());
   },[view]);
 
@@ -2353,9 +2362,6 @@ function App(){
     // Nube de palabras
     if(session.wordcloud?.active===true) setWordCloudOpen(true);
     if(session.wordcloud?.active===false) setWordCloudOpen(false);
-
-    // Banner de fin de actividad — mostrar para TODOS los clientes
-    if(p==='waiting'&&session.lastBanner) setEndBanner(session.lastBanner);
 
     // Cerrar repaso/wordcloud al volver a waiting
     if(p==='waiting'){
@@ -2536,8 +2542,9 @@ function App(){
 
   const endConfra=async()=>{
     setConfraOpen(false);
-    await db.ref(`sessions/${SID.current}`).set({phase:'waiting',lastBanner:'confra'});
-    setEndBanner('confra');
+    setEndBanner('confra'); // local inmediato para el admin
+    await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('confra');
   };
 
   const startRepaso=async()=>{
@@ -2552,8 +2559,9 @@ function App(){
   };
 
   const endRepaso=async()=>{
-    await db.ref(`sessions/${SID.current}`).set({phase:'waiting',lastBanner:'repaso'});
-    setEndBanner('repaso');
+    setEndBanner('repaso'); // local inmediato para el admin
+    await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('repaso');
   };
 
   const toggleWordCloud=async(question='')=>{
