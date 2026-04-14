@@ -613,14 +613,12 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
 
 /* ════════════════════════ CONFRA: SPEAKER PANEL ════════════════════════ */
 function ConfraSpeakerPanel({session,users,myId,isAdmin,onNext,onEnd,onReact,myReactions,allReactions}){
-  // Lee SOLO de session.confra — que viene de Firebase igual para todos
-  if(session?.phase!=='confra') return null;
-  const confra=session.confra;
-  if(!confra) return null;
+  // confraOpen en el padre controla la visibilidad — este componente siempre renderiza si se llama
+  const confra=session?.confra;
 
-  const rawQueue=confra.queue||{};
+  const rawQueue=confra?.queue||{};
   const queue=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
-  const idx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
+  const idx=typeof confra?.currentIdx==='number'?confra.currentIdx:0;
   const speakerUid=queue[idx];
   const speaker=speakerUid?users[speakerUid]:null;
   const isMe=speakerUid===myId;
@@ -2271,17 +2269,15 @@ function App(){
   const[reactions,   setReactions]   =useState({});
   const[gameHistory, setGameHistory] =useState({});
 
-
-  /* ── Click-to-move ── */
-  const[selectedChar,setSelectedChar]=useState(false); // keep for compat but unused
-  const[moveTarget,  setMoveTarget]  =useState(null);  // keep for compat but unused
   const[repasoChatOpen,setRepasoChatOpen]=useState(false);
   const[wordCloudOpen, setWordCloudOpen] =useState(false);
+  // confraOpen: bandera local solo para admin — nunca sobreescrita por el echo de Firebase
+  const[confraOpen,    setConfraOpen]    =useState(false);
 
   const UID      =useRef(null);
   const SID      =useRef(getSID());
   const roomRef  =useRef(null);
-  const sessionRef=useRef(null); // espejo ref de session para drag handler sin closures
+  const sessionRef=useRef(null);
 
   /* ── body class ── */
   useEffect(()=>{
@@ -2348,16 +2344,19 @@ function App(){
     if(!session) return;
     const p=session.phase||'waiting';
 
+    // Confra — abrir para TODOS (no-admins) cuando Firebase confirma
+    if(p==='confra'&&session.confra) setConfraOpen(true);
+
     // Repaso — auto-abrir chat para todos
     if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
 
     // Nube de palabras — auto-abre para todos cuando el admin la inicia
     if(session.wordcloud?.active===true) setWordCloudOpen(true);
-    // Si se desactivó, cerrar
     if(session.wordcloud?.active===false) setWordCloudOpen(false);
 
     // Limpiar todo al volver a waiting
     if(p==='waiting'){
+      setConfraOpen(false);
       setRepasoChatOpen(false);
       setWordCloudOpen(false);
     }
@@ -2505,17 +2504,16 @@ function App(){
     const uids=confraUsers.map(([uid])=>uid).sort(()=>Math.random()-.5);
     const queueObj={};
     uids.forEach((uid,i)=>{ queueObj[i]=uid; });
-    const confraData={active:true,queue:queueObj,currentIdx:0,startTime:Date.now()};
-    const optimistic={phase:'confra',confra:confraData};
-    // Actualización optimista: panel aparece inmediatamente sin esperar el echo de Firebase
-    sessionRef.current=optimistic;
-    setSession(optimistic);
+    // Mostrar panel inmediatamente en el admin (antes del echo de Firebase)
+    setConfraOpen(true);
     try{
-      await db.ref(`sessions/${SID.current}`).set(optimistic);
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'confra',
+        confra:{active:true,queue:queueObj,currentIdx:0,startTime:Date.now()}
+      });
     }catch(e){
       console.error('Error iniciando confra:',e);
-      sessionRef.current=null;
-      setSession(null);
+      setConfraOpen(false);
     }
   };
 
@@ -2535,6 +2533,7 @@ function App(){
   };
 
   const endConfra=async()=>{
+    setConfraOpen(false);
     await db.ref(`sessions/${SID.current}`).remove();
     await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
     setEndBanner('confra');
@@ -2582,12 +2581,9 @@ function App(){
   };
 
   const resetSession=async()=>{
-    // Actualizar estado local inmediatamente
-    sessionRef.current={phase:'waiting'};
-    setSession({phase:'waiting'});
+    setConfraOpen(false);
     setWordCloudOpen(false);
     setRepasoChatOpen(false);
-    // Luego sincronizar con Firebase
     try{
       await db.ref(`sessions/${SID.current}`).remove();
       await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
@@ -2977,8 +2973,8 @@ function App(){
         )}
       </div>
 
-      {/* Confraternización: speaker overlay — visible para TODOS cuando phase=confra */}
-      {session?.phase==='confra'&&(
+      {/* Confraternización: confraOpen=true para admin (inmediato) o para todos (cuando Firebase confirma) */}
+      {confraOpen&&(
         <ConfraSpeakerPanel
           session={session}
           users={users}
