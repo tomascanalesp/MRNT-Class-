@@ -2344,7 +2344,7 @@ function App(){
     if(!session) return;
     const p=session.phase||'waiting';
 
-    // Confra — abrir para todos cuando Firebase confirma (admin ya lo abrió optimistamente)
+    // Confra — abrir para todos cuando Firebase confirma
     if(p==='confra'&&session.confra) setConfraOpen(true);
 
     // Repaso — auto-abrir chat para todos
@@ -2354,7 +2354,10 @@ function App(){
     if(session.wordcloud?.active===true) setWordCloudOpen(true);
     if(session.wordcloud?.active===false) setWordCloudOpen(false);
 
-    // Solo cerrar repaso/wordcloud al volver a waiting — NO confraOpen (se cierra solo via endConfra/resetSession)
+    // Banner de fin de actividad — mostrar para TODOS los clientes
+    if(p==='waiting'&&session.lastBanner) setEndBanner(session.lastBanner);
+
+    // Cerrar repaso/wordcloud al volver a waiting
     if(p==='waiting'){
       setRepasoChatOpen(false);
       setWordCloudOpen(false);
@@ -2533,7 +2536,7 @@ function App(){
 
   const endConfra=async()=>{
     setConfraOpen(false);
-    await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
+    await db.ref(`sessions/${SID.current}`).set({phase:'waiting',lastBanner:'confra'});
     setEndBanner('confra');
   };
 
@@ -2549,7 +2552,7 @@ function App(){
   };
 
   const endRepaso=async()=>{
-    await db.ref(`sessions/${SID.current}`).update({phase:'waiting','repaso/active':false,'wordcloud/active':false});
+    await db.ref(`sessions/${SID.current}`).set({phase:'waiting',lastBanner:'repaso'});
     setEndBanner('repaso');
   };
 
@@ -3516,6 +3519,18 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
   },[gState,game?.qStartTime,isAdmin]);
 
   useEffect(()=>{ setCountdownDone(false); },[qIdx]);
+
+  // Auto-avanzar a resultados cuando todos los jugadores respondieron
+  useEffect(()=>{
+    if(!isAdmin||gState!=='question') return;
+    if(juegosUsers.length===0) return;
+    const answers=game?.answers||{};
+    const answeredCount=Object.keys(answers).length;
+    if(answeredCount>=juegosUsers.length){
+      clearInterval(timerRef.current);
+      db.ref(`sessions/${SID}/juegos/gameState`).set('results');
+    }
+  },[game?.answers,gState,isAdmin,juegosUsers.length]);
 
   const handleAnswer=async(ansIdx)=>{
     if(myAnswer!==null&&myAnswer!==undefined) return;
