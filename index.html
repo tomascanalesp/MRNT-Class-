@@ -2478,8 +2478,10 @@ function App(){
     // Confra — abrir para todos cuando Firebase confirma
     if(p==='confra'&&session.confra) setConfraOpen(true);
 
-    // Repaso — auto-abrir chat para todos
-    if(p==='repaso'&&session.repaso?.active) setRepasoChatOpen(true);
+    // Repaso — auto-abrir chat SOLO para usuarios en zona repaso
+    if(p==='repaso'&&session.repaso?.active){
+      if(users[UID.current]?.zone==='repaso'||isAdmin) setRepasoChatOpen(true);
+    }
 
     // Nube de palabras
     if(session.wordcloud?.active===true) setWordCloudOpen(true);
@@ -3086,8 +3088,8 @@ function App(){
           roomRef={roomRef} full={false} reactions={reactions}
         />
 
-        {/* Repaso: botón flotante para abrir chat */}
-        {phase==='repaso'&&!repasoChatOpen&&(
+        {/* Repaso: botón flotante — solo para usuarios en zona repaso */}
+        {phase==='repaso'&&!repasoChatOpen&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
           <button onClick={()=>setRepasoChatOpen(true)} style={{
             position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',
             background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
@@ -3106,29 +3108,31 @@ function App(){
         )}
       </div>
 
-      {/* Confraternización:
-          - Admin: confraOpen=true inmediato (optimista) antes del echo de Firebase
-          - Todos: session.phase==='confra' cuando Firebase confirma
-          - Se cierra: endConfra/resetSession ponen confraOpen=false Y session vuelve a waiting */}
-      {(confraOpen||session?.phase==='confra')&&(
-        <ConfraSpeakerPanel
-          session={session}
-          users={users}
-          myId={UID.current} isAdmin={isAdmin}
-          onNext={nextSpeaker} onEnd={endConfra}
-          onReact={handleReact}
-          myReactions={myReactions}
-          allReactions={(()=>{
-            const confra=session?.confra;
-            if(!confra) return {};
-            const rawQueue=confra.queue||{};
-            const qArr=Array.isArray(rawQueue)?rawQueue:Object.values(rawQueue);
-            const cIdx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
-            const sUid=qArr[cIdx];
-            return sUid?reactions?.[sUid]||{}:{};
-          })()}
-        />
-      )}
+      {/* Confraternización — solo para usuarios en zona confra (o admin o si están en la cola) */}
+      {(confraOpen||session?.phase==='confra')&&(()=>{
+        const myZone=users[UID.current]?.zone;
+        const confra=session?.confra;
+        const rawQ=confra?.queue||{};
+        const qArr=Array.isArray(rawQ)?rawQ:Object.values(rawQ);
+        const inQueue=qArr.includes(UID.current);
+        if(!isAdmin&&myZone!=='confra'&&!inQueue) return null;
+        return(
+          <ConfraSpeakerPanel
+            session={session}
+            users={users}
+            myId={UID.current} isAdmin={isAdmin}
+            onNext={nextSpeaker} onEnd={endConfra}
+            onReact={handleReact}
+            myReactions={myReactions}
+            allReactions={(()=>{
+              if(!confra) return {};
+              const cIdx=typeof confra.currentIdx==='number'?confra.currentIdx:0;
+              const sUid=qArr[cIdx];
+              return sUid?reactions?.[sUid]||{}:{};
+            })()}
+          />
+        );
+      })()}
 
       {/* Banner fin de actividad */}
       {endBanner&&(
@@ -3179,8 +3183,8 @@ function App(){
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
       {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
 
-      {/* Repaso Chat */}
-      {repasoChatOpen&&phase==='repaso'&&(
+      {/* Repaso Chat — solo para usuarios en zona repaso o admin */}
+      {repasoChatOpen&&phase==='repaso'&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
         <RepasoChat
           msgs={msgs} session={session}
           myId={UID.current} users={users}
