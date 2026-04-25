@@ -867,26 +867,63 @@ function RepasoChatScreen({msgs,session,users}){
       position:'absolute',bottom:80,left:'50%',transform:'translateX(-50%)',
       width:'82%',maxWidth:520,zIndex:30,pointerEvents:'none',
     }}>
-      {recent.map((m,i)=>(
-        <div key={m.id||i} style={{display:'flex',gap:8,marginBottom:6,animation:'slideIn .25s ease'}}>
-          <div style={{width:26,height:26,borderRadius:'50%',flexShrink:0,
-            background:`${m.color||'#3b82f6'}22`,border:`1.5px solid ${m.color||'#3b82f6'}`,
-            display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,overflow:'hidden'}}>
-            {m.photo?<img src={m.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-              :<span>{m.avatar||'👤'}</span>}
+      {recent.map((m,i)=>{
+        const tagInfo=m.tag?TAG_TYPES.find(t=>t.tag===m.tag):null;
+        const c=m.color||'#3b82f6';
+        const tc=tagInfo?tagInfo.color:c;
+        if(tagInfo){
+          return(
+            <div key={m.id||i} style={{animation:'slideIn .25s ease',
+              background:`linear-gradient(135deg,${tc}14,${tc}06)`,
+              border:`1.5px solid ${tc}44`,borderRadius:14,
+              padding:'8px 10px',marginBottom:6}}>
+              <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:5}}>
+                <span style={{background:`${tc}28`,border:`1px solid ${tc}55`,
+                  borderRadius:10,padding:'2px 7px',
+                  fontSize:9,fontWeight:800,color:tc,
+                  fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.06em',
+                  textTransform:'uppercase'}}>
+                  {tagInfo.icon} {tagInfo.tag}
+                </span>
+                <div style={{width:18,height:18,borderRadius:'50%',flexShrink:0,
+                  background:`${c}22`,border:`1.5px solid ${c}`,
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  fontSize:9,overflow:'hidden'}}>
+                  {m.photo?<img src={m.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                    :<span>{m.avatar||'👤'}</span>}
+                </div>
+                <span style={{fontSize:10,fontWeight:700,color:c,
+                  fontFamily:'Barlow Condensed,sans-serif'}}>{m.name}</span>
+              </div>
+              <div style={{fontSize:12,color:'white',lineHeight:1.45,
+                fontStyle:m.tag==='Reflexión'||m.tag==='Oración'?'italic':'normal',
+                paddingLeft:2}}>
+                {m.text}
+              </div>
+            </div>
+          );
+        }
+        return(
+          <div key={m.id||i} style={{display:'flex',gap:8,marginBottom:6,animation:'slideIn .25s ease'}}>
+            <div style={{width:26,height:26,borderRadius:'50%',flexShrink:0,
+              background:`${c}22`,border:`1.5px solid ${c}`,
+              display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,overflow:'hidden'}}>
+              {m.photo?<img src={m.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                :<span>{m.avatar||'👤'}</span>}
+            </div>
+            <div style={{background:'rgba(7,9,31,.93)',padding:'6px 12px',
+              borderRadius:'4px 12px 12px 12px',
+              border:`1px solid ${c}33`,backdropFilter:'blur(4px)',
+              maxWidth:'85%'}}>
+              <span style={{fontSize:11,fontWeight:700,color:c,
+                fontFamily:'Barlow Condensed,sans-serif',marginRight:6}}>{m.name}</span>
+              {m.type==='image'&&m.imageData
+                ?<img src={m.imageData} style={{display:'block',maxWidth:160,borderRadius:8,marginTop:4}}/>
+                :<span style={{fontSize:13,color:'white'}}>{m.text}</span>}
+            </div>
           </div>
-          <div style={{background:'rgba(7,9,31,.93)',padding:'6px 12px',
-            borderRadius:'4px 12px 12px 12px',
-            border:`1px solid ${m.color||'#3b82f6'}33`,backdropFilter:'blur(4px)',
-            maxWidth:'85%'}}>
-            <span style={{fontSize:11,fontWeight:700,color:m.color||'#3b82f6',
-              fontFamily:'Barlow Condensed,sans-serif',marginRight:6}}>{m.name}</span>
-            {m.type==='image'&&m.imageData
-              ?<img src={m.imageData} style={{display:'block',maxWidth:160,borderRadius:8,marginTop:4}}/>
-              :<span style={{fontSize:13,color:'white'}}>{m.text}</span>}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -980,16 +1017,25 @@ function TagMessageModal({tagType,onSend,onClose}){
 /* ════════════════════════ REPASO: CHAT COMPLETO ════════════════════════ */
 const QUICK_EMOJIS=['😊','🙏','❤️','👍','🔥','✨','😂','🤔','📖','🙌','💪','👏','🎉','✝️','🕊️','💡'];
 
-function RepasoChat({msgs,session,myId,users,onSend,onClose}){
+function RepasoChat({msgs,session,myId,users,onSend,onClose,SID,chatReactions}){
   const repaso=session?.repaso;
   const{remaining}=useTimer(repaso?.startTime,PHASE_DURATIONS.repaso);
   const[text,setText]=useState('');
   const[showEmojis,setShowEmojis]=useState(false);
   const[imgLoading,setImgLoading]=useState(false);
   const[tagModal,setTagModal]=useState(null); // tag string or null
+  const[zoomImg,setZoomImg]=useState(null);
   const endRef=useRef(null);
   const inputRef=useRef(null);
   const fileRef=useRef(null);
+
+  const toggleChatReaction=async(msgId,reactionId)=>{
+    if(!SID||!myId) return;
+    const ref=db.ref(`sessions/${SID}/chatReactions/${msgId}/${myId}/${reactionId}`);
+    const snap=await ref.get();
+    if(snap.val()) ref.remove();
+    else ref.set(true);
+  };
 
   useEffect(()=>{
     setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),60);
@@ -1081,6 +1127,13 @@ function RepasoChat({msgs,session,myId,users,onSend,onClose}){
 
           // Mensajes con tag: render especial tipo card
           if(tagInfo){
+            const msgReactions=chatReactions?.[m.id]||{};
+            const reactionTotals={};
+            REACTIONS.forEach(r=>{reactionTotals[r.id]=0;});
+            Object.values(msgReactions).forEach(userRxns=>{
+              REACTIONS.forEach(r=>{ if(userRxns[r.id]) reactionTotals[r.id]++; });
+            });
+            const myMsgReactions=msgReactions[myId]||{};
             return(
               <div key={m.id} style={{animation:'slideIn .2s ease',
                 background:`linear-gradient(135deg,${tc}14,${tc}06)`,
@@ -1111,6 +1164,25 @@ function RepasoChat({msgs,session,myId,users,onSend,onClose}){
                   fontStyle:m.tag==='Reflexión'||m.tag==='Oración'?'italic':'normal',
                   paddingLeft:4}}>
                   {m.text}
+                </div>
+                {/* Reactions */}
+                <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:8}}>
+                  {REACTIONS.map(r=>{
+                    const count=reactionTotals[r.id]||0;
+                    const active=!!myMsgReactions[r.id];
+                    return(
+                      <button key={r.id} onClick={()=>toggleChatReaction(m.id,r.id)} style={{
+                        display:'flex',alignItems:'center',gap:3,
+                        padding:'3px 7px',borderRadius:20,border:'none',
+                        background:active?`${tc}33`:'rgba(255,255,255,.06)',
+                        outline:active?`1px solid ${tc}77`:'1px solid rgba(255,255,255,.1)',
+                        cursor:'pointer',fontSize:13,transition:'all .15s',
+                      }}>
+                        <span>{r.e}</span>
+                        {count>0&&<span style={{fontSize:10,color:active?tc:'var(--muted)',fontWeight:700}}>{count}</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -1143,8 +1215,8 @@ function RepasoChat({msgs,session,myId,users,onSend,onClose}){
                   fontSize:13,color:'var(--white)',lineHeight:1.5,wordBreak:'break-word',
                 }}>
                   {m.type==='image'&&m.imageData
-                    ?<img src={m.imageData} alt="" style={{
-                        maxWidth:'100%',maxHeight:220,borderRadius:8,display:'block'}}/>
+                    ?<img src={m.imageData} alt="" onClick={()=>setZoomImg(m.imageData)} style={{
+                        maxWidth:'100%',maxHeight:220,borderRadius:8,display:'block',cursor:'zoom-in'}}/>
                     :<span>{m.text}</span>
                   }
                 </div>
@@ -1154,6 +1226,22 @@ function RepasoChat({msgs,session,myId,users,onSend,onClose}){
         })}
         <div ref={endRef}/>
       </div>
+
+      {/* Lightbox */}
+      {zoomImg&&(
+        <div onClick={()=>setZoomImg(null)} style={{
+          position:'fixed',inset:0,zIndex:300,background:'rgba(0,0,0,.92)',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          cursor:'zoom-out',backdropFilter:'blur(4px)'}}>
+          <img src={zoomImg} alt="" style={{maxWidth:'95vw',maxHeight:'90vh',
+            borderRadius:12,boxShadow:'0 0 40px rgba(0,0,0,.8)'}}/>
+          <button onClick={()=>setZoomImg(null)} style={{
+            position:'absolute',top:16,right:16,
+            background:'rgba(255,255,255,.1)',border:'none',borderRadius:'50%',
+            width:36,height:36,color:'white',fontSize:18,cursor:'pointer',
+            display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+        </div>
+      )}
 
       {/* Emoji picker */}
       {showEmojis&&(
@@ -1557,8 +1645,229 @@ function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
   );
 }
 
+/* ════════════════════════ NOTIFICACIÓN ASISTENCIA ════════════════════════ */
+function AttNotifyToast(){
+  return(
+    <div style={{position:'fixed',top:20,left:'50%',transform:'translateX(-50%)',
+      zIndex:400,background:'linear-gradient(135deg,#10b981,#059669)',
+      borderRadius:12,padding:'10px 22px',
+      fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+      fontSize:14,color:'white',textTransform:'uppercase',letterSpacing:'.05em',
+      boxShadow:'0 4px 20px rgba(16,185,129,.5)',animation:'slideIn .3s ease',
+      pointerEvents:'none',whiteSpace:'nowrap'}}>
+      ✅ ¡Asistencia del sábado registrada!
+    </div>
+  );
+}
+
+/* ════════════════════════ ENCUESTA SEMANAL (USUARIO) ════════════════════════ */
+function SurveyModal({myId,myName,SID,onSent}){
+  const[days,setDays]=useState(0);
+  const[bible,setBible]=useState(null);
+  const[mission,setMission]=useState(null);
+  const[sent,setSent]=useState(false);
+
+  const handleSubmit=async()=>{
+    if(bible===null||mission===null) return;
+    await db.ref(`sessions/${SID}/survey/responses/${myId}`).set({
+      name:myName,daysStudied:days,hasBibleStudents:bible,
+      missionaryAction:mission,ts:Date.now()
+    });
+    setSent(true);
+    setTimeout(onSent,2000);
+  };
+
+  if(sent) return(
+    <div style={{position:'fixed',inset:0,zIndex:220,background:'rgba(0,0,0,.85)',
+      display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{textAlign:'center',padding:32}}>
+        <div style={{fontSize:54,marginBottom:12}}>🙌</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'#10b981',textTransform:'uppercase',letterSpacing:'.05em'}}>
+          ¡Gracias por responder!
+        </div>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:220,background:'rgba(0,0,0,.82)',
+      backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
+      <div style={{width:'100%',maxWidth:480,
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(255,208,0,.25)',borderRadius:'20px 20px 0 0',
+        padding:'20px 18px 36px',overflowY:'auto',maxHeight:'88vh',
+        animation:'modalIn .3s ease'}}>
+        <div style={{width:40,height:4,borderRadius:2,background:'rgba(255,208,0,.25)',margin:'0 auto 16px'}}/>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',
+          textAlign:'center',marginBottom:20}}>
+          📋 Encuesta semanal
+        </div>
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:13,color:'var(--white)',fontFamily:'Barlow,sans-serif',fontWeight:600,marginBottom:10}}>
+            ¿Cuántos días estudiaste la lección esta semana?
+          </div>
+          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+            {[0,1,2,3,4,5,6,7].map(d=>(
+              <button key={d} onClick={()=>setDays(d)} style={{
+                width:40,height:40,borderRadius:10,border:'none',
+                background:days===d?'linear-gradient(135deg,#ffd000,#e6a800)':'rgba(255,255,255,.08)',
+                color:days===d?'#07091f':'var(--white)',
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:16,cursor:'pointer'}}>
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:13,color:'var(--white)',fontFamily:'Barlow,sans-serif',fontWeight:600,marginBottom:10}}>
+            ¿Tienes estudiantes de la Biblia?
+          </div>
+          <div style={{display:'flex',gap:8}}>
+            {[{v:true,l:'✅ Sí'},{v:false,l:'❌ No'}].map(opt=>(
+              <button key={String(opt.v)} onClick={()=>setBible(opt.v)} style={{
+                flex:1,padding:'10px',borderRadius:12,border:'none',
+                background:bible===opt.v?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'rgba(255,255,255,.06)',
+                color:bible===opt.v?'white':'var(--muted)',
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:13,
+                letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>
+                {opt.l}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:13,color:'var(--white)',fontFamily:'Barlow,sans-serif',fontWeight:600,marginBottom:10}}>
+            ¿Participaste de una acción misionera esta semana?
+          </div>
+          <div style={{display:'flex',gap:8}}>
+            {[{v:true,l:'✅ Sí'},{v:false,l:'❌ No'}].map(opt=>(
+              <button key={String(opt.v)} onClick={()=>setMission(opt.v)} style={{
+                flex:1,padding:'10px',borderRadius:12,border:'none',
+                background:mission===opt.v?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'rgba(255,255,255,.06)',
+                color:mission===opt.v?'white':'var(--muted)',
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:13,
+                letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>
+                {opt.l}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button onClick={handleSubmit} disabled={bible===null||mission===null} style={{
+          width:'100%',padding:13,borderRadius:12,border:'none',
+          background:bible!==null&&mission!==null?'linear-gradient(135deg,#ffd000,#e6a800)':'var(--muted2)',
+          color:bible!==null&&mission!==null?'#07091f':'var(--muted)',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:15,
+          letterSpacing:'.05em',textTransform:'uppercase',
+          boxShadow:bible!==null&&mission!==null?'0 0 24px rgba(255,208,0,.4)':undefined,
+          cursor:bible!==null&&mission!==null?'pointer':'default'}}>
+          Enviar respuestas →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════ ADMIN ENCUESTA MODAL ════════════════════════ */
+function AdminSurveyModal({responses,SID,onClose,onToggle,surveyActive}){
+  const list=Object.values(responses||{});
+
+  const downloadResults=()=>{
+    const rows=[
+      `Encuesta — Maranata Class (${new Date().toLocaleDateString('es-CL')})`,
+      'Nombre\tDías estudiados\tEst. Biblia\tAcc. Misionera',
+      ...list.map(r=>`${r.name}\t${r.daysStudied}\t${r.hasBibleStudents?'Sí':'No'}\t${r.missionaryAction?'Sí':'No'}`)
+    ];
+    const blob=new Blob([rows.join('\n')],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`encuesta_${SID}.txt`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:220,background:'rgba(0,0,0,.8)',
+      backdropFilter:'blur(4px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{width:'100%',maxWidth:480,
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(255,208,0,.2)',borderRadius:'20px 20px 0 0',
+        padding:'20px 18px 32px',maxHeight:'85vh',overflowY:'auto',
+        animation:'modalIn .3s ease'}}>
+        <div style={{width:40,height:4,borderRadius:2,background:'rgba(255,208,0,.2)',margin:'0 auto 16px'}}/>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:18,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            📋 Encuesta — {list.length} resp.
+          </div>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'var(--muted)',fontSize:20,padding:4}}>✕</button>
+        </div>
+        <div style={{display:'flex',gap:8,marginBottom:14}}>
+          <button onClick={onToggle} style={{
+            flex:1,padding:'9px',borderRadius:10,
+            background:surveyActive?'rgba(239,68,68,.15)':'linear-gradient(135deg,#10b981,#059669)',
+            border:surveyActive?'1px solid rgba(239,68,68,.4)':'none',
+            color:surveyActive?'#f87171':'white',
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:12,
+            letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>
+            {surveyActive?'⏹ Cerrar encuesta':'▶ Abrir encuesta'}
+          </button>
+          {list.length>0&&(
+            <button onClick={downloadResults} style={{
+              flex:1,padding:'9px',borderRadius:10,
+              background:'rgba(255,208,0,.1)',border:'1px solid rgba(255,208,0,.3)',
+              color:'#ffd000',fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+              fontSize:12,letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>
+              📥 Exportar .txt
+            </button>
+          )}
+        </div>
+        {list.length>0&&(
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:14}}>
+            {[
+              {label:'Prom. días',value:(list.reduce((s,r)=>s+r.daysStudied,0)/list.length).toFixed(1),color:'#ffd000'},
+              {label:'Est. Biblia',value:list.filter(r=>r.hasBibleStudents).length,color:'#3b82f6'},
+              {label:'Misión',value:list.filter(r=>r.missionaryAction).length,color:'#10b981'},
+            ].map(st=>(
+              <div key={st.label} style={{background:'rgba(255,255,255,.04)',borderRadius:10,
+                padding:'10px 6px',textAlign:'center',borderLeft:`3px solid ${st.color}`}}>
+                <div style={{fontSize:22,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,color:st.color}}>{st.value}</div>
+                <div style={{fontSize:9,color:'var(--muted)',marginTop:3,textTransform:'uppercase',letterSpacing:'.04em'}}>{st.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {list.length===0?(
+          <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'20px 0'}}>Aún no hay respuestas</div>
+        ):list.map((r,i)=>(
+          <div key={i} style={{background:'rgba(255,255,255,.03)',borderRadius:10,
+            padding:'10px 12px',marginBottom:8,border:'1px solid rgba(255,255,255,.06)'}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+              fontSize:13,color:'var(--white)',marginBottom:5}}>{r.name}</div>
+            <div style={{display:'flex',gap:10,flexWrap:'wrap',fontSize:11,color:'var(--muted)'}}>
+              <span>📅 {r.daysStudied} días</span>
+              <span>{r.hasBibleStudents?'✅':'❌'} Est. Biblia</span>
+              <span>{r.missionaryAction?'✅':'❌'} Misión</span>
+            </div>
+          </div>
+        ))}
+        {list.length>0&&(
+          <button onClick={()=>db.ref(`sessions/${SID}/survey/responses`).remove()} style={{
+            width:'100%',marginTop:8,padding:'9px',borderRadius:10,
+            background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',
+            color:'#f87171',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+            fontSize:11,letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>
+            🗑 Limpiar respuestas
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
-function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onOpenStats,onToggleWordCloud,onResetSession}){
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onOpenStats,onToggleWordCloud,onResetSession,onOpenSurvey,onDownloadAttendance,surveyActive}){
   const[open,setOpen]=useState(false);
   const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
@@ -1622,6 +1931,21 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
 
           {/* Acciones según fase */}
           <div style={{display:'flex',flexDirection:'column',gap:7}}>
+            <button onClick={()=>{onOpenSurvey();setOpen(false);}} style={{
+              background:surveyActive?'rgba(16,185,129,.1)':'rgba(255,208,0,.07)',
+              border:surveyActive?'1px solid rgba(16,185,129,.3)':'1px solid rgba(255,208,0,.2)',
+              borderRadius:10,padding:'9px',
+              color:surveyActive?'#10b981':'#ffd000',
+              fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+            }}>📋 {surveyActive?'Encuesta activa ●':'Encuesta semanal'}</button>
+
+            <button onClick={onDownloadAttendance} style={{
+              background:'rgba(255,208,0,.07)',border:'1px solid rgba(255,208,0,.2)',
+              borderRadius:10,padding:'9px',color:'#ffd000',fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+            }}>📥 Descargar asistencia</button>
+
             <button onClick={()=>{onOpenStats();setOpen(false);}} style={{
               background:'rgba(255,208,0,.07)',border:'1px solid rgba(255,208,0,.2)',
               borderRadius:10,padding:'9px',color:'#ffd000',fontWeight:800,fontSize:12,
@@ -2396,6 +2720,13 @@ function App(){
   // confraOpen: bandera local solo para admin — nunca sobreescrita por el echo de Firebase
   const[confraOpen,    setConfraOpen]    =useState(false);
 
+  const[chatReactions,  setChatReactions]  =useState({});
+  const[attNotify,      setAttNotify]      =useState(false);
+  const[surveyOpen,     setSurveyOpen]     =useState(false);
+  const[adminSurvey,    setAdminSurvey]    =useState(false);
+  const[surveyResponses,setSurveyResponses]=useState({});
+  const[surveySent,     setSurveySent]     =useState(false);
+
   const UID      =useRef(null);
   const SID      =useRef(getSID());
   const roomRef  =useRef(null);
@@ -2437,13 +2768,15 @@ function App(){
     // Si el juego terminó (finished/idle) y kahootOpen era true, resetear
     // (se maneja en closeGame)
     const refs={
-      users:  db.ref(`rooms/${sid}/users`),
-      chat:   db.ref(`rooms/${sid}/chat`),
-      att:    db.ref(`attendance/${uid}`),
-      sess:   db.ref(`sessions/${sid}`),
-      reac:   db.ref(`sessions/${sid}/reactions`),
-      hist:   db.ref(`gameHistory/${uid}`),
-      banner: db.ref(`sessions/${sid}/lastBanner`),
+      users:    db.ref(`rooms/${sid}/users`),
+      chat:     db.ref(`rooms/${sid}/chat`),
+      att:      db.ref(`attendance/${uid}`),
+      sess:     db.ref(`sessions/${sid}`),
+      reac:     db.ref(`sessions/${sid}/reactions`),
+      hist:     db.ref(`gameHistory/${uid}`),
+      banner:   db.ref(`sessions/${sid}/lastBanner`),
+      chatRxns: db.ref(`sessions/${sid}/chatReactions`),
+      survResp: db.ref(`sessions/${sid}/survey/responses`),
     };
     refs.users.on('value',s=>setUsers(s.val()||{}));
     refs.chat.on('value',s=>{
@@ -2459,6 +2792,8 @@ function App(){
     });
     refs.reac.on('value',s=>setReactions(s.val()||{}));
     refs.hist.on('value',s=>setGameHistory(s.val()||{}));
+    refs.chatRxns.on('value',s=>setChatReactions(s.val()||{}));
+    refs.survResp.on('value',s=>setSurveyResponses(s.val()||{}));
     // Listener dedicado para el banner — se dispara directamente en todos los clientes
     let bannerInitialized=false;
     refs.banner.on('value',s=>{
@@ -2492,6 +2827,10 @@ function App(){
       setRepasoChatOpen(false);
       setWordCloudOpen(false);
     }
+
+    // Encuesta
+    if(session?.survey?.active&&!isAdmin&&!surveySent) setSurveyOpen(true);
+    if(!session?.survey?.active) setSurveyOpen(false);
   },[session]);
 
   /* ── Helpers ── */
@@ -2502,9 +2841,45 @@ function App(){
       zone:'entrada',x:49,y:9,joinedAt:Date.now(),
     });
     uRef.onDisconnect().remove();
-    await db.ref(`attendance/${uid}/${SID.current}`).set({
-      name:p.name,avatar:p.avatar,color:p.color,timestamp:Date.now(),
-    });
+    if(new Date().getDay()===6){
+      await db.ref(`attendance/${uid}/${SID.current}`).set({
+        name:p.name,avatar:p.avatar,color:p.color,timestamp:Date.now(),
+      });
+      setAttNotify(true);
+      setTimeout(()=>setAttNotify(false),4000);
+    }
+  };
+
+  const toggleSurvey=async()=>{
+    const current=session?.survey?.active;
+    await db.ref(`sessions/${SID.current}/survey/active`).set(!current);
+  };
+
+  const downloadAttendance=async()=>{
+    const[pSnap,aSnap]=await Promise.all([
+      db.ref('profiles').get(),
+      db.ref('attendance').get(),
+    ]);
+    const profiles=pSnap.val()||{};
+    const attendance=aSnap.val()||{};
+    const allDates=new Set();
+    Object.values(attendance).forEach(u=>Object.keys(u).forEach(d=>allDates.add(d)));
+    const dates=[...allDates].sort();
+    const rows=[
+      'Asistencia — Maranata Class Las Condes',
+      'Nombre\t'+dates.join('\t'),
+      ...Object.entries(profiles)
+        .filter(([,p])=>!p.isAdmin)
+        .map(([uid,p])=>{
+          const ua=attendance[uid]||{};
+          return p.name+'\t'+dates.map(d=>ua[d]?'✓':'').join('\t');
+        })
+    ];
+    const blob=new Blob([rows.join('\n')],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`asistencia_${SID.current}.txt`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   const saveProfile=async(newProfile)=>{
@@ -2723,6 +3098,38 @@ function App(){
       await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
       await db.ref(`rooms/${SID.current}/chat`).remove();
     }catch(e){ console.error('Error reiniciando sesión:',e); }
+  };
+
+  const toggleSurvey=async()=>{
+    const current=session?.survey?.active;
+    await db.ref(`sessions/${SID.current}/survey`).update({active:!current});
+  };
+
+  const downloadAttendance=async()=>{
+    const[pSnap,aSnap]=await Promise.all([
+      db.ref('profiles').get(),
+      db.ref('attendance').get(),
+    ]);
+    const profiles=pSnap.val()||{};
+    const attendance=aSnap.val()||{};
+    const allDates=new Set();
+    Object.values(attendance).forEach(u=>Object.keys(u).forEach(d=>allDates.add(d)));
+    const dates=[...allDates].sort();
+    const rows=[
+      'Asistencia — Maranata Class Las Condes',
+      'Nombre\t'+dates.join('\t'),
+      ...Object.entries(profiles)
+        .filter(([,p])=>!p.isAdmin)
+        .map(([uid,p])=>{
+          const ua=attendance[uid]||{};
+          return p.name+'\t'+dates.map(d=>ua[d]?'✓':'').join('\t');
+        })
+    ];
+    const blob=new Blob([rows.join('\n')],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`asistencia_${SID.current}.txt`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   const phase=session?.phase||'waiting';
@@ -3153,6 +3560,9 @@ function App(){
           onOpenStats={()=>setAdminStats(true)}
           onToggleWordCloud={toggleWordCloud}
           onResetSession={resetSession}
+          onOpenSurvey={()=>setAdminSurvey(true)}
+          onDownloadAttendance={downloadAttendance}
+          surveyActive={!!session?.survey?.active}
         />
       )}
 
@@ -3182,6 +3592,9 @@ function App(){
       {editOpen&&<EditProfileModal profile={profile} onSave={saveProfile} onClose={()=>setEditOpen(false)}/>}
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
       {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
+      {attNotify&&<AttNotifyToast/>}
+      {surveyOpen&&!isAdmin&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>{setSurveySent(true);setSurveyOpen(false);}}/>}
+      {adminSurvey&&<AdminSurveyModal responses={surveyResponses} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
 
       {/* Repaso Chat — solo para usuarios en zona repaso o admin */}
       {repasoChatOpen&&phase==='repaso'&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
@@ -3189,6 +3602,8 @@ function App(){
           msgs={msgs} session={session}
           myId={UID.current} users={users}
           onSend={handleSend}
+          SID={SID.current}
+          chatReactions={chatReactions}
           onClose={()=>setRepasoChatOpen(false)}
         />
       )}
@@ -3803,7 +4218,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
   const nextQuestion=async()=>{
     const next=qIdx+1;
     await db.ref(`sessions/${SID}/juegos`).update({
-      currentQ:next,gameState:'starting',qStartTime:null,answers:{}
+      currentQ:next,gameState:'question',qStartTime:Date.now(),answers:{}
     });
   };
 
