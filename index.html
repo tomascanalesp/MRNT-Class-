@@ -2725,7 +2725,6 @@ function App(){
   const[surveyOpen,     setSurveyOpen]     =useState(false);
   const[adminSurvey,    setAdminSurvey]    =useState(false);
   const[surveyResponses,setSurveyResponses]=useState({});
-  const[surveySent,     setSurveySent]     =useState(false);
 
   const UID      =useRef(null);
   const SID      =useRef(getSID());
@@ -2829,9 +2828,15 @@ function App(){
     }
 
     // Encuesta
-    if(session?.survey?.active&&!surveySent) setSurveyOpen(true);
+    if(session?.survey?.active&&!surveyResponses[UID.current]) setSurveyOpen(true);
     if(!session?.survey?.active) setSurveyOpen(false);
   },[session]);
+
+  // Re-verificar encuesta cuando llegan respuestas (cubre usuarios que conectaron tarde)
+  useEffect(()=>{
+    if(!sessionRef.current?.survey?.active) return;
+    if(!surveyResponses[UID.current]) setSurveyOpen(true);
+  },[surveyResponses]);
 
   /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
@@ -3561,7 +3566,7 @@ function App(){
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
       {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
       {attNotify&&<AttNotifyToast/>}
-      {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>{setSurveySent(true);setSurveyOpen(false);}}/>}
+      {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>setSurveyOpen(false)}/>}
       {adminSurvey&&<AdminSurveyModal responses={surveyResponses} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
 
       {/* Repaso Chat — solo para usuarios en zona repaso o admin */}
