@@ -2829,7 +2829,7 @@ function App(){
     }
 
     // Encuesta
-    if(session?.survey?.active&&!isAdmin&&!surveySent) setSurveyOpen(true);
+    if(session?.survey?.active&&!surveySent) setSurveyOpen(true);
     if(!session?.survey?.active) setSurveyOpen(false);
   },[session]);
 
@@ -3561,7 +3561,7 @@ function App(){
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
       {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
       {attNotify&&<AttNotifyToast/>}
-      {surveyOpen&&!isAdmin&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>{setSurveySent(true);setSurveyOpen(false);}}/>}
+      {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>{setSurveySent(true);setSurveyOpen(false);}}/>}
       {adminSurvey&&<AdminSurveyModal responses={surveyResponses} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
 
       {/* Repaso Chat — solo para usuarios en zona repaso o admin */}
