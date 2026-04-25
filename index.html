@@ -3346,7 +3346,7 @@ function KahootQuestion({question,qIndex,total,myAnswer,onAnswer,timeLeft,gameSt
   );
 }
 
-function KahootResultCard({question,myAnswer,pointsEarned,myScore,qIdx,total,isAdmin,onNext,onFinish}){
+function KahootResultCard({question,myAnswer,pointsEarned,myScore,qIdx,total,isAdmin,onNext,onFinish,onEarlyEnd}){
   const correct=question.correct;
   const isRight=myAnswer===correct;
   return(
@@ -3383,21 +3383,30 @@ function KahootResultCard({question,myAnswer,pointsEarned,myScore,qIdx,total,isA
       )}
       <div style={{fontSize:11,color:'var(--muted)'}}>Pregunta {qIdx+1} de {total}</div>
       {isAdmin&&(
-        <div style={{display:'flex',gap:10,marginTop:4}}>
+        <div style={{display:'flex',gap:10,marginTop:4,flexWrap:'wrap',justifyContent:'center'}}>
           {qIdx+1<total?(
-            <button onClick={onNext} style={{background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
-              border:'none',borderRadius:12,padding:'12px 26px',
-              color:'white',fontWeight:800,fontSize:14,
-              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
-              textTransform:'uppercase',boxShadow:'0 0 20px rgba(139,92,246,.4)'}}>
-              Siguiente →
-            </button>
+            <>
+              <button onClick={onNext} style={{background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+                border:'none',borderRadius:12,padding:'12px 26px',
+                color:'white',fontWeight:800,fontSize:14,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                textTransform:'uppercase',boxShadow:'0 0 20px rgba(139,92,246,.4)',cursor:'pointer'}}>
+                Siguiente →
+              </button>
+              <button onClick={onEarlyEnd} style={{background:'linear-gradient(135deg,#10b981,#059669)',
+                border:'none',borderRadius:12,padding:'12px 20px',
+                color:'white',fontWeight:800,fontSize:14,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                textTransform:'uppercase',boxShadow:'0 0 20px rgba(16,185,129,.35)',cursor:'pointer'}}>
+                🏁 Terminar
+              </button>
+            </>
           ):(
             <button onClick={onFinish} style={{background:'linear-gradient(135deg,#10b981,#059669)',
               border:'none',borderRadius:12,padding:'12px 26px',
               color:'white',fontWeight:800,fontSize:14,
               fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
-              textTransform:'uppercase',boxShadow:'0 0 20px rgba(16,185,129,.35)'}}>
+              textTransform:'uppercase',boxShadow:'0 0 20px rgba(16,185,129,.35)',cursor:'pointer'}}>
               Ver ganador 🏆
             </button>
           )}
@@ -3410,11 +3419,45 @@ function KahootResultCard({question,myAnswer,pointsEarned,myScore,qIdx,total,isA
   );
 }
 
-function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
+function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose,myId,SID}){
   const sorted=Object.entries(scores||{})
     .map(([uid,score])=>({uid,score,user:users[uid]||{name:'?',avatar:'👤',color:'#8b5cf6'}}))
     .sort((a,b)=>b.score-a.score);
   const medals=['🥇','🥈','🥉'];
+  const winner=sorted[0];
+  const isWinner=winner?.uid===myId;
+
+  const[podiumReactions,setPodiumReactions]=useState({});
+  const[myReactions,setMyReactions]=useState({});
+
+  useEffect(()=>{
+    if(!isFinished||!SID) return;
+    const ref=db.ref(`sessions/${SID}/juegos/podiumReactions`);
+    const handler=snap=>setPodiumReactions(snap.val()||{});
+    ref.on('value',handler);
+    return()=>ref.off('value',handler);
+  },[isFinished,SID]);
+
+  useEffect(()=>{
+    setMyReactions(podiumReactions[myId]||{});
+  },[podiumReactions,myId]);
+
+  const reactionTotals={};
+  REACTIONS.forEach(r=>{reactionTotals[r.id]=0;});
+  Object.values(podiumReactions).forEach(userRxns=>{
+    if(userRxns&&typeof userRxns==='object'){
+      Object.entries(userRxns).forEach(([rid,val])=>{
+        if(val&&reactionTotals[rid]!==undefined) reactionTotals[rid]++;
+      });
+    }
+  });
+
+  const toggleReaction=async(rid)=>{
+    if(!myId||!SID||isWinner) return;
+    const path=`sessions/${SID}/juegos/podiumReactions/${myId}/${rid}`;
+    await db.ref(path).set(myReactions[rid]?null:true);
+  };
+
   return(
     <div style={{position:'fixed',inset:0,zIndex:200,background:'var(--navy)',
       display:'flex',flexDirection:'column',overflow:'hidden'}}>
@@ -3427,6 +3470,64 @@ function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
           {isFinished?'🏆 Resultados Finales':'Marcador'}
         </div>
       </div>
+
+      {isFinished&&isWinner&&winner&&(
+        <div style={{background:'linear-gradient(135deg,rgba(255,208,0,.18),rgba(255,208,0,.05))',
+          borderBottom:'1px solid rgba(255,208,0,.3)',padding:'14px 20px',
+          textAlign:'center',flexShrink:0,animation:'scoreUp .5s ease'}}>
+          <div style={{fontSize:38,marginBottom:4}}>🏆</div>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.06em'}}>
+            ¡Felicitaciones, {winner.user.name}!
+          </div>
+          <div style={{fontSize:13,color:'var(--muted)',marginTop:4}}>
+            ¡Eres el ganador/a de hoy! 🎉
+          </div>
+          {Object.values(reactionTotals).some(v=>v>0)&&(
+            <div style={{display:'flex',gap:8,justifyContent:'center',marginTop:10,flexWrap:'wrap'}}>
+              {REACTIONS.map(r=>reactionTotals[r.id]>0&&(
+                <div key={r.id} style={{background:'rgba(255,255,255,.1)',borderRadius:20,
+                  padding:'4px 10px',fontSize:18,display:'flex',alignItems:'center',gap:4}}>
+                  {r.e}<span style={{fontSize:12,color:'#ffd000',fontWeight:700}}>{reactionTotals[r.id]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isFinished&&!isWinner&&winner&&(
+        <div style={{padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,.06)',flexShrink:0}}>
+          <div style={{fontSize:11,color:'var(--muted)',textAlign:'center',
+            marginBottom:8,fontFamily:'Barlow Condensed,sans-serif',
+            textTransform:'uppercase',letterSpacing:'.05em',fontWeight:700}}>
+            Felicita a {winner.user.name} {winner.user.avatar}
+          </div>
+          <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+            {REACTIONS.map(r=>{
+              const selected=!!myReactions[r.id];
+              const count=reactionTotals[r.id];
+              return(
+                <button key={r.id} onClick={()=>toggleReaction(r.id)} style={{
+                  background:selected?'rgba(255,208,0,.2)':'rgba(255,255,255,.06)',
+                  border:selected?'1.5px solid rgba(255,208,0,.5)':'1px solid rgba(255,255,255,.1)',
+                  borderRadius:16,padding:'6px 12px',cursor:'pointer',
+                  fontSize:18,display:'flex',alignItems:'center',gap:4,
+                  transition:'all .2s',
+                  boxShadow:selected?'0 0 10px rgba(255,208,0,.3)':undefined}}>
+                  {r.e}
+                  {count>0&&(
+                    <span style={{fontSize:12,color:selected?'#ffd000':'var(--muted)',fontWeight:700}}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{flex:1,overflowY:'auto',padding:'16px 16px 80px'}}>
         {sorted.map((item,i)=>(
           <div key={item.uid} style={{
@@ -3456,7 +3557,7 @@ function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose}){
             border:'none',borderRadius:14,padding:'13px 32px',
             color:'white',fontWeight:800,fontSize:14,
             fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
-            textTransform:'uppercase',boxShadow:'0 0 22px rgba(139,92,246,.4)'}}>
+            textTransform:'uppercase',boxShadow:'0 0 22px rgba(139,92,246,.4)',cursor:'pointer'}}>
             Cerrar juego ✓
           </button>
         </div>
@@ -3715,6 +3816,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
   };
 
   const closeGame=async()=>{
+    await db.ref(`sessions/${SID}/juegos/podiumReactions`).remove();
     await db.ref(`sessions/${SID}`).update({phase:'waiting','juegos/active':false});
   };
 
@@ -3790,7 +3892,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
           timeLeft={timeLeft} gameState={gState}/>
         {isAdmin&&(
           <div style={{position:'fixed',bottom:24,left:0,right:0,zIndex:300,
-            display:'flex',justifyContent:'center',gap:10,padding:'0 16px'}}>
+            display:'flex',justifyContent:'center',gap:10,padding:'0 16px',flexWrap:'wrap'}}>
             <button onClick={endTimeNow}
               style={{background:'rgba(239,68,68,.92)',border:'none',borderRadius:14,
                 padding:'11px 20px',color:'white',fontWeight:800,fontSize:13,
@@ -3806,6 +3908,14 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
                 textTransform:'uppercase',boxShadow:'0 4px 18px rgba(139,92,246,.45)',
                 cursor:'pointer'}}>
               ⏭ Saltar
+            </button>
+            <button onClick={finishGame}
+              style={{background:'rgba(16,185,129,.92)',border:'none',borderRadius:14,
+                padding:'11px 20px',color:'white',fontWeight:800,fontSize:13,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                textTransform:'uppercase',boxShadow:'0 4px 18px rgba(16,185,129,.45)',
+                cursor:'pointer'}}>
+              🏁 Terminar juego
             </button>
           </div>
         )}
@@ -3823,7 +3933,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
       <KahootResultCard question={currentQ} myAnswer={myAnswer}
         pointsEarned={pointsEarned} myScore={myScore}
         qIdx={qIdx} total={questions.length}
-        isAdmin={isAdmin} onNext={nextQuestion} onFinish={finishGame}/>
+        isAdmin={isAdmin} onNext={nextQuestion} onFinish={finishGame} onEarlyEnd={finishGame}/>
     );
   }
 
@@ -3832,7 +3942,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
     return(
       <KahootLeaderboard scores={scores} users={users}
         isAdmin={isAdmin} isFinished={gState==='finished'}
-        onClose={closeGame}/>
+        onClose={closeGame} myId={myId} SID={SID}/>
     );
   }
 
