@@ -2852,7 +2852,7 @@ function App(){
 
   const toggleSurvey=async()=>{
     const current=session?.survey?.active;
-    await db.ref(`sessions/${SID.current}/survey/active`).set(!current);
+    await db.ref(`sessions/${SID.current}/survey`).update({active:!current});
   };
 
   const downloadAttendance=async()=>{
@@ -3098,38 +3098,6 @@ function App(){
       await db.ref(`sessions/${SID.current}`).set({phase:'waiting'});
       await db.ref(`rooms/${SID.current}/chat`).remove();
     }catch(e){ console.error('Error reiniciando sesión:',e); }
-  };
-
-  const toggleSurvey=async()=>{
-    const current=session?.survey?.active;
-    await db.ref(`sessions/${SID.current}/survey`).update({active:!current});
-  };
-
-  const downloadAttendance=async()=>{
-    const[pSnap,aSnap]=await Promise.all([
-      db.ref('profiles').get(),
-      db.ref('attendance').get(),
-    ]);
-    const profiles=pSnap.val()||{};
-    const attendance=aSnap.val()||{};
-    const allDates=new Set();
-    Object.values(attendance).forEach(u=>Object.keys(u).forEach(d=>allDates.add(d)));
-    const dates=[...allDates].sort();
-    const rows=[
-      'Asistencia — Maranata Class Las Condes',
-      'Nombre\t'+dates.join('\t'),
-      ...Object.entries(profiles)
-        .filter(([,p])=>!p.isAdmin)
-        .map(([uid,p])=>{
-          const ua=attendance[uid]||{};
-          return p.name+'\t'+dates.map(d=>ua[d]?'✓':'').join('\t');
-        })
-    ];
-    const blob=new Blob([rows.join('\n')],{type:'text/plain;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download=`asistencia_${SID.current}.txt`; a.click();
-    URL.revokeObjectURL(url);
   };
 
   const phase=session?.phase||'waiting';
