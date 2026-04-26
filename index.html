@@ -2730,6 +2730,11 @@ function App(){
   const SID      =useRef(getSID());
   const roomRef  =useRef(null);
   const sessionRef=useRef(null);
+  const lastPosRef=useRef({zone:'entrada',x:49,y:9});
+  const profileRef=useRef({name:'',avatar:null,color:'#ffd000',photo:null});
+
+  // Mantener profileRef siempre actualizado para usarlo en reconexión
+  useEffect(()=>{ profileRef.current=profile; },[profile]);
 
   /* ── body class ── */
   useEffect(()=>{
@@ -2801,7 +2806,27 @@ function App(){
       if(!bannerInitialized){ bannerInitialized=true; return; }
       if(val) setEndBanner(val);
     });
-    return()=>Object.values(refs).forEach(r=>r.off());
+    // Reconexión automática: cuando Firebase vuelve a conectar, reinsertar al usuario
+    let connReady=false;
+    const connRef=db.ref('.info/connected');
+    connRef.on('value',snap=>{
+      if(!connReady){connReady=true;return;} // ignorar el primer disparo (conexión inicial)
+      if(snap.val()!==true) return;
+      const p=profileRef.current;
+      if(!p.name) return;
+      const pos=lastPosRef.current;
+      const uRef=db.ref(`rooms/${sid}/users/${uid}`);
+      uRef.set({
+        name:p.name,avatar:p.avatar,color:p.color,photo:p.photo||null,
+        zone:pos.zone,x:pos.x,y:pos.y,joinedAt:Date.now(),
+      });
+      uRef.onDisconnect().remove();
+    });
+
+    return()=>{
+      Object.values(refs).forEach(r=>r.off());
+      connRef.off();
+    };
   },[view]);
 
   /* ── Sincronizar estado de actividades desde Firebase ── */
@@ -2965,6 +2990,7 @@ function App(){
     // Bloquear movimiento durante fases activas
     if(sessionRef.current?.phase&&sessionRef.current.phase!=='waiting') return;
     const zone=detectZone(x,y);
+    lastPosRef.current={zone,x,y};
     db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
   },[]);
 
