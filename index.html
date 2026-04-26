@@ -8,7 +8,7 @@
   <title>Maranata Class · Las Condes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -19,12 +19,25 @@
   <style>
     :root{
       --navy:#07091f;--navy2:#0d1035;--navy3:#141744;
-      --yellow:#ffd000;--white:#f0f2ff;
+      --yellow:#ffd000;--yellow-deep:#e6a800;
+      --white:#f0f2ff;
       --muted:#4a4f7a;--muted2:#2a2f5a;
+      /* Landing claro */
+      --cream:#f8f5ef;--cream2:#efeae0;--ink:#0a0e2e;--ink-soft:#3b3f5a;
+      /* MRNT sectores */
+      --m1:#3b82f6;--m2:#1d4ed8;
+      --r1:#ffd000;--r2:#f59e0b;
+      --n1:#fb923c;--n2:#ea580c;
+      --t1:#7c3aed;--t2:#5b21b6;
+      --serif:'Fraunces',Georgia,serif;
+      --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --display:'Barlow Condensed',sans-serif;
     }
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;
+    body{background:var(--navy);color:var(--white);font-family:var(--sans);
       -webkit-tap-highlight-color:transparent;min-height:100vh}
+    body.landing{background:var(--cream);color:var(--ink)}
+    body.landing-dark{background:#0a0e2e;color:var(--white)}
     body.in-room,body.in-room #root{height:100%;overflow:hidden}
     input,textarea{outline:none;transition:border-color .2s,box-shadow .2s}
     input:focus,textarea:focus{border-color:var(--yellow)!important;
@@ -55,6 +68,10 @@
     @keyframes scoreUp{0%{opacity:0;transform:translateY(12px) scale(.8)}60%{transform:translateY(-4px) scale(1.1)}100%{opacity:1;transform:translateY(0) scale(1)}}
     @keyframes reactionPop{0%{transform:scale(1)}30%{transform:scale(1.55)}60%{transform:scale(.9)}100%{transform:scale(1)}}
     @keyframes reactionFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-55px) scale(1.6)}}
+    @keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(8px,-12px)}}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes petalGlow{0%,100%{filter:drop-shadow(0 0 0 transparent)}50%{filter:drop-shadow(0 0 16px currentColor)}}
+    @keyframes rotateSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
@@ -101,15 +118,38 @@ const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','�
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
 
-// Zonas de la sala
+// Zonas de la sala — mapeadas al Plan MRNT
+// El diagrama MRNT central es la pieza visual. Cada zona se posiciona a la
+// altura de su letra correspondiente en el plan (M arriba-izq, R arriba-der,
+// N abajo-der, T abajo-izq).
+// Entrada vive arriba (zona neutral de llegada).
 const ZONES={
-  entrada: {label:'Entrada',           color:'#4a4f7a', bg:'rgba(74,79,122,.12)', icon:'🚪', x1:35, x2:64, y1:1,  y2:18},
-  confra:  {label:'Confraternización', color:'#f59e0b', bg:'rgba(245,158,11,.1)', icon:'🤝', x1:2,  x2:30, y1:22, y2:90},
-  repaso:  {label:'Repaso Bíblico',    color:'#3b82f6', bg:'rgba(59,130,246,.1)', icon:'📖', x1:35, x2:64, y1:22, y2:90},
-  juegos:  {label:'Juegos',            color:'#8b5cf6', bg:'rgba(139,92,246,.1)', icon:'🎮', x1:68, x2:97, y1:22, y2:90},
+  entrada: {label:'Entrada',           letter:'',  mrnt:'Llegada',   color:'#0a0e2e', colorDark:'#0a0e2e', bg:'rgba(10,14,46,.06)',   icon:'🚪',
+            cardX:38, cardY:3,  cardW:24, cardH:9,
+            x1:36, x2:64, y1:1,  y2:14},
+  // M — Misión: arriba-izquierda (a la altura de la M en el diagrama)
+  mision:  {label:'Misión',            letter:'M', mrnt:'Misión',    color:'#3b82f6', colorDark:'#1d4ed8', bg:'rgba(59,130,246,.10)', icon:'✈️',
+            cardX:2,  cardY:24, cardW:22, cardH:22,
+            x1:0,  x2:26, y1:18, y2:50},
+  // R — Relación / Confra: arriba-derecha (a la altura de la R)
+  confra:  {label:'Confraternización', letter:'R', mrnt:'Relación',  color:'#eab308', colorDark:'#a16207', bg:'rgba(234,179,8,.10)',  icon:'🤝',
+            cardX:76, cardY:24, cardW:22, cardH:22,
+            x1:74, x2:100,y1:18, y2:50},
+  // N — Nutrición / Repaso: abajo-derecha (altura de la N)
+  repaso:  {label:'Repaso Bíblico',    letter:'N', mrnt:'Nutrición', color:'#fb923c', colorDark:'#c2410c', bg:'rgba(251,146,60,.10)', icon:'📖',
+            cardX:76, cardY:54, cardW:22, cardH:22,
+            x1:74, x2:100,y1:50, y2:80},
+  // N — Nutrición / Juegos: abajo-derecha-extra (también N, naranjo más cálido)
+  juegos:  {label:'Juegos',            letter:'N', mrnt:'Nutrición', color:'#f97316', colorDark:'#c2410c', bg:'rgba(249,115,22,.10)', icon:'🎮',
+            cardX:62, cardY:84, cardW:22, cardH:13,
+            x1:60, x2:84, y1:80, y2:98},
+  // T — Templo: abajo-izquierda (altura de la T en el plan)
+  templo:  {label:'Templo',            letter:'T', mrnt:'Templo',    color:'#7c3aed', colorDark:'#5b21b6', bg:'rgba(124,58,237,.10)', icon:'⛪',
+            cardX:2,  cardY:54, cardW:22, cardH:22,
+            x1:0,  x2:26, y1:50, y2:80},
 };
 
-const PHASE_DURATIONS={confra:600,repaso:1800,juegos:900}; // segundos
+const PHASE_DURATIONS={confra:600,repaso:1800,juegos:900,mision:1200}; // segundos
 
 const getSID=()=>new Date().toISOString().slice(0,10);
 const nowTime=()=>new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
@@ -349,24 +389,26 @@ const BookLogo=({size=60})=>(
   </svg>
 );
 
-/* Logo completo: triángulo amarillo + libro + texto — fondo blanco */
+/* Logo completo: triángulo amarillo + libro + texto */
 const MaranataLogo=({size=240})=>{
   const w=size, h=Math.round(size*0.73);
   return(
     <svg width={w} height={h} viewBox="0 0 400 292" xmlns="http://www.w3.org/2000/svg">
-      {/* Fondo blanco con bordes redondeados */}
-      <rect x="0" y="0" width="400" height="292" rx="22" ry="22" fill="white"/>
       {/* Triángulo amarillo */}
-      <polygon points="0,268 398,118 0,58" fill="#FFD000"/>
-      {/* Segunda capa para volumen */}
-      <polygon points="0,268 398,118 160,185" fill="#E6A800" opacity=".3"/>
-      {/* Libro - centrado arriba, color navy */}
-      <g transform="translate(200,57)" stroke="#2B3070" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="0,268 398,118 0,58" fill="#ffd000" opacity=".88"/>
+      {/* Segunda sombra del triángulo para dar volumen */}
+      <polygon points="0,268 398,118 180,180" fill="#e6a800" opacity=".25"/>
+      {/* Libro - centrado arriba */}
+      <g transform="translate(200,57)" stroke="white" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* Página izquierda */}
         <path d="M-44,4 Q-44,-7 -40,-10 L-2,1 L-2,54 Q-22,48 -44,54 Z"/>
+        {/* Página derecha */}
         <path d="M44,4 Q44,-7 40,-10 L2,1 L2,54 Q22,48 44,54 Z"/>
+        {/* Líneas página izquierda */}
         <line x1="-37" y1="18" x2="-10" y2="16"/>
         <line x1="-37" y1="30" x2="-10" y2="28"/>
         <line x1="-37" y1="42" x2="-10" y2="40"/>
+        {/* Líneas página derecha */}
         <line x1="10" y1="16" x2="37" y2="18"/>
         <line x1="10" y1="28" x2="37" y2="30"/>
         <line x1="10" y1="40" x2="37" y2="42"/>
@@ -374,11 +416,11 @@ const MaranataLogo=({size=240})=>{
       {/* MARANATA */}
       <text x="200" y="174" textAnchor="middle"
         fontFamily="'Barlow Condensed',sans-serif" fontWeight="900" fontSize="74"
-        fill="#2B3070" letterSpacing="-1">MARANATA</text>
+        fill="white" letterSpacing="-1">MARANATA</text>
       {/* class */}
       <text x="200" y="236" textAnchor="middle"
         fontFamily="'Barlow Condensed',sans-serif" fontWeight="600" fontSize="52"
-        fill="#2B3070" letterSpacing="10">class</text>
+        fill="white" letterSpacing="10">class</text>
     </svg>
   );
 };
@@ -388,6 +430,124 @@ const Spinner=({size=20,color='#ffd000'})=>(
     border:`${Math.max(2,size/10)}px solid ${color}22`,
     borderTopColor:color,animation:'spin .8s linear infinite'}}/>
 );
+
+/* ════════════════════════ MRNT PETALS (visual) ════════════════════════
+   Visual del Plan Maranata: 4 letras (M, R, N, T) con 2 pétalos por letra
+   (yo / nosotros). Aquí los mapeamos a las 4 zonas funcionales:
+   M = Misión        → Confraternización (interior + exterior naranja/amarillo)
+   R = Relación      → Repaso bíblico
+   N = Nutrición     → Juegos
+   T = Templo        → Entrada / adoración
+*/
+const MRNT_SECTORS=[
+  {key:'M',label:'Misión',         core:'#1d4ed8', petal1:'#3b82f6', petal2:'#60a5fa', angle:135, zone:'confra'},
+  {key:'R',label:'Relación',       core:'#f59e0b', petal1:'#ffd000', petal2:'#fde047', angle:45,  zone:'repaso'},
+  {key:'N',label:'Nutrición',      core:'#ea580c', petal1:'#fb923c', petal2:'#fdba74', angle:315, zone:'juegos'},
+  {key:'T',label:'Templo',         core:'#5b21b6', petal1:'#7c3aed', petal2:'#a78bfa', angle:225, zone:'entrada'},
+];
+
+/* Pétalo individual (forma como gajo) */
+const Petal=({cx,cy,r1,r2,start,end,fill,stroke='none',onClick,style})=>{
+  const toRad=d=>d*Math.PI/180;
+  const x1=cx+r1*Math.cos(toRad(start)), y1=cy+r1*Math.sin(toRad(start));
+  const x2=cx+r2*Math.cos(toRad(start)), y2=cy+r2*Math.sin(toRad(start));
+  const x3=cx+r2*Math.cos(toRad(end)),   y3=cy+r2*Math.sin(toRad(end));
+  const x4=cx+r1*Math.cos(toRad(end)),   y4=cy+r1*Math.sin(toRad(end));
+  const large=Math.abs(end-start)>180?1:0;
+  const d=`M${x1},${y1} L${x2},${y2} A${r2},${r2} 0 ${large} 1 ${x3},${y3} L${x4},${y4} A${r1},${r1} 0 ${large} 0 ${x1},${y1} Z`;
+  return <path d={d} fill={fill} stroke={stroke} strokeWidth={stroke==='none'?0:1.5} onClick={onClick} style={{cursor:onClick?'pointer':'default',transition:'all .25s',...style}}/>;
+};
+
+/* Diagrama MRNT estático (ilustración del plan) */
+function MRNTDiagram({size=400,interactive=false,onSectorClick,activeSector,labels=true,hideCenterDot=false}){
+  const cx=size/2, cy=size/2;
+  const rCore=size*0.20;     // círculo central con letras
+  const rInner=size*0.30;    // pétalo "yo"
+  const rOuter=size*0.42;    // pétalo "nosotros"
+  // 4 cuadrantes a 90° cada uno; cada cuadrante tiene 2 pétalos (yo + nosotros)
+  // M: 90-180 (top-left), R: 0-90 (top-right), N: -90 a 0 (bottom-right), T: 180-270 (bottom-left)
+  const quadrants=[
+    {key:'M', start:180, end:270, core:'#1d4ed8', p1:'#3b82f6', p2:'#1e40af', letter:'M'},
+    {key:'R', start:270, end:360, core:'#ca8a04', p1:'#ffd000', p2:'#eab308', letter:'R'},
+    {key:'N', start:0,   end:90,  core:'#ea580c', p1:'#fb923c', p2:'#c2410c', letter:'N'},
+    {key:'T', start:90,  end:180, core:'#5b21b6', p1:'#7c3aed', p2:'#4c1d95', letter:'T'},
+  ];
+  return(
+    <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{display:'block'}}>
+      {/* Pétalo exterior (nosotros) */}
+      {quadrants.map(q=>{
+        const mid=(q.start+q.end)/2;
+        const isActive=activeSector===q.key;
+        return(
+          <g key={q.key+'-out'}>
+            <Petal cx={cx} cy={cy} r1={rInner+4} r2={rOuter}
+              start={q.start+3} end={q.end-3}
+              fill={q.p2}
+              onClick={interactive?()=>onSectorClick?.(q.key,'nosotros'):undefined}
+              style={{opacity:isActive?1:0.92,filter:isActive?`drop-shadow(0 0 14px ${q.p2})`:undefined}}/>
+            {labels&&(
+              <text
+                x={cx+(rInner+rOuter)/2*Math.cos((mid)*Math.PI/180)}
+                y={cy+(rInner+rOuter)/2*Math.sin((mid)*Math.PI/180)}
+                textAnchor="middle" dominantBaseline="middle"
+                transform={`rotate(${mid+90} ${cx+(rInner+rOuter)/2*Math.cos(mid*Math.PI/180)} ${cy+(rInner+rOuter)/2*Math.sin(mid*Math.PI/180)})`}
+                fill="white" fontFamily="var(--display)" fontWeight="800"
+                fontSize={size*0.032} letterSpacing="1">
+                {q.letter}2 / NOSOTROS
+              </text>
+            )}
+          </g>
+        );
+      })}
+      {/* Pétalo interior (yo) */}
+      {quadrants.map(q=>{
+        const mid=(q.start+q.end)/2;
+        return(
+          <g key={q.key+'-in'}>
+            <Petal cx={cx} cy={cy} r1={rCore+3} r2={rInner}
+              start={q.start+5} end={q.end-5}
+              fill={q.p1}
+              onClick={interactive?()=>onSectorClick?.(q.key,'yo'):undefined}
+              style={{opacity:0.96}}/>
+            {labels&&(
+              <text
+                x={cx+(rCore+rInner)/2*Math.cos((mid)*Math.PI/180)}
+                y={cy+(rCore+rInner)/2*Math.sin((mid)*Math.PI/180)}
+                textAnchor="middle" dominantBaseline="middle"
+                transform={`rotate(${mid+90} ${cx+(rCore+rInner)/2*Math.cos(mid*Math.PI/180)} ${cy+(rCore+rInner)/2*Math.sin(mid*Math.PI/180)})`}
+                fill="white" fontFamily="var(--display)" fontWeight="700"
+                fontSize={size*0.026} letterSpacing="1">
+                {q.letter}1 / YO
+              </text>
+            )}
+          </g>
+        );
+      })}
+      {/* Núcleo central con letras MRNT */}
+      {quadrants.map(q=>(
+        <Petal key={q.key+'-core'} cx={cx} cy={cy} r1={size*0.04} r2={rCore}
+          start={q.start+1} end={q.end-1}
+          fill={q.core} style={{opacity:.98}}/>
+      ))}
+      {quadrants.map(q=>{
+        const mid=(q.start+q.end)/2;
+        const r=rCore*0.62;
+        return(
+          <text key={q.key+'-letter'}
+            x={cx+r*Math.cos(mid*Math.PI/180)}
+            y={cy+r*Math.sin(mid*Math.PI/180)}
+            textAnchor="middle" dominantBaseline="central"
+            fontFamily="var(--display)" fontWeight="900"
+            fontSize={size*0.13} fill="white">
+            {q.letter}
+          </text>
+        );
+      })}
+      {/* Punto central */}
+      {!hideCenterDot&&<circle cx={cx} cy={cy} r={size*0.04} fill="#0a0e2e"/>}
+    </svg>
+  );
+}
 
 // Avatar (foto o emoji)
 const AvatarBubble=({profile,size=42,glow=false,isMe=false})=>{
@@ -491,21 +651,30 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
 
   const handleDragEnd=useCallback(()=>{ isDrag.current=false; },[]);
 
-  const zoneStyle=(key)=>{
+  const zoneCardStyle=(key)=>{
     const z=ZONES[key];
     const isActive=phase===key;
+    const isEntrada=key==='entrada';
+    // Tinte transparente del color de la zona
+    const tint=isEntrada
+      ? (isActive?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)')
+      : (isActive?z.bg.replace('.10','.22'):z.bg.replace('.10','.13'));
     return{
       position:'absolute',
-      left:`${z.x1}%`,top:`${z.y1}%`,
-      width:`${z.x2-z.x1}%`,height:`${z.y2-z.y1}%`,
-      background:isActive?`${z.bg.replace('.1','.18')}`:`${z.bg}`,
-      border:`1.5px solid ${isActive?z.color+'88':z.color+'33'}`,
-      borderRadius:12,
-      display:'flex',flexDirection:'column',
-      alignItems:'center',justifyContent:'flex-start',
-      paddingTop:8,
+      left:`${z.cardX}%`,top:`${z.cardY}%`,
+      width:`${z.cardW}%`,height:`${z.cardH}%`,
+      background:tint,
+      border:`${isActive?4:3}px solid ${isEntrada?'#0a0e2e':z.color}`,
+      borderRadius:16,
+      overflow:'hidden',
       transition:'all .3s',
-      boxShadow:isActive?`0 0 18px ${z.color}22`:undefined,
+      boxShadow:isActive
+        ? `0 10px 28px ${isEntrada?'rgba(10,14,46,.18)':z.color+'55'}, 0 0 0 5px ${isEntrada?'rgba(10,14,46,.08)':z.color+'22'}`
+        : `0 4px 14px ${isEntrada?'rgba(10,14,46,.08)':z.color+'25'}`,
+      pointerEvents:'none',
+      display:'flex',flexDirection:'column',
+      padding:full?'12px 14px':'7px 9px',
+      backdropFilter:'blur(2px)',
     };
   };
 
@@ -516,78 +685,164 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       onTouchMove={handleDragMove} onTouchEnd={handleDragEnd}
       style={{
         width:'100%',height:'100%',position:'relative',overflow:'hidden',
-        background:'var(--navy)',touchAction:'none',userSelect:'none',
-        backgroundImage:`linear-gradient(rgba(255,208,0,.03) 1px,transparent 1px),
-                         linear-gradient(90deg,rgba(255,208,0,.03) 1px,transparent 1px)`,
-        backgroundSize:'44px 44px',
+        background:'#f8f5ef',touchAction:'none',userSelect:'none',
+        backgroundImage:`
+          radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.6),transparent 70%),
+          radial-gradient(circle at 12% 88%,rgba(59,130,246,.05),transparent 50%),
+          radial-gradient(circle at 88% 12%,rgba(234,179,8,.06),transparent 50%)
+        `,
       }}>
 
-      {/* Luces ambientales */}
-      <div style={{position:'absolute',top:'8%',left:'4%',width:'30%',height:'30%',borderRadius:'50%',
-        background:'radial-gradient(circle,rgba(245,158,11,.04),transparent 70%)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',bottom:'12%',right:'4%',width:'28%',height:'28%',borderRadius:'50%',
-        background:'radial-gradient(circle,rgba(139,92,246,.04),transparent 70%)',pointerEvents:'none'}}/>
+      {/* Diagrama MRNT central — el plan visual */}
+      <div style={{
+        position:'absolute',
+        left:'50%',top:'50%',transform:'translate(-50%,-50%)',
+        width:full?'34%':'32%',aspectRatio:'1/1',
+        pointerEvents:'none',zIndex:1,
+        display:'flex',alignItems:'center',justifyContent:'center',
+      }}>
+        <div style={{width:'100%',height:'100%',position:'relative'}}>
+          <MRNTDiagram size={full?360:220} interactive={false}
+            activeSector={phase==='confra'?'R':phase==='repaso'?'N':phase==='juegos'?'N':phase==='mision'?'M':phase==='templo'?'T':null}
+            labels={false} hideCenterDot={true}/>
+        </div>
+      </div>
 
-      {/* Cuatro zonas (entrada + 3 actividades) */}
-      {['entrada','confra','repaso','juegos'].map(key=>{
+      {/* Líneas conectoras sutiles desde diagrama hacia cada zona card */}
+      <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',
+        pointerEvents:'none',zIndex:0}} preserveAspectRatio="none" viewBox="0 0 100 100">
+        {['entrada','mision','confra','repaso','juegos','templo'].map(key=>{
+          const z=ZONES[key];
+          const cx=z.cardX+z.cardW/2;
+          const cy=z.cardY+z.cardH/2;
+          const isActive=phase===key;
+          return(
+            <line key={key} x1="50" y1="50" x2={cx} y2={cy}
+              stroke={z.color}
+              strokeWidth={isActive?'.4':'.18'}
+              strokeDasharray={isActive?'0':'1.2,1.2'}
+              opacity={isActive?.5:.22}
+              vectorEffect="non-scaling-stroke"/>
+          );
+        })}
+      </svg>
+
+      {/* Zone cards alrededor del diagrama (6 zonas: entrada + 4 MRNT + templo) */}
+      {['entrada','mision','confra','repaso','juegos','templo'].map(key=>{
         const z=ZONES[key];
         const count=entries.filter(([,u])=>u.zone===key).length;
+        const isActive=phase===key;
+        const isEntrada=key==='entrada';
         return(
-          <div key={key} style={zoneStyle(key)}>
-            <div style={{
-              fontSize:full?13:8,fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
-              color:z.color,textTransform:'uppercase',letterSpacing:'.06em',
-              textShadow:`0 0 10px ${z.color}55`,
-              display:'flex',alignItems:'center',gap:4,
-            }}>
-              <span>{z.icon}</span>
-              <span style={{maxWidth:'90%',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                {full?z.label:z.label.split(' ')[0]}
-              </span>
-            </div>
-            {count>0&&(
-              <div style={{fontSize:9,color:`${z.color}88`,marginTop:2,
-                fontFamily:'Barlow Condensed,sans-serif'}}>
-                {count} {count===1?'joven':'jóvenes'}
+          <div key={key} style={zoneCardStyle(key)}>
+            {isEntrada?(
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:full?10:6,
+                height:'100%'}}>
+                <div style={{fontSize:full?22:14}}>🚪</div>
+                <div style={{lineHeight:1.05}}>
+                  <div style={{
+                    fontSize:full?9:6.5,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                    color:'#3b3f5a',textTransform:'uppercase',letterSpacing:'.22em',
+                  }}>Llegada</div>
+                  <div style={{
+                    fontSize:full?17:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                    color:'#0a0e2e',textTransform:'uppercase',letterSpacing:'.04em',marginTop:2,
+                  }}>Entrada</div>
+                </div>
+                {count>0&&(
+                  <div style={{
+                    fontSize:full?13:9,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                    color:'#0a0e2e',background:'#ffd000',
+                    padding:full?'2px 9px':'1px 6px',borderRadius:20,marginLeft:full?8:4,
+                  }}>{count}</div>
+                )}
               </div>
+            ):(<>
+              <div style={{display:'flex',alignItems:'center',gap:full?10:6,marginBottom:full?4:2}}>
+                <div style={{
+                  width:full?34:20,height:full?34:20,borderRadius:9,
+                  background:z.color,
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  color:'#fff',fontFamily:'Barlow Condensed,sans-serif',
+                  fontWeight:900,fontSize:full?20:13,lineHeight:1,
+                  boxShadow:`0 3px 8px ${z.color}55`,flexShrink:0,
+                }}>{z.letter}</div>
+                <div style={{lineHeight:1.05,minWidth:0,flex:1}}>
+                  <div style={{
+                    fontSize:full?9:6.5,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                    color:z.colorDark,textTransform:'uppercase',letterSpacing:'.18em',
+                  }}>{z.mrnt}</div>
+                  <div style={{
+                    fontSize:full?17:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                    color:'#0a0e2e',textTransform:'uppercase',letterSpacing:'.02em',
+                    marginTop:full?3:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',
+                  }}>{full?z.label:z.label.split(' ')[0]}</div>
+                </div>
+              </div>
+              {count>0&&(
+                <div style={{
+                  marginTop:'auto',
+                  display:'flex',alignItems:'center',gap:full?6:3,
+                  fontSize:full?11:7,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                  color:z.colorDark,letterSpacing:'.08em',textTransform:'uppercase',
+                }}>
+                  <div style={{width:full?6:4,height:full?6:4,borderRadius:'50%',
+                    background:z.color,boxShadow:`0 0 6px ${z.color}aa`}}/>
+                  {count} {count===1?'joven':'jóvenes'}
+                </div>
+              )}
+            </>)}
+            {isActive&&!isEntrada&&(
+              <div style={{
+                position:'absolute',top:full?8:5,right:full?8:5,
+                background:z.color,color:'#fff',
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:full?9:6,letterSpacing:'.14em',textTransform:'uppercase',
+                padding:full?'3px 7px':'1.5px 4px',borderRadius:20,
+                boxShadow:`0 2px 6px ${z.color}66`,
+              }}>● En vivo</div>
             )}
           </div>
         );
       })}
 
-      {/* Hint */}
+      {/* Hint inferior */}
       {!full&&(
         <div style={{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',
-          fontSize:8,color:'var(--muted)',pointerEvents:'none',
-          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
-          ✨ Arrastra tu avatar a una zona
+          fontSize:8,color:'#3b3f5a',pointerEvents:'none',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:600,
+          letterSpacing:'.18em',textTransform:'uppercase',opacity:.6}}>
+          Arrastra tu avatar a una zona
         </div>
       )}
 
-      {/* Overlay proyección */}
+      {/* Overlay proyección (full mode) */}
       {full&&(<>
-        <div style={{position:'absolute',top:16,left:'50%',transform:'translateX(-50%)',
-          background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.25)',
-          borderRadius:14,padding:'8px 22px',textAlign:'center',
-          backdropFilter:'blur(10px)',zIndex:20}}>
-          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:20,
-            color:'#ffd000',letterSpacing:'.05em',textTransform:'uppercase'}}>MARANATA CLASS</div>
-          <div style={{fontSize:10,color:'var(--muted)'}}>
+        <div style={{position:'absolute',top:18,left:'50%',transform:'translateX(-50%)',
+          background:'#fff',border:'1px solid rgba(10,14,46,.08)',
+          borderRadius:14,padding:'10px 26px',textAlign:'center',
+          boxShadow:'0 6px 22px rgba(10,14,46,.08)',zIndex:20}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:22,
+            color:'#0a0e2e',letterSpacing:'.06em',textTransform:'uppercase'}}>MARANATA CLASS</div>
+          <div style={{fontSize:11,color:'#3b3f5a',letterSpacing:'.06em',marginTop:2,
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:600,textTransform:'uppercase'}}>
             {new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})}
           </div>
         </div>
-        <div style={{position:'absolute',bottom:18,left:'50%',transform:'translateX(-50%)',
-          background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.2)',
-          borderRadius:20,padding:'6px 18px',display:'flex',alignItems:'center',gap:8,zIndex:20}}>
-          <div style={{width:7,height:7,borderRadius:'50%',background:'#ffd000',
+        <div style={{position:'absolute',bottom:20,left:'50%',transform:'translateX(-50%)',
+          background:'#0a0e2e',color:'#ffd000',
+          borderRadius:20,padding:'7px 20px',display:'flex',alignItems:'center',gap:8,zIndex:20,
+          boxShadow:'0 6px 22px rgba(10,14,46,.18)'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',background:'#ffd000',
             animation:'pulse 1.5s infinite'}}/>
-          <span style={{color:'#ffd000',fontSize:12,fontFamily:'Barlow Condensed',fontWeight:700}}>
-            {entries.length} JÓVENES EN SALA
+          <span style={{fontSize:13,fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+            letterSpacing:'.14em',textTransform:'uppercase'}}>
+            {entries.length} jóvenes en sala
           </span>
         </div>
       </>)}
 
-      {/* Personajes */}
+      {/* Personajes (avatars) */}
       {entries.map(([uid,u])=>{
         const myReactionsOnUser=reactions?.[uid]||{};
         const reactionCounts=REACTIONS.map(r=>({
@@ -613,14 +868,15 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
               <div style={{display:'flex',gap:2,marginBottom:2}}>
                 {reactionCounts.map(r=>(
                   <div key={r.id} style={{
-                    background:'rgba(7,9,31,.85)',borderRadius:20,
-                    padding:'1px 5px',fontSize:full?13:9,
+                    background:'#fff',borderRadius:20,
+                    padding:'2px 6px',fontSize:full?13:9,
                     display:'flex',alignItems:'center',gap:2,
-                    border:'1px solid rgba(255,255,255,.1)',
+                    border:'1px solid rgba(10,14,46,.08)',
+                    boxShadow:'0 2px 6px rgba(10,14,46,.06)',
                   }}>
                     <span>{r.e}</span>
-                    <span style={{fontSize:full?10:7,color:'#ffd000',
-                      fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
+                    <span style={{fontSize:full?10:7,color:'#0a0e2e',
+                      fontFamily:'Barlow Condensed,sans-serif',fontWeight:800}}>
                       {r.count>1?r.count:''}
                     </span>
                   </div>
@@ -629,13 +885,14 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
             )}
             <AvatarBubble profile={u} size={full?58:42} glow={uid===myId} isMe={uid===myId}/>
             <div style={{
-              marginTop:-2,fontSize:full?11:8,color:'white',
-              background:'rgba(7,9,31,.92)',padding:'2px 8px',borderRadius:20,
+              marginTop:-2,fontSize:full?11:8,color:'#0a0e2e',
+              background:'#fff',padding:'2px 9px',borderRadius:20,
               maxWidth:full?90:64,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
-              fontFamily:'Barlow,sans-serif',fontWeight:600,
-              border:`1px solid ${u.color||'#ffd000'}33`,
+              fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,letterSpacing:'.04em',
+              border:`1.5px solid ${u.color||'#ffd000'}`,
+              boxShadow:'0 2px 6px rgba(10,14,46,.08)',
             }}>
-              {uid===myId?'⭐ '+u.name:u.name}
+              {uid===myId?'★ '+u.name:u.name}
             </div>
           </div>
         );
@@ -1901,7 +2158,7 @@ function AdminSurveyModal({responses,SID,onClose,onToggle,surveyActive}){
 }
 
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
-function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onOpenStats,onToggleWordCloud,onResetSession,onOpenSurvey,onDownloadAttendance,surveyActive}){
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onOpenStats,onToggleWordCloud,onResetSession,onOpenSurvey,onDownloadAttendance,surveyActive}){
   const[open,setOpen]=useState(false);
   const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
@@ -1909,8 +2166,9 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
   const confraUsers=Object.entries(users).filter(([,u])=>u.zone==='confra');
   const repasoUsers=Object.entries(users).filter(([,u])=>u.zone==='repaso');
   const juegosUsers=Object.entries(users).filter(([,u])=>u.zone==='juegos');
+  const misionUsers=Object.entries(users).filter(([,u])=>u.zone==='mision');
 
-  const phaseColor={waiting:'var(--muted)',confra:'#f59e0b',repaso:'#3b82f6',juegos:'#8b5cf6'}[phase];
+  const phaseColor={waiting:'var(--muted)',confra:'#eab308',repaso:'#fb923c',juegos:'#fdba74',mision:'#3b82f6'}[phase];
 
   return(
     <>
@@ -1946,11 +2204,12 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
           </div>
 
           {/* Conteos por zona */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,marginBottom:14}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:6,marginBottom:14}}>
             {[
-              {label:'Confra',count:confraUsers.length,color:'#f59e0b'},
-              {label:'Repaso',count:repasoUsers.length,color:'#3b82f6'},
-              {label:'Juegos',count:juegosUsers.length,color:'#8b5cf6'},
+              {label:'R · Confra',count:confraUsers.length,color:'#eab308'},
+              {label:'N · Repaso',count:repasoUsers.length,color:'#fb923c'},
+              {label:'N · Juegos',count:juegosUsers.length,color:'#fdba74'},
+              {label:'M · Misión',count:misionUsers.length,color:'#3b82f6'},
             ].map(z=>(
               <div key={z.label} style={{background:'rgba(255,255,255,.04)',
                 borderRadius:8,padding:'6px 4px',textAlign:'center',
@@ -1998,33 +2257,47 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
             {phase==='waiting'&&(<>
               <button onClick={()=>{onStartConfra(confraUsers);setOpen(false);}}
                 disabled={confraUsers.length===0} style={{
-                background:confraUsers.length?'linear-gradient(135deg,#f59e0b,#d97706)':'var(--muted2)',
+                background:confraUsers.length?'linear-gradient(135deg,#eab308,#a16207)':'var(--muted2)',
                 border:'none',borderRadius:10,padding:'10px',
-                color:confraUsers.length?'#07091f':'var(--muted)',
+                color:confraUsers.length?'#0a0e2e':'var(--muted)',
                 fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                 letterSpacing:'.04em',textTransform:'uppercase',
               }}>
-                🤝 Confraternización {confraUsers.length>0?`(${confraUsers.length})`:'— sin personas en zona'}
+                <span style={{display:'inline-block',width:18,height:18,borderRadius:4,background:'rgba(0,0,0,.2)',marginRight:6,fontSize:11,lineHeight:'18px'}}>R</span>
+                Confraternización {confraUsers.length>0?`(${confraUsers.length})`:'— sin personas'}
               </button>
               <button onClick={()=>{onStartRepaso(repasoUsers);setOpen(false);}}
                 disabled={repasoUsers.length===0} style={{
-                background:repasoUsers.length?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'var(--muted2)',
+                background:repasoUsers.length?'linear-gradient(135deg,#fb923c,#c2410c)':'var(--muted2)',
                 border:'none',borderRadius:10,padding:'10px',
                 color:repasoUsers.length?'white':'var(--muted)',
                 fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                 letterSpacing:'.04em',textTransform:'uppercase',
               }}>
-                📖 Repaso {repasoUsers.length>0?`(${repasoUsers.length})`:'— sin personas en zona'}
+                <span style={{display:'inline-block',width:18,height:18,borderRadius:4,background:'rgba(0,0,0,.2)',marginRight:6,fontSize:11,lineHeight:'18px'}}>N</span>
+                Repaso Bíblico {repasoUsers.length>0?`(${repasoUsers.length})`:'— sin personas'}
               </button>
               <button onClick={()=>{onStartJuegos();setOpen(false);}}
                 disabled={juegosUsers.length===0} style={{
-                background:juegosUsers.length?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'var(--muted2)',
+                background:juegosUsers.length?'linear-gradient(135deg,#fdba74,#ea580c)':'var(--muted2)',
                 border:'none',borderRadius:10,padding:'10px',
-                color:juegosUsers.length?'white':'var(--muted)',
+                color:juegosUsers.length?'#0a0e2e':'var(--muted)',
                 fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                 letterSpacing:'.04em',textTransform:'uppercase',
               }}>
-                🎮 Juegos {juegosUsers.length>0?`(${juegosUsers.length})`:'— sin personas en zona'}
+                <span style={{display:'inline-block',width:18,height:18,borderRadius:4,background:'rgba(0,0,0,.2)',marginRight:6,fontSize:11,lineHeight:'18px'}}>N</span>
+                Juegos {juegosUsers.length>0?`(${juegosUsers.length})`:'— sin personas'}
+              </button>
+              <button onClick={()=>{onStartMision&&onStartMision(misionUsers);setOpen(false);}}
+                disabled={misionUsers.length===0} style={{
+                background:misionUsers.length?'linear-gradient(135deg,#3b82f6,#1d4ed8)':'var(--muted2)',
+                border:'none',borderRadius:10,padding:'10px',
+                color:misionUsers.length?'white':'var(--muted)',
+                fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                letterSpacing:'.04em',textTransform:'uppercase',
+              }}>
+                <span style={{display:'inline-block',width:18,height:18,borderRadius:4,background:'rgba(255,255,255,.18)',marginRight:6,fontSize:11,lineHeight:'18px'}}>M</span>
+                Misión {misionUsers.length>0?`(${misionUsers.length})`:'— sin personas'}
               </button>
             </>)}
 
@@ -2076,6 +2349,14 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
                 borderRadius:10,padding:'10px',color:'#ef4444',fontWeight:800,fontSize:12,
                 fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
               }}>⏹ Finalizar Juegos</button>
+            )}
+
+            {phase==='mision'&&(
+              <button onClick={()=>{onEndMision&&onEndMision();setOpen(false);}} style={{
+                background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
+                borderRadius:10,padding:'10px',color:'#ef4444',fontWeight:800,fontSize:12,
+                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',
+              }}>⏹ Finalizar Misión</button>
             )}
           </div>
         </div>
@@ -2619,7 +2900,7 @@ function ScreenView({users,session,msgs,reactions,onExit}){
   const speaker=speakerUid?users[speakerUid]:null;
 
   return(
-    <div style={{position:'fixed',inset:0,background:'var(--navy)',overflow:'hidden'}}>
+    <div style={{position:'fixed',inset:0,background:'#f8f5ef',overflow:'hidden'}}>
       {/* Canvas con zonas */}
       <div ref={roomRef} style={{width:'100%',height:'100%'}}>
         <RoomCanvas users={users} myId={null} session={session}
@@ -2631,24 +2912,25 @@ function ScreenView({users,session,msgs,reactions,onExit}){
       {phase!=='waiting'&&(
         <div style={{
           position:'absolute',top:80,right:16,
-          width:160,
-          background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.2)',
+          width:170,
+          background:'#fff',border:'1px solid rgba(10,14,46,.08)',
           borderRadius:14,padding:14,zIndex:40,
+          boxShadow:'0 8px 24px rgba(10,14,46,.12)',
         }}>
           {phase==='confra'&&(
             <>
               <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
-                fontSize:11,color:'#f59e0b',textTransform:'uppercase',
+                fontSize:11,color:'#a16207',textTransform:'uppercase',
                 letterSpacing:'.07em',marginBottom:10}}>🤝 Confraternización</div>
-              <TimerDisplay remaining={confraRemaining} color="#f59e0b"/>
+              <TimerDisplay remaining={confraRemaining} color="#eab308"/>
               {speaker&&(
                 <div style={{marginTop:10,textAlign:'center'}}>
                   <AvatarBubble profile={speaker} size={40}/>
-                  <div style={{fontSize:11,color:'white',marginTop:4,
+                  <div style={{fontSize:11,color:'#0a0e2e',marginTop:4,
                     fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
                     {speaker.name}
                   </div>
-                  <div style={{fontSize:9,color:'#f59e0b80'}}>compartiendo</div>
+                  <div style={{fontSize:9,color:'#a16207'}}>compartiendo</div>
                 </div>
               )}
             </>
@@ -2656,9 +2938,9 @@ function ScreenView({users,session,msgs,reactions,onExit}){
           {phase==='repaso'&&(
             <>
               <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
-                fontSize:11,color:'#3b82f6',textTransform:'uppercase',
+                fontSize:11,color:'#c2410c',textTransform:'uppercase',
                 letterSpacing:'.07em',marginBottom:10}}>📖 Repaso Bíblico</div>
-              <TimerDisplay remaining={repasoRemaining} color="#3b82f6"/>
+              <TimerDisplay remaining={repasoRemaining} color="#fb923c"/>
               {repasoRemaining<=0&&(
                 <div style={{marginTop:8,fontSize:10,color:'#ef4444',
                   fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
@@ -2672,7 +2954,14 @@ function ScreenView({users,session,msgs,reactions,onExit}){
             <div style={{textAlign:'center'}}>
               <div style={{fontSize:36,marginBottom:4}}>🎮</div>
               <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
-                fontSize:13,color:'#8b5cf6',textTransform:'uppercase'}}>¡JUEGOS!</div>
+                fontSize:13,color:'#c2410c',textTransform:'uppercase'}}>¡JUEGOS!</div>
+            </div>
+          )}
+          {phase==='mision'&&(
+            <div style={{textAlign:'center'}}>
+              <div style={{fontSize:36,marginBottom:4}}>✈️</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                fontSize:13,color:'#1d4ed8',textTransform:'uppercase'}}>MISIÓN</div>
             </div>
           )}
         </div>
@@ -2683,10 +2972,619 @@ function ScreenView({users,session,msgs,reactions,onExit}){
 
       <button onClick={onExit} style={{
         position:'fixed',bottom:20,right:20,zIndex:100,
-        background:'rgba(7,9,31,.95)',border:'1px solid rgba(255,208,0,.3)',
+        background:'#0a0e2e',border:'1px solid rgba(255,208,0,.3)',
         color:'#ffd000',padding:'8px 16px',borderRadius:20,fontSize:12,
         fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,letterSpacing:'.04em',
       }}>✕ SALIR</button>
+    </div>
+  );
+}
+
+/* ════════════════════════ LANDING PAGE (auth) ════════════════════════ */
+function LandingPage({T,dark,onToggleTheme,onOpenAuth,authOpen,onCloseAuth,authMode,setAuthMode,
+  email,setEmail,password,setPassword,authError,setAuthError,authLoad,
+  resetMode,setResetMode,resetSent,setResetSent,onEmailAuth,onReset,onGoogle}){
+
+  const heroRef=useRef(null);
+  const[scrolled,setScrolled]=useState(false);
+  useEffect(()=>{
+    const onScroll=()=>setScrolled(window.scrollY>40);
+    window.addEventListener('scroll',onScroll);
+    return()=>window.removeEventListener('scroll',onScroll);
+  },[]);
+
+  return(
+    <div style={{minHeight:'100vh',background:T.bg,color:T.ink,
+      fontFamily:'var(--sans)',position:'relative',overflowX:'hidden'}}>
+
+      {/* ═════ NAV ═════ */}
+      <nav style={{
+        position:'fixed',top:0,left:0,right:0,zIndex:50,
+        background:scrolled?(dark?'rgba(10,14,46,.86)':'rgba(248,245,239,.92)'):'transparent',
+        backdropFilter:scrolled?'blur(14px)':'none',
+        borderBottom:scrolled?`1px solid ${T.border}`:'1px solid transparent',
+        transition:'all .25s',
+      }}>
+        <div style={{maxWidth:1240,margin:'0 auto',padding:'14px 28px',
+          display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          {/* Logo */}
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <svg width="36" height="28" viewBox="0 0 80 60">
+              <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
+              <g stroke={dark?'#0a0e2e':'#0a0e2e'} strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
+                <path d="M52 42L52 18Q52 15 49 15L40 17L40 42"/>
+                <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
+              </g>
+            </svg>
+            <div style={{lineHeight:1}}>
+              <div style={{fontFamily:'var(--display)',fontWeight:900,fontSize:18,
+                color:T.ink,letterSpacing:'.04em'}}>MARANATA</div>
+              <div style={{fontFamily:'var(--display)',fontWeight:600,fontSize:10,
+                color:T.muted,letterSpacing:'.22em',marginTop:2}}>CLASS · LAS CONDES</div>
+            </div>
+          </div>
+
+          {/* Links */}
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            {[
+              {l:'Sobre',h:'#sobre'},
+              {l:'El Plan MRNT',h:'#mrnt'},
+              {l:'Versículo',h:'#versiculo'},
+            ].map(it=>(
+              <a key={it.l} href={it.h} style={{
+                color:T.inkSoft,textDecoration:'none',fontSize:13,fontWeight:500,
+                padding:'8px 12px',borderRadius:8,transition:'color .15s',
+              }}
+              onMouseEnter={e=>e.currentTarget.style.color=T.ink}
+              onMouseLeave={e=>e.currentTarget.style.color=T.inkSoft}>{it.l}</a>
+            ))}
+            <button onClick={onToggleTheme} title="Cambiar tema" style={{
+              background:'transparent',border:`1px solid ${T.border}`,
+              borderRadius:50,width:36,height:36,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              color:T.ink,fontSize:14,marginLeft:6,
+            }}>{dark?'☀':'☾'}</button>
+            <button onClick={()=>onOpenAuth('login')} style={{
+              background:'transparent',border:`1px solid ${T.border}`,
+              borderRadius:50,padding:'9px 18px',
+              color:T.ink,fontSize:13,fontWeight:600,marginLeft:4,
+            }}>Ingresar</button>
+            <button onClick={()=>onOpenAuth('register')} style={{
+              background:T.ink,color:T.bg,
+              border:'none',borderRadius:50,padding:'10px 20px',
+              fontSize:13,fontWeight:700,marginLeft:4,
+            }}>Crear cuenta →</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ═════ HERO ═════ */}
+      <section ref={heroRef} style={{
+        minHeight:'100vh',padding:'120px 28px 80px',
+        maxWidth:1240,margin:'0 auto',
+        display:'grid',gridTemplateColumns:'1.05fr .95fr',gap:60,
+        alignItems:'center',position:'relative',
+      }}>
+        {/* Decoración: triángulo amarillo de fondo */}
+        <div style={{position:'absolute',right:'-8%',top:'12%',
+          width:540,height:380,zIndex:0,opacity:dark?0.13:0.16,pointerEvents:'none'}}>
+          <svg width="100%" height="100%" viewBox="0 0 540 380">
+            <polygon points="0,360 540,180 0,30" fill="#ffd000"/>
+          </svg>
+        </div>
+
+        {/* Texto */}
+        <div style={{position:'relative',zIndex:2}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:8,
+            background:dark?'rgba(255,208,0,.1)':'rgba(255,208,0,.18)',
+            border:`1px solid ${dark?'rgba(255,208,0,.25)':'rgba(255,208,0,.45)'}`,
+            borderRadius:50,padding:'5px 14px',marginBottom:28}}>
+            <span style={{width:6,height:6,borderRadius:'50%',background:'#ffd000',
+              animation:'pulse 1.6s infinite'}}/>
+            <span style={{fontSize:11,fontWeight:700,letterSpacing:'.14em',
+              textTransform:'uppercase',color:dark?'#ffd000':'#8a6a00'}}>
+              Sábados · 9:00 AM
+            </span>
+          </div>
+          <h1 style={{fontFamily:'var(--serif)',fontWeight:500,
+            fontSize:'clamp(48px, 6.5vw, 88px)',
+            lineHeight:0.95,letterSpacing:'-.025em',
+            color:T.ink,margin:'0 0 28px'}}>
+            Jóvenes <em style={{fontStyle:'italic',color:'#d4a800'}}>en misión</em>,
+            <br/>creciendo <em style={{fontStyle:'italic'}}>juntos</em>.
+          </h1>
+          <p style={{fontSize:19,lineHeight:1.55,color:T.inkSoft,
+            maxWidth:520,margin:'0 0 36px',fontWeight:400}}>
+            La sala virtual de la Clase de Jóvenes Adventistas de Las Condes.
+            Un espacio para confraternizar, profundizar la Palabra y vivir el llamado misionero del Plan&nbsp;Maranata.
+          </p>
+          <div style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+            <button onClick={()=>onOpenAuth('register')} style={{
+              background:T.ink,color:T.bg,
+              border:'none',borderRadius:50,padding:'16px 32px',
+              fontSize:15,fontWeight:700,letterSpacing:'.01em',
+              cursor:'pointer',display:'inline-flex',alignItems:'center',gap:10,
+              boxShadow:dark?'0 8px 28px rgba(255,208,0,.18)':'0 8px 28px rgba(10,14,46,.18)',
+            }}>
+              Entrar a la sala
+              <span style={{fontSize:18}}>→</span>
+            </button>
+            <button onClick={()=>onOpenAuth('login')} style={{
+              background:'transparent',color:T.ink,
+              border:`1.5px solid ${T.border}`,borderRadius:50,padding:'15px 28px',
+              fontSize:15,fontWeight:600,cursor:'pointer',
+            }}>
+              Ya tengo cuenta
+            </button>
+          </div>
+          {/* Stats inline */}
+          <div style={{display:'flex',gap:42,marginTop:56,flexWrap:'wrap'}}>
+            {[
+              {k:'4',l:'Áreas del plan'},
+              {k:'·',l:'M · R · N · T',raw:true},
+              {k:'1',l:'Misión común'},
+            ].map((s,i)=>(
+              <div key={i}>
+                <div style={{fontFamily:'var(--serif)',fontSize:s.raw?28:38,
+                  fontWeight:500,color:T.ink,lineHeight:1,letterSpacing:'-.02em'}}>
+                  {s.k}
+                </div>
+                <div style={{fontSize:11,color:T.muted,marginTop:8,
+                  textTransform:'uppercase',letterSpacing:'.16em',fontWeight:600}}>
+                  {s.l}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Imagen lateral: foto placeholder + diagrama MRNT pequeño */}
+        <div style={{position:'relative',zIndex:1}}>
+          <div style={{
+            aspectRatio:'4/5',borderRadius:6,overflow:'hidden',
+            background:dark
+              ?`linear-gradient(160deg,#141744,#0a0e2e),repeating-linear-gradient(45deg,rgba(255,208,0,.04) 0,rgba(255,208,0,.04) 2px,transparent 2px,transparent 14px)`
+              :`linear-gradient(160deg,#e6e0d3,#d8cfbd)`,
+            backgroundBlendMode:'overlay',
+            boxShadow:dark?'0 24px 60px rgba(0,0,0,.5)':'0 24px 60px rgba(10,14,46,.18)',
+            position:'relative',
+          }}>
+            {/* striped placeholder */}
+            <div style={{position:'absolute',inset:0,
+              backgroundImage:`repeating-linear-gradient(135deg,${dark?'rgba(255,208,0,.04)':'rgba(10,14,46,.05)'} 0,${dark?'rgba(255,208,0,.04)':'rgba(10,14,46,.05)'} 2px,transparent 2px,transparent 16px)`,
+            }}/>
+            <div style={{position:'absolute',inset:0,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              flexDirection:'column',gap:12}}>
+              <MRNTDiagram size={300} labels={false}/>
+              <div style={{fontFamily:'monospace',fontSize:10,
+                color:dark?'rgba(247,243,235,.4)':'rgba(10,14,46,.4)',
+                letterSpacing:'.12em',textTransform:'uppercase'}}>
+                {/* foto-jovenes-clase.jpg */}
+              </div>
+            </div>
+          </div>
+          {/* Caption */}
+          <div style={{display:'flex',alignItems:'center',gap:14,marginTop:18,
+            color:T.muted,fontSize:12,letterSpacing:'.05em'}}>
+            <div style={{width:32,height:1,background:T.muted}}/>
+            <span style={{textTransform:'uppercase',fontWeight:600}}>
+              El Plan Maranata, en acción
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ═════ STRIP separador ═════ */}
+      <div style={{
+        background:dark?'#0d1239':'#0a0e2e',
+        color:'#f7f3eb',padding:'48px 28px',
+        borderTop:`1px solid ${dark?'rgba(255,208,0,.1)':'transparent'}`,
+      }}>
+        <div style={{maxWidth:1240,margin:'0 auto',
+          display:'flex',alignItems:'center',justifyContent:'space-between',
+          flexWrap:'wrap',gap:24}}>
+          <div style={{display:'flex',alignItems:'baseline',gap:14,flexWrap:'wrap'}}>
+            <span style={{fontFamily:'var(--serif)',fontStyle:'italic',
+              fontWeight:400,fontSize:24,color:'#ffd000'}}>"Maranata"</span>
+            <span style={{fontSize:14,color:'rgba(247,243,235,.7)',letterSpacing:'.02em'}}>
+              — del arameo: <strong style={{color:'#f7f3eb'}}>El Señor viene</strong>
+            </span>
+          </div>
+          <div style={{fontSize:11,color:'rgba(247,243,235,.45)',
+            textTransform:'uppercase',letterSpacing:'.18em',fontWeight:600}}>
+            1 Corintios 16:22
+          </div>
+        </div>
+      </div>
+
+      {/* ═════ SOBRE ═════ */}
+      <section id="sobre" style={{
+        padding:'100px 28px',maxWidth:1240,margin:'0 auto',
+      }}>
+        <div style={{display:'grid',gridTemplateColumns:'.9fr 1.4fr',gap:80,alignItems:'start'}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,letterSpacing:'.22em',
+              textTransform:'uppercase',color:T.muted,marginBottom:18}}>
+              ─── Sobre Maranata Class
+            </div>
+            <h2 style={{fontFamily:'var(--serif)',fontWeight:500,
+              fontSize:'clamp(36px, 4vw, 56px)',lineHeight:1,
+              letterSpacing:'-.02em',color:T.ink,margin:0}}>
+              Una clase de jóvenes que <em style={{fontStyle:'italic',color:'#d4a800'}}>vive</em> lo que estudia.
+            </h2>
+          </div>
+          <div>
+            <p style={{fontSize:18,lineHeight:1.65,color:T.inkSoft,marginBottom:24}}>
+              <strong style={{color:T.ink}}>Maranata Class</strong> es la sala virtual donde los jóvenes adventistas de Las Condes nos reunimos cada sábado para estudiar la Biblia, compartir la vida y crecer juntos en el llamado de Cristo.
+            </p>
+            <p style={{fontSize:16,lineHeight:1.7,color:T.inkSoft,marginBottom:32}}>
+              Cada encuentro está diseñado en torno al <strong style={{color:T.ink}}>Plan Maranata</strong> — un mapa espiritual de cuatro áreas que abarcan toda la vida cristiana: la <strong>Misión</strong>, las <strong>Relaciones</strong>, la <strong>Nutrición</strong> espiritual y el <strong>Templo</strong>.
+            </p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:18}}>
+              {[
+                {n:'01',t:'Confraternizar',d:'Compartir la semana, pedidos de oración y agradecimientos.'},
+                {n:'02',t:'Repasar la Palabra',d:'Estudiar la lección del sábado en comunidad.'},
+                {n:'03',t:'Vivir la misión',d:'Asumir el llamado activo en la iglesia y la ciudad.'},
+                {n:'04',t:'Adorar juntos',d:'Reflejar la unidad de la iglesia en el templo.'},
+              ].map(c=>(
+                <div key={c.n} style={{
+                  borderTop:`1px solid ${T.border}`,paddingTop:18,
+                }}>
+                  <div style={{fontSize:11,fontWeight:700,color:'#d4a800',
+                    letterSpacing:'.12em',marginBottom:8}}>{c.n}</div>
+                  <div style={{fontFamily:'var(--serif)',fontSize:22,fontWeight:500,
+                    color:T.ink,marginBottom:6,letterSpacing:'-.01em'}}>{c.t}</div>
+                  <div style={{fontSize:13,color:T.inkSoft,lineHeight:1.55}}>{c.d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═════ EL PLAN MRNT ═════ */}
+      <section id="mrnt" style={{
+        background:dark?'#0d1239':'#efeae0',
+        padding:'100px 28px',
+        borderTop:`1px solid ${T.border}`,
+        borderBottom:`1px solid ${T.border}`,
+      }}>
+        <div style={{maxWidth:1240,margin:'0 auto',
+          display:'grid',gridTemplateColumns:'1fr 1fr',gap:80,alignItems:'center'}}>
+          <div>
+            <div style={{display:'flex',justifyContent:'center',alignItems:'center',
+              padding:24,position:'relative'}}>
+              {/* Glow detrás */}
+              <div style={{position:'absolute',inset:'10%',
+                background:'radial-gradient(circle,rgba(255,208,0,.2),transparent 70%)',
+                filter:'blur(40px)',pointerEvents:'none'}}/>
+              <div style={{position:'relative',zIndex:1,
+                animation:'drift 8s ease-in-out infinite'}}>
+                <MRNTDiagram size={420}/>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,letterSpacing:'.22em',
+              textTransform:'uppercase',color:T.muted,marginBottom:18}}>
+              ─── El Plan
+            </div>
+            <h2 style={{fontFamily:'var(--serif)',fontWeight:500,
+              fontSize:'clamp(36px, 4vw, 56px)',lineHeight:1,
+              letterSpacing:'-.02em',color:T.ink,margin:'0 0 28px'}}>
+              <em style={{fontStyle:'italic'}}>M</em>aranata · <em style={{fontStyle:'italic'}}>R</em>elación · <em style={{fontStyle:'italic'}}>N</em>utrición · <em style={{fontStyle:'italic'}}>T</em>emplo
+            </h2>
+            <p style={{fontSize:16,lineHeight:1.7,color:T.inkSoft,marginBottom:28}}>
+              Cuatro áreas. Dos dimensiones por área: <strong style={{color:T.ink}}>el yo</strong> y <strong style={{color:T.ink}}>el nosotros</strong>. Un mapa espiritual completo que orienta cada sábado.
+            </p>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {[
+                {l:'M',c:'#3b82f6',t:'Misión',d:'Comprometerse personalmente y crear oportunidades para que los jóvenes asuman un papel activo en la iglesia.'},
+                {l:'R',c:'#eab308',t:'Relación',d:'Cultivar amistades y relaciones de confianza, viviendo en comunidad.'},
+                {l:'N',c:'#fb923c',t:'Nutrición',d:'Profundizar la comprensión de la Biblia y el crecimiento espiritual personal.'},
+                {l:'T',c:'#7c3aed',t:'Templo',d:'Fomentar la adoración colectiva en un contexto intergeneracional que refleje la unidad.'},
+              ].map(it=>(
+                <div key={it.l} style={{display:'flex',gap:18,alignItems:'flex-start'}}>
+                  <div style={{
+                    width:48,height:48,flexShrink:0,
+                    background:it.c,borderRadius:12,
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    color:'white',fontFamily:'var(--display)',fontWeight:900,
+                    fontSize:24,boxShadow:`0 6px 18px ${it.c}55`,
+                  }}>{it.l}</div>
+                  <div style={{paddingTop:4}}>
+                    <div style={{fontFamily:'var(--serif)',fontSize:20,fontWeight:600,
+                      color:T.ink,marginBottom:4,letterSpacing:'-.01em'}}>{it.t}</div>
+                    <div style={{fontSize:14,color:T.inkSoft,lineHeight:1.55}}>{it.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═════ VERSÍCULO ═════ */}
+      <section id="versiculo" style={{
+        padding:'120px 28px',maxWidth:920,margin:'0 auto',textAlign:'center',
+      }}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'.22em',
+          textTransform:'uppercase',color:T.muted,marginBottom:32}}>
+          ─── Versículo de la semana
+        </div>
+        <div style={{fontSize:84,color:'#d4a800',fontFamily:'var(--serif)',
+          lineHeight:0.4,marginBottom:0}}>"</div>
+        <p style={{fontFamily:'var(--serif)',fontStyle:'italic',fontWeight:400,
+          fontSize:'clamp(28px, 3.4vw, 44px)',lineHeight:1.35,
+          letterSpacing:'-.01em',color:T.ink,marginBottom:32}}>
+          Porque donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.
+        </p>
+        <div style={{display:'inline-flex',alignItems:'center',gap:14,
+          color:T.muted,fontSize:13,letterSpacing:'.06em'}}>
+          <div style={{width:32,height:1,background:T.muted}}/>
+          <span style={{textTransform:'uppercase',fontWeight:700}}>Mateo 18:20</span>
+          <div style={{width:32,height:1,background:T.muted}}/>
+        </div>
+      </section>
+
+      {/* ═════ CTA FINAL ═════ */}
+      <section style={{
+        background:dark?'#0a0e2e':'#0a0e2e',
+        color:'#f7f3eb',padding:'80px 28px',position:'relative',overflow:'hidden',
+      }}>
+        {/* Decoración: triángulo amarillo grande */}
+        <div style={{position:'absolute',top:'-20%',right:'-10%',
+          width:600,height:600,opacity:0.15,pointerEvents:'none'}}>
+          <svg width="100%" height="100%" viewBox="0 0 600 600">
+            <polygon points="50,560 580,300 30,40" fill="#ffd000"/>
+          </svg>
+        </div>
+        <div style={{maxWidth:1240,margin:'0 auto',position:'relative',zIndex:1,
+          display:'grid',gridTemplateColumns:'1.3fr 1fr',gap:60,alignItems:'center'}}>
+          <div>
+            <h2 style={{fontFamily:'var(--serif)',fontWeight:500,
+              fontSize:'clamp(36px, 4.2vw, 60px)',lineHeight:1,
+              letterSpacing:'-.02em',margin:'0 0 24px'}}>
+              Te esperamos este <em style={{fontStyle:'italic',color:'#ffd000'}}>sábado</em>.
+            </h2>
+            <p style={{fontSize:17,lineHeight:1.6,color:'rgba(247,243,235,.7)',
+              maxWidth:540,margin:'0 0 32px'}}>
+              Crea tu cuenta en menos de un minuto y forma parte de la comunidad de jóvenes adventistas de Las Condes.
+            </p>
+            <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+              <button onClick={()=>onOpenAuth('register')} style={{
+                background:'#ffd000',color:'#0a0e2e',border:'none',borderRadius:50,
+                padding:'16px 30px',fontSize:15,fontWeight:700,
+                cursor:'pointer',
+              }}>Crear cuenta gratis →</button>
+              <button onClick={()=>onOpenAuth('login')} style={{
+                background:'transparent',color:'#f7f3eb',
+                border:'1.5px solid rgba(247,243,235,.3)',borderRadius:50,
+                padding:'15px 28px',fontSize:15,fontWeight:600,cursor:'pointer',
+              }}>Ya soy parte</button>
+            </div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:11,fontWeight:700,letterSpacing:'.22em',
+              textTransform:'uppercase',color:'rgba(255,208,0,.8)',marginBottom:14}}>
+              Próxima clase
+            </div>
+            <div style={{fontFamily:'var(--serif)',fontSize:48,fontWeight:500,
+              lineHeight:1,letterSpacing:'-.02em',marginBottom:8}}>
+              Sábado<br/>9:00 AM
+            </div>
+            <div style={{fontSize:13,color:'rgba(247,243,235,.5)',
+              letterSpacing:'.04em'}}>
+              Iglesia Adventista · Las Condes
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═════ FOOTER ═════ */}
+      <footer style={{
+        background:dark?'#080b22':'#f1ece2',
+        color:T.muted,padding:'40px 28px',textAlign:'center',
+        borderTop:`1px solid ${T.border}`,
+      }}>
+        <div style={{fontFamily:'var(--display)',fontSize:13,fontWeight:700,
+          letterSpacing:'.18em',textTransform:'uppercase',color:T.ink,marginBottom:6}}>
+          Maranata Class
+        </div>
+        <div style={{fontSize:12,color:T.muted}}>
+          Iglesia Adventista del Séptimo Día · Las Condes, Santiago de Chile
+        </div>
+      </footer>
+
+      {/* ═════ AUTH MODAL ═════ */}
+      {authOpen&&(
+        <AuthModal
+          T={T} dark={dark}
+          authMode={authMode} setAuthMode={setAuthMode}
+          email={email} setEmail={setEmail}
+          password={password} setPassword={setPassword}
+          authError={authError} setAuthError={setAuthError}
+          authLoad={authLoad}
+          resetMode={resetMode} setResetMode={setResetMode}
+          resetSent={resetSent} setResetSent={setResetSent}
+          onEmailAuth={onEmailAuth} onReset={onReset} onGoogle={onGoogle}
+          onClose={onCloseAuth}
+        />
+      )}
+    </div>
+  );
+}
+
+/* Auth modal limpio */
+function AuthModal({T,dark,authMode,setAuthMode,email,setEmail,password,setPassword,
+  authError,setAuthError,authLoad,resetMode,setResetMode,resetSent,setResetSent,
+  onEmailAuth,onReset,onGoogle,onClose}){
+  const inputSt={width:'100%',padding:'14px 16px',borderRadius:10,
+    background:dark?'rgba(255,255,255,.05)':'rgba(10,14,46,.04)',
+    border:`1px solid ${T.border}`,
+    color:T.ink,fontSize:15,fontFamily:'var(--sans)',outline:'none',
+    transition:'border-color .15s'};
+  const labelSt={fontSize:11,fontWeight:600,color:T.muted,
+    textTransform:'uppercase',letterSpacing:'.12em',display:'block',marginBottom:8};
+  const btnPrimary=(dis)=>({
+    width:'100%',padding:14,borderRadius:50,border:'none',
+    background:dis?(dark?'rgba(255,255,255,.1)':'rgba(10,14,46,.2)'):T.ink,
+    color:dis?T.muted:T.bg,fontSize:14,fontWeight:700,
+    cursor:dis?'not-allowed':'pointer',transition:'all .15s',
+    display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+  });
+  return(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{
+      position:'fixed',inset:0,zIndex:200,
+      background:dark?'rgba(5,7,20,.78)':'rgba(10,14,46,.4)',
+      backdropFilter:'blur(8px)',
+      display:'flex',alignItems:'center',justifyContent:'center',
+      padding:20,
+    }}>
+      <div style={{
+        width:'100%',maxWidth:440,
+        background:T.bg,
+        border:`1px solid ${T.border}`,
+        borderRadius:20,padding:'32px 28px',
+        boxShadow:'0 32px 80px rgba(0,0,0,.4)',
+        animation:'modalIn .25s ease',
+        position:'relative',
+      }}>
+        <button onClick={onClose} style={{
+          position:'absolute',top:16,right:16,
+          background:'transparent',border:'none',color:T.muted,
+          fontSize:22,cursor:'pointer',padding:4,lineHeight:1,
+        }}>×</button>
+
+        {/* Logo + título */}
+        <div style={{textAlign:'center',marginBottom:28}}>
+          <svg width="44" height="34" viewBox="0 0 80 60" style={{marginBottom:12}}>
+            <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
+            <g stroke="#0a0e2e" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
+              <path d="M52 42L52 18Q52 15 49 15L40 17L40 42"/>
+              <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
+            </g>
+          </svg>
+          <h2 style={{fontFamily:'var(--serif)',fontWeight:500,
+            fontSize:30,letterSpacing:'-.01em',color:T.ink,margin:'0 0 6px'}}>
+            {resetMode?'Recuperar acceso':authMode==='login'?'Bienvenido':'Crear cuenta'}
+          </h2>
+          <p style={{fontSize:13,color:T.muted,margin:0}}>
+            {resetMode?'Te enviaremos un enlace por correo':'Maranata Class · Las Condes'}
+          </p>
+        </div>
+
+        {!resetMode&&(
+          <div style={{display:'flex',gap:4,
+            background:dark?'rgba(255,255,255,.04)':'rgba(10,14,46,.04)',
+            borderRadius:50,padding:4,marginBottom:24}}>
+            {[{id:'login',l:'Ingresar'},{id:'register',l:'Crear cuenta'}].map(t=>(
+              <button key={t.id} onClick={()=>{setAuthMode(t.id);setAuthError('');}} style={{
+                flex:1,padding:'10px',borderRadius:50,border:'none',
+                background:authMode===t.id?T.ink:'transparent',
+                color:authMode===t.id?T.bg:T.inkSoft,
+                fontSize:13,fontWeight:600,cursor:'pointer',transition:'all .15s',
+              }}>{t.l}</button>
+            ))}
+          </div>
+        )}
+
+        {resetMode&&resetSent?(
+          <div style={{textAlign:'center',padding:'8px 0'}}>
+            <div style={{
+              width:60,height:60,borderRadius:'50%',
+              background:dark?'rgba(16,185,129,.15)':'rgba(16,185,129,.12)',
+              display:'inline-flex',alignItems:'center',justifyContent:'center',
+              fontSize:30,marginBottom:14,
+            }}>✉</div>
+            <div style={{fontFamily:'var(--serif)',fontSize:22,fontWeight:600,
+              color:T.ink,marginBottom:8}}>Correo enviado</div>
+            <div style={{fontSize:13,color:T.inkSoft,lineHeight:1.6,marginBottom:6}}>
+              Revisa tu bandeja de entrada en
+            </div>
+            <div style={{fontWeight:700,color:T.ink,fontSize:14,marginBottom:24,
+              wordBreak:'break-all'}}>{email}</div>
+            <button onClick={()=>{setResetMode(false);setResetSent(false);setAuthError('');}}
+              style={btnPrimary(false)}>Volver</button>
+          </div>
+        ):(
+          <>
+            <div style={{marginBottom:14}}>
+              <label style={labelSt}>Correo electrónico</label>
+              <input type="email" value={email}
+                onChange={e=>{setEmail(e.target.value);setAuthError('');}}
+                onKeyDown={e=>e.key==='Enter'&&(resetMode?onReset():onEmailAuth())}
+                placeholder="tucorreo@gmail.com" style={inputSt}/>
+            </div>
+            {!resetMode&&(
+              <div style={{marginBottom:6}}>
+                <label style={labelSt}>Contraseña</label>
+                <input type="password" value={password}
+                  onChange={e=>{setPassword(e.target.value);setAuthError('');}}
+                  onKeyDown={e=>e.key==='Enter'&&onEmailAuth()}
+                  placeholder="••••••••" style={inputSt}/>
+              </div>
+            )}
+            {authMode==='login'&&!resetMode&&(
+              <div style={{textAlign:'right',marginBottom:authError?8:18}}>
+                <button onClick={()=>{setResetMode(true);setAuthError('');setResetSent(false);}}
+                  style={{background:'none',border:'none',color:T.inkSoft,
+                  fontSize:12,cursor:'pointer',textDecoration:'underline',padding:'4px 0'}}>
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            )}
+            {authError&&(
+              <div style={{
+                background:dark?'rgba(239,68,68,.1)':'rgba(239,68,68,.08)',
+                border:`1px solid ${dark?'rgba(239,68,68,.25)':'rgba(239,68,68,.2)'}`,
+                borderRadius:10,padding:'10px 14px',marginBottom:14,
+                fontSize:12,color:'#dc2626',lineHeight:1.5}}>⚠ {authError}</div>
+            )}
+            <button onClick={resetMode?onReset:onEmailAuth}
+              disabled={authLoad||!email.trim()||(!resetMode&&!password)}
+              style={btnPrimary(authLoad||!email.trim()||(!resetMode&&!password))}>
+              {authLoad?<Spinner size={16} color={T.bg}/>
+                :resetMode?'Enviar enlace →'
+                :authMode==='login'?'Ingresar →':'Crear cuenta →'}
+            </button>
+            {resetMode?(
+              <button onClick={()=>{setResetMode(false);setAuthError('');}} style={{
+                width:'100%',padding:12,marginTop:12,borderRadius:50,border:'none',
+                background:'transparent',color:T.muted,fontSize:13,fontWeight:600,cursor:'pointer',
+              }}>← Volver al inicio</button>
+            ):(
+              <>
+                <div style={{display:'flex',alignItems:'center',gap:12,margin:'20px 0'}}>
+                  <div style={{flex:1,height:1,background:T.border}}/>
+                  <span style={{fontSize:11,color:T.muted,letterSpacing:'.08em',
+                    textTransform:'uppercase',fontWeight:600}}>O</span>
+                  <div style={{flex:1,height:1,background:T.border}}/>
+                </div>
+                <button onClick={onGoogle} disabled={authLoad} style={{
+                  width:'100%',padding:13,borderRadius:50,
+                  border:`1px solid ${T.border}`,
+                  background:dark?'rgba(255,255,255,.04)':'white',
+                  color:T.ink,fontSize:14,fontWeight:600,cursor:'pointer',
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:10,
+                  transition:'all .15s',
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 48 48">
+                    <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.4-4z"/>
+                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+                    <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.6-2.9-11.3-7.1l-6.6 5.1C9.7 39.6 16.3 44 24 44z"/>
+                    <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/>
+                  </svg>
+                  Continuar con Google
+                </button>
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -2721,6 +3619,8 @@ function App(){
   /* ── Vista y auth ── */
   const[view,        setView]        =useState('loading');
   const[authMode,    setAuthMode]    =useState('login');
+  const[landingTheme,setLandingTheme]=useState('light'); // 'light' | 'dark'
+  const[authOpen,    setAuthOpen]    =useState(false);
   const[email,       setEmail]       =useState('');
   const[password,    setPassword]    =useState('');
   const[authError,   setAuthError]   =useState('');
@@ -2772,9 +3672,10 @@ function App(){
 
   /* ── body class ── */
   useEffect(()=>{
+    document.body.classList.remove('in-room','landing','landing-dark');
     if(view==='room'||view==='screen') document.body.classList.add('in-room');
-    else document.body.classList.remove('in-room');
-  },[view]);
+    else if(view==='auth') document.body.classList.add(landingTheme==='dark'?'landing-dark':'landing');
+  },[view,landingTheme]);
 
   /* ── Auth listener ── */
   useEffect(()=>{
@@ -3155,6 +4056,19 @@ function App(){
     await db.ref(`sessions/${SID.current}`).update({phase:'waiting','juegos/active':false});
   };
 
+  const startMision=async(misionUsers=[])=>{
+    try{
+      await db.ref(`sessions/${SID.current}`).set({
+        phase:'mision',
+        mision:{active:true,startTime:Date.now()},
+      });
+    }catch(e){console.error('Error iniciando misión:',e);}
+  };
+
+  const endMision=async()=>{
+    await db.ref(`sessions/${SID.current}`).update({phase:'waiting','mision/active':false});
+  };
+
   const resetSession=async()=>{
     setConfraOpen(false);
     setWordCloudOpen(false);
@@ -3195,163 +4109,38 @@ function App(){
   );
 
   /* ════ AUTH ════ */
-  if(view==='auth') return(
-    <div style={pageWrap}>
-      <BgTriangles/>
-      {/* Logo esquina superior izquierda */}
-      <div style={{position:'fixed',top:14,left:14,zIndex:10,
-        display:'flex',alignItems:'center',gap:9}}>
-        <BookLogo size={34}/>
-        <div style={{lineHeight:1}}>
-          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-            fontSize:14,color:'#ffd000',letterSpacing:'.07em'}}>MARANATA</div>
-          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-            fontSize:9,color:'var(--muted)',letterSpacing:'.14em',
-            textTransform:'uppercase',marginTop:1}}>CLASS</div>
-        </div>
-      </div>
-      <div style={cardStyle}>
-        <div style={{textAlign:'center',marginBottom:22}}>
-          <BookLogo size={70}/>
-          <h1 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-            fontSize:28,color:'#ffd000',letterSpacing:'.05em',
-            textTransform:'uppercase',lineHeight:1,marginTop:8}}>MARANATA CLASS</h1>
-          <p style={{color:'var(--muted)',fontSize:12,marginTop:4}}>Adventista Las Condes</p>
-        </div>
-        <div style={{display:'flex',background:'rgba(255,255,255,.04)',
-          borderRadius:12,padding:4,marginBottom:20,
-          border:'1px solid rgba(255,208,0,.1)'}}>
-          {[{id:'login',l:'Ingresar'},{id:'register',l:'Registrarse'}].map(t=>(
-            <button key={t.id} onClick={()=>{setAuthMode(t.id);setAuthError('');setResetMode(false);setResetSent(false);}} style={{
-              flex:1,padding:'9px 4px',borderRadius:9,border:'none',
-              background:authMode===t.id&&!resetMode?'linear-gradient(135deg,#ffd000,#e6a800)':'transparent',
-              color:authMode===t.id&&!resetMode?'#07091f':'var(--muted)',
-              fontSize:13,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
-              letterSpacing:'.04em',textTransform:'uppercase',transition:'all .2s',
-            }}>{t.l}</button>
-          ))}
-        </div>
-
-        {/* ── MODO RECUPERAR CONTRASEÑA ── */}
-        {resetMode ? (
-          resetSent ? (
-            <div style={{textAlign:'center',padding:'10px 0 8px'}}>
-              <div style={{fontSize:52,marginBottom:12}}>📩</div>
-              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-                fontSize:18,color:'#10b981',textTransform:'uppercase',letterSpacing:'.04em',
-                marginBottom:8}}>¡Correo enviado!</div>
-              <div style={{fontSize:13,color:'var(--white)',lineHeight:1.6,marginBottom:6}}>
-                Revisa tu bandeja de entrada en
-              </div>
-              <div style={{fontWeight:700,color:'#ffd000',fontSize:14,marginBottom:16,
-                wordBreak:'break-all'}}>{email}</div>
-              <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5,marginBottom:20}}>
-                Si no aparece, revisa la carpeta de Spam.
-                El enlace expira en 1 hora.
-              </div>
-              <button onClick={()=>{setResetMode(false);setResetSent(false);setAuthError('');}} style={{
-                background:'linear-gradient(135deg,#ffd000,#e6a800)',
-                border:'none',borderRadius:12,padding:'12px 28px',
-                color:'#07091f',fontWeight:800,fontSize:14,
-                fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
-              }}>Volver al inicio ←</button>
-            </div>
-          ) : (
-            <>
-              <div style={{textAlign:'center',marginBottom:16}}>
-                <div style={{fontSize:36,marginBottom:6}}>🔑</div>
-                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-                  fontSize:17,color:'var(--white)',textTransform:'uppercase',letterSpacing:'.04em'}}>
-                  Recuperar contraseña
-                </div>
-                <div style={{fontSize:12,color:'var(--muted)',marginTop:4,lineHeight:1.5}}>
-                  Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.
-                </div>
-              </div>
-              <div style={{marginBottom:authError?10:18}}>
-                <label style={labelStyle}>Correo electrónico</label>
-                <input type="email" value={email}
-                  onChange={e=>{setEmail(e.target.value);setAuthError('');}}
-                  onKeyDown={e=>e.key==='Enter'&&handleReset()}
-                  placeholder="tucorreo@gmail.com" style={inputStyle}/>
-              </div>
-              {authError&&(
-                <div style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',
-                  borderRadius:8,padding:'10px 12px',marginBottom:14,
-                  fontSize:12,color:'#fca5a5',lineHeight:1.5}}>⚠️ {authError}</div>
-              )}
-              <button onClick={handleReset} disabled={authLoad||!email.trim()}
-                style={btnYellow(authLoad||!email.trim())}>
-                {authLoad?<Spinner size={18} color="#07091f"/>:'Enviar correo de recuperación →'}
-              </button>
-              <button onClick={()=>{setResetMode(false);setAuthError('');}} style={{
-                width:'100%',padding:'10px',marginTop:10,borderRadius:12,border:'none',
-                background:'none',color:'var(--muted)',fontSize:13,
-                fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-              }}>← Volver</button>
-            </>
-          )
-        ) : (
-          /* ── MODO NORMAL (login / registro) ── */
-          <>
-            <div style={{marginBottom:12}}>
-              <label style={labelStyle}>Correo electrónico</label>
-              <input type="email" value={email}
-                onChange={e=>{setEmail(e.target.value);setAuthError('');}}
-                onKeyDown={e=>e.key==='Enter'&&handleEmailAuth()}
-                placeholder="tucorreo@gmail.com" style={inputStyle}/>
-            </div>
-            <div style={{marginBottom:4}}>
-              <label style={labelStyle}>Contraseña</label>
-              <input type="password" value={password}
-                onChange={e=>{setPassword(e.target.value);setAuthError('');}}
-                onKeyDown={e=>e.key==='Enter'&&handleEmailAuth()}
-                placeholder="••••••••" style={inputStyle}/>
-            </div>
-            {/* Link olvidé contraseña — solo en login */}
-            {authMode==='login'&&(
-              <div style={{textAlign:'right',marginBottom:authError?10:16}}>
-                <button onClick={()=>{setResetMode(true);setAuthError('');setResetSent(false);}} style={{
-                  background:'none',border:'none',color:'rgba(255,208,0,.6)',
-                  fontSize:11,cursor:'pointer',fontFamily:'Barlow,sans-serif',
-                  textDecoration:'underline',padding:'2px 0',
-                }}>¿Olvidaste tu contraseña?</button>
-              </div>
-            )}
-            {authError&&(
-              <div style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',
-                borderRadius:8,padding:'10px 12px',marginBottom:14,
-                fontSize:12,color:'#fca5a5',lineHeight:1.5}}>⚠️ {authError}</div>
-            )}
-            <button onClick={handleEmailAuth} disabled={authLoad||!email.trim()||!password}
-              style={btnYellow(authLoad||!email.trim()||!password)}>
-              {authLoad?<Spinner size={18} color="#07091f"/>
-                :authMode==='login'?'Ingresar →':'Crear cuenta →'}
-            </button>
-            <div style={{display:'flex',alignItems:'center',gap:10,margin:'16px 0'}}>
-              <div style={{flex:1,height:1,background:'rgba(255,208,0,.1)'}}/>
-              <span style={{fontSize:11,color:'var(--muted)'}}>o continúa con</span>
-              <div style={{flex:1,height:1,background:'rgba(255,208,0,.1)'}}/>
-            </div>
-            <button onClick={handleGoogle} disabled={authLoad} style={{
-              width:'100%',padding:12,borderRadius:12,border:'none',
-              background:'white',color:'#111',fontSize:14,fontWeight:600,
-              display:'flex',alignItems:'center',justifyContent:'center',gap:10,
-              boxShadow:'0 2px 14px rgba(0,0,0,.4)',fontFamily:'Barlow,sans-serif',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 48 48">
-                <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.4-4z"/>
-                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
-                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.6-2.9-11.3-7.1l-6.6 5.1C9.7 39.6 16.3 44 24 44z"/>
-                <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/>
-              </svg>
-              Continuar con Google
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
+  if(view==='auth'){
+    const dark=landingTheme==='dark';
+    const T={
+      bg:        dark?'#0a0e2e':'#f8f5ef',
+      bgAlt:     dark?'#0d1239':'#efeae0',
+      ink:       dark?'#f7f3eb':'#0a0e2e',
+      inkSoft:   dark?'rgba(247,243,235,.7)':'rgba(10,14,46,.7)',
+      muted:     dark?'rgba(247,243,235,.45)':'rgba(10,14,46,.45)',
+      border:    dark?'rgba(247,243,235,.12)':'rgba(10,14,46,.12)',
+      cardBg:    dark?'rgba(255,255,255,.03)':'rgba(255,255,255,.6)',
+      accent:    '#ffd000',
+      accentInk: '#0a0e2e',
+    };
+    return(
+      <LandingPage
+        T={T} dark={dark}
+        onToggleTheme={()=>setLandingTheme(d=>d==='dark'?'light':'dark')}
+        onOpenAuth={(mode)=>{setAuthMode(mode);setAuthError('');setResetMode(false);setResetSent(false);setAuthOpen(true);}}
+        authOpen={authOpen} onCloseAuth={()=>setAuthOpen(false)}
+        authMode={authMode} setAuthMode={setAuthMode}
+        email={email} setEmail={setEmail}
+        password={password} setPassword={setPassword}
+        authError={authError} setAuthError={setAuthError}
+        authLoad={authLoad}
+        resetMode={resetMode} setResetMode={setResetMode}
+        resetSent={resetSent} setResetSent={setResetSent}
+        onEmailAuth={handleEmailAuth}
+        onReset={handleReset}
+        onGoogle={handleGoogle}
+      />
+    );
+  }
 
   /* ════ SETUP ════ */
   if(view==='setup') return(
@@ -3449,89 +4238,158 @@ function App(){
   );
 
   /* ════ ROOM ════ */
+  const iconBtn={
+    background:'rgba(247,243,235,.04)',
+    border:'1px solid rgba(247,243,235,.1)',
+    borderRadius:50,width:36,height:36,
+    display:'flex',alignItems:'center',justifyContent:'center',
+    color:'#f7f3eb',cursor:'pointer',transition:'all .15s',
+  };
   return(
     <div style={{position:'fixed',inset:0,display:'flex',flexDirection:'column',
-      background:'var(--navy)'}}>
+      background:'#0a0e2e',fontFamily:'var(--sans)'}}>
 
-      {/* ── HEADER ── */}
-      <div style={{
-        background:'linear-gradient(135deg,#0d1035,#0a0c28)',
-        borderBottom:'1px solid rgba(255,208,0,.12)',
-        padding:'8px 12px',
-        display:'flex',alignItems:'center',
-        justifyContent:'space-between',flexShrink:0,
-        minHeight:52,
+      {/* ── HEADER editorial ── */}
+      <header style={{
+        background:'rgba(8,11,34,.92)',
+        backdropFilter:'blur(14px)',
+        borderBottom:'1px solid rgba(247,243,235,.08)',
+        padding:'14px 24px',
+        display:'flex',alignItems:'center',justifyContent:'space-between',
+        flexShrink:0,minHeight:64,
       }}>
-        {/* Logo */}
-        <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <svg width="26" height="19" viewBox="0 0 80 60">
-            <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
-            <g stroke="#07091f" strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
-              <path d="M52 42L52 18Q52 15 49 15L40 17L40 42"/>
-              <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
-            </g>
-          </svg>
-          <div>
-            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-              fontSize:14,color:'#ffd000',letterSpacing:'.05em',
-              textTransform:'uppercase',lineHeight:1}}>
-              MARANATA CLASS
+        {/* IZQ — Logo + estado */}
+        <div style={{display:'flex',alignItems:'center',gap:18}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <svg width="32" height="24" viewBox="0 0 80 60">
+              <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
+              <g stroke="#0a0e2e" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
+                <path d="M52 42L52 18Q52 15 49 15L40 17L40 42"/>
+                <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
+              </g>
+            </svg>
+            <div style={{lineHeight:1}}>
+              <div style={{fontFamily:'var(--display)',fontWeight:900,fontSize:15,
+                color:'#f7f3eb',letterSpacing:'.04em'}}>MARANATA</div>
+              <div style={{fontFamily:'var(--display)',fontWeight:600,fontSize:9,
+                color:'rgba(247,243,235,.45)',letterSpacing:'.22em',marginTop:2}}>
+                CLASS · LAS CONDES
+              </div>
             </div>
-            <div style={{fontSize:9,color:'var(--muted)'}}>
-              {usersArr.length} en sala
-              {phase!=='waiting'&&<span style={{
-                marginLeft:6,color:ZONES[phase]?.color||'#ffd000',
-                fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-              }}>
-                · {ZONES[phase]?.icon} {ZONES[phase]?.label}
-              </span>}
+          </div>
+
+          {/* Divisor + estado de sala */}
+          <div style={{height:32,width:1,background:'rgba(247,243,235,.1)'}}/>
+          <div style={{display:'flex',alignItems:'center',gap:14}}>
+            <div>
+              <div style={{fontSize:10,color:'rgba(247,243,235,.4)',
+                textTransform:'uppercase',letterSpacing:'.16em',fontWeight:600,marginBottom:3}}>
+                En sala
+              </div>
+              <div style={{fontFamily:'var(--serif)',fontSize:22,fontWeight:500,
+                color:'#f7f3eb',lineHeight:1,letterSpacing:'-.01em'}}>
+                {usersArr.length}
+              </div>
             </div>
+            {phase!=='waiting'&&ZONES[phase]&&(
+              <>
+                <div style={{height:32,width:1,background:'rgba(247,243,235,.1)'}}/>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{
+                    width:28,height:28,borderRadius:7,
+                    background:ZONES[phase].color,
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    color:'white',fontFamily:'var(--display)',fontWeight:900,fontSize:16,
+                    boxShadow:`0 4px 14px ${ZONES[phase].color}66`,
+                  }}>{ZONES[phase].letter}</div>
+                  <div style={{lineHeight:1}}>
+                    <div style={{fontSize:9,color:'rgba(247,243,235,.4)',
+                      textTransform:'uppercase',letterSpacing:'.16em',fontWeight:600,marginBottom:3}}>
+                      En curso
+                    </div>
+                    <div style={{fontFamily:'var(--serif)',fontStyle:'italic',
+                      fontSize:18,fontWeight:500,color:'#f7f3eb',
+                      letterSpacing:'-.01em'}}>
+                      {ZONES[phase].label}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Botones header */}
-        <div style={{display:'flex',gap:5,alignItems:'center'}}>
-          {/* Avatar + editar */}
+        {/* DER — Acciones */}
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
           <button onClick={()=>setEditOpen(true)} title="Editar perfil" style={{
-            display:'flex',alignItems:'center',gap:5,
-            background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
-            borderRadius:20,padding:'4px 8px',
+            display:'flex',alignItems:'center',gap:8,
+            background:'rgba(247,243,235,.04)',
+            border:'1px solid rgba(247,243,235,.1)',
+            borderRadius:50,padding:'5px 14px 5px 5px',
+            color:'#f7f3eb',transition:'all .15s',cursor:'pointer',
           }}>
-            <AvatarBubble profile={profile} size={26}/>
-            <span style={{fontSize:9,color:'#ffd000',fontFamily:'Barlow Condensed,sans-serif',
-              fontWeight:700,maxWidth:55,overflow:'hidden',textOverflow:'ellipsis',
-              whiteSpace:'nowrap'}}>
+            <AvatarBubble profile={profile} size={28}/>
+            <span style={{fontSize:13,fontWeight:600,maxWidth:90,overflow:'hidden',
+              textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
               {profile.name||'Yo'}
             </span>
-            <span style={{fontSize:10}}>✏️</span>
           </button>
 
-          {/* Asistencia */}
-          <button onClick={()=>setAttOpen(true)} title="Mi asistencia" style={{
-            background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
-            borderRadius:20,width:34,height:34,
-            display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
-          }}>📊</button>
+          <button onClick={()=>setAttOpen(true)} title="Mi asistencia" style={iconBtn}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
+            </svg>
+          </button>
 
-          {/* Proyectar */}
-          <button onClick={()=>setView('screen')} title="Proyectar" style={{
-            background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.15)',
-            borderRadius:20,width:34,height:34,
-            display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
-          }}>📺</button>
+          <button onClick={()=>setView('screen')} title="Proyectar a la pantalla grande" style={iconBtn}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </button>
 
-          {/* Cerrar sesión */}
+          <div style={{width:1,height:24,background:'rgba(247,243,235,.1)',margin:'0 4px'}}/>
+
           <button onClick={handleSignOut} title="Cerrar sesión" style={{
-            background:'rgba(239,68,68,.07)',border:'1px solid rgba(239,68,68,.15)',
-            borderRadius:20,width:34,height:34,
-            display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
-          }}>↩</button>
+            ...iconBtn,
+            color:'rgba(247,243,235,.5)',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* ── SALA (canvas con zonas) ── */}
-      <div style={{flex:1,position:'relative',overflow:'hidden'}}>
+      {/* ── Sub-header: hint contextual ── */}
+      {phase==='waiting'&&(
+        <div style={{
+          background:'linear-gradient(90deg,rgba(255,208,0,.06),rgba(255,208,0,.02))',
+          borderBottom:'1px solid rgba(255,208,0,.12)',
+          padding:'10px 24px',
+          display:'flex',alignItems:'center',gap:14,flexShrink:0,
+        }}>
+          <span style={{fontFamily:'var(--display)',fontSize:10,fontWeight:700,
+            letterSpacing:'.22em',textTransform:'uppercase',
+            color:'#ffd000',
+            background:'rgba(255,208,0,.1)',padding:'4px 10px',borderRadius:50,
+            border:'1px solid rgba(255,208,0,.25)',
+          }}>
+            ● En espera
+          </span>
+          <span style={{fontFamily:'var(--serif)',fontStyle:'italic',
+            fontSize:15,color:'rgba(247,243,235,.7)',letterSpacing:'-.01em'}}>
+            Arrastra tu avatar a la zona donde quieras participar.
+          </span>
+        </div>
+      )}
+
+      {/* ── SALA (canvas con zonas — 16:9 con letterbox) ── */}
+      <div style={{flex:1,position:'relative',overflow:'hidden',
+        background:'#0a0e2e',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{width:'100%',aspectRatio:'16/9',maxHeight:'100%',
+          maxWidth:'calc((100vh - 56px) * 16/9)',position:'relative',
+          boxShadow:'0 8px 32px rgba(0,0,0,.18)'}}>
         <RoomCanvas
           users={users} myId={UID.current} session={session}
           onDragMove={handleDragMove}
@@ -3541,21 +4399,23 @@ function App(){
         {/* Repaso: botón flotante — solo para usuarios en zona repaso */}
         {phase==='repaso'&&!repasoChatOpen&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
           <button onClick={()=>setRepasoChatOpen(true)} style={{
-            position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',
-            background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-            border:'none',borderRadius:24,padding:'10px 22px',
-            color:'white',fontWeight:800,fontSize:13,
-            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',
-            display:'flex',alignItems:'center',gap:8,zIndex:20,
-            boxShadow:'0 4px 20px rgba(59,130,246,.5)',
+            position:'absolute',bottom:20,left:'50%',transform:'translateX(-50%)',
+            background:'#fb923c',
+            border:'none',borderRadius:50,padding:'12px 26px',
+            color:'#0a0e2e',fontWeight:700,fontSize:14,
+            fontFamily:'var(--sans)',letterSpacing:'-.01em',
+            display:'flex',alignItems:'center',gap:10,zIndex:20,cursor:'pointer',
+            boxShadow:'0 8px 28px rgba(251,146,60,.4)',
           }}>
-            <span style={{fontSize:16}}>💬</span> Abrir Chat del Repaso
+            Abrir Chat del Repaso
+            <span style={{fontSize:16}}>→</span>
             {msgs.length>0&&(
-              <span style={{background:'rgba(255,255,255,.25)',borderRadius:20,
-                padding:'1px 7px',fontSize:11}}>{msgs.length}</span>
+              <span style={{background:'rgba(10,14,46,.18)',borderRadius:50,
+                padding:'2px 9px',fontSize:11,fontWeight:700}}>{msgs.length}</span>
             )}
           </button>
         )}
+        </div>
       </div>
 
       {/* Confraternización — solo para usuarios en zona confra (o admin o si están en la cola) */}
@@ -3600,6 +4460,8 @@ function App(){
           onEndRepaso={endRepaso}
           onStartJuegos={startJuegos}
           onEndJuegos={endJuegos}
+          onStartMision={startMision}
+          onEndMision={endMision}
           onOpenStats={()=>setAdminStats(true)}
           onToggleWordCloud={toggleWordCloud}
           onResetSession={resetSession}
