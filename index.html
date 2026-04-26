@@ -349,26 +349,24 @@ const BookLogo=({size=60})=>(
   </svg>
 );
 
-/* Logo completo: triángulo amarillo + libro + texto */
+/* Logo completo: triángulo amarillo + libro + texto — fondo blanco */
 const MaranataLogo=({size=240})=>{
   const w=size, h=Math.round(size*0.73);
   return(
     <svg width={w} height={h} viewBox="0 0 400 292" xmlns="http://www.w3.org/2000/svg">
+      {/* Fondo blanco con bordes redondeados */}
+      <rect x="0" y="0" width="400" height="292" rx="22" ry="22" fill="white"/>
       {/* Triángulo amarillo */}
-      <polygon points="0,268 398,118 0,58" fill="#ffd000" opacity=".88"/>
-      {/* Segunda sombra del triángulo para dar volumen */}
-      <polygon points="0,268 398,118 180,180" fill="#e6a800" opacity=".25"/>
-      {/* Libro - centrado arriba */}
-      <g transform="translate(200,57)" stroke="white" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        {/* Página izquierda */}
+      <polygon points="0,268 398,118 0,58" fill="#FFD000"/>
+      {/* Segunda capa para volumen */}
+      <polygon points="0,268 398,118 160,185" fill="#E6A800" opacity=".3"/>
+      {/* Libro - centrado arriba, color navy */}
+      <g transform="translate(200,57)" stroke="#2B3070" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M-44,4 Q-44,-7 -40,-10 L-2,1 L-2,54 Q-22,48 -44,54 Z"/>
-        {/* Página derecha */}
         <path d="M44,4 Q44,-7 40,-10 L2,1 L2,54 Q22,48 44,54 Z"/>
-        {/* Líneas página izquierda */}
         <line x1="-37" y1="18" x2="-10" y2="16"/>
         <line x1="-37" y1="30" x2="-10" y2="28"/>
         <line x1="-37" y1="42" x2="-10" y2="40"/>
-        {/* Líneas página derecha */}
         <line x1="10" y1="16" x2="37" y2="18"/>
         <line x1="10" y1="28" x2="37" y2="30"/>
         <line x1="10" y1="40" x2="37" y2="42"/>
@@ -376,11 +374,11 @@ const MaranataLogo=({size=240})=>{
       {/* MARANATA */}
       <text x="200" y="174" textAnchor="middle"
         fontFamily="'Barlow Condensed',sans-serif" fontWeight="900" fontSize="74"
-        fill="white" letterSpacing="-1">MARANATA</text>
+        fill="#2B3070" letterSpacing="-1">MARANATA</text>
       {/* class */}
       <text x="200" y="236" textAnchor="middle"
         fontFamily="'Barlow Condensed',sans-serif" fontWeight="600" fontSize="52"
-        fill="white" letterSpacing="10">class</text>
+        fill="#2B3070" letterSpacing="10">class</text>
     </svg>
   );
 };
