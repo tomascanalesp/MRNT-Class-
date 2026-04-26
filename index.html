@@ -349,6 +349,42 @@ const BookLogo=({size=60})=>(
   </svg>
 );
 
+/* Logo completo: triángulo amarillo + libro + texto */
+const MaranataLogo=({size=240})=>{
+  const w=size, h=Math.round(size*0.73);
+  return(
+    <svg width={w} height={h} viewBox="0 0 400 292" xmlns="http://www.w3.org/2000/svg">
+      {/* Triángulo amarillo */}
+      <polygon points="0,268 398,118 0,58" fill="#ffd000" opacity=".88"/>
+      {/* Segunda sombra del triángulo para dar volumen */}
+      <polygon points="0,268 398,118 180,180" fill="#e6a800" opacity=".25"/>
+      {/* Libro - centrado arriba */}
+      <g transform="translate(200,57)" stroke="white" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* Página izquierda */}
+        <path d="M-44,4 Q-44,-7 -40,-10 L-2,1 L-2,54 Q-22,48 -44,54 Z"/>
+        {/* Página derecha */}
+        <path d="M44,4 Q44,-7 40,-10 L2,1 L2,54 Q22,48 44,54 Z"/>
+        {/* Líneas página izquierda */}
+        <line x1="-37" y1="18" x2="-10" y2="16"/>
+        <line x1="-37" y1="30" x2="-10" y2="28"/>
+        <line x1="-37" y1="42" x2="-10" y2="40"/>
+        {/* Líneas página derecha */}
+        <line x1="10" y1="16" x2="37" y2="18"/>
+        <line x1="10" y1="28" x2="37" y2="30"/>
+        <line x1="10" y1="40" x2="37" y2="42"/>
+      </g>
+      {/* MARANATA */}
+      <text x="200" y="174" textAnchor="middle"
+        fontFamily="'Barlow Condensed',sans-serif" fontWeight="900" fontSize="74"
+        fill="white" letterSpacing="-1">MARANATA</text>
+      {/* class */}
+      <text x="200" y="236" textAnchor="middle"
+        fontFamily="'Barlow Condensed',sans-serif" fontWeight="600" fontSize="52"
+        fill="white" letterSpacing="10">class</text>
+    </svg>
+  );
+};
+
 const Spinner=({size=20,color='#ffd000'})=>(
   <div style={{width:size,height:size,borderRadius:'50%',flexShrink:0,
     border:`${Math.max(2,size/10)}px solid ${color}22`,
@@ -3147,17 +3183,15 @@ function App(){
   /* ════ LOADING ════ */
   if(view==='loading') return(
     <div style={{height:'100vh',display:'flex',flexDirection:'column',
-      alignItems:'center',justifyContent:'center',gap:20,
+      alignItems:'center',justifyContent:'center',
       background:'var(--navy)',position:'relative',overflow:'hidden'}}>
       <BgTriangles/>
-      <div style={{position:'relative',zIndex:1,textAlign:'center'}}>
-        <BookLogo size={80}/>
-        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-          fontSize:26,color:'#ffd000',letterSpacing:'.08em',marginTop:10}}>MARANATA CLASS</div>
-        <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>Las Condes</div>
-        <div style={{marginTop:20,display:'flex',justifyContent:'center'}}>
-          <Spinner size={32}/>
-        </div>
+      <div style={{position:'relative',zIndex:1,textAlign:'center',
+        display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+        <MaranataLogo size={260}/>
+        <div style={{fontSize:11,color:'var(--muted)',letterSpacing:'.12em',
+          textTransform:'uppercase',marginTop:-8}}>Las Condes</div>
+        <Spinner size={28}/>
       </div>
     </div>
   );
@@ -3166,6 +3200,18 @@ function App(){
   if(view==='auth') return(
     <div style={pageWrap}>
       <BgTriangles/>
+      {/* Logo esquina superior izquierda */}
+      <div style={{position:'fixed',top:14,left:14,zIndex:10,
+        display:'flex',alignItems:'center',gap:9}}>
+        <BookLogo size={34}/>
+        <div style={{lineHeight:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:14,color:'#ffd000',letterSpacing:'.07em'}}>MARANATA</div>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+            fontSize:9,color:'var(--muted)',letterSpacing:'.14em',
+            textTransform:'uppercase',marginTop:1}}>CLASS</div>
+        </div>
+      </div>
       <div style={cardStyle}>
         <div style={{textAlign:'center',marginBottom:22}}>
           <BookLogo size={70}/>
