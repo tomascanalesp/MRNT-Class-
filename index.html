@@ -23,7 +23,7 @@
       --white:#f0f2ff;
       --muted:#4a4f7a;--muted2:#2a2f5a;
       /* Landing claro */
-      --cream:#f8f5ef;--cream2:#efeae0;--ink:#0a0e2e;--ink-soft:#3b3f5a;
+      --cream:#ede4ce;--cream2:#e3d9bf;--ink:#0a0e2e;--ink-soft:#3b3f5a;
       /* MRNT sectores */
       --m1:#3b82f6;--m2:#1d4ed8;
       --r1:#ffd000;--r2:#f59e0b;
@@ -140,7 +140,7 @@ const ZONES={
             x1:50, x2:75,  y1:14, y2:57},
   // N — Nutrición / Juegos: mitad inferior de la columna 3 (misma letra que Repaso)
   juegos:  {label:'Juegos',            letter:'N', mrnt:'Nutrición', color:'#f97316', colorDark:'#c2410c', bg:'rgba(249,115,22,.10)', icon:'🎮',
-            cardX:50,   cardY:57, cardW:23,   cardH:41,
+            cardX:50,   cardY:56, cardW:23,   cardH:42,
             x1:50, x2:75,  y1:57, y2:100},
   // T — Templo: columna 4
   templo:  {label:'Templo',            letter:'T', mrnt:'Templo',    color:'#7c3aed', colorDark:'#5b21b6', bg:'rgba(124,58,237,.10)', icon:'⛪',
@@ -658,17 +658,26 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
     const z=ZONES[key];
     const isActive=phase===key;
     const isEntrada=key==='entrada';
+    const isRepaso=key==='repaso';
+    const isJuegos=key==='juegos';
     // Tinte transparente del color de la zona
     const tint=isEntrada
       ? (isActive?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)')
       : (isActive?z.bg.replace('.10','.22'):z.bg.replace('.10','.13'));
+    const borderW=isActive?3:2;
+    const borderColor=isEntrada?'#0a0e2e':z.color;
+    // Repaso y Juegos comparten una columna unificada con un divisor naranja leve
+    const borderRadius=isRepaso?'14px 14px 0 0':isJuegos?'0 0 14px 14px':14;
     return{
       position:'absolute',
       left:`${z.cardX}%`,top:`${z.cardY}%`,
       width:`${z.cardW}%`,height:`${z.cardH}%`,
       background:tint,
-      border:`${isActive?3:2}px solid ${isEntrada?'#0a0e2e':z.color}`,
-      borderRadius:14,
+      borderTop:isJuegos?'1px solid rgba(251,146,60,.35)':`${borderW}px solid ${borderColor}`,
+      borderBottom:isRepaso?'1px solid rgba(251,146,60,.35)':`${borderW}px solid ${borderColor}`,
+      borderLeft:`${borderW}px solid ${borderColor}`,
+      borderRight:`${borderW}px solid ${borderColor}`,
+      borderRadius,
       overflow:'hidden',
       transition:'all .3s',
       boxShadow:isActive
@@ -688,9 +697,9 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       onTouchMove={handleDragMove} onTouchEnd={handleDragEnd}
       style={{
         width:'100%',height:'100%',position:'relative',overflow:'hidden',
-        background:'#f8f5ef',touchAction:'none',userSelect:'none',
+        background:'#ede4ce',touchAction:'none',userSelect:'none',
         backgroundImage:`
-          radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.55),transparent 70%),
+          radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.4),transparent 70%),
           radial-gradient(circle at 12% 88%,rgba(59,130,246,.05),transparent 50%),
           radial-gradient(circle at 88% 12%,rgba(234,179,8,.06),transparent 50%)
         `,
@@ -731,20 +740,24 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
                 )}
               </div>
             ):(<>
-              {/* Letra MRNT prominente */}
-              <div style={{
-                fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-                fontSize:letterSize,lineHeight:1,
-                color:z.color,textAlign:'center',
-                textShadow:`0 3px 14px ${z.color}33`,
-                marginTop:full?4:2,
-              }}>{z.letter}</div>
-              {/* MRNT label */}
-              <div style={{
-                fontSize:full?10:7,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                color:z.colorDark,textTransform:'uppercase',letterSpacing:'.2em',
-                textAlign:'center',marginTop:full?6:3,
-              }}>{z.mrnt}</div>
+              {/* Letra MRNT prominente — oculta en Juegos (comparte la "N" con Repaso) */}
+              {key!=='juegos'&&(
+                <div style={{
+                  fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                  fontSize:letterSize,lineHeight:1,
+                  color:z.color,textAlign:'center',
+                  textShadow:`0 3px 14px ${z.color}33`,
+                  marginTop:full?4:2,
+                }}>{z.letter}</div>
+              )}
+              {/* MRNT label — oculto en Juegos (sub-sección bajo Nutrición) */}
+              {key!=='juegos'&&(
+                <div style={{
+                  fontSize:full?10:7,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                  color:z.colorDark,textTransform:'uppercase',letterSpacing:'.2em',
+                  textAlign:'center',marginTop:full?6:3,
+                }}>{z.mrnt}</div>
+              )}
               {/* Sala name */}
               <div style={{
                 fontSize:full?14:9,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
