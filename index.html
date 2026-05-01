@@ -4649,9 +4649,27 @@ function App(){
       )}
 
 
-      {/* Kahoot Game */}
-      {phase==='juegos'&&(
+      {/* Kahoot — solo si NO hay otro juego activo */}
+      {phase==='juegos'&&!session?.tabu?.active&&!session?.quiensoy?.active&&(
         <KahootController
+          session={session} users={users}
+          myId={UID.current} isAdmin={isAdmin}
+          SID={SID.current}
+          onClose={()=>setKahootOpen(false)}
+        />
+      )}
+      {/* Tabú Bíblico */}
+      {phase==='juegos'&&session?.tabu?.active&&(
+        <TabuController
+          session={session} users={users}
+          myId={UID.current} isAdmin={isAdmin}
+          SID={SID.current}
+          onClose={()=>setKahootOpen(false)}
+        />
+      )}
+      {/* ¿Quién soy? */}
+      {phase==='juegos'&&session?.quiensoy?.active&&(
+        <QuienSoyController
           session={session} users={users}
           myId={UID.current} isAdmin={isAdmin}
           SID={SID.current}
@@ -4702,6 +4720,161 @@ function App(){
     </div>
   );
 }
+
+
+/* ═══ DATOS BÍBLICOS ═══ */
+
+const TABU_CARDS = [
+  { tipo:'Personaje', nombre:'Adán', prohibidas:['Eva','jardín','costilla','manzana','primer hombre','Edén'] },
+  { tipo:'Personaje', nombre:'Eva', prohibidas:['Adán','serpiente','fruto','costilla','primera mujer','Edén'] },
+  { tipo:'Personaje', nombre:'Noé', prohibidas:['arca','diluvio','animales','paloma','arcoíris','lluvia'] },
+  { tipo:'Personaje', nombre:'Abraham', prohibidas:['Isaac','sacrificio','padre','fe','Sara','descendencia'] },
+  { tipo:'Personaje', nombre:'Sara', prohibidas:['Abraham','Isaac','vieja','risa','estéril','anciana'] },
+  { tipo:'Personaje', nombre:'Isaac', prohibidas:['Abraham','sacrificio','altar','Rebeca','Jacob','monte'] },
+  { tipo:'Personaje', nombre:'Jacob', prohibidas:['Esaú','escalera','ángel','lentejas','12 tribus','Israel'] },
+  { tipo:'Personaje', nombre:'José', prohibidas:['túnica','sueños','Egipto','hermanos','pozo','faraón'] },
+  { tipo:'Personaje', nombre:'Moisés', prohibidas:['Egipto','Mar Rojo','mandamientos','vara','zarza','faraón'] },
+  { tipo:'Personaje', nombre:'Aarón', prohibidas:['Moisés','sumo sacerdote','vara','becerro','hermano','Sinaí'] },
+  { tipo:'Personaje', nombre:'Josué', prohibidas:['Jericó','muralla','trompetas','tierra prometida','Moisés','sol'] },
+  { tipo:'Personaje', nombre:'Sansón', prohibidas:['fuerza','cabello','Dalila','filisteos','columnas','león'] },
+  { tipo:'Personaje', nombre:'Dalila', prohibidas:['Sansón','cabello','traición','filisteos','tijeras','dormido'] },
+  { tipo:'Personaje', nombre:'Rut', prohibidas:['Noemí','Booz','moabita','espigas','viuda','suegra'] },
+  { tipo:'Personaje', nombre:'David', prohibidas:['Goliat','rey','Saúl','arpa','salmos','honda'] },
+  { tipo:'Personaje', nombre:'Goliat', prohibidas:['David','gigante','filisteo','piedra','honda','Israel'] },
+  { tipo:'Personaje', nombre:'Salomón', prohibidas:['sabiduría','templo','rey','David','Proverbios','reina'] },
+  { tipo:'Personaje', nombre:'Elías', prohibidas:['carro de fuego','Baal','altar','profeta','cuervos','Jezabel'] },
+  { tipo:'Personaje', nombre:'Eliseo', prohibidas:['Elías','manto','milagros','profeta','Naamán','osos'] },
+  { tipo:'Personaje', nombre:'Daniel', prohibidas:['leones','foso','Babilonia','sueños','Nabucodonosor','oración'] },
+  { tipo:'Personaje', nombre:'Jonás', prohibidas:['ballena','pez','Nínive','tormenta','barco','huida'] },
+  { tipo:'Personaje', nombre:'Job', prohibidas:['paciencia','sufrimiento','pruebas','llagas','riqueza','Satanás'] },
+  { tipo:'Personaje', nombre:'Ester', prohibidas:['reina','Asuero','Mardoqueo','judíos','Persia','banquete'] },
+  { tipo:'Personaje', nombre:'Caín', prohibidas:['Abel','hermano','asesinato','primer','ofrenda','tierra'] },
+  { tipo:'Personaje', nombre:'Abel', prohibidas:['Caín','hermano','muerto','pastor','ofrenda','sangre'] },
+  { tipo:'Personaje', nombre:'Rebeca', prohibidas:['Isaac','pozo','camellos','Jacob','Esaú','agua'] },
+  { tipo:'Personaje', nombre:'Débora', prohibidas:['jueza','profetisa','Barac','palmera','canción','batalla'] },
+  { tipo:'Personaje', nombre:'Juan el Bautista', prohibidas:['bautismo','Jordán','desierto','langostas','miel','Jesús'] },
+  { tipo:'Personaje', nombre:'María (madre de Jesús)', prohibidas:['Jesús','Nazaret','virgen','ángel','pesebre','José'] },
+  { tipo:'Personaje', nombre:'José (esposo de María)', prohibidas:['María','Jesús','carpintero','Belén','sueño','Nazaret'] },
+  { tipo:'Personaje', nombre:'Pedro', prohibidas:['pescador','negar','gallo','llaves','Roca','Jesús'] },
+  { tipo:'Personaje', nombre:'Pablo', prohibidas:['Damasco','cartas','apóstol','Saulo','gentiles','conversión'] },
+  { tipo:'Personaje', nombre:'Judas Iscariote', prohibidas:['traición','30 monedas','beso','suicidio','plata','discípulo'] },
+  { tipo:'Personaje', nombre:'Tomás', prohibidas:['dudar','heridas','dedos','resurrección','creer','discípulo'] },
+  { tipo:'Personaje', nombre:'Mateo', prohibidas:['cobrador','impuestos','evangelio','publicano','discípulo','dinero'] },
+  { tipo:'Personaje', nombre:'María Magdalena', prohibidas:['demonios','tumba','resurrección','jardinero','llorar','Jesús'] },
+  { tipo:'Personaje', nombre:'Lázaro', prohibidas:['resucitado','muerto','tumba','Marta','María','cuatro días'] },
+  { tipo:'Personaje', nombre:'Zaqueo', prohibidas:['árbol','bajito','publicano','Jericó','sicómoro','impuestos'] },
+  { tipo:'Personaje', nombre:'Nicodemo', prohibidas:['noche','nacer de nuevo','fariseo','Jesús','espíritu','viento'] },
+  { tipo:'Personaje', nombre:'Esteban', prohibidas:['mártir','apedreado','primer','diácono','cielo','perdón'] },
+  { tipo:'Historia', nombre:'El Arca de Noé', prohibidas:['diluvio','animales','lluvia','paloma','barco','arcoíris'] },
+  { tipo:'Historia', nombre:'La Torre de Babel', prohibidas:['idiomas','confusión','torre','cielo','lenguas','construcción'] },
+  { tipo:'Historia', nombre:'Sodoma y Gomorra', prohibidas:['Lot','sal','fuego','destrucción','ángeles','esposa'] },
+  { tipo:'Historia', nombre:'El Sacrificio de Isaac', prohibidas:['Abraham','altar','cuchillo','carnero','monte','obediencia'] },
+  { tipo:'Historia', nombre:'La Zarza Ardiente', prohibidas:['Moisés','fuego','arbusto','sandalias','Dios','santo'] },
+  { tipo:'Historia', nombre:'Las Diez Plagas', prohibidas:['Egipto','Moisés','faraón','primogénitos','sangre','ranas'] },
+  { tipo:'Historia', nombre:'Cruce del Mar Rojo', prohibidas:['Moisés','Egipto','agua','Israel','vara','seco'] },
+  { tipo:'Historia', nombre:'Los Diez Mandamientos', prohibidas:['Moisés','Sinaí','tablas','piedra','ley','Dios'] },
+  { tipo:'Historia', nombre:'La Caída de Jericó', prohibidas:['muralla','Josué','trompetas','siete días','vueltas','Rahab'] },
+  { tipo:'Historia', nombre:'David y Goliat', prohibidas:['gigante','honda','piedra','filisteo','pastor','frente'] },
+  { tipo:'Historia', nombre:'Daniel en el Foso', prohibidas:['leones','Daniel','rey','oración','Babilonia','noche'] },
+  { tipo:'Historia', nombre:'Jonás y el Gran Pez', prohibidas:['ballena','pez','Nínive','tormenta','tres días','huida'] },
+  { tipo:'Historia', nombre:'El Nacimiento de Jesús', prohibidas:['Belén','pesebre','María','establo','estrella','pastores'] },
+  { tipo:'Historia', nombre:'Las Bodas de Caná', prohibidas:['agua','vino','milagro','María','tinajas','boda'] },
+  { tipo:'Historia', nombre:'La Multiplicación de los Panes', prohibidas:['cinco mil','panes','peces','niño','cestas','Jesús'] },
+  { tipo:'Historia', nombre:'Jesús camina sobre el agua', prohibidas:['Pedro','mar','tormenta','barca','hundir','fe'] },
+  { tipo:'Historia', nombre:'La Última Cena', prohibidas:['pan','vino','discípulos','traición','Pascua','cuerpo'] },
+  { tipo:'Historia', nombre:'La Crucifixión', prohibidas:['cruz','clavos','Calvario','Gólgota','espinas','muerte'] },
+  { tipo:'Historia', nombre:'La Resurrección', prohibidas:['tumba','tercer día','piedra','ángeles','vacía','María'] },
+  { tipo:'Historia', nombre:'Pentecostés', prohibidas:['Espíritu Santo','lenguas','fuego','apóstoles','viento','Pedro'] },
+  { tipo:'Historia', nombre:'Camino a Emaús', prohibidas:['discípulos','Jesús','pan','reconocer','camino','resurrección'] },
+  { tipo:'Lugar', nombre:'Jardín del Edén', prohibidas:['Adán','Eva','árbol','serpiente','paraíso','manzana'] },
+  { tipo:'Lugar', nombre:'Belén', prohibidas:['Jesús','pesebre','nacimiento','David','estrella','establo'] },
+  { tipo:'Lugar', nombre:'Nazaret', prohibidas:['Jesús','María','infancia','carpintero','Galilea','niño'] },
+  { tipo:'Lugar', nombre:'Jerusalén', prohibidas:['templo','David','capital','santa','muro','Israel'] },
+  { tipo:'Lugar', nombre:'Monte Sinaí', prohibidas:['Moisés','tablas','mandamientos','Dios','nube','ley'] },
+  { tipo:'Lugar', nombre:'Río Jordán', prohibidas:['bautismo','Juan','Jesús','agua','cruzar','Israel'] },
+  { tipo:'Lugar', nombre:'Mar de Galilea', prohibidas:['Jesús','pesca','Pedro','tormenta','discípulos','agua'] },
+  { tipo:'Lugar', nombre:'Getsemaní', prohibidas:['huerto','oración','Judas','traición','olivos','Jesús'] },
+  { tipo:'Lugar', nombre:'Gólgota', prohibidas:['cruz','crucifixión','calavera','Jesús','muerte','clavos'] },
+  { tipo:'Lugar', nombre:'Babilonia', prohibidas:['Daniel','Nabucodonosor','exilio','torre','cautiverio','rey'] },
+  { tipo:'Lugar', nombre:'Egipto', prohibidas:['faraón','Moisés','plagas','pirámides','esclavos','Nilo'] },
+  { tipo:'Lugar', nombre:'Nínive', prohibidas:['Jonás','arrepentimiento','asiria','ciudad','40 días','pez'] },
+];
+
+const QUIEN_SOY_PERSONAJES = [
+  { nombre:'Adán', testamento:'AT', genero:'M', pistas:['primer hombre','Edén','esposo de Eva','formado del polvo','le pusieron nombre a los animales'] },
+  { nombre:'Eva', testamento:'AT', genero:'F', pistas:['primera mujer','Edén','esposa de Adán','formada de costilla','tentada por la serpiente'] },
+  { nombre:'Caín', testamento:'AT', genero:'M', pistas:['hijo de Adán','agricultor','mató a su hermano','marca en la frente','primer asesino'] },
+  { nombre:'Abel', testamento:'AT', genero:'M', pistas:['hijo de Adán','pastor','asesinado por su hermano','ofrenda agradable a Dios','primer mártir'] },
+  { nombre:'Noé', testamento:'AT', genero:'M', pistas:['construyó el arca','sobrevivió al diluvio','justo en su generación','familia de 8','arcoíris como pacto'] },
+  { nombre:'Abraham', testamento:'AT', genero:'M', pistas:['padre de la fe','dejó Ur','padre de Isaac','prometido descendencia como las estrellas','amigo de Dios'] },
+  { nombre:'Sara', testamento:'AT', genero:'F', pistas:['esposa de Abraham','tuvo hijo en su vejez','rió al oír la promesa','madre de Isaac','de gran belleza'] },
+  { nombre:'Isaac', testamento:'AT', genero:'M', pistas:['hijo de Abraham','casi sacrificado','esposo de Rebeca','padre de Jacob y Esaú','su nombre significa risa'] },
+  { nombre:'Rebeca', testamento:'AT', genero:'F', pistas:['esposa de Isaac','dio agua a los camellos','madre de gemelos','favoreció a Jacob','la encontró un siervo'] },
+  { nombre:'Jacob', testamento:'AT', genero:'M', pistas:['gemelo de Esaú','vio una escalera al cielo','luchó con un ángel','padre de 12 hijos','Dios le cambió el nombre a Israel'] },
+  { nombre:'Esaú', testamento:'AT', genero:'M', pistas:['gemelo de Jacob','peludo','vendió la primogenitura','cazador','padre de los edomitas'] },
+  { nombre:'José (hijo de Jacob)', testamento:'AT', genero:'M', pistas:['túnica de colores','interpretó sueños','vendido por hermanos','gobernador de Egipto','perdonó a sus hermanos'] },
+  { nombre:'Moisés', testamento:'AT', genero:'M', pistas:['salvado en el Nilo','vio la zarza ardiente','sacó al pueblo de Egipto','recibió los 10 mandamientos','tartamudeaba'] },
+  { nombre:'Aarón', testamento:'AT', genero:'M', pistas:['hermano de Moisés','primer sumo sacerdote','su vara floreció','hizo el becerro de oro','vocero de Moisés'] },
+  { nombre:'María (hermana de Moisés)', testamento:'AT', genero:'F', pistas:['profetisa','cuidó a su hermano en el río','dirigió un canto de victoria','castigada con lepra','tocó pandero'] },
+  { nombre:'Josué', testamento:'AT', genero:'M', pistas:['sucesor de Moisés','conquistó Jericó','el sol se detuvo','espía valiente','dijo: yo y mi casa serviremos al Señor'] },
+  { nombre:'Caleb', testamento:'AT', genero:'M', pistas:['uno de los 12 espías','fiel a Dios','recibió Hebrón','tribu de Judá','entró a la tierra prometida'] },
+  { nombre:'Rahab', testamento:'AT', genero:'F', pistas:['mujer de Jericó','escondió a los espías','cordón rojo','antepasada de Jesús','prostituta convertida'] },
+  { nombre:'Débora', testamento:'AT', genero:'F', pistas:['jueza','profetisa','juzgaba bajo una palmera','cantó una victoria','ayudó a Barac'] },
+  { nombre:'Gedeón', testamento:'AT', genero:'M', pistas:['juez','venció con 300 hombres','vellón de lana','antorchas y trompetas','derrotó a Madián'] },
+  { nombre:'Sansón', testamento:'AT', genero:'M', pistas:['nazareo','fuerza en el cabello','mató un león','traicionado por Dalila','derribó un templo'] },
+  { nombre:'Dalila', testamento:'AT', genero:'F', pistas:['mujer filistea','traicionó a su amado','recibió plata','cortó el cabello','vivió en Sorec'] },
+  { nombre:'Rut', testamento:'AT', genero:'F', pistas:['moabita','viuda fiel a su suegra','espigaba en los campos','antepasada de David','se casó con Booz'] },
+  { nombre:'Booz', testamento:'AT', genero:'M', pistas:['rico de Belén','pariente cercano','pariente redentor','se casó con una moabita','antepasado de David'] },
+  { nombre:'Samuel', testamento:'AT', genero:'M', pistas:['último juez','dedicado a Dios desde niño','ungió a Saúl y a David','oyó la voz de Dios en el templo','hijo de Ana'] },
+  { nombre:'Ana (madre de Samuel)', testamento:'AT', genero:'F', pistas:['oró silenciosamente','consideraron borracha','dedicó su hijo a Dios','estéril por años','cantó un cántico'] },
+  { nombre:'Saúl', testamento:'AT', genero:'M', pistas:['primer rey de Israel','de la tribu de Benjamín','muy alto','perseguía a David','consultó una bruja'] },
+  { nombre:'David', testamento:'AT', genero:'M', pistas:['pastor','venció a un gigante','tocaba arpa','escribió Salmos','rey conforme al corazón de Dios'] },
+  { nombre:'Jonatán', testamento:'AT', genero:'M', pistas:['hijo de Saúl','mejor amigo de David','arquero','le dio su manto a David','murió en batalla'] },
+  { nombre:'Salomón', testamento:'AT', genero:'M', pistas:['hijo de David','el más sabio','construyó el templo','escribió Proverbios','tuvo muchas esposas'] },
+  { nombre:'Elías', testamento:'AT', genero:'M', pistas:['profeta','alimentado por cuervos','desafió a los profetas de Baal','subió en un carro de fuego','huyó de Jezabel'] },
+  { nombre:'Eliseo', testamento:'AT', genero:'M', pistas:['discípulo de Elías','recibió doble porción','sanó a un leproso','multiplicó aceite','su manto'] },
+  { nombre:'Jezabel', testamento:'AT', genero:'F', pistas:['reina malvada','adoraba a Baal','esposa de Acab','perseguía a los profetas','murió devorada por perros'] },
+  { nombre:'Acab', testamento:'AT', genero:'M', pistas:['rey malvado de Israel','esposo de Jezabel','adoró a Baal','quitó la viña de Nabot','murió en batalla'] },
+  { nombre:'Daniel', testamento:'AT', genero:'M', pistas:['cautivo en Babilonia','interpretó sueños','foso de los leones','no comió del banquete del rey','vio visiones del fin'] },
+  { nombre:'Sadrac, Mesac y Abed-nego', testamento:'AT', genero:'M', pistas:['amigos de Daniel','horno de fuego','no se inclinaron a la estatua','un cuarto en el horno','salieron sin oler a humo'] },
+  { nombre:'Nabucodonosor', testamento:'AT', genero:'M', pistas:['rey de Babilonia','soñó una estatua','vivió como animal','construyó una imagen de oro','reconoció al Dios verdadero'] },
+  { nombre:'Ester', testamento:'AT', genero:'F', pistas:['reina judía','esposa del rey persa','arriesgó su vida','salvó a su pueblo','su nombre significa estrella'] },
+  { nombre:'Mardoqueo', testamento:'AT', genero:'M', pistas:['primo de Ester','no se inclinó ante Amán','salvó al rey','desfiló en el caballo real','sentado a la puerta del rey'] },
+  { nombre:'Nehemías', testamento:'AT', genero:'M', pistas:['copero del rey','reconstruyó los muros','de Jerusalén','oró antes de hablar','volvió del exilio'] },
+  { nombre:'Esdras', testamento:'AT', genero:'M', pistas:['sacerdote escriba','enseñó la ley','volvió del exilio','leyó la ley al pueblo','reformador espiritual'] },
+  { nombre:'Job', testamento:'AT', genero:'M', pistas:['perdió todo','llagas en el cuerpo','tres amigos','restaurado al doble','famoso por su paciencia'] },
+  { nombre:'Jonás', testamento:'AT', genero:'M', pistas:['profeta','huyó de Dios','tragado por un gran pez','predicó en Nínive','se enojó por la calabacera'] },
+  { nombre:'Isaías', testamento:'AT', genero:'M', pistas:['profeta','vio al Señor en su trono','profetizó al Mesías','carbón encendido','siervo sufriente'] },
+  { nombre:'Jeremías', testamento:'AT', genero:'M', pistas:['profeta llorón','llamado desde joven','escribió Lamentaciones','encarcelado en una cisterna','anunció la caída de Jerusalén'] },
+  { nombre:'Ezequiel', testamento:'AT', genero:'M', pistas:['profeta del exilio','vio ruedas','valle de huesos secos','visión del templo','sacerdote'] },
+  { nombre:'María (madre de Jesús)', testamento:'NT', genero:'F', pistas:['virgen','visitada por un ángel','prima de Elisabet','dio a luz en un establo','estuvo al pie de la cruz'] },
+  { nombre:'José (esposo de María)', testamento:'NT', genero:'M', pistas:['carpintero','de la casa de David','padre adoptivo de Jesús','huyó a Egipto','recibió mensajes en sueños'] },
+  { nombre:'Juan el Bautista', testamento:'NT', genero:'M', pistas:['vestía piel de camello','comía langostas y miel','primo de Jesús','bautizaba en el Jordán','degollado por Herodes'] },
+  { nombre:'Jesús', testamento:'NT', genero:'M', pistas:['nacido en Belén','hizo milagros','murió en una cruz','resucitó al tercer día','Hijo de Dios'] },
+  { nombre:'Pedro', testamento:'NT', genero:'M', pistas:['pescador','negó a Jesús tres veces','caminó sobre el agua','recibió las llaves','antes se llamaba Simón'] },
+  { nombre:'Andrés', testamento:'NT', genero:'M', pistas:['hermano de Pedro','pescador','primer discípulo','llevó a Pedro a Jesús','presentó al niño con los panes'] },
+  { nombre:'Santiago (hijo de Zebedeo)', testamento:'NT', genero:'M', pistas:['hermano de Juan','hijo del trueno','pescador','primer apóstol martirizado','vio la transfiguración'] },
+  { nombre:'Juan (apóstol)', testamento:'NT', genero:'M', pistas:['discípulo amado','escribió un evangelio','recibió a María','vio el Apocalipsis','exiliado en Patmos'] },
+  { nombre:'Mateo', testamento:'NT', genero:'M', pistas:['cobrador de impuestos','dejó todo al ser llamado','escribió un evangelio','también llamado Leví','hizo un banquete a Jesús'] },
+  { nombre:'Tomás', testamento:'NT', genero:'M', pistas:['también llamado Dídimo','dudó de la resurrección','quiso ver las heridas','dijo Señor mío y Dios mío','tradicionalmente predicó en India'] },
+  { nombre:'Judas Iscariote', testamento:'NT', genero:'M', pistas:['traidor','tesorero del grupo','30 piezas de plata','beso en Getsemaní','se ahorcó'] },
+  { nombre:'María Magdalena', testamento:'NT', genero:'F', pistas:['liberada de siete demonios','siguió a Jesús','primera en ver al resucitado','en el sepulcro','de Magdala'] },
+  { nombre:'Marta', testamento:'NT', genero:'F', pistas:['hermana de Lázaro','afanada con el servicio','de Betania','recibió a Jesús','confesó a Jesús como Cristo'] },
+  { nombre:'María de Betania', testamento:'NT', genero:'F', pistas:['hermana de Marta','ungió los pies de Jesús','con perfume costoso','escuchaba a sus pies','lloró por Lázaro'] },
+  { nombre:'Lázaro', testamento:'NT', genero:'M', pistas:['hermano de Marta','resucitado','muerto cuatro días','de Betania','Jesús lloró por él'] },
+  { nombre:'Zaqueo', testamento:'NT', genero:'M', pistas:['de baja estatura','rico','jefe de publicanos','subió a un sicómoro','devolvió cuatro veces lo robado'] },
+  { nombre:'Nicodemo', testamento:'NT', genero:'M', pistas:['fariseo','principal de los judíos','vino de noche','le dijeron debes nacer de nuevo','ayudó a sepultar a Jesús'] },
+  { nombre:'Pilato', testamento:'NT', genero:'M', pistas:['gobernador romano','se lavó las manos','interrogó a Jesús','escribió INRI','su esposa tuvo un sueño'] },
+  { nombre:'Herodes el Grande', testamento:'NT', genero:'M', pistas:['rey cuando nació Jesús','recibió a los magos','mató a los niños de Belén','ambicioso','construyó el templo'] },
+  { nombre:'Pablo', testamento:'NT', genero:'M', pistas:['antes perseguía cristianos','cayó camino a Damasco','escribió cartas','ciudadano romano','apóstol a los gentiles'] },
+  { nombre:'Bernabé', testamento:'NT', genero:'M', pistas:['hijo de consolación','vendió un campo','compañero de Pablo','primo de Marcos','animaba a la iglesia'] },
+  { nombre:'Lucas', testamento:'NT', genero:'M', pistas:['médico','escribió un evangelio','escribió Hechos','compañero de Pablo','gentil'] },
+  { nombre:'Esteban', testamento:'NT', genero:'M', pistas:['primer mártir cristiano','diácono','vio el cielo abierto','apedreado','perdonó a sus asesinos'] },
+  { nombre:'Felipe (evangelista)', testamento:'NT', genero:'M', pistas:['diácono','evangelizó Samaria','bautizó al etíope','arrebatado por el Espíritu','tenía cuatro hijas profetisas'] },
+  { nombre:'Cornelio', testamento:'NT', genero:'M', pistas:['centurión romano','temeroso de Dios','tuvo una visión','mandó llamar a Pedro','primer gentil convertido'] },
+  { nombre:'Lidia', testamento:'NT', genero:'F', pistas:['vendedora de púrpura','de Tiatira','primera convertida en Europa','hospedó a Pablo','adoraba a Dios'] },
+  { nombre:'Timoteo', testamento:'NT', genero:'M', pistas:['hijo espiritual de Pablo','madre judía y padre griego','pastor en Éfeso','recibió dos cartas','enseñado por su abuela Loida'] },
+];
 
 
 /* ════════════════════════ KAHOOT: COLORES / TIMER / BIBLIOTECA ════════════════════════ */
@@ -5094,7 +5267,7 @@ function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose,myId,SID}){
   );
 }
 
-function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onCancel}){
+function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onStartTabu,onStartQuienSoy,onCancel}){
   return(
     <div style={{position:'fixed',inset:0,zIndex:250,
       background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',
@@ -5134,6 +5307,24 @@ function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onCancel}){
           <span style={{fontSize:20,color:'#ffd000',opacity:.6}}>›</span>
         </button>
       ))}
+      <button onClick={onStartTabu} style={{width:'100%',maxWidth:380,background:'linear-gradient(135deg,rgba(255,208,0,.18),rgba(239,68,68,.08))',border:'1px solid rgba(255,208,0,.35)',borderRadius:20,padding:'16px 20px',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',gap:16,boxShadow:'0 0 24px rgba(255,208,0,.1)'}}>
+        <span style={{fontSize:38,flexShrink:0}}>🤐</span>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>Tabú Bíblico</div>
+          <div style={{fontFamily:'Barlow,sans-serif',fontSize:13,color:'var(--white)',marginTop:3,lineHeight:1.4}}>Describe sin usar las palabras prohibidas</div>
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:5,display:'flex',gap:10}}><span>👥 Por turnos</span><span>⏱ 3 min</span></div>
+        </div>
+        <span style={{fontSize:20,color:'#ffd000',opacity:.6}}>›</span>
+      </button>
+      <button onClick={onStartQuienSoy} style={{width:'100%',maxWidth:380,background:'linear-gradient(135deg,rgba(34,211,238,.18),rgba(34,211,238,.04))',border:'1px solid rgba(34,211,238,.35)',borderRadius:20,padding:'16px 20px',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',gap:16,boxShadow:'0 0 24px rgba(34,211,238,.1)'}}>
+        <span style={{fontSize:38,flexShrink:0}}>❓</span>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:20,color:'#22d3ee',textTransform:'uppercase',letterSpacing:'.05em'}}>¿Quién soy?</div>
+          <div style={{fontFamily:'Barlow,sans-serif',fontSize:13,color:'var(--white)',marginTop:3,lineHeight:1.4}}>Adivina con preguntas de sí o no</div>
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:5,display:'flex',gap:10}}><span>👥 Por turnos</span><span>🤔 Sin tiempo</span></div>
+        </div>
+        <span style={{fontSize:20,color:'#22d3ee',opacity:.6}}>›</span>
+      </button>
       <button onClick={onCreateNew}
         style={{width:'100%',maxWidth:380,
           background:'rgba(139,92,246,.1)',border:'1px solid rgba(139,92,246,.25)',
@@ -5375,6 +5566,12 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
           });
         }}
         onCreateNew={()=>setShowSetup(true)}
+        onStartTabu={async()=>{
+          await db.ref(`sessions/${SID}/tabu`).set({active:true,gameState:'idle',scores:{}});
+        }}
+        onStartQuienSoy={async()=>{
+          await db.ref(`sessions/${SID}/quiensoy`).set({active:true,gameState:'idle',scores:{}});
+        }}
         onCancel={()=>{ if(onClose) onClose(); }}
       />
     );
@@ -5495,6 +5692,390 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
   return null;
 }
 
+
+
+/* ═══ TABÚ BÍBLICO ═══ */
+function TabuController({session,users,myId,isAdmin,SID,onClose}){
+  const game=session?.tabu;
+  const gState=game?.gameState;
+  const [timeLeft,setTimeLeft]=useState(180);
+  const [showCard,setShowCard]=useState(false);
+  const timerRef=useRef(null);
+
+  const juegosUsers=Object.entries(users||{})
+    .filter(([_,u])=>u.zone==='juegos')
+    .map(([uid,u])=>({uid,...u}));
+
+  const currentSpeakerId=game?.currentSpeaker;
+  const currentSpeaker=currentSpeakerId?users[currentSpeakerId]:null;
+  const isSpeaker=currentSpeakerId===myId;
+  const currentCard=game?.currentCard;
+  const scores=game?.scores||{};
+
+  useEffect(()=>{
+    if(gState!=='playing'||!game?.roundStartTime){setTimeLeft(180);return;}
+    const tick=()=>{
+      const elapsed=Math.floor((Date.now()-game.roundStartTime)/1000);
+      const left=Math.max(0,180-elapsed);
+      setTimeLeft(left);
+      if(left===0&&isAdmin){
+        db.ref(`sessions/${SID}/tabu`).update({gameState:'idle',currentSpeaker:null,currentCard:null,roundStartTime:null});
+      }
+    };
+    tick();
+    timerRef.current=setInterval(tick,500);
+    return()=>clearInterval(timerRef.current);
+  },[gState,game?.roundStartTime,isAdmin,SID]);
+
+  useEffect(()=>{setShowCard(false);},[currentSpeakerId]);
+
+  const seleccionarRandom=async()=>{
+    if(juegosUsers.length===0) return;
+    const random=juegosUsers[Math.floor(Math.random()*juegosUsers.length)];
+    const card=TABU_CARDS[Math.floor(Math.random()*TABU_CARDS.length)];
+    await db.ref(`sessions/${SID}/tabu`).update({
+      active:true,gameState:'playing',currentSpeaker:random.uid,
+      currentCard:card,roundStartTime:Date.now()
+    });
+  };
+  const seleccionarManual=async(uid)=>{
+    const card=TABU_CARDS[Math.floor(Math.random()*TABU_CARDS.length)];
+    await db.ref(`sessions/${SID}/tabu`).update({
+      active:true,gameState:'playing',currentSpeaker:uid,
+      currentCard:card,roundStartTime:Date.now()
+    });
+  };
+  const otraCarta=async()=>{
+    const card=TABU_CARDS[Math.floor(Math.random()*TABU_CARDS.length)];
+    await db.ref(`sessions/${SID}/tabu`).update({currentCard:card,roundStartTime:Date.now()});
+  };
+  const adivinador=async(uid)=>{
+    const newScores={...scores};
+    newScores[uid]=(newScores[uid]||0)+10;
+    if(currentSpeakerId) newScores[currentSpeakerId]=(newScores[currentSpeakerId]||0)+5;
+    await db.ref(`sessions/${SID}/tabu`).update({
+      scores:newScores,gameState:'idle',currentSpeaker:null,currentCard:null,roundStartTime:null
+    });
+  };
+  const skipTurn=async()=>{
+    await db.ref(`sessions/${SID}/tabu`).update({
+      gameState:'idle',currentSpeaker:null,currentCard:null,roundStartTime:null
+    });
+  };
+  const finalizar=async()=>{await db.ref(`sessions/${SID}/tabu`).update({gameState:'finished'});};
+  const cerrar=async()=>{
+    await db.ref(`sessions/${SID}/tabu`).remove();
+    await db.ref(`sessions/${SID}`).update({phase:'waiting'});
+    if(onClose) onClose();
+  };
+
+  const myZone=users[myId]?.zone;
+  if(myZone!=='juegos'&&!isAdmin) return null;
+
+  if(gState==='finished'){
+    const ranking=Object.entries(scores)
+      .map(([uid,pts])=>({uid,pts,user:users[uid]}))
+      .filter(x=>x.user).sort((a,b)=>b.pts-a.pts);
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,gap:14,overflowY:'auto'}}>
+        <Confetti/>
+        <div style={{fontSize:54}}>🏆</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:30,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.06em',margin:0,textAlign:'center'}}>¡Tabú Bíblico — Resultados!</h2>
+        <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8,marginTop:8}}>
+          {ranking.map((r,i)=>(
+            <div key={r.uid} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:14,background:i===0?'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))':'rgba(255,255,255,.05)',border:i===0?'2px solid #ffd000':'1px solid rgba(255,255,255,.08)'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:24,color:i===0?'#ffd000':'#fff',width:36,textAlign:'center'}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`}</div>
+              <AvatarBubble profile={r.user} size={40}/>
+              <div style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:18,color:'#fff'}}>{r.user.name}</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:22,color:'#ffd000'}}>{r.pts} pts</div>
+            </div>
+          ))}
+        </div>
+        {isAdmin&&(<button onClick={cerrar} style={{marginTop:14,background:'#ffd000',border:'none',borderRadius:14,padding:'14px 32px',color:'#07091f',fontWeight:900,fontSize:14,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer'}}>Cerrar juego</button>)}
+      </div>
+    );
+  }
+
+  if(gState==='playing'&&currentCard&&currentSpeaker){
+    const timeColor=timeLeft<30?'#ef4444':timeLeft<60?'#f97316':'#ffd000';
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',padding:'20px 16px',gap:14,overflowY:'auto'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginTop:8}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:54,color:timeColor,lineHeight:1}}>{Math.floor(timeLeft/60)}:{String(timeLeft%60).padStart(2,'0')}</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10,background:'rgba(255,255,255,.06)',padding:'10px 16px',borderRadius:30,border:'1px solid rgba(255,208,0,.2)'}}>
+          <AvatarBubble profile={currentSpeaker} size={36}/>
+          <div>
+            <div style={{fontSize:11,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em'}}>Describe</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:18,color:'#fff'}}>{currentSpeaker.name}</div>
+          </div>
+        </div>
+        {(isSpeaker||isAdmin)?(
+          showCard||isSpeaker?(
+            <div style={{width:'100%',maxWidth:380,background:'linear-gradient(135deg,#fff,#f8f5ef)',borderRadius:24,padding:'20px 22px',boxShadow:'0 20px 60px rgba(0,0,0,.5)',border:'4px solid #ffd000'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'#a16207',textTransform:'uppercase',letterSpacing:'.18em',marginBottom:6}}>{currentCard.tipo}</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:32,color:'#07091f',textTransform:'uppercase',letterSpacing:'.02em',lineHeight:1.05,marginBottom:14}}>{currentCard.nombre}</div>
+              <div style={{height:2,background:'#ef4444',marginBottom:12,borderRadius:1}}/>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'#ef4444',textTransform:'uppercase',letterSpacing:'.15em',marginBottom:10}}>⛔ No puedes decir</div>
+              <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                {currentCard.prohibidas.map((p,i)=>(
+                  <div key={i} style={{background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.25)',borderRadius:8,padding:'8px 12px',fontFamily:'Barlow,sans-serif',fontWeight:600,fontSize:16,color:'#7f1d1d'}}>{p}</div>
+                ))}
+              </div>
+            </div>
+          ):(
+            <button onClick={()=>setShowCard(true)} style={{width:'100%',maxWidth:380,padding:'40px 20px',background:'rgba(255,208,0,.1)',border:'2px dashed #ffd000',borderRadius:24,color:'#ffd000',fontSize:16,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer'}}>👁 Mostrar carta (admin)</button>
+          )
+        ):(
+          <div style={{width:'100%',maxWidth:380,padding:'40px 24px',background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.1)',borderRadius:24,textAlign:'center'}}>
+            <div style={{fontSize:54,marginBottom:14}}>🤐</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:22,color:'#fff',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:8}}>¡A adivinar!</div>
+            <div style={{fontFamily:'Barlow,sans-serif',fontSize:14,color:'var(--muted)',lineHeight:1.5}}>Escucha la descripción y grita lo que crees que es. El admin marcará al ganador.</div>
+          </div>
+        )}
+        {isAdmin&&(
+          <div style={{width:'100%',maxWidth:380,display:'flex',flexDirection:'column',gap:8,marginTop:8}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.15em',marginBottom:4}}>¿Quién adivinó?</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              {juegosUsers.filter(u=>u.uid!==currentSpeakerId).map(u=>(
+                <button key={u.uid} onClick={()=>adivinador(u.uid)} style={{display:'flex',alignItems:'center',gap:8,background:'rgba(34,197,94,.12)',border:'1px solid rgba(34,197,94,.3)',borderRadius:10,padding:'8px 10px',cursor:'pointer',color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,textAlign:'left'}}>
+                  <AvatarBubble profile={u} size={26}/>
+                  <span style={{flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:6,marginTop:6}}>
+              <button onClick={otraCarta} style={{flex:1,background:'rgba(139,92,246,.18)',border:'1px solid rgba(139,92,246,.4)',borderRadius:10,padding:'10px',color:'#c4b5fd',fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>🔄 Otra carta</button>
+              <button onClick={skipTurn} style={{flex:1,background:'rgba(239,68,68,.15)',border:'1px solid rgba(239,68,68,.35)',borderRadius:10,padding:'10px',color:'#fca5a5',fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>⏭ Saltar turno</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const ranking=Object.entries(scores).map(([uid,pts])=>({uid,pts,user:users[uid]})).filter(x=>x.user).sort((a,b)=>b.pts-a.pts);
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',padding:'20px 16px',gap:14,overflowY:'auto'}}>
+      <div style={{textAlign:'center',marginTop:8}}>
+        <div style={{fontSize:42,marginBottom:6}}>🤐</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:26,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.06em',margin:0}}>Tabú Bíblico</h2>
+        <p style={{color:'var(--muted)',fontSize:13,marginTop:6,maxWidth:340}}>Describe el personaje, lugar o historia <strong>sin usar</strong> las palabras prohibidas. Tienes 3 minutos.</p>
+      </div>
+      {ranking.length>0&&(
+        <div style={{width:'100%',maxWidth:380,background:'rgba(255,208,0,.06)',border:'1px solid rgba(255,208,0,.2)',borderRadius:14,padding:'10px 14px'}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.15em',marginBottom:8}}>📊 Puntaje actual</div>
+          {ranking.slice(0,5).map((r,i)=>(
+            <div key={r.uid} style={{display:'flex',alignItems:'center',gap:8,padding:'4px 0',borderBottom:i<Math.min(4,ranking.length-1)?'1px solid rgba(255,255,255,.05)':'none'}}>
+              <span style={{width:20,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:13,color:'var(--muted)'}}>#{i+1}</span>
+              <AvatarBubble profile={r.user} size={24}/>
+              <span style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,color:'#fff'}}>{r.user.name}</span>
+              <span style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,color:'#ffd000'}}>{r.pts}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {isAdmin?(
+        <div style={{width:'100%',maxWidth:380,display:'flex',flexDirection:'column',gap:10}}>
+          <button onClick={seleccionarRandom} disabled={juegosUsers.length===0} style={{padding:'14px 20px',background:juegosUsers.length===0?'rgba(255,208,0,.2)':'#ffd000',border:'none',borderRadius:14,color:'#07091f',fontWeight:900,fontSize:14,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',cursor:juegosUsers.length===0?'not-allowed':'pointer',opacity:juegosUsers.length===0?.5:1}}>🎲 Elegir al azar</button>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.15em',marginTop:4}}>O elige tú a quien describe:</div>
+          {juegosUsers.length===0?(
+            <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:14}}>Nadie en sala de juegos aún.</div>
+          ):(
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              {juegosUsers.map(u=>(
+                <button key={u.uid} onClick={()=>seleccionarManual(u.uid)} style={{display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.12)',borderRadius:10,padding:'8px 10px',cursor:'pointer',color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,textAlign:'left'}}>
+                  <AvatarBubble profile={u} size={26}/>
+                  <span style={{flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{display:'flex',gap:8,marginTop:10}}>
+            {ranking.length>0&&(<button onClick={finalizar} style={{flex:1,background:'rgba(34,197,94,.18)',border:'1px solid rgba(34,197,94,.4)',borderRadius:14,padding:'12px',color:'#86efac',fontWeight:800,fontSize:13,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>🏆 Finalizar y ver resultados</button>)}
+            <button onClick={cerrar} style={{flex:1,background:'rgba(239,68,68,.15)',border:'1px solid rgba(239,68,68,.35)',borderRadius:14,padding:'12px',color:'#fca5a5',fontWeight:800,fontSize:13,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>✕ Cerrar</button>
+          </div>
+        </div>
+      ):(
+        <div style={{textAlign:'center',color:'var(--muted)',fontSize:14,maxWidth:300}}>Esperando que el admin elija al próximo describidor...<Spinner size={22}/></div>
+      )}
+    </div>
+  );
+}
+
+/* ═══ ¿QUIÉN SOY? ═══ */
+function QuienSoyController({session,users,myId,isAdmin,SID,onClose}){
+  const game=session?.quiensoy;
+  const gState=game?.gameState;
+  const juegosUsers=Object.entries(users||{}).filter(([_,u])=>u.zone==='juegos').map(([uid,u])=>({uid,...u}));
+  const currentPlayerId=game?.currentPlayer;
+  const currentPlayer=currentPlayerId?users[currentPlayerId]:null;
+  const isPlayer=currentPlayerId===myId;
+  const character=game?.currentCharacter;
+  const scores=game?.scores||{};
+
+  const seleccionarRandom=async()=>{
+    if(juegosUsers.length===0) return;
+    const random=juegosUsers[Math.floor(Math.random()*juegosUsers.length)];
+    const character=QUIEN_SOY_PERSONAJES[Math.floor(Math.random()*QUIEN_SOY_PERSONAJES.length)];
+    await db.ref(`sessions/${SID}/quiensoy`).update({active:true,gameState:'playing',currentPlayer:random.uid,currentCharacter:character,roundStartTime:Date.now()});
+  };
+  const seleccionarManual=async(uid)=>{
+    const character=QUIEN_SOY_PERSONAJES[Math.floor(Math.random()*QUIEN_SOY_PERSONAJES.length)];
+    await db.ref(`sessions/${SID}/quiensoy`).update({active:true,gameState:'playing',currentPlayer:uid,currentCharacter:character,roundStartTime:Date.now()});
+  };
+  const otroPersonaje=async()=>{
+    const character=QUIEN_SOY_PERSONAJES[Math.floor(Math.random()*QUIEN_SOY_PERSONAJES.length)];
+    await db.ref(`sessions/${SID}/quiensoy/currentCharacter`).set(character);
+  };
+  const adivinador=async(uid)=>{
+    const newScores={...scores};
+    newScores[uid]=(newScores[uid]||0)+10;
+    if(currentPlayerId) newScores[currentPlayerId]=(newScores[currentPlayerId]||0)+3;
+    await db.ref(`sessions/${SID}/quiensoy`).update({scores:newScores,gameState:'idle',currentPlayer:null,currentCharacter:null,roundStartTime:null});
+  };
+  const skipTurn=async()=>{
+    await db.ref(`sessions/${SID}/quiensoy`).update({gameState:'idle',currentPlayer:null,currentCharacter:null,roundStartTime:null});
+  };
+  const finalizar=async()=>{await db.ref(`sessions/${SID}/quiensoy`).update({gameState:'finished'});};
+  const cerrar=async()=>{
+    await db.ref(`sessions/${SID}/quiensoy`).remove();
+    await db.ref(`sessions/${SID}`).update({phase:'waiting'});
+    if(onClose) onClose();
+  };
+
+  const myZone=users[myId]?.zone;
+  if(myZone!=='juegos'&&!isAdmin) return null;
+
+  if(gState==='finished'){
+    const ranking=Object.entries(scores).map(([uid,pts])=>({uid,pts,user:users[uid]})).filter(x=>x.user).sort((a,b)=>b.pts-a.pts);
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,gap:14,overflowY:'auto'}}>
+        <Confetti/>
+        <div style={{fontSize:54}}>🏆</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:30,color:'#22d3ee',textTransform:'uppercase',letterSpacing:'.06em',margin:0,textAlign:'center'}}>¿Quién Soy? — Resultados</h2>
+        <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8,marginTop:8}}>
+          {ranking.map((r,i)=>(
+            <div key={r.uid} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:14,background:i===0?'linear-gradient(135deg,rgba(34,211,238,.22),rgba(34,211,238,.06))':'rgba(255,255,255,.05)',border:i===0?'2px solid #22d3ee':'1px solid rgba(255,255,255,.08)'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:24,color:i===0?'#22d3ee':'#fff',width:36,textAlign:'center'}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`}</div>
+              <AvatarBubble profile={r.user} size={40}/>
+              <div style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:18,color:'#fff'}}>{r.user.name}</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:22,color:'#22d3ee'}}>{r.pts} pts</div>
+            </div>
+          ))}
+        </div>
+        {isAdmin&&(<button onClick={cerrar} style={{marginTop:14,background:'#22d3ee',border:'none',borderRadius:14,padding:'14px 32px',color:'#07091f',fontWeight:900,fontSize:14,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer'}}>Cerrar juego</button>)}
+      </div>
+    );
+  }
+
+  if(gState==='playing'&&character&&currentPlayer){
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',padding:'20px 16px',gap:14,overflowY:'auto'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginTop:8,background:'rgba(255,255,255,.06)',padding:'10px 16px',borderRadius:30,border:'1px solid rgba(34,211,238,.3)'}}>
+          <AvatarBubble profile={currentPlayer} size={36}/>
+          <div>
+            <div style={{fontSize:11,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em'}}>Le toca a</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:18,color:'#fff'}}>{currentPlayer.name}</div>
+          </div>
+        </div>
+        {(isPlayer||isAdmin)?(
+          <div style={{width:'100%',maxWidth:380,background:'linear-gradient(135deg,#0e7490,#22d3ee)',borderRadius:24,padding:'24px 22px',boxShadow:'0 20px 60px rgba(0,0,0,.5)',border:'4px solid #22d3ee',color:'#fff'}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'rgba(255,255,255,.75)',textTransform:'uppercase',letterSpacing:'.18em',marginBottom:8,textAlign:'center'}}>{isPlayer?'Tú eres':'Personaje (admin)'}</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:36,color:'#fff',textTransform:'uppercase',letterSpacing:'.02em',lineHeight:1.05,marginBottom:14,textAlign:'center',textShadow:'0 2px 12px rgba(0,0,0,.3)'}}>{character.nombre}</div>
+            <div style={{height:1,background:'rgba(255,255,255,.3)',marginBottom:14}}/>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'rgba(255,255,255,.85)',textTransform:'uppercase',letterSpacing:'.15em',marginBottom:10,textAlign:'center'}}>💡 Pistas para responder</div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {character.pistas.map((p,i)=>(
+                <div key={i} style={{background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.25)',borderRadius:8,padding:'8px 12px',fontFamily:'Barlow,sans-serif',fontWeight:600,fontSize:14,color:'#fff'}}>• {p}</div>
+              ))}
+            </div>
+            <div style={{marginTop:14,display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
+              <span style={{background:'rgba(255,255,255,.2)',padding:'4px 10px',borderRadius:20,fontSize:11,fontWeight:700,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.08em',textTransform:'uppercase'}}>{character.testamento==='AT'?'Antiguo Testamento':'Nuevo Testamento'}</span>
+              <span style={{background:'rgba(255,255,255,.2)',padding:'4px 10px',borderRadius:20,fontSize:11,fontWeight:700,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.08em',textTransform:'uppercase'}}>{character.genero==='F'?'Mujer':'Hombre'}</span>
+            </div>
+          </div>
+        ):(
+          <div style={{width:'100%',maxWidth:380,padding:'30px 24px',background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.1)',borderRadius:24,textAlign:'center'}}>
+            <div style={{fontSize:54,marginBottom:14}}>❓</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:22,color:'#fff',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:8}}>¡A preguntar!</div>
+            <div style={{fontFamily:'Barlow,sans-serif',fontSize:14,color:'var(--muted)',lineHeight:1.5,marginBottom:14}}>Hagan preguntas de <strong>SÍ o NO</strong> a {currentPlayer.name} para descubrir qué personaje bíblico es.</div>
+            <div style={{display:'flex',flexDirection:'column',gap:6,textAlign:'left',marginTop:10}}>
+              <div style={{padding:'8px 12px',background:'rgba(34,211,238,.08)',borderRadius:8,fontSize:13,color:'#a5f3fc'}}>✓ "¿Eres del Nuevo Testamento?"</div>
+              <div style={{padding:'8px 12px',background:'rgba(34,211,238,.08)',borderRadius:8,fontSize:13,color:'#a5f3fc'}}>✓ "¿Eres hombre?"</div>
+              <div style={{padding:'8px 12px',background:'rgba(34,211,238,.08)',borderRadius:8,fontSize:13,color:'#a5f3fc'}}>✓ "¿Hiciste milagros?"</div>
+            </div>
+          </div>
+        )}
+        {isAdmin&&(
+          <div style={{width:'100%',maxWidth:380,display:'flex',flexDirection:'column',gap:8,marginTop:8}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.15em',marginBottom:4}}>¿Quién adivinó?</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              {juegosUsers.filter(u=>u.uid!==currentPlayerId).map(u=>(
+                <button key={u.uid} onClick={()=>adivinador(u.uid)} style={{display:'flex',alignItems:'center',gap:8,background:'rgba(34,197,94,.12)',border:'1px solid rgba(34,197,94,.3)',borderRadius:10,padding:'8px 10px',cursor:'pointer',color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,textAlign:'left'}}>
+                  <AvatarBubble profile={u} size={26}/>
+                  <span style={{flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:6,marginTop:6}}>
+              <button onClick={otroPersonaje} style={{flex:1,background:'rgba(139,92,246,.18)',border:'1px solid rgba(139,92,246,.4)',borderRadius:10,padding:'10px',color:'#c4b5fd',fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>🔄 Otro personaje</button>
+              <button onClick={skipTurn} style={{flex:1,background:'rgba(239,68,68,.15)',border:'1px solid rgba(239,68,68,.35)',borderRadius:10,padding:'10px',color:'#fca5a5',fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>⏭ Saltar turno</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const ranking=Object.entries(scores).map(([uid,pts])=>({uid,pts,user:users[uid]})).filter(x=>x.user).sort((a,b)=>b.pts-a.pts);
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',padding:'20px 16px',gap:14,overflowY:'auto'}}>
+      <div style={{textAlign:'center',marginTop:8}}>
+        <div style={{fontSize:42,marginBottom:6}}>❓</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:26,color:'#22d3ee',textTransform:'uppercase',letterSpacing:'.06em',margin:0}}>¿Quién soy?</h2>
+        <p style={{color:'var(--muted)',fontSize:13,marginTop:6,maxWidth:340}}>A un jugador le sale un personaje bíblico. El resto pregunta <strong>sí/no</strong> hasta adivinar.</p>
+      </div>
+      {ranking.length>0&&(
+        <div style={{width:'100%',maxWidth:380,background:'rgba(34,211,238,.06)',border:'1px solid rgba(34,211,238,.2)',borderRadius:14,padding:'10px 14px'}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'#22d3ee',textTransform:'uppercase',letterSpacing:'.15em',marginBottom:8}}>📊 Puntaje actual</div>
+          {ranking.slice(0,5).map((r,i)=>(
+            <div key={r.uid} style={{display:'flex',alignItems:'center',gap:8,padding:'4px 0',borderBottom:i<Math.min(4,ranking.length-1)?'1px solid rgba(255,255,255,.05)':'none'}}>
+              <span style={{width:20,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:13,color:'var(--muted)'}}>#{i+1}</span>
+              <AvatarBubble profile={r.user} size={24}/>
+              <span style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,color:'#fff'}}>{r.user.name}</span>
+              <span style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,color:'#22d3ee'}}>{r.pts}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {isAdmin?(
+        <div style={{width:'100%',maxWidth:380,display:'flex',flexDirection:'column',gap:10}}>
+          <button onClick={seleccionarRandom} disabled={juegosUsers.length===0} style={{padding:'14px 20px',background:juegosUsers.length===0?'rgba(34,211,238,.2)':'#22d3ee',border:'none',borderRadius:14,color:'#07091f',fontWeight:900,fontSize:14,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',cursor:juegosUsers.length===0?'not-allowed':'pointer',opacity:juegosUsers.length===0?.5:1}}>🎲 Elegir al azar</button>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.15em',marginTop:4}}>O elige tú a quien le sale el personaje:</div>
+          {juegosUsers.length===0?(
+            <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:14}}>Nadie en sala de juegos aún.</div>
+          ):(
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              {juegosUsers.map(u=>(
+                <button key={u.uid} onClick={()=>seleccionarManual(u.uid)} style={{display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.12)',borderRadius:10,padding:'8px 10px',cursor:'pointer',color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,textAlign:'left'}}>
+                  <AvatarBubble profile={u} size={26}/>
+                  <span style={{flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{display:'flex',gap:8,marginTop:10}}>
+            {ranking.length>0&&(<button onClick={finalizar} style={{flex:1,background:'rgba(34,197,94,.18)',border:'1px solid rgba(34,197,94,.4)',borderRadius:14,padding:'12px',color:'#86efac',fontWeight:800,fontSize:13,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>🏆 Finalizar y ver resultados</button>)}
+            <button onClick={cerrar} style={{flex:1,background:'rgba(239,68,68,.15)',border:'1px solid rgba(239,68,68,.35)',borderRadius:14,padding:'12px',color:'#fca5a5',fontWeight:800,fontSize:13,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>✕ Cerrar</button>
+          </div>
+        </div>
+      ):(
+        <div style={{textAlign:'center',color:'var(--muted)',fontSize:14,maxWidth:300}}>Esperando que el admin elija al próximo jugador...<Spinner size={22}/></div>
+      )}
+    </div>
+  );
+}
 
 
 function CountdownTimer({from,onDone}){
