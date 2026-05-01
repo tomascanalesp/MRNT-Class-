@@ -210,6 +210,23 @@ const formatTime=s=>{
   return `${s<0?'-':''}${m}:${sec}`;
 };
 
+// Hook para detectar viewport pequeño (mobile-first responsivo)
+const useIsMobile=(breakpoint=640)=>{
+  const[isMobile,setIsMobile]=useState(
+    typeof window!=='undefined'?window.innerWidth<breakpoint:false
+  );
+  useEffect(()=>{
+    const onResize=()=>setIsMobile(window.innerWidth<breakpoint);
+    window.addEventListener('resize',onResize);
+    window.addEventListener('orientationchange',onResize);
+    return()=>{
+      window.removeEventListener('resize',onResize);
+      window.removeEventListener('orientationchange',onResize);
+    };
+  },[breakpoint]);
+  return isMobile;
+};
+
 /* ════════════════════════ CORREO BIENVENIDA ════════════════════════ */
 const buildWelcomeHTML=(name,email)=>`
 <!DOCTYPE html>
@@ -722,28 +739,28 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
         const isEntrada=key==='entrada';
         const isHalfCol=key==='repaso'||key==='juegos';
         // Letras grandes para columnas completas, medianas para sub-columnas
-        const letterSize=full?(isHalfCol?56:88):(isHalfCol?38:54);
+        const letterSize=full?(isHalfCol?56:88):(isHalfCol?46:66);
         return(
           <div key={key} style={zoneCardStyle(key)}>
             {isEntrada?(
-              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:full?10:6,
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:full?10:8,
                 height:'100%'}}>
-                <div style={{fontSize:full?22:14}}>🚪</div>
+                <div style={{fontSize:full?22:18}}>🚪</div>
                 <div style={{lineHeight:1.05}}>
                   <div style={{
-                    fontSize:full?9:7,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                    fontSize:full?9:9,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
                     color:'#3b3f5a',textTransform:'uppercase',letterSpacing:'.22em',
                   }}>Llegada</div>
                   <div style={{
-                    fontSize:full?17:11,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                    fontSize:full?17:14,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
                     color:'#0a0e2e',textTransform:'uppercase',letterSpacing:'.04em',marginTop:2,
                   }}>Entrada</div>
                 </div>
                 {count>0&&(
                   <div style={{
-                    fontSize:full?13:10,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                    fontSize:full?13:12,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
                     color:'#0a0e2e',background:'#ffd000',
-                    padding:full?'2px 9px':'1px 7px',borderRadius:20,marginLeft:full?8:4,
+                    padding:full?'2px 9px':'2px 9px',borderRadius:20,marginLeft:full?8:6,
                   }}>{count}</div>
                 )}
               </div>
@@ -761,16 +778,16 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
               {/* MRNT label — oculto en Juegos (sub-sección bajo Nutrición) */}
               {key!=='juegos'&&(
                 <div style={{
-                  fontSize:full?10:7,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                  color:z.colorDark,textTransform:'uppercase',letterSpacing:'.2em',
-                  textAlign:'center',marginTop:full?6:3,
+                  fontSize:full?10:9,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                  color:z.colorDark,textTransform:'uppercase',letterSpacing:'.18em',
+                  textAlign:'center',marginTop:full?6:4,
                 }}>{z.mrnt}</div>
               )}
               {/* Sala name */}
               <div style={{
-                fontSize:full?14:9,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:full?14:12,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
                 color:'#0a0e2e',textTransform:'uppercase',letterSpacing:'.04em',
-                textAlign:'center',marginTop:full?3:1,padding:'0 2px',
+                textAlign:'center',marginTop:full?3:2,padding:'0 2px',
                 whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',
               }}>{full?z.label:(z.label.split(' ')[0])}</div>
               {/* Spacer + count */}
@@ -778,11 +795,11 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
               {count>0&&(
                 <div style={{
                   display:'flex',alignItems:'center',justifyContent:'center',
-                  gap:full?6:3,marginBottom:full?4:2,
-                  fontSize:full?11:8,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                  gap:full?6:4,marginBottom:full?4:3,
+                  fontSize:full?11:11,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
                   color:z.colorDark,letterSpacing:'.06em',textTransform:'uppercase',
                 }}>
-                  <div style={{width:full?6:4,height:full?6:4,borderRadius:'50%',
+                  <div style={{width:full?6:5,height:full?6:5,borderRadius:'50%',
                     background:z.color,boxShadow:`0 0 6px ${z.color}aa`}}/>
                   <span>{count}</span>
                 </div>
@@ -793,8 +810,8 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
                 position:'absolute',top:full?8:4,right:full?8:4,
                 background:z.color,color:'#fff',
                 fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-                fontSize:full?9:6,letterSpacing:'.12em',textTransform:'uppercase',
-                padding:full?'3px 7px':'1.5px 4px',borderRadius:20,
+                fontSize:full?9:8,letterSpacing:'.12em',textTransform:'uppercase',
+                padding:full?'3px 7px':'2px 6px',borderRadius:20,
                 boxShadow:`0 2px 6px ${z.color}66`,
               }}>● En vivo</div>
             )}
@@ -3782,6 +3799,8 @@ const btnYellow=(dis)=>({
 
 /* ════════════════════════ APP PRINCIPAL ════════════════════════ */
 function App(){
+  /* ── Responsive ── */
+  const isMobile=useIsMobile(640);
   /* ── Vista y auth ── */
   const[view,        setView]        =useState('loading');
   const[authMode,    setAuthMode]    =useState('login');
@@ -4419,14 +4438,15 @@ function App(){
         background:'rgba(8,11,34,.92)',
         backdropFilter:'blur(14px)',
         borderBottom:'1px solid rgba(247,243,235,.08)',
-        padding:'10px 12px',
+        padding:isMobile?'8px 10px':'10px 12px',
         display:'flex',alignItems:'center',justifyContent:'space-between',
-        flexShrink:0,minHeight:56,gap:8,
+        flexShrink:0,minHeight:isMobile?52:56,gap:isMobile?6:8,
       }}>
         {/* IZQ — Logo + estado */}
-        <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <svg width="32" height="24" viewBox="0 0 80 60">
+        <div style={{display:'flex',alignItems:'center',
+          gap:isMobile?8:10,minWidth:0,flex:'1 1 auto',overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',gap:isMobile?7:10,flexShrink:0}}>
+            <svg width={isMobile?28:32} height={isMobile?21:24} viewBox="0 0 80 60">
               <polygon points="8,54 72,54 58,10" fill="#ffd000"/>
               <g stroke="#0a0e2e" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M28 42L28 18Q28 15 31 15L40 17L40 42"/>
@@ -4434,48 +4454,66 @@ function App(){
                 <path d="M28 42Q34 40 40 42Q46 40 52 42"/>
               </g>
             </svg>
-            <div style={{lineHeight:1}}>
-              <div style={{fontFamily:'var(--display)',fontWeight:900,fontSize:15,
-                color:'#f7f3eb',letterSpacing:'.04em'}}>MARANATA</div>
-              <div style={{fontFamily:'var(--display)',fontWeight:600,fontSize:9,
-                color:'rgba(247,243,235,.45)',letterSpacing:'.22em',marginTop:2}}>
-                CLASS · LAS CONDES
+            {!isMobile&&(
+              <div style={{lineHeight:1}}>
+                <div style={{fontFamily:'var(--display)',fontWeight:900,fontSize:15,
+                  color:'#f7f3eb',letterSpacing:'.04em'}}>MARANATA</div>
+                <div style={{fontFamily:'var(--display)',fontWeight:600,fontSize:9,
+                  color:'rgba(247,243,235,.45)',letterSpacing:'.22em',marginTop:2}}>
+                  CLASS · LAS CONDES
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Divisor + estado de sala */}
-          <div style={{height:32,width:1,background:'rgba(247,243,235,.1)'}}/>
-          <div style={{display:'flex',alignItems:'center',gap:14}}>
-            <div>
-              <div style={{fontSize:10,color:'rgba(247,243,235,.4)',
-                textTransform:'uppercase',letterSpacing:'.16em',fontWeight:600,marginBottom:3}}>
-                En sala
-              </div>
-              <div style={{fontFamily:'var(--serif)',fontSize:22,fontWeight:500,
-                color:'#f7f3eb',lineHeight:1,letterSpacing:'-.01em'}}>
-                {usersArr.length}
+          <div style={{height:isMobile?28:32,width:1,background:'rgba(247,243,235,.1)',flexShrink:0}}/>
+          <div style={{display:'flex',alignItems:'center',gap:isMobile?10:14,minWidth:0}}>
+            <div style={{flexShrink:0}}>
+              {!isMobile&&(
+                <div style={{fontSize:10,color:'rgba(247,243,235,.4)',
+                  textTransform:'uppercase',letterSpacing:'.16em',fontWeight:600,marginBottom:3}}>
+                  En sala
+                </div>
+              )}
+              <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+                <div style={{fontFamily:'var(--serif)',fontSize:isMobile?20:22,fontWeight:500,
+                  color:'#f7f3eb',lineHeight:1,letterSpacing:'-.01em'}}>
+                  {usersArr.length}
+                </div>
+                {isMobile&&(
+                  <div style={{fontSize:9,color:'rgba(247,243,235,.45)',
+                    textTransform:'uppercase',letterSpacing:'.14em',fontWeight:600}}>
+                    en sala
+                  </div>
+                )}
               </div>
             </div>
             {phase!=='waiting'&&ZONES[phase]&&(
               <>
-                <div style={{height:32,width:1,background:'rgba(247,243,235,.1)'}}/>
-                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{height:isMobile?28:32,width:1,
+                  background:'rgba(247,243,235,.1)',flexShrink:0}}/>
+                <div style={{display:'flex',alignItems:'center',gap:isMobile?7:10,minWidth:0}}>
                   <div style={{
-                    width:28,height:28,borderRadius:7,
-                    background:ZONES[phase].color,
+                    width:isMobile?24:28,height:isMobile?24:28,borderRadius:isMobile?6:7,
+                    background:ZONES[phase].color,flexShrink:0,
                     display:'flex',alignItems:'center',justifyContent:'center',
-                    color:'white',fontFamily:'var(--display)',fontWeight:900,fontSize:16,
+                    color:'white',fontFamily:'var(--display)',fontWeight:900,
+                    fontSize:isMobile?14:16,
                     boxShadow:`0 4px 14px ${ZONES[phase].color}66`,
                   }}>{ZONES[phase].letter}</div>
-                  <div style={{lineHeight:1}}>
-                    <div style={{fontSize:9,color:'rgba(247,243,235,.4)',
-                      textTransform:'uppercase',letterSpacing:'.16em',fontWeight:600,marginBottom:3}}>
-                      En curso
-                    </div>
+                  <div style={{lineHeight:1,minWidth:0}}>
+                    {!isMobile&&(
+                      <div style={{fontSize:9,color:'rgba(247,243,235,.4)',
+                        textTransform:'uppercase',letterSpacing:'.16em',fontWeight:600,marginBottom:3}}>
+                        En curso
+                      </div>
+                    )}
                     <div style={{fontFamily:'var(--serif)',fontStyle:'italic',
-                      fontSize:18,fontWeight:500,color:'#f7f3eb',
-                      letterSpacing:'-.01em'}}>
+                      fontSize:isMobile?14:18,fontWeight:500,color:'#f7f3eb',
+                      letterSpacing:'-.01em',
+                      whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',
+                      maxWidth:isMobile?90:'none'}}>
                       {ZONES[phase].label}
                     </div>
                   </div>
@@ -4486,37 +4524,47 @@ function App(){
         </div>
 
         {/* DER — Acciones */}
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+        <div style={{display:'flex',gap:isMobile?5:8,alignItems:'center',flexShrink:0}}>
           <button onClick={()=>setEditOpen(true)} title="Editar perfil" style={{
-            display:'flex',alignItems:'center',gap:8,
+            display:'flex',alignItems:'center',gap:isMobile?0:8,
             background:'rgba(247,243,235,.04)',
             border:'1px solid rgba(247,243,235,.1)',
-            borderRadius:50,padding:'5px 14px 5px 5px',
+            borderRadius:50,padding:isMobile?3:'5px 14px 5px 5px',
             color:'#f7f3eb',transition:'all .15s',cursor:'pointer',
           }}>
-            <AvatarBubble profile={profile} size={28}/>
-            <span style={{fontSize:13,fontWeight:600,maxWidth:90,overflow:'hidden',
-              textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-              {profile.name||'Yo'}
-            </span>
+            <AvatarBubble profile={profile} size={isMobile?26:28}/>
+            {!isMobile&&(
+              <span style={{fontSize:13,fontWeight:600,maxWidth:90,overflow:'hidden',
+                textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                {profile.name||'Yo'}
+              </span>
+            )}
           </button>
 
-          <button onClick={()=>setAttOpen(true)} title="Mi asistencia" style={iconBtn}>
+          <button onClick={()=>setAttOpen(true)} title="Mi asistencia" style={{
+            ...iconBtn,
+            width:isMobile?32:36,height:isMobile?32:36,
+          }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
             </svg>
           </button>
 
-          <button onClick={()=>setView('screen')} title="Proyectar a la pantalla grande" style={iconBtn}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </button>
+          {!isMobile&&(
+            <button onClick={()=>setView('screen')} title="Proyectar a la pantalla grande" style={iconBtn}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </button>
+          )}
 
-          <div style={{width:1,height:24,background:'rgba(247,243,235,.1)',margin:'0 4px'}}/>
+          {!isMobile&&(
+            <div style={{width:1,height:24,background:'rgba(247,243,235,.1)',margin:'0 4px'}}/>
+          )}
 
           <button onClick={handleSignOut} title="Cerrar sesión" style={{
             ...iconBtn,
+            width:isMobile?32:36,height:isMobile?32:36,
             color:'rgba(247,243,235,.5)',
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -4531,20 +4579,21 @@ function App(){
         <div style={{
           background:'linear-gradient(90deg,rgba(255,208,0,.06),rgba(255,208,0,.02))',
           borderBottom:'1px solid rgba(255,208,0,.12)',
-          padding:'10px 24px',
-          display:'flex',alignItems:'center',gap:14,flexShrink:0,
+          padding:isMobile?'8px 12px':'10px 24px',
+          display:'flex',alignItems:'center',gap:isMobile?8:14,flexShrink:0,
         }}>
           <span style={{fontFamily:'var(--display)',fontSize:10,fontWeight:700,
             letterSpacing:'.22em',textTransform:'uppercase',
-            color:'#ffd000',
+            color:'#ffd000',flexShrink:0,
             background:'rgba(255,208,0,.1)',padding:'4px 10px',borderRadius:50,
             border:'1px solid rgba(255,208,0,.25)',
           }}>
             ● En espera
           </span>
           <span style={{fontFamily:'var(--serif)',fontStyle:'italic',
-            fontSize:15,color:'rgba(247,243,235,.7)',letterSpacing:'-.01em'}}>
-            Arrastra tu avatar a la zona donde quieras participar.
+            fontSize:isMobile?13:15,color:'rgba(247,243,235,.7)',letterSpacing:'-.01em',
+            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:isMobile?'nowrap':'normal',minWidth:0}}>
+            {isMobile?'Arrastra tu avatar a una zona.':'Arrastra tu avatar a la zona donde quieras participar.'}
           </span>
         </div>
       )}
