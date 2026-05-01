@@ -737,9 +737,8 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
         const count=entries.filter(([,u])=>effectiveZone(u)===key).length;
         const isActive=phase===key;
         const isEntrada=key==='entrada';
-        const isHalfCol=key==='repaso'||key==='juegos';
-        // Letras grandes para columnas completas, medianas para sub-columnas
-        const letterSize=full?(isHalfCol?56:88):(isHalfCol?46:66);
+        // Todas las letras MRNT del mismo tamaño para alinearse visualmente
+        const letterSize=full?88:66;
         return(
           <div key={key} style={zoneCardStyle(key)}>
             {isEntrada?(
