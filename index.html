@@ -2226,25 +2226,35 @@ function AttNotifyToast(){
 }
 
 /* ════════════════════════ ENCUESTA SEMANAL (USUARIO) ════════════════════════ */
-function SurveyModal({myId,myName,SID,onSent}){
+function SurveyModal({myId,myName,SID,onSent,onClose}){
   const[days,setDays]=useState(0);
   const[bible,setBible]=useState(null);
   const[mission,setMission]=useState(null);
   const[sent,setSent]=useState(false);
+  const[sending,setSending]=useState(false);
+  const[error,setError]=useState('');
 
   const handleSubmit=async()=>{
-    if(bible===null||mission===null) return;
+    if(bible===null||mission===null||sending) return;
+    setSending(true);
+    setError('');
     const payload={
       name:myName,daysStudied:days,hasBibleStudents:bible,
       missionaryAction:mission,ts:Date.now()
     };
-    // Vista en vivo + copia persistente que sobrevive cambios de fase / reset
-    await Promise.all([
-      db.ref(`sessions/${SID}/survey/responses/${myId}`).set(payload),
-      db.ref(`surveyHistory/${SID}/${myId}`).set(payload),
-    ]);
-    setSent(true);
-    setTimeout(onSent,2000);
+    try{
+      // Vista en vivo + copia persistente que sobrevive cambios de fase / reset
+      await Promise.all([
+        db.ref(`sessions/${SID}/survey/responses/${myId}`).set(payload),
+        db.ref(`surveyHistory/${SID}/${myId}`).set(payload),
+      ]);
+      setSent(true);
+      setTimeout(onSent,2000);
+    }catch(e){
+      console.error('Error enviando encuesta:',e);
+      setError('No se pudo enviar. Intenta de nuevo.');
+      setSending(false);
+    }
   };
 
   if(sent) return(
@@ -2269,10 +2279,18 @@ function SurveyModal({myId,myName,SID,onSent}){
         padding:'20px 18px 36px',overflowY:'auto',maxHeight:'88vh',
         animation:'modalIn .3s ease'}}>
         <div style={{width:40,height:4,borderRadius:2,background:'rgba(255,208,0,.25)',margin:'0 auto 16px'}}/>
-        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-          fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',
-          textAlign:'center',marginBottom:20}}>
-          📋 Encuesta semanal
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,gap:8}}>
+          <div style={{width:32}}/>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:20,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',
+            textAlign:'center',flex:1}}>
+            📋 Encuesta semanal
+          </div>
+          <button onClick={onClose} aria-label="Cerrar" style={{
+            width:32,height:32,borderRadius:8,border:'1px solid rgba(255,255,255,.12)',
+            background:'rgba(255,255,255,.06)',color:'var(--white)',
+            fontSize:18,lineHeight:1,cursor:'pointer',padding:0,
+          }}>×</button>
         </div>
         <div style={{marginBottom:20}}>
           <div style={{fontSize:13,color:'var(--white)',fontFamily:'Barlow,sans-serif',fontWeight:600,marginBottom:10}}>
@@ -2324,15 +2342,22 @@ function SurveyModal({myId,myName,SID,onSent}){
             ))}
           </div>
         </div>
-        <button onClick={handleSubmit} disabled={bible===null||mission===null} style={{
+        {error&&(
+          <div style={{marginBottom:12,padding:'10px 12px',borderRadius:10,
+            background:'rgba(239,68,68,.12)',border:'1px solid rgba(239,68,68,.35)',
+            color:'#fca5a5',fontSize:13,fontFamily:'Barlow,sans-serif',textAlign:'center'}}>
+            {error}
+          </div>
+        )}
+        <button onClick={handleSubmit} disabled={bible===null||mission===null||sending} style={{
           width:'100%',padding:13,borderRadius:12,border:'none',
-          background:bible!==null&&mission!==null?'linear-gradient(135deg,#ffd000,#e6a800)':'var(--muted2)',
-          color:bible!==null&&mission!==null?'#07091f':'var(--muted)',
+          background:bible!==null&&mission!==null&&!sending?'linear-gradient(135deg,#ffd000,#e6a800)':'var(--muted2)',
+          color:bible!==null&&mission!==null&&!sending?'#07091f':'var(--muted)',
           fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:15,
           letterSpacing:'.05em',textTransform:'uppercase',
-          boxShadow:bible!==null&&mission!==null?'0 0 24px rgba(255,208,0,.4)':undefined,
-          cursor:bible!==null&&mission!==null?'pointer':'default'}}>
-          Enviar respuestas →
+          boxShadow:bible!==null&&mission!==null&&!sending?'0 0 24px rgba(255,208,0,.4)':undefined,
+          cursor:bible!==null&&mission!==null&&!sending?'pointer':'default'}}>
+          {sending?'Enviando…':'Enviar respuestas →'}
         </button>
       </div>
     </div>
@@ -4350,7 +4375,11 @@ function App(){
   };
 
   const endTemplo=async()=>{
-    await db.ref(`sessions/${SID.current}`).update({phase:'waiting','templo/active':false});
+    await db.ref(`sessions/${SID.current}`).update({
+      phase:'waiting',
+      'templo/active':false,
+      'survey/active':false,
+    });
   };
 
   const resetSession=async()=>{
@@ -4842,7 +4871,7 @@ function App(){
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
       {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
       {attNotify&&<AttNotifyToast/>}
-      {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>setSurveyOpen(false)}/>}
+      {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>setSurveyOpen(false)} onClose={()=>setSurveyOpen(false)}/>}
       {adminSurvey&&<AdminSurveyModal responses={surveyResponses} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
       {downloadOpen&&<DataDownloadModal onClose={()=>setDownloadOpen(false)}/>}
 
