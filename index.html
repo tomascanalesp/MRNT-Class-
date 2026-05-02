@@ -2225,6 +2225,52 @@ function AttNotifyToast(){
   );
 }
 
+/* ════════════════════════ PROMPT: UNIRSE A ACTIVIDAD ACTIVA ════════════════════════ */
+function JoinActivityPrompt({label,phase,onJoin,onDecline}){
+  const z=ZONES[phase]||{};
+  const color=z.color||'#ffd000';
+  const icon=z.icon||'🤝';
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:230,background:'rgba(7,9,31,.78)',
+      backdropFilter:'blur(6px)',display:'flex',alignItems:'center',justifyContent:'center',
+      padding:20}}>
+      <div style={{
+        width:'100%',maxWidth:340,
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:`2px solid ${color}55`,borderRadius:20,padding:'24px 22px',
+        textAlign:'center',boxShadow:`0 0 40px ${color}33`,
+        animation:'modalIn .3s ease'}}>
+        <div style={{fontSize:48,marginBottom:8}}>{icon}</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:13,color:color,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:6}}>
+          Actividad en curso
+        </div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'var(--white)',lineHeight:1.2,marginBottom:18}}>
+          ¿Quieres unirte a la sala {label}?
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button onClick={onDecline} style={{
+            flex:1,padding:12,borderRadius:12,border:'1px solid rgba(255,255,255,.18)',
+            background:'rgba(255,255,255,.06)',color:'var(--white)',
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:14,
+            letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>
+            Ahora no
+          </button>
+          <button onClick={onJoin} style={{
+            flex:1,padding:12,borderRadius:12,border:'none',
+            background:`linear-gradient(135deg,${color},${z.colorDark||color})`,
+            color:'#07091f',fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,
+            letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer',
+            boxShadow:`0 0 24px ${color}55`}}>
+            Sí, unirme
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════════ ENCUESTA SEMANAL (USUARIO) ════════════════════════ */
 function SurveyModal({myId,myName,SID,onSent,onClose}){
   const[days,setDays]=useState(0);
@@ -2243,11 +2289,13 @@ function SurveyModal({myId,myName,SID,onSent,onClose}){
       missionaryAction:mission,ts:Date.now()
     };
     try{
-      // Vista en vivo + copia persistente que sobrevive cambios de fase / reset
-      await Promise.all([
-        db.ref(`sessions/${SID}/survey/responses/${myId}`).set(payload),
-        db.ref(`surveyHistory/${SID}/${myId}`).set(payload),
-      ]);
+      // Vista en vivo: requerida — si falla, el usuario ve el error y reintenta.
+      await db.ref(`sessions/${SID}/survey/responses/${myId}`).set(payload);
+      // Copia persistente: best-effort — no bloquear el envío si las reglas de RTDB
+      // no permiten escribir en /surveyHistory. Solo logueamos el error.
+      db.ref(`surveyHistory/${SID}/${myId}`).set(payload).catch(err=>{
+        console.warn('No se pudo persistir surveyHistory:',err);
+      });
       setSent(true);
       setTimeout(onSent,2000);
     }catch(e){
@@ -3970,6 +4018,8 @@ function App(){
   const[adminSurvey,    setAdminSurvey]    =useState(false);
   const[downloadOpen,   setDownloadOpen]   =useState(false);
   const[surveyResponses,setSurveyResponses]=useState({});
+  // Prompt para integrarse a una actividad activa cuando un late-joiner entra a la zona
+  const[joinPrompt,     setJoinPrompt]     =useState(null); // {phase,label}
 
   const UID      =useRef(null);
   const SID      =useRef(getSID());
@@ -3977,6 +4027,14 @@ function App(){
   const sessionRef=useRef(null);
   const lastPosRef=useRef({zone:'entrada',x:49,y:9});
   const profileRef=useRef({name:'',avatar:null,color:'#ffd000',photo:null});
+  // Zonas de actividades activas que el usuario ya rechazó unirse en su entrada actual.
+  // Se limpia cuando sale de la zona, para que la próxima entrada vuelva a preguntar.
+  const declinedZonesRef=useRef(new Set());
+  const prevZoneRef=useRef('entrada');
+  // Fase en la que el usuario quedó "integrado" (no puede salir hasta que termine).
+  // Se setea si estaba en la zona cuando el admin inició la fase, o al aceptar el prompt.
+  const lockedPhaseRef=useRef(null);
+  const prevPhaseRef=useRef(null);
 
   // Mantener profileRef siempre actualizado para usarlo en reconexión
   useEffect(()=>{ profileRef.current=profile; },[profile]);
@@ -4080,9 +4138,14 @@ function App(){
     if(!session) return;
     const p=session.phase||'waiting';
 
-    // Confra — abrir para todos cuando Firebase confirma; cerrar al salir de la fase
-    if(p==='confra'&&session.confra) setConfraOpen(true);
-    else if(p!=='confra') setConfraOpen(false);
+    // Confra — abrir solo para los integrantes de la cola (o admin).
+    // Late-joiners verán el prompt de unirse al entrar a la zona.
+    if(p==='confra'&&session.confra){
+      const q=session.confra?.queue||{};
+      const arr=Array.isArray(q)?q:Object.values(q);
+      if(arr.includes(UID.current)||isAdmin) setConfraOpen(true);
+      else setConfraOpen(false);
+    } else if(p!=='confra') setConfraOpen(false);
 
     // Repaso — auto-abrir chat SOLO para usuarios en zona repaso
     if(p==='repaso'&&session.repaso?.active){
@@ -4115,6 +4178,96 @@ function App(){
     if(!sessionRef.current?.survey?.active) return;
     if(!surveyResponses[UID.current]) setSurveyOpen(true);
   },[surveyResponses]);
+
+  /* ── Prompt para integrarse a una actividad activa al entrar a su zona ── */
+  useEffect(()=>{
+    const me=users[UID.current];
+    if(!me) return;
+    const p=session?.phase;
+    const myZone=me.zone;
+    const prevZone=prevZoneRef.current;
+    prevZoneRef.current=myZone;
+
+    // Si la fase cambia o no hay actividad: limpiar prompt, rechazos y lock
+    if(!p||p==='waiting'){
+      declinedZonesRef.current.clear();
+      lockedPhaseRef.current=null;
+      if(joinPrompt) setJoinPrompt(null);
+      return;
+    }
+
+    // Auto-integración: solo cuando la fase recién cambia y el usuario YA está
+    // en la zona (típicamente estaba ahí cuando el admin inició la fase).
+    const phaseChanged=prevPhaseRef.current!==p;
+    prevPhaseRef.current=p;
+    if(phaseChanged&&myZone===p&&!declinedZonesRef.current.has(p)){
+      if(p==='confra'){
+        const q=session?.confra?.queue||{};
+        const arr=Array.isArray(q)?q:Object.values(q);
+        if(arr.includes(UID.current)) lockedPhaseRef.current=p;
+      } else {
+        lockedPhaseRef.current=p;
+      }
+    }
+
+    // Admin nunca recibe el prompt
+    if(isAdmin){ if(joinPrompt) setJoinPrompt(null); return; }
+
+    // Si el usuario salió de la zona de la fase, limpiar el rechazo
+    // para que la próxima entrada vuelva a preguntar
+    if(prevZone===p&&myZone!==p){
+      declinedZonesRef.current.delete(p);
+      if(joinPrompt?.phase===p) setJoinPrompt(null);
+    }
+
+    // Si entró a la zona de la fase y no está integrado todavía, preguntar
+    if(myZone===p){
+      let alreadyIn=lockedPhaseRef.current===p;
+      if(p==='confra'){
+        const q=session?.confra?.queue||{};
+        const arr=Array.isArray(q)?q:Object.values(q);
+        if(arr.includes(UID.current)) alreadyIn=true;
+      }
+      if(!alreadyIn&&!declinedZonesRef.current.has(p)){
+        const label=ZONES[p]?.label||p;
+        if(joinPrompt?.phase!==p) setJoinPrompt({phase:p,label});
+      }
+    }
+  },[users,session,isAdmin]);
+
+  const handleJoinActivity=async()=>{
+    const p=session?.phase;
+    if(!p) { setJoinPrompt(null); return; }
+    try{
+      if(p==='confra'){
+        const q=session?.confra?.queue||{};
+        const arr=Array.isArray(q)?[...q]:Object.values(q);
+        if(!arr.includes(UID.current)){
+          arr.push(UID.current);
+          const queueObj={};
+          arr.forEach((uid,i)=>{queueObj[i]=uid;});
+          await db.ref(`sessions/${SID.current}/confra/queue`).set(queueObj);
+        }
+        setConfraOpen(true);
+      } else if(p==='repaso'){
+        setRepasoChatOpen(true);
+      } else if(p==='mision'){
+        setMisionOpen(true);
+      }
+      // juegos/templo: integrarse = estar en la zona, los modales de juego se abren solos
+      lockedPhaseRef.current=p;
+    }catch(e){
+      console.error('Error integrándose a la actividad:',e);
+    }
+    declinedZonesRef.current.delete(p);
+    setJoinPrompt(null);
+  };
+
+  const handleDeclineJoin=()=>{
+    const p=session?.phase;
+    if(p) declinedZonesRef.current.add(p);
+    setJoinPrompt(null);
+  };
 
   /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
@@ -4214,8 +4367,19 @@ function App(){
   const handleDragMove=useCallback((x,y)=>{
     const uid=UID.current;
     if(!uid) return;
-    // Bloquear movimiento durante fases activas
-    if(sessionRef.current?.phase&&sessionRef.current.phase!=='waiting') return;
+    const sess=sessionRef.current;
+    const phase=sess?.phase;
+    if(phase&&phase!=='waiting'){
+      // Los que ya están integrados a la actividad activa no pueden salir.
+      // El resto (late-joiners o quienes rechazaron) puede moverse libremente.
+      let inActivity=lockedPhaseRef.current===phase;
+      if(phase==='confra'){
+        const q=sess?.confra?.queue||{};
+        const arr=Array.isArray(q)?q:Object.values(q);
+        if(arr.includes(uid)) inActivity=true;
+      }
+      if(inActivity) return;
+    }
     const zone=detectZone(x,y);
     lastPosRef.current={zone,x,y};
     db.ref(`rooms/${SID.current}/users/${uid}`).update({x,y,zone});
@@ -4871,6 +5035,14 @@ function App(){
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
       {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
       {attNotify&&<AttNotifyToast/>}
+      {joinPrompt&&(
+        <JoinActivityPrompt
+          label={joinPrompt.label}
+          phase={joinPrompt.phase}
+          onJoin={handleJoinActivity}
+          onDecline={handleDeclineJoin}
+        />
+      )}
       {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>setSurveyOpen(false)} onClose={()=>setSurveyOpen(false)}/>}
       {adminSurvey&&<AdminSurveyModal responses={surveyResponses} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
       {downloadOpen&&<DataDownloadModal onClose={()=>setDownloadOpen(false)}/>}
