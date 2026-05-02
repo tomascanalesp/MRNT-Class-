@@ -688,10 +688,10 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
     const isEntrada=key==='entrada';
     const isRepaso=key==='repaso';
     const isJuegos=key==='juegos';
-    // Tinte transparente del color de la zona
+    // Entrada mantiene fondo claro; columnas MRNT usan color sólido
     const tint=isEntrada
       ? (isActive?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)')
-      : (isActive?z.bg.replace('.10','.22'):z.bg.replace('.10','.13'));
+      : z.color;
     const borderW=isActive?3:2;
     const borderColor=isEntrada?'#0a0e2e':z.color;
     // Repaso y Juegos comparten una columna unificada con un divisor naranja leve
@@ -701,8 +701,8 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       left:`${z.cardX}%`,top:`${z.cardY}%`,
       width:`${z.cardW}%`,height:`${z.cardH}%`,
       background:tint,
-      borderTop:isJuegos?'1px solid rgba(251,146,60,.35)':`${borderW}px solid ${borderColor}`,
-      borderBottom:isRepaso?'1px solid rgba(251,146,60,.35)':`${borderW}px solid ${borderColor}`,
+      borderTop:isJuegos?'1px solid rgba(255,255,255,.45)':`${borderW}px solid ${borderColor}`,
+      borderBottom:isRepaso?'1px solid rgba(255,255,255,.45)':`${borderW}px solid ${borderColor}`,
       borderLeft:`${borderW}px solid ${borderColor}`,
       borderRight:`${borderW}px solid ${borderColor}`,
       borderRadius,
@@ -725,12 +725,7 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
       onTouchMove={handleDragMove} onTouchEnd={handleDragEnd}
       style={{
         width:'100%',height:'100%',position:'relative',overflow:'hidden',
-        background:'#ede4ce',touchAction:'none',userSelect:'none',
-        backgroundImage:`
-          radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.4),transparent 70%),
-          radial-gradient(circle at 12% 88%,rgba(59,130,246,.05),transparent 50%),
-          radial-gradient(circle at 88% 12%,rgba(234,179,8,.06),transparent 50%)
-        `,
+        background:'#ffffff',touchAction:'none',userSelect:'none',
       }}>
 
       {/* Zone cards: Entrada banner arriba + 4 columnas verticales (M · R · N · T).
@@ -772,8 +767,8 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
                 <div style={{
                   fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
                   fontSize:letterSize,lineHeight:1,
-                  color:z.color,textAlign:'center',
-                  textShadow:`0 3px 14px ${z.color}33`,
+                  color:'#fff',textAlign:'center',
+                  textShadow:'0 2px 10px rgba(0,0,0,.18)',
                   marginTop:full?4:2,
                 }}>{z.letter}</div>
               )}
@@ -781,14 +776,14 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
               {key!=='juegos'&&(
                 <div style={{
                   fontSize:full?10:9,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                  color:z.colorDark,textTransform:'uppercase',letterSpacing:'.18em',
+                  color:'#fff',textTransform:'uppercase',letterSpacing:'.18em',
                   textAlign:'center',marginTop:full?6:4,
                 }}>{z.mrnt}</div>
               )}
               {/* Sala name */}
               <div style={{
                 fontSize:full?14:12,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-                color:'#0a0e2e',textTransform:'uppercase',letterSpacing:'.04em',
+                color:'#fff',textTransform:'uppercase',letterSpacing:'.04em',
                 textAlign:'center',marginTop:full?3:2,padding:'0 2px',
                 whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',
               }}>{full?z.label:(z.label.split(' ')[0])}</div>
@@ -799,10 +794,10 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
                   display:'flex',alignItems:'center',justifyContent:'center',
                   gap:full?6:4,marginBottom:full?4:3,
                   fontSize:full?11:11,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                  color:z.colorDark,letterSpacing:'.06em',textTransform:'uppercase',
+                  color:'#fff',letterSpacing:'.06em',textTransform:'uppercase',
                 }}>
                   <div style={{width:full?6:5,height:full?6:5,borderRadius:'50%',
-                    background:z.color,boxShadow:`0 0 6px ${z.color}aa`}}/>
+                    background:'#fff',boxShadow:'0 0 6px rgba(255,255,255,.7)'}}/>
                   <span>{count}</span>
                 </div>
               )}
@@ -810,11 +805,11 @@ function RoomCanvas({users,myId,session,onDragMove,roomRef,full,reactions}){
             {isActive&&!isEntrada&&(
               <div style={{
                 position:'absolute',top:full?8:4,right:full?8:4,
-                background:z.color,color:'#fff',
+                background:'#fff',color:z.colorDark,
                 fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
                 fontSize:full?9:8,letterSpacing:'.12em',textTransform:'uppercase',
                 padding:full?'3px 7px':'2px 6px',borderRadius:20,
-                boxShadow:`0 2px 6px ${z.color}66`,
+                boxShadow:'0 2px 6px rgba(0,0,0,.18)',
               }}>● En vivo</div>
             )}
           </div>
