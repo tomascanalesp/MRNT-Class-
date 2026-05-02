@@ -1708,18 +1708,25 @@ function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
   const MAX=5;
   const canSend=myCount<MAX&&!sending;
 
+  // Colores MRNT (M-R-N-T) — la nube usa estos al azar por palabra,
+  // no el color del avatar de cada usuario.
+  const MRNT_COLORS=['#3b82f6','#eab308','#fb923c','#7c3aed'];
+  const colorFor=key=>MRNT_COLORS[wordHash(key)%MRNT_COLORS.length];
+
   // Frecuencias
   const freq={};
   rawWords.forEach(w=>{
     const key=w.word.toLowerCase().trim();
-    if(!freq[key]) freq[key]={display:w.word,count:0,color:w.color||'#3b82f6'};
+    if(!freq[key]) freq[key]={display:w.word,count:0};
     freq[key].count++;
-    freq[key].color=w.color||'#3b82f6';
   });
   const sorted=Object.entries(freq).sort((a,b)=>b[1].count-a[1].count);
   const maxCount=sorted[0]?.[1].count||1;
-  const getFontSize=count=>Math.round(16+(maxCount===1?10:(count-1)/(maxCount-1))*52);
-  const getRotation=key=>{const h=wordHash(key);return[0,0,0,-15,15,-8,8][h%7];};
+  const getFontSize=count=>Math.round(18+(maxCount===1?14:(count-1)/(maxCount-1))*60);
+  // Rotaciones más amplias y jitter vertical para romper la grilla y dar formato nube
+  const getRotation=key=>{const h=wordHash(key);return((h%51)-25);};
+  const getJitterY =key=>{const h=wordHash('y'+key);return((h%31)-15);};
+  const getJitterX =key=>{const h=wordHash('x'+key);return((h%21)-10);};
 
   const handleSend=async()=>{
     const w=input.trim();
@@ -1827,14 +1834,17 @@ function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
               </div>
             ):(
               <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center'}}>
-                {myWords.map((w,i)=>(
-                  <span key={i} style={{background:`${w.color||'#3b82f6'}18`,
-                    border:`1px solid ${w.color||'#3b82f6'}44`,
-                    borderRadius:20,padding:'4px 12px',
-                    fontSize:13,color:w.color||'#3b82f6',fontWeight:600}}>
-                    ✓ {w.word}
-                  </span>
-                ))}
+                {myWords.map((w,i)=>{
+                  const c=colorFor(w.word.toLowerCase().trim());
+                  return(
+                    <span key={i} style={{background:`${c}18`,
+                      border:`1px solid ${c}44`,
+                      borderRadius:20,padding:'4px 12px',
+                      fontSize:13,color:c,fontWeight:600}}>
+                      ✓ {w.word}
+                    </span>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1898,9 +1908,9 @@ function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
 
       {/* TAB: NUBE */}
       {tab==='nube'&&(
-        <div style={{flex:1,display:'flex',flexWrap:'wrap',alignItems:'center',
+        <div style={{flex:1,position:'relative',display:'flex',flexWrap:'wrap',alignItems:'center',
           justifyContent:'center',alignContent:'center',
-          padding:'16px 20px',gap:'6px 10px',overflowY:'auto',
+          padding:'24px 18px',gap:'2px 14px',overflowY:'auto',
           background:'radial-gradient(ellipse at 50% 40%,#0a0e2a,#07091f)'}}>
           {/* Stars bg */}
           <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>
@@ -1922,15 +1932,20 @@ function WordCloudActivity({wordcloud,myId,users,isAdmin,SID,onClose,question}){
             </div>
           ):sorted.map(([key,data],i)=>{
             const sz=getFontSize(data.count);
+            const c=colorFor(key);
+            const rot=getRotation(key);
+            const jx=getJitterX(key);
+            const jy=getJitterY(key);
             return(
               <span key={key} style={{
                 display:'inline-block',position:'relative',zIndex:1,
                 fontSize:sz,fontFamily:'Barlow Condensed,sans-serif',
                 fontWeight:data.count>=3?900:data.count>=2?800:600,
-                color:data.color,
-                transform:`rotate(${getRotation(key)}deg)`,
-                textShadow:sz>36?`0 0 ${sz*.55}px ${data.color}55`:undefined,
-                letterSpacing:'-.01em',lineHeight:1.1,padding:'2px 4px',
+                color:c,
+                transform:`translate(${jx}px,${jy}px) rotate(${rot}deg)`,
+                textShadow:sz>34?`0 0 ${sz*.55}px ${c}55`:undefined,
+                letterSpacing:'-.01em',lineHeight:.95,padding:'0 4px',
+                margin:`${(wordHash('m'+key)%14)-7}px ${(wordHash('n'+key)%10)}px`,
                 animation:`fadeUp ${.15+i*.04}s ease both`,
                 transition:'font-size .5s cubic-bezier(0.23,1,0.32,1)',
                 userSelect:'none',cursor:'default',
