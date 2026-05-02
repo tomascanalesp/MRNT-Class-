@@ -4055,8 +4055,9 @@ function App(){
     if(!session) return;
     const p=session.phase||'waiting';
 
-    // Confra — abrir para todos cuando Firebase confirma
+    // Confra — abrir para todos cuando Firebase confirma; cerrar al salir de la fase
     if(p==='confra'&&session.confra) setConfraOpen(true);
+    else if(p!=='confra') setConfraOpen(false);
 
     // Repaso — auto-abrir chat SOLO para usuarios en zona repaso
     if(p==='repaso'&&session.repaso?.active){
