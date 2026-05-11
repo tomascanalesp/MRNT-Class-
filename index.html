@@ -2584,25 +2584,48 @@ function DataDownloadModal({onClose}){
 
   // ── Encuestas (todas las sesiones) ─────────────────────────────────
   const fetchSurveys=async()=>{
-    // Lee de surveyHistory (persistente) y mezcla con sessions/.../survey/responses
-    // (compatibilidad con respuestas previas a la persistencia separada).
-    const[hSnap,sSnap]=await Promise.all([
-      db.ref('surveyHistory').get(),
-      db.ref('sessions').get(),
-    ]);
-    const history=hSnap.val()||{};
-    const sessions=sSnap.val()||{};
+    // Estrategia robusta: cada lectura es independiente y tolera fallos de permisos.
+    // 1) surveyHistory (persistente)
+    // 2) sessions/{sid}/survey/responses (en vivo) — descubrimos los SIDs por
+    //    attendance (lectura ya autorizada para admin) y leemos cada uno por
+    //    separado, evitando depender de un .get() en la raíz /sessions.
     const merged={};
-    Object.entries(sessions).forEach(([sid,s])=>{
-      const responses=s?.survey?.responses;
-      if(!responses) return;
+    const addResponses=(sid,uids)=>{
+      if(!uids) return;
       merged[sid]=merged[sid]||{};
-      Object.assign(merged[sid],responses);
+      Object.assign(merged[sid],uids);
+    };
+
+    // 1) Historial persistente
+    try{
+      const hSnap=await db.ref('surveyHistory').get();
+      const history=hSnap.val()||{};
+      Object.entries(history).forEach(([sid,uids])=>addResponses(sid,uids));
+    }catch(err){
+      console.warn('No se pudo leer surveyHistory:',err);
+    }
+
+    // 2) Descubrir SIDs por attendance y leer respuestas de cada sesión
+    let sids=new Set(Object.keys(merged));
+    try{
+      const aSnap=await db.ref('attendance').get();
+      const attendance=aSnap.val()||{};
+      Object.values(attendance).forEach(uMap=>{
+        Object.keys(uMap||{}).forEach(d=>sids.add(d));
+      });
+    }catch(err){
+      console.warn('No se pudo leer attendance para descubrir sesiones:',err);
+    }
+    // Filtrar por rango antes de pedir cada sesión, para no leer de más
+    const sidsInRange=[...sids].filter(sid=>inRange(sid,startDate,endDate));
+    const sessReads=await Promise.allSettled(
+      sidsInRange.map(sid=>db.ref(`sessions/${sid}/survey/responses`).get())
+    );
+    sessReads.forEach((res,i)=>{
+      if(res.status==='fulfilled') addResponses(sidsInRange[i],res.value.val());
+      else console.warn('No se pudo leer encuesta de',sidsInRange[i],res.reason);
     });
-    Object.entries(history).forEach(([sid,uids])=>{
-      merged[sid]=merged[sid]||{};
-      Object.assign(merged[sid],uids); // history pisa sessions si hay duplicado
-    });
+
     const rows=[];
     Object.entries(merged).forEach(([sid,uids])=>{
       if(!inRange(sid,startDate,endDate)) return;
@@ -2639,10 +2662,20 @@ function DataDownloadModal({onClose}){
       }else if(kind==='encuesta'){
         dl(await fetchSurveys(),`encuestas_${stamp}${suf}.txt`);
       }else if(kind==='todos'){
-        const[a,j,e]=await Promise.all([fetchAttendance(),fetchGames(),fetchSurveys()]);
+        const results=await Promise.allSettled([
+          fetchAttendance(),fetchGames(),fetchSurveys()
+        ]);
+        const labels=['Asistencia','Juegos','Encuestas'];
+        const parts=results.map((r,i)=>r.status==='fulfilled'
+          ? r.value
+          : `${labels[i]} — Error al obtener datos: ${r.reason?.message||r.reason}`);
+        results.forEach((r,i)=>{
+          if(r.status==='rejected') console.error('Error descargando',labels[i],r.reason);
+        });
         const sep='\n\n'+'═'.repeat(60)+'\n\n';
         dl(['MARANATA CLASS — Datos completos ('+stamp+')',
-          sep,a,sep,j,sep,e].join(''),`maranata_datos_${stamp}${suf}.txt`);
+          sep,parts[0],sep,parts[1],sep,parts[2]].join(''),
+          `maranata_datos_${stamp}${suf}.txt`);
       }
     }catch(err){
       console.error('Error descargando',kind,err);
@@ -4171,7 +4204,7 @@ function App(){
     // Encuesta
     if(session?.survey?.active&&!surveyResponses[UID.current]) setSurveyOpen(true);
     if(!session?.survey?.active) setSurveyOpen(false);
-  },[session]);
+  },[session,users]);
 
   // Re-verificar encuesta cuando llegan respuestas (cubre usuarios que conectaron tarde)
   useEffect(()=>{
@@ -4271,10 +4304,22 @@ function App(){
 
   /* ── Helpers ── */
   const joinRoom=async(uid,p)=>{
+    // Si hay una actividad activa, ubicar al usuario directamente en su zona
+    let zone='entrada', x=49, y=9;
+    try{
+      const sSnap=await db.ref(`sessions/${SID.current}/phase`).get();
+      const ph=sSnap.val();
+      if(ph&&ph!=='waiting'&&ZONES[ph]&&ph!=='confra'){
+        const z=ZONES[ph];
+        zone=ph;
+        x=(z.x1+z.x2)/2;
+        y=(z.y1+z.y2)/2;
+      }
+    }catch(e){ /* fallback a entrada */ }
     const uRef=db.ref(`rooms/${SID.current}/users/${uid}`);
     await uRef.set({
       name:p.name,avatar:p.avatar,color:p.color,photo:p.photo||null,
-      zone:'entrada',x:49,y:9,joinedAt:Date.now(),
+      zone,x,y,joinedAt:Date.now(),
     });
     uRef.onDisconnect().remove();
     if(new Date().getDay()===6){
