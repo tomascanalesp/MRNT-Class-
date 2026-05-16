@@ -3541,6 +3541,31 @@ function ScreenView({users,session,msgs,reactions,onExit}){
           roomRef={roomRef} full={true} reactions={reactions} moveTarget={null}/>
       </div>
 
+      {/* Código QR de acceso — esquina superior izquierda, visible para que la
+          gente lo escanee mientras va llegando a la sala. */}
+      <div style={{
+        position:'absolute',top:16,left:16,zIndex:40,
+        background:'#fff',borderRadius:18,padding:'14px 14px 12px',
+        boxShadow:'0 12px 32px rgba(10,14,46,.18)',
+        border:'1px solid rgba(255,208,0,.4)',
+        display:'flex',flexDirection:'column',alignItems:'center',gap:8,
+      }}>
+        <div style={{
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:15,color:'#0a0e2e',textTransform:'uppercase',
+          letterSpacing:'.12em',lineHeight:1,
+        }}>📲 Únete</div>
+        <img
+          src={`https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=0&data=${encodeURIComponent(window.location.origin+window.location.pathname)}`}
+          alt="Escanear para unirse a la sala" width={220} height={220}
+          style={{display:'block',borderRadius:8}}/>
+        <div style={{
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:10,color:'rgba(10,14,46,.6)',letterSpacing:'.1em',
+          textTransform:'uppercase',lineHeight:1,
+        }}>Escanea y entra</div>
+      </div>
+
       {/* Panel fase activa - lado derecho */}
       {phase!=='waiting'&&(
         <div style={{
