@@ -4949,77 +4949,6 @@ function App(){
           roomRef={roomRef} full={false} reactions={reactions}
         />
 
-        {/* QR de acceso (solo admin) — toca para ciclar tamaño: pequeño → mediano → grande */}
-        {isAdmin&&qrSize!=='large'&&(
-          <button
-            onClick={()=>setQrSize(s=>s==='small'?'medium':'large')}
-            title="Tocar para agrandar el QR"
-            style={{
-              position:'absolute',
-              top:qrSize==='medium'?14:12,
-              right:qrSize==='medium'?14:12,
-              zIndex:30,
-              background:'#fff',borderRadius:14,
-              padding:qrSize==='medium'?'12px 12px 8px':'6px 6px 4px',
-              boxShadow:'0 8px 24px rgba(10,14,46,.18)',
-              border:'1px solid rgba(255,208,0,.4)',
-              cursor:'pointer',
-              display:'flex',flexDirection:'column',alignItems:'center',
-              gap:qrSize==='medium'?6:0,
-            }}>
-            {qrSize==='medium'&&(
-              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-                fontSize:13,color:'#0a0e2e',textTransform:'uppercase',
-                letterSpacing:'.12em',lineHeight:1}}>
-                📲 Únete
-              </div>
-            )}
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=0&data=${encodeURIComponent(window.location.origin+window.location.pathname)}`}
-              alt="QR para unirse a la sala"
-              width={qrSize==='medium'?180:80}
-              height={qrSize==='medium'?180:80}
-              style={{display:'block',borderRadius:6}}/>
-            {qrSize==='medium'&&(
-              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                fontSize:9,color:'rgba(10,14,46,.55)',letterSpacing:'.1em',
-                textTransform:'uppercase',lineHeight:1}}>
-                Escanea y entra
-              </div>
-            )}
-          </button>
-        )}
-        {isAdmin&&qrSize==='large'&&(
-          <div
-            onClick={()=>setQrSize('small')}
-            style={{
-              position:'fixed',inset:0,zIndex:200,
-              background:'rgba(10,14,46,.92)',backdropFilter:'blur(8px)',
-              display:'flex',alignItems:'center',justifyContent:'center',
-              cursor:'pointer',animation:'modalIn .25s ease',padding:24,
-            }}>
-            <div style={{background:'#fff',borderRadius:24,
-              padding:'28px 28px 22px',
-              display:'flex',flexDirection:'column',alignItems:'center',gap:16,
-              boxShadow:'0 24px 60px rgba(0,0,0,.5)',maxWidth:'92vmin'}}>
-              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-                fontSize:24,color:'#0a0e2e',textTransform:'uppercase',
-                letterSpacing:'.12em',lineHeight:1}}>
-                📲 Únete a la sala
-              </div>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=0&data=${encodeURIComponent(window.location.origin+window.location.pathname)}`}
-                alt="QR para unirse a la sala"
-                style={{width:'min(72vmin,640px)',height:'auto',display:'block',borderRadius:12}}/>
-              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                fontSize:13,color:'rgba(10,14,46,.6)',letterSpacing:'.1em',
-                textTransform:'uppercase',lineHeight:1}}>
-                Toca para reducir
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Repaso: botón flotante — solo para usuarios en zona repaso */}
         {phase==='repaso'&&!repasoChatOpen&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
           <button onClick={()=>setRepasoChatOpen(true)} style={{
@@ -5108,6 +5037,76 @@ function App(){
           onResetSession={resetSession}
           onOpenDownload={()=>setDownloadOpen(true)}
         />
+      )}
+
+      {/* QR de acceso (solo admin) — fixed para que nunca lo tape nada */}
+      {isAdmin&&qrSize!=='large'&&(
+        <button
+          onClick={()=>setQrSize(s=>s==='small'?'medium':'large')}
+          title="Tocar para cambiar el tamaño del QR"
+          style={{
+            position:'fixed',
+            top:qrSize==='medium'?72:64,
+            right:qrSize==='medium'?14:10,
+            zIndex:110,
+            background:'#fff',borderRadius:14,
+            padding:qrSize==='medium'?'12px 12px 8px':'5px 5px 3px',
+            boxShadow:'0 10px 28px rgba(10,14,46,.28), 0 0 0 2px rgba(255,208,0,.55)',
+            border:'none',cursor:'pointer',
+            display:'flex',flexDirection:'column',alignItems:'center',
+            gap:qrSize==='medium'?6:0,
+          }}>
+          {qrSize==='medium'&&(
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:13,color:'#0a0e2e',textTransform:'uppercase',
+              letterSpacing:'.12em',lineHeight:1}}>
+              📲 Únete
+            </div>
+          )}
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=0&data=${encodeURIComponent(window.location.origin+window.location.pathname)}`}
+            alt="QR para unirse a la sala"
+            width={qrSize==='medium'?180:80}
+            height={qrSize==='medium'?180:80}
+            style={{display:'block',borderRadius:6,background:'#fff'}}/>
+          {qrSize==='medium'&&(
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              fontSize:9,color:'rgba(10,14,46,.55)',letterSpacing:'.1em',
+              textTransform:'uppercase',lineHeight:1}}>
+              Escanea y entra
+            </div>
+          )}
+        </button>
+      )}
+      {isAdmin&&qrSize==='large'&&(
+        <div
+          onClick={()=>setQrSize('small')}
+          style={{
+            position:'fixed',inset:0,zIndex:200,
+            background:'rgba(10,14,46,.92)',backdropFilter:'blur(8px)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            cursor:'pointer',animation:'modalIn .25s ease',padding:24,
+          }}>
+          <div style={{background:'#fff',borderRadius:24,
+            padding:'28px 28px 22px',
+            display:'flex',flexDirection:'column',alignItems:'center',gap:16,
+            boxShadow:'0 24px 60px rgba(0,0,0,.5)',maxWidth:'92vmin'}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:24,color:'#0a0e2e',textTransform:'uppercase',
+              letterSpacing:'.12em',lineHeight:1}}>
+              📲 Únete a la sala
+            </div>
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=0&data=${encodeURIComponent(window.location.origin+window.location.pathname)}`}
+              alt="QR para unirse a la sala"
+              style={{width:'min(72vmin,640px)',height:'auto',display:'block',borderRadius:12}}/>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              fontSize:13,color:'rgba(10,14,46,.6)',letterSpacing:'.1em',
+              textTransform:'uppercase',lineHeight:1}}>
+              Toca para reducir
+            </div>
+          </div>
+        </div>
       )}
 
 
