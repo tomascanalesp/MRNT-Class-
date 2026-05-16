@@ -164,6 +164,13 @@ const MISION_PROJECTS=[
 const getSID=()=>new Date().toISOString().slice(0,10);
 const nowTime=()=>new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
 
+// Correos que tienen admin automáticamente al iniciar sesión.
+// El flag se persiste en profiles/<uid>/isAdmin la primera vez que entran.
+const ADMIN_EMAILS=[
+  'sromeromolina10@gmail.com',
+];
+const isAdminEmail=(email)=>ADMIN_EMAILS.includes((email||'').trim().toLowerCase());
+
 const AUTH_ERRORS={
   'auth/user-not-found':'No existe una cuenta con ese correo',
   'auth/wrong-password':'Contraseña incorrecta',
@@ -4088,15 +4095,27 @@ function App(){
       clearTimeout(t);
       if(user){
         UID.current=user.uid;
+        const whitelisted=isAdminEmail(user.email);
         try{
           const snap=await db.ref(`profiles/${user.uid}`).get();
           const p=snap.val();
+          const adminFlag=!!p?.isAdmin||whitelisted;
+          // Persistir admin si fue otorgado por la whitelist y aún no estaba marcado.
+          if(whitelisted&&!p?.isAdmin){
+            db.ref(`profiles/${user.uid}/isAdmin`).set(true).catch(err=>{
+              console.warn('No se pudo persistir isAdmin:',err);
+            });
+          }
           if(p&&p.name){
-            setProfile(p);
-            setIsAdmin(!!p.isAdmin);
+            setProfile({...p,isAdmin:adminFlag});
+            setIsAdmin(adminFlag);
             await joinRoom(user.uid,p);
             setView('room');
-          } else setView('setup');
+          } else {
+            // Setup: dejamos el flag listo para que saveProfile lo persista.
+            setIsAdmin(adminFlag);
+            setView('setup');
+          }
         } catch(e){ console.error(e); setView('setup'); }
       } else { UID.current=null; setView('auth'); }
     });
