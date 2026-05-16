@@ -2279,13 +2279,43 @@ function JoinActivityPrompt({label,phase,onJoin,onDecline}){
 }
 
 /* ════════════════════════ ENCUESTA SEMANAL (USUARIO) ════════════════════════ */
-function SurveyModal({myId,myName,SID,onSent,onClose}){
+function SurveyModal({myId,myName,SID,onSent,onClose,alreadyResponded}){
   const[days,setDays]=useState(0);
   const[bible,setBible]=useState(null);
   const[mission,setMission]=useState(null);
   const[sent,setSent]=useState(false);
   const[sending,setSending]=useState(false);
   const[error,setError]=useState('');
+
+  // Si ya respondió hoy, mostrar mensaje en vez del formulario (el admin
+  // puede reabrir la encuesta varias veces el mismo día).
+  if(alreadyResponded&&!sent) return(
+    <div style={{position:'fixed',inset:0,zIndex:220,background:'rgba(0,0,0,.82)',
+      backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
+      <div style={{width:'100%',maxWidth:480,
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(16,185,129,.3)',borderRadius:'20px 20px 0 0',
+        padding:'28px 22px 32px',animation:'modalIn .3s ease',textAlign:'center'}}>
+        <div style={{width:40,height:4,borderRadius:2,background:'rgba(16,185,129,.3)',margin:'0 auto 18px'}}/>
+        <div style={{fontSize:54,marginBottom:12}}>✅</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:22,color:'#10b981',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:8}}>
+          Ya respondiste hoy
+        </div>
+        <div style={{fontFamily:'Barlow,sans-serif',fontSize:14,color:'var(--muted)',
+          lineHeight:1.5,marginBottom:20,maxWidth:320,marginLeft:'auto',marginRight:'auto'}}>
+          Gracias por participar. No necesitas responder de nuevo.
+        </div>
+        <button onClick={onClose} style={{
+          width:'100%',padding:13,borderRadius:12,border:'none',
+          background:'linear-gradient(135deg,#10b981,#059669)',color:'#fff',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,
+          letterSpacing:'.06em',textTransform:'uppercase',cursor:'pointer'}}>
+          Cerrar
+        </button>
+      </div>
+    </div>
+  );
 
   const handleSubmit=async()=>{
     if(bible===null||mission===null||sending) return;
@@ -2420,8 +2450,21 @@ function SurveyModal({myId,myName,SID,onSent,onClose}){
 }
 
 /* ════════════════════════ ADMIN ENCUESTA MODAL ════════════════════════ */
-function AdminSurveyModal({responses,SID,onClose,onToggle,surveyActive}){
-  const list=Object.values(responses||{});
+function AdminSurveyModal({responses,users,SID,onClose,onToggle,surveyActive}){
+  const responsesObj=responses||{};
+  const list=Object.values(responsesObj);
+  const respondedUids=new Set(Object.keys(responsesObj));
+  // Usuarios actualmente en la sala
+  const allInRoom=Object.entries(users||{}).map(([uid,u])=>({uid,name:u?.name||uid,avatar:u?.avatar,color:u?.color,photo:u?.photo}));
+  const pending=allInRoom.filter(u=>!respondedUids.has(u.uid));
+  const respondedInRoom=allInRoom.filter(u=>respondedUids.has(u.uid));
+  // Personas que respondieron pero ya no están en la sala (igual cuentan).
+  const respondedNotInRoom=Object.entries(responsesObj)
+    .filter(([uid])=>!allInRoom.find(u=>u.uid===uid))
+    .map(([uid,r])=>({uid,name:r?.name||uid}));
+  const totalExpected=allInRoom.length;
+  const totalResponded=list.length;
+  const allDone=totalExpected>0&&pending.length===0;
 
   const downloadResults=()=>{
     const rows=[
@@ -2448,11 +2491,19 @@ function AdminSurveyModal({responses,SID,onClose,onToggle,surveyActive}){
         <div style={{width:40,height:4,borderRadius:2,background:'rgba(255,208,0,.2)',margin:'0 auto 16px'}}/>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
           <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-            fontSize:18,color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
-            📋 Encuesta — {list.length} resp.
+            fontSize:18,color:allDone?'#10b981':'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            📋 Encuesta — {totalResponded}{totalExpected>0?` / ${totalExpected}`:''}
           </div>
           <button onClick={onClose} style={{background:'none',border:'none',color:'var(--muted)',fontSize:20,padding:4}}>✕</button>
         </div>
+        {allDone&&(
+          <div style={{marginBottom:12,padding:'10px 14px',borderRadius:10,
+            background:'rgba(16,185,129,.15)',border:'1px solid rgba(16,185,129,.35)',
+            color:'#10b981',fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+            fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase',textAlign:'center'}}>
+            ✅ Todos en la sala respondieron
+          </div>
+        )}
         <div style={{display:'flex',gap:8,marginBottom:14}}>
           <button onClick={onToggle} style={{
             flex:1,padding:'9px',borderRadius:10,
@@ -2486,6 +2537,48 @@ function AdminSurveyModal({responses,SID,onClose,onToggle,surveyActive}){
                 <div style={{fontSize:9,color:'var(--muted)',marginTop:3,textTransform:'uppercase',letterSpacing:'.04em'}}>{st.label}</div>
               </div>
             ))}
+          </div>
+        )}
+        {totalExpected>0&&(
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
+            <div style={{background:'rgba(16,185,129,.06)',border:'1px solid rgba(16,185,129,.2)',
+              borderRadius:10,padding:'10px 12px'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:10,
+                color:'#10b981',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:6}}>
+                ✓ Respondieron ({respondedInRoom.length+respondedNotInRoom.length})
+              </div>
+              {respondedInRoom.length+respondedNotInRoom.length===0?(
+                <div style={{fontSize:11,color:'var(--muted)',fontStyle:'italic'}}>—</div>
+              ):(
+                <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                  {[...respondedInRoom,...respondedNotInRoom].map(u=>(
+                    <span key={u.uid} style={{fontSize:11,fontFamily:'Barlow,sans-serif',
+                      fontWeight:600,color:'var(--white)',background:'rgba(16,185,129,.12)',
+                      padding:'3px 8px',borderRadius:20,
+                      border:'1px solid rgba(16,185,129,.25)'}}>{u.name}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div style={{background:'rgba(255,208,0,.05)',border:'1px solid rgba(255,208,0,.18)',
+              borderRadius:10,padding:'10px 12px'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:10,
+                color:'#ffd000',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:6}}>
+                ⏳ Faltan ({pending.length})
+              </div>
+              {pending.length===0?(
+                <div style={{fontSize:11,color:'var(--muted)',fontStyle:'italic'}}>—</div>
+              ):(
+                <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                  {pending.map(u=>(
+                    <span key={u.uid} style={{fontSize:11,fontFamily:'Barlow,sans-serif',
+                      fontWeight:600,color:'var(--white)',background:'rgba(255,208,0,.1)',
+                      padding:'3px 8px',borderRadius:20,
+                      border:'1px solid rgba(255,208,0,.25)'}}>{u.name}</span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
         {list.length===0?(
@@ -2772,7 +2865,7 @@ function DataDownloadModal({onClose}){
 }
 
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
-function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload}){
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
   const[open,setOpen]=useState(false);
   const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
@@ -2840,6 +2933,27 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
 
           {/* Acciones según fase */}
           <div style={{display:'flex',flexDirection:'column',gap:7}}>
+            {session?.survey?.active&&(()=>{
+              const total=Object.keys(users||{}).length;
+              const done=Object.keys(surveyResponses||{}).length;
+              const all=total>0&&done>=total;
+              return(
+                <button onClick={()=>{onOpenSurveyResults&&onOpenSurveyResults();setOpen(false);}} style={{
+                  background:all?'rgba(16,185,129,.15)':'rgba(139,92,246,.12)',
+                  border:`1px solid ${all?'rgba(16,185,129,.4)':'rgba(139,92,246,.35)'}`,
+                  borderRadius:10,padding:'9px',color:all?'#10b981':'#a78bfa',
+                  fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                  letterSpacing:'.04em',textTransform:'uppercase',
+                  display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,
+                }}>
+                  <span>📋 Encuesta · ver respuestas</span>
+                  <span style={{background:all?'rgba(16,185,129,.25)':'rgba(139,92,246,.25)',
+                    padding:'2px 8px',borderRadius:20,fontSize:11}}>
+                    {all?'✓ Todos':`${done}/${total}`}
+                  </span>
+                </button>
+              );
+            })()}
             <button onClick={()=>{onOpenDownload();setOpen(false);}} style={{
               background:'rgba(255,208,0,.07)',border:'1px solid rgba(255,208,0,.2)',
               borderRadius:10,padding:'9px',color:'#ffd000',fontWeight:800,fontSize:12,
@@ -4058,6 +4172,9 @@ function App(){
   const[joinPrompt,     setJoinPrompt]     =useState(null); // {phase,label}
   // QR de acceso visible en la sala (solo admin) — small | medium | large
   const[qrSize,         setQrSize]         =useState('small');
+  // Toast cuando todos respondieron la encuesta (solo admin)
+  const[surveyAllNotify,setSurveyAllNotify]=useState(null); // {done,total} | null
+  const surveyAllNotifyShownRef=useRef(false);
 
   const UID      =useRef(null);
   const SID      =useRef(getSID());
@@ -4240,6 +4357,27 @@ function App(){
       setSurveyOpen(false);
     }
   },[session]);
+
+  // Notificar al admin cuando todos respondieron la encuesta (una sola vez
+  // por activación: el flag se resetea cuando la encuesta se cierra o cuando
+  // alguien aún no respondió).
+  useEffect(()=>{
+    if(!isAdmin||!session?.survey?.active){
+      surveyAllNotifyShownRef.current=false;
+      return;
+    }
+    const total=Object.keys(users||{}).length;
+    const done=Object.keys(surveyResponses||{}).length;
+    if(total>0&&done>=total){
+      if(!surveyAllNotifyShownRef.current){
+        surveyAllNotifyShownRef.current=true;
+        setSurveyAllNotify({done,total});
+        setTimeout(()=>setSurveyAllNotify(null),8000);
+      }
+    } else {
+      surveyAllNotifyShownRef.current=false;
+    }
+  },[users,surveyResponses,session?.survey?.active,isAdmin]);
 
   /* ── Prompt para integrarse a una actividad activa al entrar a su zona ── */
   useEffect(()=>{
@@ -5055,6 +5193,8 @@ function App(){
           onToggleWordCloud={toggleWordCloud}
           onResetSession={resetSession}
           onOpenDownload={()=>setDownloadOpen(true)}
+          onOpenSurveyResults={()=>setAdminSurvey(true)}
+          surveyResponses={surveyResponses}
         />
       )}
 
@@ -5173,6 +5313,20 @@ function App(){
       {attOpen&&<AttendanceModal myAtt={myAtt} gameHistory={gameHistory} onClose={()=>setAttOpen(false)}/>}
       {adminStats&&<AdminStatsModal onClose={()=>setAdminStats(false)}/>}
       {attNotify&&<AttNotifyToast/>}
+      {isAdmin&&surveyAllNotify&&(
+        <div style={{position:'fixed',top:80,left:'50%',transform:'translateX(-50%)',
+          zIndex:240,background:'linear-gradient(135deg,#10b981,#059669)',
+          color:'#fff',padding:'12px 20px',borderRadius:14,
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:13,
+          letterSpacing:'.06em',textTransform:'uppercase',
+          boxShadow:'0 12px 32px rgba(16,185,129,.5)',
+          display:'flex',alignItems:'center',gap:10,
+          animation:'modalIn .35s ease',cursor:'pointer',
+        }} onClick={()=>setSurveyAllNotify(null)}>
+          <span style={{fontSize:18}}>✅</span>
+          <span>Todos respondieron la encuesta ({surveyAllNotify.done}/{surveyAllNotify.total})</span>
+        </div>
+      )}
       {joinPrompt&&(
         <JoinActivityPrompt
           label={joinPrompt.label}
@@ -5182,9 +5336,10 @@ function App(){
         />
       )}
       {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current}
+        alreadyResponded={!!surveyResponses[UID.current]}
         onSent={()=>{surveyDismissedRef.current=true;setSurveyOpen(false);}}
         onClose={()=>{surveyDismissedRef.current=true;setSurveyOpen(false);}}/>}
-      {adminSurvey&&<AdminSurveyModal responses={surveyResponses} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
+      {adminSurvey&&<AdminSurveyModal responses={surveyResponses} users={users} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
       {downloadOpen&&<DataDownloadModal onClose={()=>setDownloadOpen(false)}/>}
 
       {/* Repaso Chat — solo para usuarios en zona repaso o admin */}
