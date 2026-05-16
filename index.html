@@ -2584,13 +2584,17 @@ function DataDownloadModal({onClose}){
 
   // ── Encuestas (todas las sesiones) ─────────────────────────────────
   const fetchSurveys=async()=>{
-    // Lee de surveyHistory (persistente) y mezcla con sessions/.../survey/responses
-    // (compatibilidad con respuestas previas a la persistencia separada).
+    // Lee de surveyHistory (persistente) y mezcla con sessions/.../survey/responses.
+    // surveyHistory puede estar bloqueado por reglas de RTDB — toleramos el fallo
+    // y caemos en sessions como fuente principal para que la descarga siga andando.
     const[hSnap,sSnap]=await Promise.all([
-      db.ref('surveyHistory').get(),
+      db.ref('surveyHistory').get().catch(err=>{
+        console.warn('No se pudo leer surveyHistory:',err);
+        return null;
+      }),
       db.ref('sessions').get(),
     ]);
-    const history=hSnap.val()||{};
+    const history=hSnap?.val()||{};
     const sessions=sSnap.val()||{};
     const merged={};
     Object.entries(sessions).forEach(([sid,s])=>{
@@ -4035,6 +4039,10 @@ function App(){
   // Se setea si estaba en la zona cuando el admin inició la fase, o al aceptar el prompt.
   const lockedPhaseRef=useRef(null);
   const prevPhaseRef=useRef(null);
+  // Encuesta: marcar cuando el usuario cierra/responde para no re-abrir el modal
+  // hasta la próxima activación (inactiva→activa) desde Templo.
+  const surveyDismissedRef=useRef(false);
+  const prevSurveyActiveRef=useRef(false);
 
   // Mantener profileRef siempre actualizado para usarlo en reconexión
   useEffect(()=>{ profileRef.current=profile; },[profile]);
@@ -4168,16 +4176,24 @@ function App(){
       setMisionOpen(false);
     }
 
-    // Encuesta
-    if(session?.survey?.active&&!surveyResponses[UID.current]) setSurveyOpen(true);
-    if(!session?.survey?.active) setSurveyOpen(false);
   },[session]);
 
-  // Re-verificar encuesta cuando llegan respuestas (cubre usuarios que conectaron tarde)
+  // Encuesta — sólo abre en la transición inactiva→activa (cuando el admin inicia
+  // Templo o reabre la encuesta). No reabrir por otros cambios de la sesión
+  // (descargas, reacciones, etc.) ni cada vez que llegan respuestas.
   useEffect(()=>{
-    if(!sessionRef.current?.survey?.active) return;
-    if(!surveyResponses[UID.current]) setSurveyOpen(true);
-  },[surveyResponses]);
+    const active=!!session?.survey?.active;
+    const wasActive=prevSurveyActiveRef.current;
+    prevSurveyActiveRef.current=active;
+    if(active&&!wasActive){
+      // Nueva apertura: limpiar el dismiss y abrir el modal — incluso si ya
+      // habían respondido antes (permite actualizar la respuesta).
+      surveyDismissedRef.current=false;
+      setSurveyOpen(true);
+    } else if(!active&&wasActive){
+      setSurveyOpen(false);
+    }
+  },[session]);
 
   /* ── Prompt para integrarse a una actividad activa al entrar a su zona ── */
   useEffect(()=>{
@@ -4529,11 +4545,17 @@ function App(){
 
   const startTemplo=async()=>{
     try{
-      // Al ir a Templo se abre automáticamente la encuesta semanal
-      await db.ref(`sessions/${SID.current}`).set({
+      // Al ir a Templo se abre automáticamente la encuesta semanal.
+      // Si ya hubo una apertura previa el mismo día, preservar las respuestas
+      // existentes: si los usuarios responden de nuevo, el `set` por uid las
+      // sobreescribe; si no, queda la última respuesta registrada.
+      const sessRef=db.ref(`sessions/${SID.current}`);
+      const respSnap=await sessRef.child('survey/responses').get();
+      const responses=respSnap.val();
+      await sessRef.set({
         phase:'templo',
         templo:{active:true,startTime:Date.now()},
-        survey:{active:true},
+        survey:{active:true,...(responses?{responses}:{})},
       });
     }catch(e){console.error('Error iniciando templo:',e);}
   };
@@ -5043,7 +5065,9 @@ function App(){
           onDecline={handleDeclineJoin}
         />
       )}
-      {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current} onSent={()=>setSurveyOpen(false)} onClose={()=>setSurveyOpen(false)}/>}
+      {surveyOpen&&<SurveyModal myId={UID.current} myName={profile.name} SID={SID.current}
+        onSent={()=>{surveyDismissedRef.current=true;setSurveyOpen(false);}}
+        onClose={()=>{surveyDismissedRef.current=true;setSurveyOpen(false);}}/>}
       {adminSurvey&&<AdminSurveyModal responses={surveyResponses} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
       {downloadOpen&&<DataDownloadModal onClose={()=>setDownloadOpen(false)}/>}
 
