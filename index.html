@@ -6403,6 +6403,10 @@ function QuienSoyController({session,users,myId,isAdmin,SID,onClose}){
   const isPlayer=currentPlayerId===myId;
   const character=game?.currentCharacter;
   const scores=game?.scores||{};
+  // Admin: ocultar respuesta por defecto, revelar al hacer click. Se resetea
+  // cuando cambia el personaje (nueva ronda u "otro personaje").
+  const[adminRevealed,setAdminRevealed]=useState(false);
+  useEffect(()=>{ setAdminRevealed(false); },[character?.nombre]);
 
   const seleccionarRandom=async()=>{
     if(juegosUsers.length===0) return;
@@ -6469,7 +6473,7 @@ function QuienSoyController({session,users,myId,isAdmin,SID,onClose}){
             <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:18,color:'#fff'}}>{currentPlayer.name}</div>
           </div>
         </div>
-        {(isPlayer||isAdmin)?(
+        {(isPlayer||(isAdmin&&adminRevealed))?(
           <div style={{width:'100%',maxWidth:380,background:'linear-gradient(135deg,#0e7490,#22d3ee)',borderRadius:24,padding:'24px 22px',boxShadow:'0 20px 60px rgba(0,0,0,.5)',border:'4px solid #22d3ee',color:'#fff'}}>
             <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,color:'rgba(255,255,255,.75)',textTransform:'uppercase',letterSpacing:'.18em',marginBottom:8,textAlign:'center'}}>{isPlayer?'Tú eres':'Personaje (admin)'}</div>
             <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:36,color:'#fff',textTransform:'uppercase',letterSpacing:'.02em',lineHeight:1.05,marginBottom:14,textAlign:'center',textShadow:'0 2px 12px rgba(0,0,0,.3)'}}>{character.nombre}</div>
@@ -6484,6 +6488,16 @@ function QuienSoyController({session,users,myId,isAdmin,SID,onClose}){
               <span style={{background:'rgba(255,255,255,.2)',padding:'4px 10px',borderRadius:20,fontSize:11,fontWeight:700,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.08em',textTransform:'uppercase'}}>{character.testamento==='AT'?'Antiguo Testamento':'Nuevo Testamento'}</span>
               <span style={{background:'rgba(255,255,255,.2)',padding:'4px 10px',borderRadius:20,fontSize:11,fontWeight:700,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.08em',textTransform:'uppercase'}}>{character.genero==='F'?'Mujer':'Hombre'}</span>
             </div>
+            {isAdmin&&!isPlayer&&(
+              <button onClick={()=>setAdminRevealed(false)} style={{marginTop:14,width:'100%',background:'rgba(0,0,0,.25)',border:'1px solid rgba(255,255,255,.3)',borderRadius:10,padding:'9px',color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:12,letterSpacing:'.06em',textTransform:'uppercase',cursor:'pointer'}}>🙈 Ocultar respuesta</button>
+            )}
+          </div>
+        ):isAdmin?(
+          <div style={{width:'100%',maxWidth:380,padding:'30px 24px',background:'rgba(34,211,238,.06)',border:'2px dashed rgba(34,211,238,.4)',borderRadius:24,textAlign:'center'}}>
+            <div style={{fontSize:48,marginBottom:10}}>🙈</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:22,color:'#fff',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:8}}>Personaje oculto</div>
+            <div style={{fontFamily:'Barlow,sans-serif',fontSize:13,color:'var(--muted)',lineHeight:1.5,marginBottom:16,maxWidth:280,marginLeft:'auto',marginRight:'auto'}}>Juega junto al grupo y adivina junto a ellos. Si necesitas verlo para facilitar, muestra la respuesta.</div>
+            <button onClick={()=>setAdminRevealed(true)} style={{background:'rgba(34,211,238,.18)',border:'1px solid rgba(34,211,238,.45)',borderRadius:12,padding:'10px 20px',color:'#22d3ee',fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:13,letterSpacing:'.06em',textTransform:'uppercase',cursor:'pointer'}}>👁 Mostrar respuesta</button>
           </div>
         ):(
           <div style={{width:'100%',maxWidth:380,padding:'30px 24px',background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.1)',borderRadius:24,textAlign:'center'}}>
