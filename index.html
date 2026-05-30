@@ -1648,6 +1648,298 @@ function RepasoChat({msgs,session,myId,users,onSend,onClose,SID,chatReactions}){
   );
 }
 
+/* ════════════════════════ REPASO: PRESENTACIÓN (SLIDES) ════════════════════════ */
+/* Paleta verde inspirada en la plantilla de la clase (foto de referencia). */
+const SLIDE_T={
+  bg:'linear-gradient(135deg,#b4c587 0%,#c7d6a0 52%,#e0e9c8 100%)',
+  ink:'#3c511d',       // verde oliva oscuro (títulos)
+  inkSoft:'#54622f',
+  cardLead:'#39501c',
+  cardBody:'#444b33',
+  accent:'#6f8f3c',
+  accentDark:'#4d6a27',
+};
+
+/* Una slide por cada día del repaso de la semana — Mateo 5–7. */
+const REPASO_SLIDES=[
+  {
+    day:'SÁBADO', kicker:'INICIA', section:'inTro',
+    title:'El problema del pecado',
+    verses:['Mateo 5–7','Isaías 59:2','Mateo 5:20','Mateo 6:33','1 Juan 3:4'],
+    cards:[
+      {lead:'El pecado separa al ser humano de Dios,',rest:'destruyendo la relación con Él y afectando nuestros pensamientos, acciones y decisiones.'},
+      {lead:'La ley de Dios revela nuestra verdadera condición espiritual',rest:'y nos muestra que todos necesitamos un Salvador, sin importar nuestra apariencia religiosa o nuestras obras.'},
+      {lead:'En el Sermón del Monte, Jesús enseñó que la obediencia externa no basta,',rest:'porque el pecado también nace en el corazón: el orgullo, el odio, la lujuria y la hipocresía.'},
+      {lead:'Cristo invita a cada persona a reconocer su necesidad de perdón,',rest:'a confiar en su justicia y a permitir que Dios restaure la relación quebrantada por el pecado.'},
+    ],
+  },
+  {
+    day:'DOMINGO', kicker:'INTERIORIZA', section:'inTerioriza',
+    title:'La ampliación de la ley',
+    verses:['Mateo 5:22','Mateo 5:28-29','Mateo 5:44','Mateo 6:2','Mateo 7:1-2'],
+    cards:[
+      {lead:'Jesús profundiza la ley hasta el corazón:',rest:'enojarse con el hermano o mirar con deseo ya es pecado delante de Dios, aunque nadie lo vea.'},
+      {lead:'El enojo y la lujuria levantan una barrera',rest:'en nuestra relación con Dios; por eso Jesús nos pide tratarlos con la mayor seriedad.'},
+      {lead:'Amar a los enemigos y orar por quienes nos hieren',rest:'transforma nuestro caminar con Dios y también nuestra relación con los demás.'},
+      {lead:'La verdadera religión es humilde:',rest:'no busca el aplauso de la gente ni juzga a los demás, porque solo Dios es el juez.'},
+    ],
+  },
+  {
+    day:'LUNES', kicker:'INTERPRETA', section:'inTerpreta',
+    title:'Un espejo',
+    verses:['1 Juan 3:4','Salmo 51:5','Éxodo 31:18','Marcos 12:30-31','Juan 14:15'],
+    cards:[
+      {lead:'El pecado es la infracción de la ley',rest:'y forma parte de nuestra naturaleza; la ley saca a la luz lo que realmente somos.'},
+      {lead:'La ley es como un espejo:',rest:'nos da claridad y convicción, y nos habla del carácter de Dios y de lo que es importante para Él.'},
+      {lead:'Toda la ley se resume en el amor:',rest:'amar a Dios con todo el corazón y amar al prójimo como a uno mismo.'},
+      {lead:'La ley revela el pecado, pero nunca perdona ni justifica;',rest:'por eso, junto a la ley, está el evangelio: la muerte de Cristo que nos justifica ante Dios.'},
+    ],
+  },
+  {
+    day:'MARTES', kicker:'INVESTIGA', section:'inVestiga',
+    title:'La ley y el evangelio',
+    verses:['Romanos 3:19-23','Romanos 4:15','Romanos 7:7','Gálatas 2:16','Santiago 1:23-25'],
+    cards:[
+      {lead:'Nuestra naturaleza pecaminosa nos alcanza a todos:',rest:'«todos pecaron y están destituidos de la gloria de Dios» (Romanos 3:23).'},
+      {lead:'El propósito de la ley es darnos el conocimiento del pecado',rest:'(Romanos 3:20); funciona como un espejo que muestra nuestra necesidad (Santiago 1:23-25).'},
+      {lead:'La salvación se encuentra solo en Jesús:',rest:'somos justificados por la fe en Cristo y no por las obras de la ley (Gálatas 2:16).'},
+      {lead:'La ley señala la enfermedad,',rest:'pero solo el evangelio de Cristo ofrece la cura.'},
+    ],
+  },
+  {
+    day:'MIÉRCOLES', kicker:'INVITA', section:'inVita',
+    title:'Saber y hacer',
+    verses:['Mateo 7:21','Mateo 7:24-29','Juan 17:3','Oseas 4:6'],
+    cards:[
+      {lead:'No basta con decir «Señor, Señor»:',rest:'al reino entran los que hacen la voluntad del Padre celestial (Mateo 7:21).'},
+      {lead:'La vida eterna es conocer a Dios,',rest:'y no podemos hacer su voluntad sin conocerlo de verdad (Juan 17:3).'},
+      {lead:'El conocimiento que no transforma no sirve de nada:',rest:'nuestra obediencia es la expresión natural de nuestro amor por Cristo.'},
+      {lead:'Edificar sobre la Roca',rest:'es escuchar las palabras de Jesús y ponerlas en práctica (Mateo 7:24-27).'},
+    ],
+  },
+  {
+    day:'JUEVES', kicker:'IMPLÍCATE', section:'imPlícate',
+    title:'La muerte de Cristo',
+    verses:['Mateo 5:17-18','Isaías 42:21','Romanos 7:12','Romanos 3:20','1 Juan 3:4'],
+    cards:[
+      {lead:'La muerte de Cristo no abolió la ley;',rest:'al contrario, prueba que la ley es inmutable, pues si pudiera cambiar, Él no habría tenido que morir.'},
+      {lead:'La ley de Dios es una revelación de su carácter:',rest:'santa, justa y buena, tan duradera como su Autor.'},
+      {lead:'El primer paso hacia la reconciliación es la convicción del pecado:',rest:'«por la ley es el conocimiento del pecado».'},
+      {lead:'La ley revela el pecado, pero no da remedio;',rest:'solo el evangelio de Cristo libra de la condenación y de la mancha del pecado.'},
+    ],
+  },
+  {
+    day:'VIERNES', kicker:'INQUIERE', section:'inQuiere',
+    title:'La ley, el pecado y nuestra respuesta',
+    verses:['Mateo 5:17-20','Romanos 3:19-23','Gálatas 2:16','Mateo 7:21-27'],
+    cards:[
+      {lead:'¿Cuál era la relación de Cristo con la ley?',rest:'Vino a cumplirla, no a abolirla, y le dio su significado espiritual más profundo (Mateo 5:17-19).'},
+      {lead:'¿Cuál es el peligro de una falsa seguridad de salvación?',rest:'Conocer a Cristo de palabra mientras se ignora su voluntad (Mateo 7:21-23).'},
+      {lead:'Puntos clave:',rest:'el pecado nos separa de Dios; la ley refleja su carácter y muestra nuestra necesidad; solo Jesús puede salvarnos.'},
+      {lead:'Nuestra respuesta:',rest:'escuchar y seguir las enseñanzas de Cristo, edificando la vida sobre la Roca.'},
+    ],
+  },
+];
+
+/* Logo compacto MRNT class para la esquina de la slide. */
+function SlideBrand(){
+  return(
+    <div style={{display:'flex',alignItems:'center',gap:8,
+      background:'rgba(255,255,255,.82)',borderRadius:12,
+      padding:'6px 12px 6px 8px',boxShadow:'0 4px 14px rgba(60,81,29,.18)'}}>
+      <BookLogo size={34}/>
+      <div style={{lineHeight:.95}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:'clamp(15px,1.8vw,20px)',color:SLIDE_T.ink,letterSpacing:'.02em'}}>MRNT class</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:'clamp(8px,1vw,10px)',color:SLIDE_T.inkSoft,letterSpacing:'.18em',
+          textTransform:'uppercase'}}>Las Condes</div>
+      </div>
+    </div>
+  );
+}
+
+/* Render de una slide individual con el estilo verde de la plantilla. */
+function SlideView({slide,index,total}){
+  return(
+    <div style={{
+      position:'relative',width:'min(96vw,1180px)',maxHeight:'90vh',overflowY:'auto',
+      background:SLIDE_T.bg,borderRadius:22,
+      boxShadow:'0 26px 70px rgba(10,14,46,.55)',
+      padding:'clamp(18px,3vw,40px)',
+      border:'1px solid rgba(255,255,255,.35)',
+    }}>
+      {/* Trazo decorativo sutil */}
+      <div style={{position:'absolute',inset:0,borderRadius:22,overflow:'hidden',pointerEvents:'none'}}>
+        <div style={{position:'absolute',right:'-12%',bottom:'-30%',width:'70%',height:'120%',
+          background:'radial-gradient(ellipse at center,rgba(255,255,255,.35),rgba(255,255,255,0) 60%)'}}/>
+      </div>
+
+      {/* Encabezado: logo + versículos */}
+      <div style={{position:'relative',display:'flex',justifyContent:'space-between',
+        alignItems:'flex-start',gap:14,flexWrap:'wrap'}}>
+        <SlideBrand/>
+        <div style={{display:'flex',alignItems:'center',gap:9,
+          background:'rgba(255,255,255,.74)',borderRadius:12,
+          padding:'8px 13px',boxShadow:'0 4px 14px rgba(60,81,29,.16)'}}>
+          <span style={{fontSize:'clamp(16px,2vw,22px)'}}>📖</span>
+          <div style={{display:'flex',flexDirection:'column',gap:1}}>
+            {slide.verses.map((v,i)=>(
+              <span key={i} style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                fontSize:'clamp(9px,1.15vw,13px)',color:SLIDE_T.accentDark,
+                letterSpacing:'.04em',whiteSpace:'nowrap'}}>{v}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Día + título */}
+      <div style={{position:'relative',display:'flex',alignItems:'center',gap:14,
+        margin:'clamp(14px,2.4vw,26px) 0 clamp(12px,2vw,22px)'}}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',
+          gap:3,flexShrink:0}}>
+          <div style={{width:'clamp(38px,4.6vw,56px)',height:'clamp(38px,4.6vw,56px)',
+            borderRadius:'50%',background:'rgba(255,255,255,.55)',
+            border:`2px solid ${SLIDE_T.accentDark}`,
+            display:'flex',alignItems:'center',justifyContent:'center',
+            color:SLIDE_T.accentDark,fontSize:'clamp(18px,2.4vw,26px)',fontWeight:900}}>↑</div>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:'clamp(10px,1.3vw,14px)',color:SLIDE_T.accentDark,
+            letterSpacing:'.1em'}}>{slide.kicker}</div>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+            fontSize:'clamp(8px,1vw,11px)',color:SLIDE_T.inkSoft,
+            letterSpacing:'.16em'}}>{slide.day}</div>
+        </div>
+        <h1 style={{margin:0,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:'clamp(28px,5.2vw,62px)',lineHeight:.98,color:SLIDE_T.ink,
+          textTransform:'uppercase',letterSpacing:'.01em'}}>{slide.title}</h1>
+      </div>
+
+      {/* Tarjetas */}
+      <div style={{position:'relative',display:'grid',
+        gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',
+        gap:'clamp(10px,1.6vw,18px)'}}>
+        {slide.cards.map((c,i)=>(
+          <div key={i} style={{background:'#ffffff',borderRadius:14,
+            padding:'clamp(12px,1.6vw,20px)',
+            borderLeft:`5px solid ${SLIDE_T.accent}`,
+            boxShadow:'0 8px 22px rgba(60,81,29,.16)'}}>
+            <span style={{fontFamily:'Barlow,sans-serif',fontWeight:800,
+              fontSize:'clamp(13px,1.55vw,19px)',color:SLIDE_T.cardLead,lineHeight:1.4}}>
+              {c.lead}{' '}
+            </span>
+            <span style={{fontFamily:'Barlow,sans-serif',fontWeight:400,
+              fontSize:'clamp(13px,1.5vw,18px)',color:SLIDE_T.cardBody,lineHeight:1.45}}>
+              {c.rest}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Pie: progreso */}
+      <div style={{position:'relative',display:'flex',alignItems:'center',
+        justifyContent:'space-between',marginTop:'clamp(12px,2vw,22px)'}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:'clamp(9px,1.1vw,12px)',color:SLIDE_T.inkSoft,
+          letterSpacing:'.16em',textTransform:'uppercase'}}>
+          Repaso · Novena semana · Mateo 5–7
+        </div>
+        <div style={{display:'flex',gap:5,alignItems:'center'}}>
+          {Array.from({length:total}).map((_,i)=>(
+            <span key={i} style={{width:i===index?16:7,height:7,borderRadius:4,
+              background:i===index?SLIDE_T.accentDark:'rgba(60,81,29,.28)',
+              transition:'all .2s'}}/>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Overlay de presentación sincronizada: todos ven la slide; el admin avanza. */
+function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
+  const pres=session?.presentation;
+  const idx=Math.min(Math.max(pres?.slide||0,0),REPASO_SLIDES.length-1);
+  const total=REPASO_SLIDES.length;
+
+  useEffect(()=>{
+    if(!isAdmin) return;
+    const h=e=>{
+      if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();onNext();}
+      else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();onPrev();}
+    };
+    window.addEventListener('keydown',h);
+    return()=>window.removeEventListener('keydown',h);
+  },[isAdmin,onNext,onPrev]);
+
+  if(!pres?.active) return null;
+  const slide=REPASO_SLIDES[idx];
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:150,
+      background:'radial-gradient(ellipse at top,#11173f,#070a1f)',
+      display:'flex',flexDirection:'column',alignItems:'center',
+      justifyContent:'center',padding:'14px 12px',gap:12}}>
+      <SlideView slide={slide} index={idx} total={total}/>
+
+      {isAdmin?(
+        <div style={{display:'flex',alignItems:'center',gap:10,
+          background:'rgba(7,9,31,.88)',border:'1px solid rgba(255,255,255,.12)',
+          borderRadius:16,padding:'8px 10px',boxShadow:'0 10px 30px rgba(0,0,0,.5)'}}>
+          <button onClick={onPrev} disabled={idx===0} style={{
+            width:42,height:42,borderRadius:12,border:'none',cursor:idx===0?'default':'pointer',
+            background:idx===0?'rgba(255,255,255,.05)':'rgba(255,255,255,.12)',
+            color:idx===0?'rgba(255,255,255,.3)':'#fff',fontSize:18}}>◀</button>
+          <div style={{minWidth:78,textAlign:'center',fontFamily:'Barlow Condensed,sans-serif',
+            fontWeight:900,fontSize:15,color:'#fff',letterSpacing:'.05em'}}>
+            {idx+1} / {total}
+            <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,.5)',
+              letterSpacing:'.12em',textTransform:'uppercase'}}>{slide.day}</div>
+          </div>
+          <button onClick={onNext} disabled={idx===total-1} style={{
+            width:42,height:42,borderRadius:12,border:'none',cursor:idx===total-1?'default':'pointer',
+            background:idx===total-1?'rgba(255,255,255,.05)':'linear-gradient(135deg,#6f8f3c,#4d6a27)',
+            color:idx===total-1?'rgba(255,255,255,.3)':'#fff',fontSize:18}}>▶</button>
+          <button onClick={onEnd} style={{
+            marginLeft:4,padding:'0 14px',height:42,borderRadius:12,border:'1px solid rgba(239,68,68,.4)',
+            background:'rgba(239,68,68,.12)',color:'#ef4444',fontWeight:800,fontSize:12,
+            fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.06em',textTransform:'uppercase',
+            cursor:'pointer'}}>⏹ Finalizar</button>
+        </div>
+      ):(
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:12,color:'rgba(255,255,255,.5)',letterSpacing:'.12em',
+          textTransform:'uppercase',display:'flex',alignItems:'center',gap:7}}>
+          <span style={{width:7,height:7,borderRadius:'50%',background:'#6f8f3c',
+            animation:'pulse 1.5s infinite'}}/>
+          El anfitrión controla la presentación
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Botón flotante para abrir/cerrar el chat del repaso. */
+function ChatFab({onClick,count}){
+  return(
+    <button onClick={onClick} title="Abrir chat" style={{
+      position:'fixed',right:16,bottom:18,zIndex:152,
+      width:56,height:56,borderRadius:'50%',border:'none',cursor:'pointer',
+      background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',color:'#fff',fontSize:24,
+      display:'flex',alignItems:'center',justifyContent:'center',
+      boxShadow:'0 10px 26px rgba(29,78,216,.5)'}}>
+      💬
+      {count>0&&(
+        <span style={{position:'absolute',top:-2,right:-2,minWidth:20,height:20,
+          padding:'0 5px',borderRadius:10,background:'#ef4444',color:'#fff',
+          fontSize:11,fontWeight:800,fontFamily:'Barlow Condensed,sans-serif',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          border:'2px solid #070a1f'}}>{count>99?'99+':count}</span>
+      )}
+    </button>
+  );
+}
+
 /* ════════════════════════ FIN DE ACTIVIDAD ════════════════════════ */
 function ActivityEndBanner({phase,onDismiss}){
   const msgs={
@@ -2865,7 +3157,7 @@ function DataDownloadModal({onClose}){
 }
 
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
-function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartPresentation,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
   const[open,setOpen]=useState(false);
   const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
@@ -3063,6 +3355,16 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
 
             {phase==='repaso'&&(
               <div style={{display:'flex',flexDirection:'column',gap:7}}>
+                <button onClick={()=>{onStartPresentation();setOpen(false);}} style={{
+                  background:session?.presentation?.active
+                    ?'rgba(111,143,60,.16)':'linear-gradient(135deg,#6f8f3c,#4d6a27)',
+                  border:'1px solid rgba(111,143,60,.45)',
+                  borderRadius:10,padding:'10px',
+                  color:session?.presentation?.active?'#a3c46a':'#fff',
+                  fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                  letterSpacing:'.04em',textTransform:'uppercase'}}>
+                  {session?.presentation?.active?'▶️ Presentación en curso':'▶️ Iniciar presentación'}
+                </button>
                 {!session?.wordcloud?.active&&(
                   <input value={wcQ} onChange={e=>setWcQ(e.target.value)}
                     placeholder="Pregunta para la nube (opcional)..."
@@ -4194,6 +4496,8 @@ function App(){
   // hasta la próxima activación (inactiva→activa) desde Templo.
   const surveyDismissedRef=useRef(false);
   const prevSurveyActiveRef=useRef(false);
+  // Presentación: detectar transición inactiva→activa para colapsar el chat.
+  const prevPresActiveRef=useRef(false);
 
   // Mantener profileRef siempre actualizado para usarlo en reconexión
   useEffect(()=>{ profileRef.current=profile; },[profile]);
@@ -4318,10 +4622,16 @@ function App(){
       else setConfraOpen(false);
     } else if(p!=='confra') setConfraOpen(false);
 
-    // Repaso — auto-abrir chat SOLO para usuarios en zona repaso
-    if(p==='repaso'&&session.repaso?.active){
+    // Repaso — auto-abrir chat SOLO si NO hay una presentación activa.
+    // Durante la presentación el chat queda como ícono flotante (FAB).
+    const presActive=!!session.presentation?.active;
+    if(p==='repaso'&&session.repaso?.active&&!presActive){
       if(users[UID.current]?.zone==='repaso'||isAdmin) setRepasoChatOpen(true);
     }
+    // Al iniciar la presentación (transición inactiva→activa) colapsar el chat
+    // para que todos vean la slide; el ícono permite reabrirlo.
+    if(presActive&&!prevPresActiveRef.current) setRepasoChatOpen(false);
+    prevPresActiveRef.current=presActive;
 
     // Misión — auto-abrir actividad para usuarios en zona misión o admin
     if(p==='mision'&&session.mision?.active){
@@ -4685,6 +4995,23 @@ function App(){
     // Limpiar chat y nube de palabras
     await db.ref(`rooms/${SID.current}/chat`).remove();
     await db.ref(`sessions/${SID.current}/wordcloud`).remove();
+  };
+
+  /* ── Presentación de slides del repaso (sincronizada por el admin) ── */
+  const startPresentation=async()=>{
+    setRepasoChatOpen(false);
+    await db.ref(`sessions/${SID.current}/presentation`).set({
+      active:true,slide:0,total:REPASO_SLIDES.length,startedAt:Date.now(),
+    });
+  };
+  const movePresentation=async(dir)=>{
+    const cur=sessionRef.current?.presentation;
+    if(!cur?.active) return;
+    const next=Math.max(0,Math.min(REPASO_SLIDES.length-1,(cur.slide||0)+dir));
+    if(next!==cur.slide) await db.ref(`sessions/${SID.current}/presentation/slide`).set(next);
+  };
+  const endPresentation=async()=>{
+    await db.ref(`sessions/${SID.current}/presentation/active`).set(false);
   };
 
   const toggleWordCloud=async(question='')=>{
@@ -5183,6 +5510,7 @@ function App(){
           onEndConfra={endConfra}
           onStartRepaso={startRepaso}
           onEndRepaso={endRepaso}
+          onStartPresentation={startPresentation}
           onStartJuegos={startJuegos}
           onEndJuegos={endJuegos}
           onStartMision={startMision}
@@ -5342,6 +5670,16 @@ function App(){
       {adminSurvey&&<AdminSurveyModal responses={surveyResponses} users={users} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
       {downloadOpen&&<DataDownloadModal onClose={()=>setDownloadOpen(false)}/>}
 
+      {/* Presentación del repaso — todos ven la slide; el admin la avanza */}
+      {phase==='repaso'&&session?.presentation?.active&&(
+        <PresentationOverlay
+          session={session} isAdmin={isAdmin}
+          onPrev={()=>movePresentation(-1)}
+          onNext={()=>movePresentation(1)}
+          onEnd={endPresentation}
+        />
+      )}
+
       {/* Repaso Chat — solo para usuarios en zona repaso o admin */}
       {repasoChatOpen&&phase==='repaso'&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
         <RepasoChat
@@ -5352,6 +5690,11 @@ function App(){
           chatReactions={chatReactions}
           onClose={()=>setRepasoChatOpen(false)}
         />
+      )}
+
+      {/* Ícono flotante de chat — la gente lo activa cuando quiera */}
+      {phase==='repaso'&&!repasoChatOpen&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
+        <ChatFab count={msgs.length} onClick={()=>setRepasoChatOpen(true)}/>
       )}
 
       {/* Misión — solo para usuarios en zona mision o admin */}
