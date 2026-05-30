@@ -4434,6 +4434,23 @@ const btnYellow=(dis)=>({
 
 /* ════════════════════════ APP PRINCIPAL ════════════════════════ */
 function App(){
+  // Auto-actualización: revisa periódicamente si se publicó una versión nueva
+  // del index.html y, si cambió APP_VERSION, recarga para que todos (también
+  // los participantes) tengan siempre las funciones más recientes.
+  useEffect(()=>{
+    let stop=false;
+    const check=async()=>{
+      try{
+        const res=await fetch(window.location.pathname+'?v='+Date.now(),{cache:'no-store'});
+        const txt=await res.text();
+        const m=txt.match(/APP_VERSION='([^']+)'/);
+        if(!stop&&m&&m[1]&&m[1]!==APP_VERSION) window.location.reload();
+      }catch(e){/* sin red: reintentar luego */}
+    };
+    const id=setInterval(check,60000);
+    return()=>{stop=true;clearInterval(id);};
+  },[]);
+
   /* ── Responsive ── */
   const isMobile=useIsMobile(640);
   /* ── Vista y auth ── */
