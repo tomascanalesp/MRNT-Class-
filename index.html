@@ -4506,6 +4506,8 @@ function App(){
   const prevSurveyActiveRef=useRef(false);
   // Presentación: detectar transición inactiva→activa para colapsar el chat.
   const prevPresActiveRef=useRef(false);
+  // Repaso: para abrir el chat solo una vez al entrar (no en cada update).
+  const repasoAutoRef=useRef(false);
 
   // Mantener profileRef siempre actualizado para usarlo en reconexión
   useEffect(()=>{ profileRef.current=profile; },[profile]);
@@ -4630,11 +4632,18 @@ function App(){
       else setConfraOpen(false);
     } else if(p!=='confra') setConfraOpen(false);
 
-    // Repaso — auto-abrir chat SOLO si NO hay una presentación activa.
-    // Durante la presentación el chat queda como ícono flotante (FAB).
+    // Repaso — el chat queda como ícono que cada persona activa (NO se fuerza
+    // a pantalla completa). Para los participantes (no admin) se abre UNA sola
+    // vez al entrar a la zona, y luego respeta si lo cierran. El admin nunca
+    // recibe el chat forzado, así su panel de configuración queda siempre libre.
     const presActive=!!session.presentation?.active;
-    if(p==='repaso'&&session.repaso?.active&&!presActive){
-      if(users[UID.current]?.zone==='repaso'||isAdmin) setRepasoChatOpen(true);
+    if(p==='repaso'&&session.repaso?.active){
+      if(!isAdmin&&!presActive&&users[UID.current]?.zone==='repaso'&&!repasoAutoRef.current){
+        setRepasoChatOpen(true);
+        repasoAutoRef.current=true;
+      }
+    } else {
+      repasoAutoRef.current=false;
     }
     // Al iniciar la presentación (transición inactiva→activa) colapsar el chat
     // para que todos vean la slide; el ícono permite reabrirlo.
@@ -4987,7 +4996,9 @@ function App(){
   };
 
   const startRepaso=async(repasoUsers=[])=>{
-    setRepasoChatOpen(true);
+    // No abrimos el chat en pantalla completa para el admin: el panel de
+    // configuración debe quedar accesible. El chat se abre con su ícono.
+    setRepasoChatOpen(false);
     try{
       await db.ref(`sessions/${SID.current}`).set({
         phase:'repaso',
@@ -5701,8 +5712,9 @@ function App(){
         />
       )}
 
-      {/* Ícono flotante de chat — la gente lo activa cuando quiera */}
-      {phase==='repaso'&&!repasoChatOpen&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
+      {/* Ícono flotante de chat — visible sobre la presentación (cuando el
+          botón normal de la sala queda tapado por la slide) */}
+      {phase==='repaso'&&session?.presentation?.active&&!repasoChatOpen&&(users[UID.current]?.zone==='repaso'||isAdmin)&&(
         <ChatFab count={msgs.length} onClick={()=>setRepasoChatOpen(true)}/>
       )}
 
