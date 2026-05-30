@@ -2228,6 +2228,16 @@ function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd,onToggleWordCl
               )}
             </div>
           )}
+          {onToggleQR&&(
+            <button onClick={onToggleQR} title="Mostrar/ocultar QR" style={{
+              padding:'0 12px',height:42,borderRadius:12,cursor:'pointer',
+              border:`1px solid ${qrOn?'rgba(255,208,0,.6)':'rgba(255,208,0,.4)'}`,
+              background:qrOn?'rgba(255,208,0,.2)':'rgba(255,208,0,.1)',
+              color:'#ffd000',fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
+              {qrOn?'📲 Ocultar QR':'📲 QR'}
+            </button>
+          )}
           <button onClick={onEnd} style={{
             marginLeft:4,padding:'0 14px',height:42,borderRadius:12,border:'1px solid rgba(239,68,68,.4)',
             background:'rgba(239,68,68,.12)',color:'#ef4444',fontWeight:800,fontSize:12,
