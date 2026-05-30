@@ -119,7 +119,7 @@ const{useState,useRef,useEffect,useCallback,useMemo}=React;
 /* ════════════════════════ CONSTANTES ════════════════════════ */
 // Versión de la app. Al desplegar una nueva, los clientes abiertos la detectan
 // y se recargan solos (ver auto-actualización en App). Subir este valor en cada deploy.
-const APP_VERSION='2026-05-30-presentacion-1';
+const APP_VERSION='2026-05-30-presentacion-2';
 const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
@@ -1664,85 +1664,108 @@ const SLIDE_T={
 };
 
 /* Una slide por cada día del repaso de la semana — Mateo 5–7. */
-const REPASO_SLIDES=[
+/* Presentaciones disponibles para el repaso. Cada una se etiqueta con su
+   semana y el título de la lección. El admin elige cuál proyectar desde el
+   menú "Iniciar presentación". */
+const PRESENTATIONS=[
   {
-    day:'SÁBADO', kicker:'INICIA', section:'inTro',
-    title:'El problema del pecado',
-    verses:['Mateo 5–7','Isaías 59:2','Mateo 5:20','Mateo 6:33','1 Juan 3:4'],
-    cards:[
-      {lead:'El pecado separa al ser humano de Dios,',rest:'destruyendo la relación con Él y afectando nuestros pensamientos, acciones y decisiones.'},
-      {lead:'La ley de Dios revela nuestra verdadera condición espiritual',rest:'y nos muestra que todos necesitamos un Salvador, sin importar nuestra apariencia religiosa o nuestras obras.'},
-      {lead:'En el Sermón del Monte, Jesús enseñó que la obediencia externa no basta,',rest:'porque el pecado también nace en el corazón: el orgullo, el odio, la lujuria y la hipocresía.'},
-      {lead:'Cristo invita a cada persona a reconocer su necesidad de perdón,',rest:'a confiar en su justicia y a permitir que Dios restaure la relación quebrantada por el pecado.'},
-    ],
-  },
-  {
-    day:'DOMINGO', kicker:'INTERIORIZA', section:'inTerioriza',
-    title:'La ampliación de la ley',
-    verses:['Mateo 5:22','Mateo 5:28-29','Mateo 5:44','Mateo 6:2','Mateo 7:1-2'],
-    cards:[
-      {lead:'Jesús profundiza la ley hasta el corazón:',rest:'enojarse con el hermano o mirar con deseo ya es pecado delante de Dios, aunque nadie lo vea.'},
-      {lead:'El enojo y la lujuria levantan una barrera',rest:'en nuestra relación con Dios; por eso Jesús nos pide tratarlos con la mayor seriedad.'},
-      {lead:'Amar a los enemigos y orar por quienes nos hieren',rest:'transforma nuestro caminar con Dios y también nuestra relación con los demás.'},
-      {lead:'La verdadera religión es humilde:',rest:'no busca el aplauso de la gente ni juzga a los demás, porque solo Dios es el juez.'},
-    ],
-  },
-  {
-    day:'LUNES', kicker:'INTERPRETA', section:'inTerpreta',
-    title:'Un espejo',
-    verses:['1 Juan 3:4','Salmo 51:5','Éxodo 31:18','Marcos 12:30-31','Juan 14:15'],
-    cards:[
-      {lead:'El pecado es la infracción de la ley',rest:'y forma parte de nuestra naturaleza; la ley saca a la luz lo que realmente somos.'},
-      {lead:'La ley es como un espejo:',rest:'nos da claridad y convicción, y nos habla del carácter de Dios y de lo que es importante para Él.'},
-      {lead:'Toda la ley se resume en el amor:',rest:'amar a Dios con todo el corazón y amar al prójimo como a uno mismo.'},
-      {lead:'La ley revela el pecado, pero nunca perdona ni justifica;',rest:'por eso, junto a la ley, está el evangelio: la muerte de Cristo que nos justifica ante Dios.'},
-    ],
-  },
-  {
-    day:'MARTES', kicker:'INVESTIGA', section:'inVestiga',
-    title:'La ley y el evangelio',
-    verses:['Romanos 3:19-23','Romanos 4:15','Romanos 7:7','Gálatas 2:16','Santiago 1:23-25'],
-    cards:[
-      {lead:'Nuestra naturaleza pecaminosa nos alcanza a todos:',rest:'«todos pecaron y están destituidos de la gloria de Dios» (Romanos 3:23).'},
-      {lead:'El propósito de la ley es darnos el conocimiento del pecado',rest:'(Romanos 3:20); funciona como un espejo que muestra nuestra necesidad (Santiago 1:23-25).'},
-      {lead:'La salvación se encuentra solo en Jesús:',rest:'somos justificados por la fe en Cristo y no por las obras de la ley (Gálatas 2:16).'},
-      {lead:'La ley señala la enfermedad,',rest:'pero solo el evangelio de Cristo ofrece la cura.'},
-    ],
-  },
-  {
-    day:'MIÉRCOLES', kicker:'INVITA', section:'inVita',
-    title:'Saber y hacer',
-    verses:['Mateo 7:21','Mateo 7:24-29','Juan 17:3','Oseas 4:6'],
-    cards:[
-      {lead:'No basta con decir «Señor, Señor»:',rest:'al reino entran los que hacen la voluntad del Padre celestial (Mateo 7:21).'},
-      {lead:'La vida eterna es conocer a Dios,',rest:'y no podemos hacer su voluntad sin conocerlo de verdad (Juan 17:3).'},
-      {lead:'El conocimiento que no transforma no sirve de nada:',rest:'nuestra obediencia es la expresión natural de nuestro amor por Cristo.'},
-      {lead:'Edificar sobre la Roca',rest:'es escuchar las palabras de Jesús y ponerlas en práctica (Mateo 7:24-27).'},
-    ],
-  },
-  {
-    day:'JUEVES', kicker:'IMPLÍCATE', section:'imPlícate',
-    title:'La muerte de Cristo',
-    verses:['Mateo 5:17-18','Isaías 42:21','Romanos 7:12','Romanos 3:20','1 Juan 3:4'],
-    cards:[
-      {lead:'La muerte de Cristo no abolió la ley;',rest:'al contrario, prueba que la ley es inmutable, pues si pudiera cambiar, Él no habría tenido que morir.'},
-      {lead:'La ley de Dios es una revelación de su carácter:',rest:'santa, justa y buena, tan duradera como su Autor.'},
-      {lead:'El primer paso hacia la reconciliación es la convicción del pecado:',rest:'«por la ley es el conocimiento del pecado».'},
-      {lead:'La ley revela el pecado, pero no da remedio;',rest:'solo el evangelio de Cristo libra de la condenación y de la mancha del pecado.'},
-    ],
-  },
-  {
-    day:'VIERNES', kicker:'INQUIERE', section:'inQuiere',
-    title:'La ley, el pecado y nuestra respuesta',
-    verses:['Mateo 5:17-20','Romanos 3:19-23','Gálatas 2:16','Mateo 7:21-27'],
-    cards:[
-      {lead:'¿Cuál era la relación de Cristo con la ley?',rest:'Vino a cumplirla, no a abolirla, y le dio su significado espiritual más profundo (Mateo 5:17-19).'},
-      {lead:'¿Cuál es el peligro de una falsa seguridad de salvación?',rest:'Conocer a Cristo de palabra mientras se ignora su voluntad (Mateo 7:21-23).'},
-      {lead:'Puntos clave:',rest:'el pecado nos separa de Dios; la ley refleja su carácter y muestra nuestra necesidad; solo Jesús puede salvarnos.'},
-      {lead:'Nuestra respuesta:',rest:'escuchar y seguir las enseñanzas de Cristo, edificando la vida sobre la Roca.'},
+    id:'semana09',
+    week:'Semana 9',
+    weekLong:'Novena semana',
+    title:'El pecado, el evangelio y la ley',
+    subtitle:'Mateo 5–7',
+    icon:'⚖️',
+    slides:[
+      {type:'cover',
+        material:'Material para el repaso de la lección 2T 2026',
+        org:'Ministerio Joven Unión Chilena',
+        bigTitle:'Creciendo en nuestra relación con Dios',
+        num:'09', lessonTitle:'El pecado, el evangelio y la ley', ref:'Mateo 5–7'},
+      {type:'content', day:'SÁBADO', kicker:'INICIA',
+        title:'El problema del pecado',
+        verses:['Isaías 59:2','Mateo 5–7','Mateo 3:9','Romanos 10:3','Mateo 5:20','Mateo 6:33','Mateo 5:21, 27, 31, 33, 38, 43','Mateo 7'],
+        cards:[
+          {variant:'box',lead:'El pecado separa al ser humano de Dios,',rest:'destruyendo la relación con Él y afectando pensamientos, acciones y decisiones.'},
+          {variant:'box',lead:'La ley de Dios',rest:'revela nuestra verdadera condición espiritual y nos muestra que todos necesitamos un Salvador, sin importar nuestra apariencia religiosa o nuestras obras.'},
+          {variant:'plain',lead:'En el sermón del monte, Jesús enseñó que la obediencia externa no es suficiente,',rest:'porque el pecado también nace en el corazón mediante el orgullo, el odio, la lujuria y la hipocresía.'},
+          {variant:'note',lead:'Cristo invita a cada persona a reconocer su',rest:'necesidad de perdón, confiar en su justicia y permitir que Dios restaure la relación quebrantada por el pecado.'},
+        ]},
+      {type:'quote', day:'DOMINGO', kicker:'ESCRIBE',
+        name:'Ministerio Joven', handle:'@ministeriojoven',
+        text:'Todos debemos comenzar por reconocer nuestra propia condición pecaminosa y nuestra necesidad de un Salvador.'},
+      {type:'content', day:'LUNES', kicker:'ASIMILA',
+        title:'Una ampliación de la ley',
+        verses:['Mateo 5:22','Mateo 5:28-29','Mateo 5:44','Mateo 6:2','Mateo 7:1-2','1 Corintios 4:5'],
+        cards:[
+          {variant:'box',lead:'Jesús enseñó que la ley de Dios no solo se relaciona con acciones externas,',rest:'sino también con las actitudes y pensamientos del corazón.'},
+          {variant:'box',lead:'El enojo, la lujuria, el orgullo, la hipocresía y el juicio hacia los demás',rest:'son pecados que dañan nuestra relación con Dios y con las personas.'},
+          {variant:'plain',lead:'En el sermón del monte, Cristo mostró que incluso quienes aparentan ser muy religiosos',rest:'necesitan reconocer su condición pecaminosa y depender de un Salvador.'},
+          {variant:'note',lead:'Dios desea transformar el corazón humano',rest:'para que vivamos con humildad, amor, misericordia y sinceridad delante de Él.'},
+        ]},
+      {type:'content', day:'MARTES', kicker:'INTERPRETA',
+        title:'Un espejo',
+        verses:['1 Juan 3:4','Salmos 51:5','Jeremías 17:9','Éxodo 20:3-17','Marcos 12:30-31','Mateo 22:40','Juan 14:15','1 Juan 5:3'],
+        cards:[
+          {variant:'box',lead:'La ley de Dios revela el pecado',rest:'y nos ayuda a comprender nuestro verdadero estado espiritual, mostrando tanto nuestro carácter como el carácter santo de Dios.'},
+          {variant:'box',lead:'Los diez mandamientos',rest:'fueron dados para proteger nuestra relación con Dios y con los demás, enseñando que el amor es el fundamento de toda obediencia.'},
+          {variant:'plain',lead:'Cuando amamos a Jesús, obedecer sus mandamientos deja de ser una carga',rest:'y se convierte en una expresión natural de amor y fidelidad.'},
+          {variant:'note',lead:'Sin embargo, la ley no puede salvar ni justificar;',rest:'solamente el evangelio y el sacrificio de Cristo pueden perdonar nuestros pecados y restaurarnos delante de Dios.'},
+        ]},
+      {type:'list', day:'MIÉRCOLES', kicker:'INVESTIGA',
+        items:[
+          {n:'01',title:'Nuestra naturaleza pecaminosa',refs:['Romanos 3:19, 23','Romanos 7:14','Romanos 8:7']},
+          {n:'02',title:'El propósito de la ley',refs:['Romanos 3:20','Romanos 4:15','Romanos 7:7','Santiago 1:23-25']},
+          {n:'03',title:'Salvación solo a través de Jesús',refs:['Gálatas 2:16','Gálatas 3:13']},
+        ]},
+      {type:'content', day:'JUEVES', kicker:'ENFOCA',
+        title:'Saber y hacer',
+        verses:['Mateo 7:21','Oseas 4:1, 6, 10','Juan 17:3','Mateo 7:24-29'],
+        cards:[
+          {variant:'box',lead:'Jesús enseñó que conocer acerca de Dios no es suficiente;',rest:'lo esencial es tener una relación real con Él y vivir conforme a su voluntad.'},
+          {variant:'box',lead:'La obediencia nace del amor',rest:'y demuestra la profundidad de nuestra conexión con Cristo y nuestro deseo de seguir sus enseñanzas.'},
+          {variant:'plain',lead:'En el sermón del monte, Jesús comparó a quienes practican su palabra con una casa edificada sobre la roca,',rest:'firme ante cualquier dificultad.'},
+          {variant:'note',lead:'Dios invita a cada persona a aceptar por fe la justicia de Cristo,',rest:'permitir que transforme su vida y construir una relación íntima y permanente con Él.'},
+        ]},
+      {type:'egw', day:'VIERNES', kicker:'REFLEXIONA',
+        title:'La muerte de Cristo',
+        text:'El aserto de que, con su muerte, Cristo abolió la ley de su Padre no tiene fundamento. Si hubiese sido posible cambiar la ley o abolirla, entonces Cristo no habría tenido por qué morir para salvar al hombre de la penalidad del pecado. La muerte de Cristo, lejos de abolir la ley, prueba que es inmutable. El Hijo de Dios vino para engrandecer la ley y hacerla honorable (Isa. 42:21). Él dijo: «No penséis que vine a invalidar la ley… hasta que pasen el cielo y la tierra, ni siquiera una jota ni un tilde pasará de la ley» (Mat. 5:17-18). Y, con respecto a sí mismo, declara: «Me complazco en hacer tu voluntad, oh Dios mío, y tu ley está en medio de mi corazón» (Sal. 40:8).',
+        cite:'Elena de White, El conflicto de los siglos (ACES, 2015), pp. 520-521'},
+      {type:'dialoga',
+        columns:[
+          {title:'La ley y el pecado',items:[
+            '1. ¿Cuál era la relación de Cristo con la ley? (Mat. 5:17-19).',
+            '2. ¿A qué tipo de personas se enfrentó especialmente Jesús, para que reconocieran su condición pecaminosa y su necesidad de un Salvador? (Mat. 5:20).',
+            '3. ¿Cómo le dio Jesús un significado espiritual más profundo a la ley, a fin de convencer de pecado incluso a los más religiosos? (Mat. 5:21, 27, 31, 33, 38, 43).',
+            '4. ¿Cuál es el propósito de la ley? (Rom. 3:19-23; 4:15; 7:7; Sant. 1:23-25).',
+            '5. ¿Cómo se concibe el pecado en la cultura popular? ¿Cómo debería responder nuestra iglesia?',
+          ]},
+          {title:'El evangelio',items:[
+            '1. ¿Dónde podemos encontrar la salvación? (Gál. 2:16; 3:13).',
+            '2. ¿Cómo cambiará el amor por Cristo mi relación con los mandamientos de Dios? (Juan 14:15; 1 Juan 5:3).',
+            '3. ¿Ha sido fácil o difícil obedecer la ley de Dios en tu vida? ¿Qué factores han contribuido a ello? ¿Cómo podemos ser fieles a la ley de Dios y evitar la trampa del legalismo?',
+          ]},
+          {title:'Responder al llamado divino',items:[
+            '1. ¿Cuál es el peligro de tener una falsa seguridad de salvación mientras se ignora la ley de Dios? (Mat. 7:21-23).',
+            '2. ¿Qué les sucede a aquellos que escuchan y conocen las enseñanzas de Cristo pero no las siguen? (Mat. 7:24-27).',
+            '3. ¿Cómo deseas responder a Cristo y a sus enseñanzas?',
+          ]},
+        ]},
+      {type:'preview', label:'Un vistazo', title:'Arrepentimiento y perdón',
+        text:'¿Alguna vez has sentido que, tras una semana de éxito profesional y metas cumplidas, tu conexión con lo trascendente se siente vacía y "fuera de cobertura"? El estudio de esta semana nos confronta con la paradoja de vivir vidas tan llenas de actividades necesarias que terminan por asfixiar nuestra relación con Dios, recordándonos que el verdadero descanso no es la ausencia de trabajo, sino la presencia de una persona. A través de la lente del arrepentimiento y el perdón, exploraremos si estamos intentando construir nuestro propio reino de autosuficiencia o si somos capaces de soltar el control para ser envueltos por una gracia que no se gana con esfuerzo, sino con entrega; una invitación urgente para una generación que lo tiene todo, pero que a menudo olvida lo único que realmente importa.'},
+      {type:'credits', title:'Conócenos — Ministerio Joven Unión Chilena',
+        platforms:[
+          {icon:'📘',label:'Facebook',value:'Ministerio Joven Chile'},
+          {icon:'📷',label:'Instagram',value:'Ministeriojovenchile'},
+          {icon:'✈️',label:'Telegram',value:'Escuela Sabática Jóvenes - Inverse'},
+          {icon:'▶️',label:'YouTube',value:'Ministerio Joven Unión Chilena'},
+          {icon:'🍎',label:'App Store',value:'https://rb.gy/jwpzw'},
+          {icon:'🤖',label:'Google Play',value:'https://rb.gy/3leq0'},
+        ],
+        people:['Makarina Valdivia F. — Ilustración, Resumen y Edición','Daniela Garcés B. — Ilustración, Resumen y Edición']},
     ],
   },
 ];
+const findPresentation=id=>PRESENTATIONS.find(p=>p.id===id)||PRESENTATIONS[0];
 
 /* Logo compacto MRNT class para la esquina de la slide. */
 function SlideBrand(){
@@ -1762,96 +1785,66 @@ function SlideBrand(){
   );
 }
 
-/* Render de una slide individual con el estilo verde de la plantilla. */
-function SlideView({slide,index,total}){
+/* Insignia lateral del día (kicker + día con flecha). */
+function DayBadge({kicker,day}){
+  return(
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,flexShrink:0}}>
+      <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+        fontSize:'clamp(11px,1.4vw,16px)',color:SLIDE_T.accentDark,letterSpacing:'.12em'}}>{kicker}</div>
+      <div style={{width:'clamp(30px,3.6vw,42px)',height:'clamp(30px,3.6vw,42px)',
+        borderRadius:'50%',background:'rgba(255,255,255,.5)',
+        border:`2px solid ${SLIDE_T.accentDark}`,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        color:SLIDE_T.accentDark,fontSize:'clamp(15px,1.9vw,20px)',fontWeight:900}}>↑</div>
+      <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+        fontSize:'clamp(8px,1vw,11px)',color:SLIDE_T.inkSoft,letterSpacing:'.16em'}}>{day}</div>
+    </div>
+  );
+}
+
+/* Caja de versículos (REF. BÍBLICA). */
+function VersesBox({verses}){
+  return(
+    <div style={{display:'flex',alignItems:'flex-start',gap:9,
+      background:'rgba(255,255,255,.74)',borderRadius:12,
+      padding:'8px 13px',boxShadow:'0 4px 14px rgba(60,81,29,.16)',maxWidth:'46%'}}>
+      <span style={{fontSize:'clamp(15px,1.8vw,20px)'}}>📖</span>
+      <div style={{display:'flex',flexDirection:'column',gap:1}}>
+        <span style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:'clamp(8px,1vw,11px)',color:SLIDE_T.accentDark,letterSpacing:'.12em',
+          textTransform:'uppercase',marginBottom:2}}>Ref. bíblica</span>
+        {verses.map((v,i)=>(
+          <span key={i} style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+            fontSize:'clamp(8px,1vw,12px)',color:SLIDE_T.accentDark,letterSpacing:'.03em'}}>• {v}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Marco común de cada slide: logo arriba + contenido + pie de progreso. */
+function SlideShell({children,index,total,footer}){
   return(
     <div style={{
       position:'relative',width:'min(96vw,1180px)',maxHeight:'90vh',overflowY:'auto',
       background:SLIDE_T.bg,borderRadius:22,
       boxShadow:'0 26px 70px rgba(10,14,46,.55)',
-      padding:'clamp(18px,3vw,40px)',
-      border:'1px solid rgba(255,255,255,.35)',
+      padding:'clamp(18px,3vw,38px)',border:'1px solid rgba(255,255,255,.35)',
     }}>
-      {/* Trazo decorativo sutil */}
       <div style={{position:'absolute',inset:0,borderRadius:22,overflow:'hidden',pointerEvents:'none'}}>
         <div style={{position:'absolute',right:'-12%',bottom:'-30%',width:'70%',height:'120%',
           background:'radial-gradient(ellipse at center,rgba(255,255,255,.35),rgba(255,255,255,0) 60%)'}}/>
       </div>
-
-      {/* Encabezado: logo + versículos */}
-      <div style={{position:'relative',display:'flex',justifyContent:'space-between',
-        alignItems:'flex-start',gap:14,flexWrap:'wrap'}}>
-        <SlideBrand/>
-        <div style={{display:'flex',alignItems:'center',gap:9,
-          background:'rgba(255,255,255,.74)',borderRadius:12,
-          padding:'8px 13px',boxShadow:'0 4px 14px rgba(60,81,29,.16)'}}>
-          <span style={{fontSize:'clamp(16px,2vw,22px)'}}>📖</span>
-          <div style={{display:'flex',flexDirection:'column',gap:1}}>
-            {slide.verses.map((v,i)=>(
-              <span key={i} style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                fontSize:'clamp(9px,1.15vw,13px)',color:SLIDE_T.accentDark,
-                letterSpacing:'.04em',whiteSpace:'nowrap'}}>{v}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Día + título */}
-      <div style={{position:'relative',display:'flex',alignItems:'center',gap:14,
-        margin:'clamp(14px,2.4vw,26px) 0 clamp(12px,2vw,22px)'}}>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',
-          gap:3,flexShrink:0}}>
-          <div style={{width:'clamp(38px,4.6vw,56px)',height:'clamp(38px,4.6vw,56px)',
-            borderRadius:'50%',background:'rgba(255,255,255,.55)',
-            border:`2px solid ${SLIDE_T.accentDark}`,
-            display:'flex',alignItems:'center',justifyContent:'center',
-            color:SLIDE_T.accentDark,fontSize:'clamp(18px,2.4vw,26px)',fontWeight:900}}>↑</div>
-          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-            fontSize:'clamp(10px,1.3vw,14px)',color:SLIDE_T.accentDark,
-            letterSpacing:'.1em'}}>{slide.kicker}</div>
-          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-            fontSize:'clamp(8px,1vw,11px)',color:SLIDE_T.inkSoft,
-            letterSpacing:'.16em'}}>{slide.day}</div>
-        </div>
-        <h1 style={{margin:0,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
-          fontSize:'clamp(28px,5.2vw,62px)',lineHeight:.98,color:SLIDE_T.ink,
-          textTransform:'uppercase',letterSpacing:'.01em'}}>{slide.title}</h1>
-      </div>
-
-      {/* Tarjetas */}
-      <div style={{position:'relative',display:'grid',
-        gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',
-        gap:'clamp(10px,1.6vw,18px)'}}>
-        {slide.cards.map((c,i)=>(
-          <div key={i} style={{background:'#ffffff',borderRadius:14,
-            padding:'clamp(12px,1.6vw,20px)',
-            borderLeft:`5px solid ${SLIDE_T.accent}`,
-            boxShadow:'0 8px 22px rgba(60,81,29,.16)'}}>
-            <span style={{fontFamily:'Barlow,sans-serif',fontWeight:800,
-              fontSize:'clamp(13px,1.55vw,19px)',color:SLIDE_T.cardLead,lineHeight:1.4}}>
-              {c.lead}{' '}
-            </span>
-            <span style={{fontFamily:'Barlow,sans-serif',fontWeight:400,
-              fontSize:'clamp(13px,1.5vw,18px)',color:SLIDE_T.cardBody,lineHeight:1.45}}>
-              {c.rest}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Pie: progreso */}
+      <div style={{position:'relative'}}>{children}</div>
       <div style={{position:'relative',display:'flex',alignItems:'center',
-        justifyContent:'space-between',marginTop:'clamp(12px,2vw,22px)'}}>
+        justifyContent:'space-between',marginTop:'clamp(12px,2vw,20px)',gap:10}}>
         <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
           fontSize:'clamp(9px,1.1vw,12px)',color:SLIDE_T.inkSoft,
-          letterSpacing:'.16em',textTransform:'uppercase'}}>
-          Repaso · Novena semana · Mateo 5–7
-        </div>
-        <div style={{display:'flex',gap:5,alignItems:'center'}}>
+          letterSpacing:'.14em',textTransform:'uppercase'}}>{footer}</div>
+        <div style={{display:'flex',gap:5,alignItems:'center',flexShrink:0}}>
           {Array.from({length:total}).map((_,i)=>(
             <span key={i} style={{width:i===index?16:7,height:7,borderRadius:4,
-              background:i===index?SLIDE_T.accentDark:'rgba(60,81,29,.28)',
-              transition:'all .2s'}}/>
+              background:i===index?SLIDE_T.accentDark:'rgba(60,81,29,.28)',transition:'all .2s'}}/>
           ))}
         </div>
       </div>
@@ -1859,11 +1852,295 @@ function SlideView({slide,index,total}){
   );
 }
 
+/* Render de una slide según su tipo, con el estilo verde de la plantilla. */
+function SlideView({slide,index,total,footer}){
+  // ── Portada ──
+  if(slide.type==='cover'){
+    return(
+      <SlideShell index={index} total={total} footer={footer}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',
+          textAlign:'center',gap:'clamp(10px,1.8vw,18px)',padding:'clamp(6px,2vw,22px) 0'}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+            fontSize:'clamp(10px,1.3vw,15px)',color:SLIDE_T.inkSoft,
+            letterSpacing:'.1em',textTransform:'uppercase',lineHeight:1.4}}>
+            {slide.material}<br/>{slide.org}
+          </div>
+          <BookLogo size={56}/>
+          <h1 style={{margin:0,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:'clamp(34px,6.4vw,76px)',lineHeight:.96,color:'#fff',
+            textTransform:'uppercase',letterSpacing:'.01em',
+            textShadow:'0 3px 14px rgba(40,55,18,.35)'}}>{slide.bigTitle}</h1>
+          <div style={{display:'flex',alignItems:'center',gap:'clamp(12px,2vw,22px)',
+            background:'rgba(255,255,255,.55)',borderRadius:16,
+            padding:'clamp(10px,1.6vw,18px) clamp(16px,2.4vw,30px)',marginTop:8}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:'clamp(44px,7vw,90px)',lineHeight:.9,color:SLIDE_T.accentDark}}>{slide.num}</div>
+            <div style={{textAlign:'left'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:'clamp(18px,2.8vw,34px)',lineHeight:1,color:SLIDE_T.ink,
+                textTransform:'uppercase',letterSpacing:'.04em'}}>{slide.lessonTitle}</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                fontSize:'clamp(12px,1.6vw,18px)',color:SLIDE_T.inkSoft,
+                letterSpacing:'.14em',textTransform:'uppercase',marginTop:3}}>{slide.ref}</div>
+            </div>
+          </div>
+        </div>
+      </SlideShell>
+    );
+  }
+
+  // ── Cita de red social ──
+  if(slide.type==='quote'){
+    return(
+      <SlideShell index={index} total={total} footer={footer}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:14}}>
+          <DayBadge kicker={slide.kicker} day={slide.day}/>
+          <SlideBrand/>
+        </div>
+        <div style={{display:'flex',justifyContent:'center',marginTop:'clamp(14px,2.4vw,26px)'}}>
+          <div style={{background:'#f3ecda',borderRadius:18,padding:'clamp(18px,2.6vw,30px)',
+            maxWidth:620,width:'100%',boxShadow:'0 10px 28px rgba(60,81,29,.2)',
+            border:`3px solid ${SLIDE_T.accent}`}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+              <div style={{width:40,height:40,borderRadius:'50%',background:SLIDE_T.accent,
+                display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>✝️</div>
+              <div>
+                <div style={{fontFamily:'Barlow,sans-serif',fontWeight:800,
+                  fontSize:'clamp(14px,1.7vw,18px)',color:SLIDE_T.cardLead}}>{slide.name} 🔵</div>
+                <div style={{fontFamily:'Barlow,sans-serif',fontWeight:400,
+                  fontSize:'clamp(11px,1.3vw,14px)',color:SLIDE_T.cardBody}}>{slide.handle}</div>
+              </div>
+            </div>
+            <div style={{fontFamily:'Barlow,sans-serif',fontWeight:500,textAlign:'center',
+              fontSize:'clamp(16px,2.2vw,26px)',color:SLIDE_T.cardBody,lineHeight:1.5}}>
+              {slide.text}
+            </div>
+            <div style={{display:'flex',justifyContent:'center',gap:18,marginTop:16,
+              fontSize:'clamp(15px,1.8vw,20px)',opacity:.5}}>
+              <span>➤</span><span>🔖</span><span>🔁</span><span>♡</span><span>💬</span>
+            </div>
+          </div>
+        </div>
+      </SlideShell>
+    );
+  }
+
+  // ── Lista numerada (Investiga) ──
+  if(slide.type==='list'){
+    return(
+      <SlideShell index={index} total={total} footer={footer}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:14}}>
+          <DayBadge kicker={slide.kicker} day={slide.day}/>
+          <SlideBrand/>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:'clamp(12px,2vw,22px)',
+          marginTop:'clamp(14px,2.4vw,26px)',paddingLeft:'clamp(6px,3vw,40px)'}}>
+          {slide.items.map((it,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:'clamp(12px,2vw,22px)'}}>
+              <div style={{width:'clamp(54px,7vw,92px)',height:'clamp(54px,7vw,92px)',flexShrink:0,
+                borderRadius:'50%',background:i%2?SLIDE_T.accent:'#b9cd86',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:'clamp(22px,3.2vw,42px)',color:SLIDE_T.accentDark}}>{it.n}</div>
+              <div style={{flex:1,borderBottom:`1.5px solid ${SLIDE_T.accent}66`,paddingBottom:8}}>
+                <div style={{fontFamily:'Barlow,sans-serif',fontWeight:800,
+                  fontSize:'clamp(16px,2.1vw,26px)',color:SLIDE_T.cardLead}}>{it.title}</div>
+                <div style={{fontFamily:'Barlow,sans-serif',fontWeight:500,
+                  fontSize:'clamp(12px,1.5vw,18px)',color:SLIDE_T.cardBody,marginTop:3}}>
+                  {it.refs.join(' · ')}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </SlideShell>
+    );
+  }
+
+  // ── Cita de Elena de White (Reflexiona) ──
+  if(slide.type==='egw'){
+    return(
+      <SlideShell index={index} total={total} footer={footer}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:14}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <DayBadge kicker={slide.kicker} day={slide.day}/>
+            <h1 style={{margin:0,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:'clamp(24px,4vw,48px)',lineHeight:1,color:'#fff',
+              textTransform:'uppercase',letterSpacing:'.02em'}}>{slide.title}</h1>
+          </div>
+          <SlideBrand/>
+        </div>
+        <div style={{background:'#f3ecda',borderRadius:14,padding:'clamp(16px,2.4vw,30px)',
+          marginTop:'clamp(14px,2.2vw,24px)',border:`3px solid ${SLIDE_T.accent}`,
+          boxShadow:'0 10px 26px rgba(60,81,29,.18)'}}>
+          <div style={{fontFamily:'Barlow,sans-serif',fontWeight:400,
+            fontSize:'clamp(13px,1.7vw,21px)',color:SLIDE_T.cardBody,lineHeight:1.6}}>
+            {slide.text}
+          </div>
+        </div>
+        <div style={{fontFamily:'Barlow,sans-serif',fontWeight:600,fontStyle:'italic',
+          fontSize:'clamp(11px,1.4vw,16px)',color:'#fff',marginTop:12,
+          textShadow:'0 1px 6px rgba(40,55,18,.3)'}}>{slide.cite}</div>
+      </SlideShell>
+    );
+  }
+
+  // ── Preguntas en 3 columnas (Dialoga) ──
+  if(slide.type==='dialoga'){
+    return(
+      <SlideShell index={index} total={total} footer={footer}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:12,marginBottom:6}}>
+          <span style={{fontSize:'clamp(22px,3vw,34px)'}}>💬</span>
+          <h1 style={{margin:0,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:'clamp(26px,4.4vw,52px)',color:SLIDE_T.accentDark,
+            textTransform:'uppercase',letterSpacing:'.06em'}}>Dialoga</h1>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',
+          gap:'clamp(12px,1.8vw,22px)',marginTop:'clamp(10px,1.6vw,18px)'}}>
+          {slide.columns.map((col,ci)=>(
+            <div key={ci}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                fontSize:'clamp(13px,1.6vw,19px)',color:ci===1?'#5a6a30':SLIDE_T.cardLead,
+                textTransform:'uppercase',textAlign:'center',letterSpacing:'.04em',
+                borderTop:`3px solid ${SLIDE_T.accent}`,paddingTop:10,marginBottom:10}}>{col.title}</div>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {col.items.map((q,qi)=>(
+                  <div key={qi} style={{fontFamily:'Barlow,sans-serif',fontWeight:500,
+                    fontSize:'clamp(11px,1.25vw,15px)',color:SLIDE_T.cardBody,lineHeight:1.4}}>{q}</div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </SlideShell>
+    );
+  }
+
+  // ── Vistazo de la próxima semana ──
+  if(slide.type==='preview'){
+    return(
+      <SlideShell index={index} total={total} footer={footer}>
+        <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) minmax(0,1.4fr)',
+          gap:'clamp(14px,2.4vw,30px)',alignItems:'center'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'center',
+            background:SLIDE_T.accent,borderRadius:16,padding:'clamp(20px,3vw,40px)',minHeight:160}}>
+            <BookLogo size={84}/>
+          </div>
+          <div>
+            <h1 style={{margin:0,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+              fontSize:'clamp(26px,4vw,48px)',color:SLIDE_T.accentDark,textAlign:'center',
+              textTransform:'uppercase',letterSpacing:'.1em'}}>{slide.label}</h1>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+              fontSize:'clamp(15px,2vw,24px)',color:SLIDE_T.cardLead,textAlign:'center',
+              textTransform:'uppercase',letterSpacing:'.12em',margin:'6px 0 14px'}}>{slide.title}</div>
+            <div style={{fontFamily:'Barlow,sans-serif',fontWeight:400,textAlign:'justify',
+              fontSize:'clamp(12px,1.5vw,18px)',color:SLIDE_T.cardBody,lineHeight:1.55}}>
+              {slide.text}
+            </div>
+          </div>
+        </div>
+      </SlideShell>
+    );
+  }
+
+  // ── Créditos ──
+  if(slide.type==='credits'){
+    return(
+      <SlideShell index={index} total={total} footer={footer}>
+        <h1 style={{margin:'0 0 6px',fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+          fontSize:'clamp(20px,3.2vw,40px)',color:SLIDE_T.accentDark,textAlign:'center',
+          textTransform:'uppercase',letterSpacing:'.04em'}}>{slide.title}</h1>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:'clamp(11px,1.4vw,16px)',color:SLIDE_T.inkSoft,textAlign:'center',
+          letterSpacing:'.14em',textTransform:'uppercase',marginBottom:16}}>
+          Encuéntranos en nuestras plataformas
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',
+          gap:'clamp(8px,1.4vw,14px)',marginBottom:16}}>
+          {slide.platforms.map((p,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:9,
+              background:'rgba(255,255,255,.55)',borderRadius:10,padding:'8px 12px'}}>
+              <span style={{fontSize:'clamp(15px,1.8vw,20px)'}}>{p.icon}</span>
+              <div>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+                  fontSize:'clamp(9px,1.1vw,12px)',color:SLIDE_T.inkSoft,
+                  letterSpacing:'.08em',textTransform:'uppercase'}}>{p.label}</div>
+                <div style={{fontFamily:'Barlow,sans-serif',fontWeight:600,
+                  fontSize:'clamp(11px,1.35vw,15px)',color:SLIDE_T.cardLead,wordBreak:'break-all'}}>{p.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+          {slide.people.map((person,i)=>(
+            <div key={i} style={{fontFamily:'Barlow,sans-serif',fontWeight:600,
+              fontSize:'clamp(11px,1.4vw,16px)',color:SLIDE_T.cardBody}}>{person}</div>
+          ))}
+          <div style={{marginTop:10}}><SlideBrand/></div>
+        </div>
+      </SlideShell>
+    );
+  }
+
+  // ── Contenido estándar (cards + versículos) ──
+  return(
+    <SlideShell index={index} total={total} footer={footer}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <DayBadge kicker={slide.kicker} day={slide.day}/>
+          <h1 style={{margin:0,fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:'clamp(22px,3.8vw,46px)',lineHeight:1,color:'#fff',
+            textTransform:'uppercase',letterSpacing:'.02em',
+            textShadow:'0 2px 10px rgba(40,55,18,.3)'}}>{slide.title}</h1>
+        </div>
+        <SlideBrand/>
+      </div>
+
+      <div style={{display:'flex',gap:'clamp(10px,1.8vw,20px)',alignItems:'flex-start',
+        marginTop:'clamp(12px,2vw,22px)',flexWrap:'wrap'}}>
+        <div style={{flex:'1 1 320px',display:'flex',flexDirection:'column',gap:'clamp(8px,1.3vw,14px)'}}>
+          {slide.cards.map((c,i)=>{
+            if(c.variant==='plain'){
+              return(
+                <div key={i} style={{padding:'2px 4px'}}>
+                  <span style={{fontFamily:'Barlow,sans-serif',fontWeight:800,
+                    fontSize:'clamp(13px,1.5vw,19px)',color:'#fefdf6',lineHeight:1.45,
+                    textShadow:'0 1px 6px rgba(40,55,18,.35)'}}>{c.lead}{' '}</span>
+                  <span style={{fontFamily:'Barlow,sans-serif',fontWeight:400,
+                    fontSize:'clamp(13px,1.45vw,18px)',color:'#f2f0e4',lineHeight:1.45,
+                    textShadow:'0 1px 6px rgba(40,55,18,.35)'}}>{c.rest}</span>
+                </div>
+              );
+            }
+            const note=c.variant==='note';
+            return(
+              <div key={i} style={{background:note?'#ece5d2':'#f3ecda',borderRadius:12,
+                padding:'clamp(10px,1.4vw,18px)',
+                borderLeft:note?'none':`5px solid ${SLIDE_T.accent}`,
+                boxShadow:'0 6px 18px rgba(60,81,29,.14)'}}>
+                <span style={{fontFamily:'Barlow,sans-serif',fontWeight:800,
+                  fontStyle:note?'italic':'normal',
+                  fontSize:'clamp(13px,1.5vw,19px)',color:SLIDE_T.cardLead,lineHeight:1.42}}>{c.lead}{' '}</span>
+                <span style={{fontFamily:'Barlow,sans-serif',fontWeight:400,
+                  fontStyle:note?'italic':'normal',
+                  fontSize:'clamp(13px,1.45vw,18px)',color:SLIDE_T.cardBody,lineHeight:1.45}}>{c.rest}</span>
+              </div>
+            );
+          })}
+        </div>
+        {slide.verses&&slide.verses.length>0&&<VersesBox verses={slide.verses}/>}
+      </div>
+    </SlideShell>
+  );
+}
+
 /* Overlay de presentación sincronizada: todos ven la slide; el admin avanza. */
 function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
   const pres=session?.presentation;
-  const idx=Math.min(Math.max(pres?.slide||0,0),REPASO_SLIDES.length-1);
-  const total=REPASO_SLIDES.length;
+  const deck=findPresentation(pres?.id);
+  const slides=deck.slides;
+  const idx=Math.min(Math.max(pres?.slide||0,0),slides.length-1);
+  const total=slides.length;
 
   useEffect(()=>{
     if(!isAdmin) return;
@@ -1876,14 +2153,15 @@ function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
   },[isAdmin,onNext,onPrev]);
 
   if(!pres?.active) return null;
-  const slide=REPASO_SLIDES[idx];
+  const slide=slides[idx];
+  const footer=`${deck.week} · ${deck.subtitle}`;
 
   return(
     <div style={{position:'fixed',inset:0,zIndex:150,
       background:'radial-gradient(ellipse at top,#11173f,#070a1f)',
       display:'flex',flexDirection:'column',alignItems:'center',
       justifyContent:'center',padding:'14px 12px',gap:12}}>
-      <SlideView slide={slide} index={idx} total={total}/>
+      <SlideView slide={slide} index={idx} total={total} footer={footer}/>
 
       {isAdmin?(
         <div style={{display:'flex',alignItems:'center',gap:10,
@@ -1897,7 +2175,7 @@ function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
             fontWeight:900,fontSize:15,color:'#fff',letterSpacing:'.05em'}}>
             {idx+1} / {total}
             <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,.5)',
-              letterSpacing:'.12em',textTransform:'uppercase'}}>{slide.day}</div>
+              letterSpacing:'.12em',textTransform:'uppercase'}}>{slide.day||deck.week}</div>
           </div>
           <button onClick={onNext} disabled={idx===total-1} style={{
             width:42,height:42,borderRadius:12,border:'none',cursor:idx===total-1?'default':'pointer',
@@ -1918,6 +2196,52 @@ function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
           El anfitrión controla la presentación
         </div>
       )}
+    </div>
+  );
+}
+
+/* Menú de presentaciones disponibles — el admin elige cuál proyectar. */
+function PresentationMenu({onSelect,onClose}){
+  return(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{
+      position:'fixed',inset:0,zIndex:170,background:'rgba(7,9,31,.82)',
+      backdropFilter:'blur(6px)',display:'flex',alignItems:'center',
+      justifyContent:'center',padding:20,animation:'modalIn .2s ease'}}>
+      <div style={{width:'100%',maxWidth:460,
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(111,143,60,.35)',borderRadius:18,
+        padding:'20px 18px',boxShadow:'0 18px 50px rgba(0,0,0,.6)'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:17,color:'#a3c46a',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            ▶️ Elegir presentación
+          </div>
+          <button onClick={onClose} style={{background:'rgba(255,255,255,.06)',
+            border:'1px solid rgba(255,255,255,.1)',borderRadius:'50%',width:30,height:30,
+            color:'var(--muted)',fontSize:14,cursor:'pointer'}}>✕</button>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {PRESENTATIONS.map(p=>(
+            <button key={p.id} onClick={()=>onSelect(p.id)} style={{
+              display:'flex',alignItems:'center',gap:12,textAlign:'left',cursor:'pointer',
+              background:'rgba(111,143,60,.12)',border:'1px solid rgba(111,143,60,.35)',
+              borderRadius:12,padding:'12px 14px'}}>
+              <span style={{fontSize:26,flexShrink:0}}>{p.icon||'📊'}</span>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+                  fontSize:13,color:'#a3c46a',textTransform:'uppercase',letterSpacing:'.06em'}}>{p.week}</div>
+                <div style={{fontFamily:'Barlow,sans-serif',fontWeight:700,
+                  fontSize:15,color:'#fff',marginTop:1}}>{p.title}</div>
+                <div style={{fontFamily:'Barlow,sans-serif',fontSize:12,
+                  color:'rgba(255,255,255,.55)',marginTop:2}}>
+                  {p.subtitle} · {p.slides.length} slides
+                </div>
+              </div>
+              <span style={{color:'#6f8f3c',fontSize:18}}>▶</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -3160,7 +3484,7 @@ function DataDownloadModal({onClose}){
 }
 
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
-function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartPresentation,onEndPresentation,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onOpenPresentationMenu,onEndPresentation,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
   const[open,setOpen]=useState(false);
   const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
@@ -3359,7 +3683,7 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
             {phase==='repaso'&&(
               <div style={{display:'flex',flexDirection:'column',gap:7}}>
                 {!session?.presentation?.active?(
-                  <button onClick={()=>{onStartPresentation();setOpen(false);}} style={{
+                  <button onClick={()=>{onOpenPresentationMenu();setOpen(false);}} style={{
                     background:'linear-gradient(135deg,#6f8f3c,#4d6a27)',
                     border:'1px solid rgba(111,143,60,.45)',
                     borderRadius:10,padding:'10px',color:'#fff',
@@ -4487,6 +4811,7 @@ function App(){
   const[gameHistory, setGameHistory] =useState({});
 
   const[repasoChatOpen,setRepasoChatOpen]=useState(false);
+  const[presMenuOpen,setPresMenuOpen]=useState(false);
   const[wordCloudOpen, setWordCloudOpen] =useState(false);
   const[misionOpen,    setMisionOpen]    =useState(false);
   // confraOpen: bandera local solo para admin — nunca sobreescrita por el echo de Firebase
@@ -5037,16 +5362,18 @@ function App(){
   };
 
   /* ── Presentación de slides del repaso (sincronizada por el admin) ── */
-  const startPresentation=async()=>{
+  const startPresentation=async(presId)=>{
     setRepasoChatOpen(false);
+    const deck=findPresentation(presId);
     await db.ref(`sessions/${SID.current}/presentation`).set({
-      active:true,slide:0,total:REPASO_SLIDES.length,startedAt:Date.now(),
+      active:true,id:deck.id,slide:0,total:deck.slides.length,startedAt:Date.now(),
     });
   };
   const movePresentation=async(dir)=>{
     const cur=sessionRef.current?.presentation;
     if(!cur?.active) return;
-    const next=Math.max(0,Math.min(REPASO_SLIDES.length-1,(cur.slide||0)+dir));
+    const max=findPresentation(cur.id).slides.length-1;
+    const next=Math.max(0,Math.min(max,(cur.slide||0)+dir));
     if(next!==cur.slide) await db.ref(`sessions/${SID.current}/presentation/slide`).set(next);
   };
   const endPresentation=async()=>{
@@ -5549,7 +5876,7 @@ function App(){
           onEndConfra={endConfra}
           onStartRepaso={startRepaso}
           onEndRepaso={endRepaso}
-          onStartPresentation={startPresentation}
+          onOpenPresentationMenu={()=>setPresMenuOpen(true)}
           onEndPresentation={endPresentation}
           onStartJuegos={startJuegos}
           onEndJuegos={endJuegos}
@@ -5709,6 +6036,14 @@ function App(){
         onClose={()=>{surveyDismissedRef.current=true;setSurveyOpen(false);}}/>}
       {adminSurvey&&<AdminSurveyModal responses={surveyResponses} users={users} SID={SID.current} onClose={()=>setAdminSurvey(false)} onToggle={toggleSurvey} surveyActive={!!session?.survey?.active}/>}
       {downloadOpen&&<DataDownloadModal onClose={()=>setDownloadOpen(false)}/>}
+
+      {/* Menú de presentaciones — el admin elige cuál proyectar */}
+      {presMenuOpen&&isAdmin&&phase==='repaso'&&(
+        <PresentationMenu
+          onSelect={id=>{setPresMenuOpen(false);startPresentation(id);}}
+          onClose={()=>setPresMenuOpen(false)}
+        />
+      )}
 
       {/* Presentación del repaso — todos ven la slide; el admin la avanza */}
       {phase==='repaso'&&session?.presentation?.active&&(
