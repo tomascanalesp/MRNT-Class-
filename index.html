@@ -119,7 +119,7 @@ const{useState,useRef,useEffect,useCallback,useMemo}=React;
 /* ════════════════════════ CONSTANTES ════════════════════════ */
 // Versión de la app. Al desplegar una nueva, los clientes abiertos la detectan
 // y se recargan solos (ver auto-actualización en App). Subir este valor en cada deploy.
-const APP_VERSION='2026-05-30-presentacion-3';
+const APP_VERSION='2026-05-30-presentacion-4';
 const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
@@ -2135,8 +2135,9 @@ function SlideView({slide,index,total,footer}){
 }
 
 /* Overlay de presentación sincronizada: todos ven la slide; el admin avanza. */
-function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
+function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd,onToggleWordCloud}){
   const pres=session?.presentation;
+  const wcActive=!!session?.wordcloud?.active;
   const deck=findPresentation(pres?.id);
   const slides=deck.slides;
   const idx=Math.min(Math.max(pres?.slide||0,0),slides.length-1);
@@ -2181,6 +2182,16 @@ function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
             width:42,height:42,borderRadius:12,border:'none',cursor:idx===total-1?'default':'pointer',
             background:idx===total-1?'rgba(255,255,255,.05)':'linear-gradient(135deg,#6f8f3c,#4d6a27)',
             color:idx===total-1?'rgba(255,255,255,.3)':'#fff',fontSize:18}}>▶</button>
+          {onToggleWordCloud&&(
+            <button onClick={onToggleWordCloud} title="Nube de palabras" style={{
+              marginLeft:4,padding:'0 12px',height:42,borderRadius:12,cursor:'pointer',
+              border:`1px solid ${wcActive?'rgba(16,185,129,.5)':'rgba(59,130,246,.45)'}`,
+              background:wcActive?'rgba(16,185,129,.16)':'rgba(59,130,246,.16)',
+              color:wcActive?'#10b981':'#60a5fa',fontWeight:800,fontSize:12,
+              fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase'}}>
+              {wcActive?'☁️ Cerrar nube':'☁️ Nube'}
+            </button>
+          )}
           <button onClick={onEnd} style={{
             marginLeft:4,padding:'0 14px',height:42,borderRadius:12,border:'1px solid rgba(239,68,68,.4)',
             background:'rgba(239,68,68,.12)',color:'#ef4444',fontWeight:800,fontSize:12,
@@ -6055,6 +6066,7 @@ function App(){
           onPrev={()=>movePresentation(-1)}
           onNext={()=>movePresentation(1)}
           onEnd={endPresentation}
+          onToggleWordCloud={()=>toggleWordCloud()}
         />
       )}
 
