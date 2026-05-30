@@ -1923,7 +1923,7 @@ function PresentationOverlay({session,isAdmin,onPrev,onNext,onEnd}){
 function ChatFab({onClick,count}){
   return(
     <button onClick={onClick} title="Abrir chat" style={{
-      position:'fixed',right:16,bottom:18,zIndex:152,
+      position:'fixed',left:16,bottom:18,zIndex:152,
       width:56,height:56,borderRadius:'50%',border:'none',cursor:'pointer',
       background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',color:'#fff',fontSize:24,
       display:'flex',alignItems:'center',justifyContent:'center',
@@ -3157,7 +3157,7 @@ function DataDownloadModal({onClose}){
 }
 
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
-function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartPresentation,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onStartPresentation,onEndPresentation,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
   const[open,setOpen]=useState(false);
   const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
@@ -3355,16 +3355,24 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
 
             {phase==='repaso'&&(
               <div style={{display:'flex',flexDirection:'column',gap:7}}>
-                <button onClick={()=>{onStartPresentation();setOpen(false);}} style={{
-                  background:session?.presentation?.active
-                    ?'rgba(111,143,60,.16)':'linear-gradient(135deg,#6f8f3c,#4d6a27)',
-                  border:'1px solid rgba(111,143,60,.45)',
-                  borderRadius:10,padding:'10px',
-                  color:session?.presentation?.active?'#a3c46a':'#fff',
-                  fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
-                  letterSpacing:'.04em',textTransform:'uppercase'}}>
-                  {session?.presentation?.active?'▶️ Presentación en curso':'▶️ Iniciar presentación'}
-                </button>
+                {!session?.presentation?.active?(
+                  <button onClick={()=>{onStartPresentation();setOpen(false);}} style={{
+                    background:'linear-gradient(135deg,#6f8f3c,#4d6a27)',
+                    border:'1px solid rgba(111,143,60,.45)',
+                    borderRadius:10,padding:'10px',color:'#fff',
+                    fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                    letterSpacing:'.04em',textTransform:'uppercase'}}>
+                    ▶️ Iniciar presentación
+                  </button>
+                ):(
+                  <button onClick={()=>{onEndPresentation();setOpen(false);}} style={{
+                    background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
+                    borderRadius:10,padding:'10px',color:'#ef4444',
+                    fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                    letterSpacing:'.04em',textTransform:'uppercase'}}>
+                    ⏹ Cerrar presentación
+                  </button>
+                )}
                 {!session?.wordcloud?.active&&(
                   <input value={wcQ} onChange={e=>setWcQ(e.target.value)}
                     placeholder="Pregunta para la nube (opcional)..."
@@ -5511,6 +5519,7 @@ function App(){
           onStartRepaso={startRepaso}
           onEndRepaso={endRepaso}
           onStartPresentation={startPresentation}
+          onEndPresentation={endPresentation}
           onStartJuegos={startJuegos}
           onEndJuegos={endJuegos}
           onStartMision={startMision}
