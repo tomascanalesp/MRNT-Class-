@@ -117,6 +117,9 @@
 const{useState,useRef,useEffect,useCallback,useMemo}=React;
 
 /* ════════════════════════ CONSTANTES ════════════════════════ */
+// Versión de la app. Al desplegar una nueva, los clientes abiertos la detectan
+// y se recargan solos (ver auto-actualización en App). Subir este valor en cada deploy.
+const APP_VERSION='2026-05-30-presentacion-1';
 const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
