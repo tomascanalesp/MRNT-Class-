@@ -119,7 +119,7 @@ const{useState,useRef,useEffect,useCallback,useMemo}=React;
 /* ════════════════════════ CONSTANTES ════════════════════════ */
 // Versión de la app. Al desplegar una nueva, los clientes abiertos la detectan
 // y se recargan solos (ver auto-actualización en App). Subir este valor en cada deploy.
-const APP_VERSION='2026-05-30-otras-acciones-1';
+const APP_VERSION='2026-05-30-juegos-cerrar-1';
 const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
@@ -7389,6 +7389,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
   const[timeLeft,setTimeLeft]=useState(GAME_TIMER);
   const[countdownDone,setCountdownDone]=useState(false);
   const[showSetup,setShowSetup]=useState(false);
+  const[menuDismissed,setMenuDismissed]=useState(false);
   const timerRef=useRef(null);
   const questions=game?.questions||[];
   const qIdx=game?.currentQ||0;
@@ -7483,6 +7484,19 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
 
   /* ── Admin: menú de selección / setup ── */
   if(isAdmin&&(!gState||gState==='idle')){
+    // Menú cerrado por el admin: mostrar un botón flotante para reabrirlo.
+    if(menuDismissed){
+      return(
+        <button onClick={()=>setMenuDismissed(false)} title="Elegir juego" style={{
+          position:'fixed',bottom:80,left:'50%',transform:'translateX(-50%)',zIndex:140,
+          background:'linear-gradient(135deg,#fdba74,#ea580c)',border:'none',borderRadius:50,
+          padding:'12px 24px',color:'#0a0e2e',fontFamily:'Barlow Condensed,sans-serif',
+          fontWeight:900,fontSize:14,letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer',
+          boxShadow:'0 8px 24px rgba(234,88,12,.5)'}}>
+          🎮 Elegir juego
+        </button>
+      );
+    }
     if(showSetup){
       return(
         <KahootSetup juegosCount={juegosUsers.length}
@@ -7511,7 +7525,7 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
         onStartQuienSoy={async()=>{
           await db.ref(`sessions/${SID}/quiensoy`).set({active:true,gameState:'idle',scores:{}});
         }}
-        onCancel={()=>{ if(onClose) onClose(); }}
+        onCancel={()=>{ setMenuDismissed(true); if(onClose) onClose(); }}
       />
     );
   }
