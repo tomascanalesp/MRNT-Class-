@@ -60,6 +60,7 @@
     @keyframes speakerPop{0%{opacity:0;transform:scale(.5) translateY(30px)}60%{transform:scale(1.08) translateY(-5px)}100%{opacity:1;transform:scale(1) translateY(0)}}
     @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
     @keyframes reactionFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.5)}}
+    @keyframes diceRoll{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-18deg) scale(1.15)}50%{transform:rotate(16deg) scale(1.08)}75%{transform:rotate(-8deg) scale(1.12)}100%{transform:rotate(0) scale(1)}}
     @keyframes timerTick{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
     @keyframes confettiSpin{to{transform:rotate(360deg) translateX(20px)}}
     @keyframes answerPop{0%{transform:scale(.88);opacity:.6}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
@@ -119,7 +120,7 @@ const{useState,useRef,useEffect,useCallback,useMemo}=React;
 /* ════════════════════════ CONSTANTES ════════════════════════ */
 // Versión de la app. Al desplegar una nueva, los clientes abiertos la detectan
 // y se recargan solos (ver auto-actualización en App). Subir este valor en cada deploy.
-const APP_VERSION='2026-05-30-juegos-cerrar-1';
+const APP_VERSION='2026-05-30-dibuja-1';
 const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
@@ -6505,7 +6506,7 @@ function App(){
 
 
       {/* Kahoot — solo si NO hay otro juego activo */}
-      {phase==='juegos'&&!session?.tabu?.active&&!session?.quiensoy?.active&&(
+      {phase==='juegos'&&!session?.tabu?.active&&!session?.quiensoy?.active&&!session?.dibuja?.active&&(
         <KahootController
           session={session} users={users}
           myId={UID.current} isAdmin={isAdmin}
@@ -6525,6 +6526,15 @@ function App(){
       {/* ¿Quién soy? */}
       {phase==='juegos'&&session?.quiensoy?.active&&(
         <QuienSoyController
+          session={session} users={users}
+          myId={UID.current} isAdmin={isAdmin}
+          SID={SID.current}
+          onClose={()=>setKahootOpen(false)}
+        />
+      )}
+      {/* Dibujando la Biblia */}
+      {phase==='juegos'&&session?.dibuja?.active&&(
+        <DibujaController
           session={session} users={users}
           myId={UID.current} isAdmin={isAdmin}
           SID={SID.current}
@@ -6783,6 +6793,45 @@ const QUIEN_SOY_PERSONAJES = [
   { nombre:'Lidia', testamento:'NT', genero:'F', pistas:['vendedora de púrpura','de Tiatira','primera convertida en Europa','hospedó a Pablo','adoraba a Dios'] },
   { nombre:'Timoteo', testamento:'NT', genero:'M', pistas:['hijo espiritual de Pablo','madre judía y padre griego','pastor en Éfeso','recibió dos cartas','enseñado por su abuela Loida'] },
 ];
+
+
+/* ═══ DIBUJANDO LA BIBLIA (tipo Pictionary bíblico) ═══ */
+// 4 categorías con sus colores (estilo Pictionary).
+const DIBUJA_CATS={
+  animal:    {label:'Animal',            color:'#2ecc71', dark:'#1e8e4f', icon:'🐾'},
+  verbo:     {label:'Acción bíblica',    color:'#3498db', dark:'#21618c', icon:'🏃'},
+  personaje: {label:'Personaje bíblico', color:'#e74c3c', dark:'#a93226', icon:'🧑'},
+  lugar:     {label:'Lugar bíblico',     color:'#f39c12', dark:'#b9770e', icon:'📍'},
+};
+const DIBUJA_CAT_ORDER=['animal','verbo','personaje','lugar'];
+// Palabras por categoría.
+const DIBUJA_WORDS={
+  animal:['Cordero','León','Paloma','Serpiente','Ballena','Burro','Camello','Pez','Cuervo','Oveja','Becerro de oro','Caballo','Langosta','Águila','Rana','Pelícano','Buey','Leviatán'],
+  verbo:['Orar','Bautizar','Predicar','Sembrar','Caminar sobre el agua','Sanar','Resucitar','Adorar','Ayunar','Diezmar','Perdonar','Pescar','Edificar','Cosechar','Ungir','Arrepentirse','Bendecir','Servir'],
+  personaje:['Moisés','David','Goliat','Noé','Jonás','María','José','Pedro','Pablo','Daniel','Sansón','Ester','Abraham','Elías','Juan el Bautista','Zaqueo','Rut','Adán y Eva'],
+  lugar:['Arca de Noé','Jardín del Edén','Mar Rojo','Belén','Jericó','Monte Sinaí','Getsemaní','Babilonia','Nínive','Río Jordán','Templo de Jerusalén','Torre de Babel','Egipto','Calvario','Foso de los leones','Pesebre','Galilea','Aposento alto'],
+};
+const dibujaRandomCard=()=>{
+  const cat=DIBUJA_CAT_ORDER[Math.floor(Math.random()*DIBUJA_CAT_ORDER.length)];
+  const arr=DIBUJA_WORDS[cat];
+  return {category:cat,word:arr[Math.floor(Math.random()*arr.length)]};
+};
+const dibujaRandomCardForCat=(cat)=>{
+  const arr=DIBUJA_WORDS[cat]||DIBUJA_WORDS.animal;
+  return {category:cat,word:arr[Math.floor(Math.random()*arr.length)]};
+};
+// Tablero: secuencia de casillas. type = categoría | 'all' (todos participan) | 'start' | 'finish'.
+const DIBUJA_BOARD=(()=>{
+  const seq=['start'];
+  const pattern=['animal','verbo','all','personaje','lugar','animal','all','verbo','personaje','all','lugar','animal','verbo','all','personaje','lugar','all','animal','verbo','personaje','all','lugar','animal','all','verbo','personaje','lugar','all'];
+  pattern.forEach(t=>seq.push(t));
+  seq.push('finish');
+  return seq.map((type,i)=>({i,type}));
+})();
+const DIBUJA_GOAL=DIBUJA_BOARD.length-1;
+// Avatares disponibles para los grupos.
+const DIBUJA_TEAM_AVATARS=['🦁','🐺','🦊','🐻','🐼','🦅','🐬','🦄','🐉','🦋','🐯','🐸'];
+const DIBUJA_TEAM_COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12','#8b5cf6','#ec4899','#22d3ee','#fb923c'];
 
 
 /* ════════════════════════ KAHOOT: COLORES / TIMER / BIBLIOTECA ════════════════════════ */
@@ -7206,7 +7255,7 @@ function KahootLeaderboard({scores,users,isAdmin,isFinished,onClose,myId,SID}){
   );
 }
 
-function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onStartTabu,onStartQuienSoy,onCancel}){
+function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onStartTabu,onStartQuienSoy,onStartDibuja,onCancel}){
   return(
     <div style={{position:'fixed',inset:0,zIndex:250,
       background:'rgba(7,9,31,.97)',backdropFilter:'blur(8px)',
@@ -7263,6 +7312,15 @@ function GameSelectMenu({juegosCount,onSelectLibrary,onCreateNew,onStartTabu,onS
           <div style={{fontSize:11,color:'var(--muted)',marginTop:5,display:'flex',gap:10}}><span>👥 Por turnos</span><span>🤔 Sin tiempo</span></div>
         </div>
         <span style={{fontSize:20,color:'#22d3ee',opacity:.6}}>›</span>
+      </button>
+      <button onClick={onStartDibuja} style={{width:'100%',maxWidth:380,background:'linear-gradient(135deg,rgba(46,204,113,.18),rgba(243,156,18,.08))',border:'1px solid rgba(46,204,113,.35)',borderRadius:20,padding:'16px 20px',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',gap:16,boxShadow:'0 0 24px rgba(46,204,113,.1)'}}>
+        <span style={{fontSize:38,flexShrink:0}}>🎨</span>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:20,color:'#2ecc71',textTransform:'uppercase',letterSpacing:'.05em'}}>Dibujando la Biblia</div>
+          <div style={{fontFamily:'Barlow,sans-serif',fontSize:13,color:'var(--white)',marginTop:3,lineHeight:1.4}}>Dibuja o haz mímica · tablero por equipos</div>
+          <div style={{fontSize:11,color:'var(--muted)',marginTop:5,display:'flex',gap:10}}><span>👥 Equipos</span><span>🎲 Con dados</span></div>
+        </div>
+        <span style={{fontSize:20,color:'#2ecc71',opacity:.6}}>›</span>
       </button>
       <button onClick={onCreateNew}
         style={{width:'100%',maxWidth:380,
@@ -7524,6 +7582,9 @@ function KahootController({session,users,myId,isAdmin,SID,onClose}){
         }}
         onStartQuienSoy={async()=>{
           await db.ref(`sessions/${SID}/quiensoy`).set({active:true,gameState:'idle',scores:{}});
+        }}
+        onStartDibuja={async()=>{
+          await db.ref(`sessions/${SID}/dibuja`).set({active:true,gameState:'setup'});
         }}
         onCancel={()=>{ setMenuDismissed(true); if(onClose) onClose(); }}
       />
@@ -8039,6 +8100,654 @@ function QuienSoyController({session,users,myId,isAdmin,SID,onClose}){
         </div>
       ):(
         <div style={{textAlign:'center',color:'var(--muted)',fontSize:14,maxWidth:300}}>Esperando que el admin elija al próximo jugador...<Spinner size={22}/></div>
+      )}
+    </div>
+  );
+}
+
+
+/* ═══ DIBUJANDO LA BIBLIA — lienzo de dibujo en vivo ═══ */
+// El dibujante escribe trazos en Firebase (normalizados 0..1); todos los miran.
+function DibujaCanvas({SID,canDraw,color='#0a0e2e',strokes,live,height=300}){
+  const wrapRef=useRef(null);
+  const curRef=useRef(null);     // trazo en curso (array de puntos)
+  const lastWriteRef=useRef(0);
+  const drawingRef=useRef(false);
+
+  const getPt=e=>{
+    const r=wrapRef.current.getBoundingClientRect();
+    const p=e.touches?e.touches[0]:e;
+    return {x:(p.clientX-r.left)/r.width, y:(p.clientY-r.top)/r.height};
+  };
+  const writeLive=()=>{
+    db.ref(`sessions/${SID}/dibuja/live`).set({color,points:curRef.current});
+  };
+  const start=e=>{
+    if(!canDraw) return;
+    if(e.cancelable) e.preventDefault();
+    drawingRef.current=true;
+    curRef.current=[getPt(e)];
+    writeLive();
+  };
+  const move=e=>{
+    if(!canDraw||!drawingRef.current) return;
+    if(e.cancelable) e.preventDefault();
+    curRef.current.push(getPt(e));
+    const now=Date.now();
+    if(now-lastWriteRef.current>70){ lastWriteRef.current=now; writeLive(); }
+  };
+  const end=()=>{
+    if(!canDraw||!drawingRef.current) return;
+    drawingRef.current=false;
+    if(curRef.current&&curRef.current.length>1){
+      db.ref(`sessions/${SID}/dibuja/strokes`).push({color,points:curRef.current});
+    }
+    curRef.current=null;
+    db.ref(`sessions/${SID}/dibuja/live`).remove();
+  };
+
+  const strokeArr=strokes?Object.values(strokes):[];
+  const liveStroke=live&&live.points?live:null;
+  const toPath=pts=>pts.map((p,i)=>`${i===0?'M':'L'} ${(p.x*100).toFixed(2)} ${(p.y*100).toFixed(2)}`).join(' ');
+
+  return(
+    <div ref={wrapRef}
+      onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
+      onTouchStart={start} onTouchMove={move} onTouchEnd={end}
+      style={{width:'100%',height,background:'#fff',borderRadius:14,
+        border:'3px solid #ffd000',overflow:'hidden',position:'relative',
+        touchAction:'none',cursor:canDraw?'crosshair':'default',
+        boxShadow:'0 10px 30px rgba(0,0,0,.4)'}}>
+      <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
+        style={{display:'block'}}>
+        {strokeArr.map((s,i)=>(
+          <path key={i} d={toPath(s.points||[])} stroke={s.color||'#0a0e2e'}
+            strokeWidth="0.9" fill="none" strokeLinecap="round" strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"/>
+        ))}
+        {liveStroke&&(
+          <path d={toPath(liveStroke.points)} stroke={liveStroke.color||'#0a0e2e'}
+            strokeWidth="0.9" fill="none" strokeLinecap="round" strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"/>
+        )}
+      </svg>
+      {strokeArr.length===0&&!liveStroke&&(
+        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',
+          justifyContent:'center',color:'#c9c4b8',fontFamily:'Barlow Condensed,sans-serif',
+          fontWeight:700,fontSize:15,letterSpacing:'.06em',textTransform:'uppercase',
+          pointerEvents:'none'}}>
+          {canDraw?'✏️ Dibuja aquí':'Esperando el dibujo...'}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Dado visual con animación; todos ven el mismo resultado por su timestamp. */
+function DibujaDie({roll,faces,size=64}){
+  const[anim,setAnim]=useState(false);
+  useEffect(()=>{ if(roll?.ts){ setAnim(true); const t=setTimeout(()=>setAnim(false),650); return()=>clearTimeout(t);} },[roll?.ts]);
+  const face=roll?(faces?faces[roll.value]:roll.value):'?';
+  return(
+    <div style={{width:size,height:size,borderRadius:14,background:'#fff',
+      border:'2px solid #ffd000',display:'flex',alignItems:'center',justifyContent:'center',
+      fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:size*.5,color:'#0a0e2e',
+      boxShadow:'0 6px 18px rgba(0,0,0,.35)',
+      animation:anim?'diceRoll .6s ease':undefined}}>
+      {face}
+    </div>
+  );
+}
+
+/* Tablero serpenteante con las fichas de los equipos. */
+function DibujaBoard({teams,order}){
+  const cols=6;
+  return(
+    <div style={{background:'linear-gradient(160deg,#ffd000,#f97316)',borderRadius:16,
+      padding:12,boxShadow:'0 10px 30px rgba(0,0,0,.4)'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginBottom:8}}>
+        <span style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:20,
+          color:'#0a4d8c',letterSpacing:'.04em',textShadow:'0 1px 0 rgba(255,255,255,.5)'}}>DIBUJANDO LA BIBLIA</span>
+        <span style={{fontSize:18}}>✏️</span>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:`repeat(${cols},1fr)`,gap:5}}>
+        {DIBUJA_BOARD.map((sq,idx)=>{
+          const cat=DIBUJA_CATS[sq.type];
+          let bg='#fff',border='#fff',label='';
+          if(sq.type==='start'){bg='#fff';label='🚪';}
+          else if(sq.type==='finish'){bg='#fff';label='⭐';}
+          else if(sq.type==='all'){bg='#fff';border='#e74c3c';label='👥';}
+          else if(cat){bg=cat.color;border=cat.dark;}
+          // fichas en esta casilla
+          const here=(order||[]).map(tid=>teams[tid]).filter(t=>t&&(t.pos||0)===idx);
+          return(
+            <div key={idx} style={{aspectRatio:'1',borderRadius:8,background:bg,
+              border:`2px solid ${border}`,position:'relative',
+              display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}>
+              {sq.type==='all'
+                ? <span style={{color:'#e74c3c',fontSize:13}}>👥</span>
+                : <span>{label}</span>}
+              {here.length>0&&(
+                <div style={{position:'absolute',inset:0,display:'flex',flexWrap:'wrap',
+                  alignItems:'center',justifyContent:'center',gap:1}}>
+                  {here.map((t,i)=>(
+                    <span key={i} style={{fontSize:here.length>1?12:18,
+                      filter:'drop-shadow(0 1px 2px rgba(0,0,0,.5))'}}>{t.avatar}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Leyenda */}
+      <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:8,justifyContent:'center'}}>
+        {DIBUJA_CAT_ORDER.map(k=>(
+          <span key={k} style={{display:'flex',alignItems:'center',gap:4,
+            background:'rgba(255,255,255,.85)',borderRadius:20,padding:'2px 8px',
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:9,color:'#0a0e2e'}}>
+            <span style={{width:9,height:9,borderRadius:3,background:DIBUJA_CATS[k].color}}/>
+            {DIBUJA_CATS[k].label}
+          </span>
+        ))}
+        <span style={{display:'flex',alignItems:'center',gap:4,
+          background:'rgba(255,255,255,.85)',borderRadius:20,padding:'2px 8px',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:9,color:'#0a0e2e'}}>
+          👥 Todos participan
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* Pantalla de armado de equipos (solo admin). */
+function DibujaSetup({juegosUsers,onStart,onCancel}){
+  const[numTeams,setNumTeams]=useState(Math.min(2,Math.max(2,juegosUsers.length)));
+  const[assign,setAssign]=useState({}); // uid -> teamIdx
+  const[teamAvatars,setTeamAvatars]=useState(()=>DIBUJA_TEAM_AVATARS.slice(0,6));
+
+  const max=Math.max(2,Math.min(6,juegosUsers.length||2));
+  const repartirAzar=()=>{
+    const shuffled=[...juegosUsers].sort(()=>Math.random()-0.5);
+    const a={};
+    shuffled.forEach((u,i)=>{a[u.uid]=i%numTeams;});
+    setAssign(a);
+  };
+  const setTeam=(uid,t)=>setAssign(p=>({...p,[uid]:t}));
+  const allAssigned=juegosUsers.length>0&&juegosUsers.every(u=>assign[u.uid]!==undefined);
+
+  const build=()=>{
+    const teams={},order=[];
+    for(let t=0;t<numTeams;t++){
+      const tid='t'+t;
+      order.push(tid);
+      const members={};
+      juegosUsers.forEach(u=>{ if(assign[u.uid]===t) members[u.uid]=true; });
+      teams[tid]={name:'Equipo '+(t+1),avatar:teamAvatars[t]||DIBUJA_TEAM_AVATARS[t],
+        color:DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length],members,pos:0,drawerIdx:0};
+    }
+    onStart(teams,order);
+  };
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
+      backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',
+      padding:'20px 16px',gap:14,overflowY:'auto'}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:40}}>🎨</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:26,
+          color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',margin:0}}>Dibujando la Biblia</h2>
+        <p style={{color:'var(--muted)',fontSize:13,marginTop:4}}>Arma los equipos · {juegosUsers.length} en sala</p>
+      </div>
+
+      {/* Número de equipos */}
+      <div style={{width:'100%',maxWidth:420,background:'rgba(255,255,255,.05)',
+        border:'1px solid rgba(255,255,255,.1)',borderRadius:14,padding:'12px 14px'}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,
+          color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:8}}>
+          Cantidad de equipos
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          {Array.from({length:max-1},(_,i)=>i+2).map(n=>(
+            <button key={n} onClick={()=>{setNumTeams(n);setAssign({});}} style={{
+              flex:1,padding:'10px',borderRadius:10,cursor:'pointer',
+              border:numTeams===n?'2px solid #ffd000':'1px solid rgba(255,255,255,.12)',
+              background:numTeams===n?'rgba(255,208,0,.18)':'rgba(255,255,255,.04)',
+              color:numTeams===n?'#ffd000':'#fff',fontFamily:'Barlow Condensed,sans-serif',
+              fontWeight:900,fontSize:18}}>{n}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Avatar de cada equipo */}
+      <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8}}>
+        {Array.from({length:numTeams}).map((_,t)=>(
+          <div key={t} style={{display:'flex',alignItems:'center',gap:10,
+            background:`${DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length]}1a`,
+            border:`1px solid ${DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length]}55`,
+            borderRadius:12,padding:'8px 10px'}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,
+              color:DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length],width:78,flexShrink:0}}>Equipo {t+1}</div>
+            <div style={{display:'flex',gap:4,flexWrap:'wrap',flex:1}}>
+              {DIBUJA_TEAM_AVATARS.slice(0,8).map(av=>(
+                <button key={av} onClick={()=>setTeamAvatars(a=>{const n=[...a];n[t]=av;return n;})} style={{
+                  width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',
+                  border:teamAvatars[t]===av?'2px solid #ffd000':'1px solid rgba(255,255,255,.15)',
+                  background:teamAvatars[t]===av?'rgba(255,208,0,.2)':'rgba(255,255,255,.05)'}}>{av}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Repartir */}
+      <div style={{width:'100%',maxWidth:420}}>
+        <button onClick={repartirAzar} disabled={juegosUsers.length===0} style={{
+          width:'100%',padding:'12px',borderRadius:12,border:'none',cursor:'pointer',
+          background:'linear-gradient(135deg,#8b5cf6,#6d28d9)',color:'#fff',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,
+          letterSpacing:'.05em',textTransform:'uppercase',opacity:juegosUsers.length?1:.5}}>
+          🎲 Repartir al azar
+        </button>
+      </div>
+
+      {/* Asignación manual */}
+      <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:6}}>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,
+          color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.12em'}}>O asigna manualmente:</div>
+        {juegosUsers.length===0&&(<div style={{color:'var(--muted)',fontSize:13,textAlign:'center',padding:10}}>Nadie en sala de juegos aún.</div>)}
+        {juegosUsers.map(u=>(
+          <div key={u.uid} style={{display:'flex',alignItems:'center',gap:8,
+            background:'rgba(255,255,255,.04)',borderRadius:10,padding:'6px 8px'}}>
+            <AvatarBubble profile={u} size={28}/>
+            <span style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+              fontSize:14,color:'#fff',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
+            <div style={{display:'flex',gap:4}}>
+              {Array.from({length:numTeams}).map((_,t)=>(
+                <button key={t} onClick={()=>setTeam(u.uid,t)} style={{
+                  width:30,height:30,borderRadius:8,cursor:'pointer',
+                  fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:13,
+                  border:assign[u.uid]===t?`2px solid ${DIBUJA_TEAM_COLORS[t]}`:'1px solid rgba(255,255,255,.12)',
+                  background:assign[u.uid]===t?`${DIBUJA_TEAM_COLORS[t]}33`:'rgba(255,255,255,.04)',
+                  color:assign[u.uid]===t?DIBUJA_TEAM_COLORS[t]:'#fff'}}>{t+1}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{width:'100%',maxWidth:420,display:'flex',gap:8,marginTop:4}}>
+        <button onClick={onCancel} style={{flex:1,padding:'13px',borderRadius:12,
+          border:'1px solid rgba(255,255,255,.12)',background:'rgba(255,255,255,.05)',
+          color:'var(--muted)',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+          fontSize:13,letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>Cancelar</button>
+        <button onClick={build} disabled={!allAssigned} style={{flex:2,padding:'13px',borderRadius:12,
+          border:'none',cursor:allAssigned?'pointer':'not-allowed',
+          background:allAssigned?'linear-gradient(135deg,#ffd000,#e6a800)':'rgba(255,255,255,.1)',
+          color:allAssigned?'#0a0e2e':'var(--muted)',fontFamily:'Barlow Condensed,sans-serif',
+          fontWeight:900,fontSize:14,letterSpacing:'.05em',textTransform:'uppercase'}}>
+          {allAssigned?'🎨 Comenzar juego':'Asigna a todos'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* Controlador principal de Dibujando la Biblia. */
+function DibujaController({session,users,myId,isAdmin,SID,onClose}){
+  const game=session?.dibuja;
+  const gState=game?.gameState;
+  const teams=game?.teams||{};
+  const order=game?.order||[];
+  const turnIdx=game?.turnIdx||0;
+  const turnTeamId=order[turnIdx];
+  const turnTeam=teams[turnTeamId];
+  const phase=game?.phase||'idle';
+  const card=game?.card;
+  const mode=game?.mode;
+  const allPlay=!!game?.allPlay;
+  const TURN_SECONDS=90;
+  const[timeLeft,setTimeLeft]=useState(TURN_SECONDS);
+  const timerRef=useRef(null);
+
+  const juegosUsers=Object.entries(users||{}).filter(([_,u])=>u.zone==='juegos').map(([uid,u])=>({uid,...u}));
+  const myTeamId=order.find(tid=>teams[tid]?.members?.[myId]);
+  const isMyTurn=myTeamId===turnTeamId;
+  const drawerId=game?.currentDrawer;
+  const isDrawer=drawerId===myId;
+  // ¿Puedo ver la palabra? Solo el dibujante (y el admin). El equipo adivina.
+  const canSeeWord=isDrawer||isAdmin;
+  // ¿Puedo dibujar? El dibujante actual, solo si el modo es dibujo.
+  const canDraw=isDrawer&&mode==='dibujo'&&phase==='draw';
+
+  // Timer de la ronda
+  useEffect(()=>{
+    if(phase!=='draw'||!game?.roundStartTime){setTimeLeft(TURN_SECONDS);return;}
+    const tick=()=>{
+      const left=Math.max(0,TURN_SECONDS-Math.floor((Date.now()-game.roundStartTime)/1000));
+      setTimeLeft(left);
+    };
+    tick(); timerRef.current=setInterval(tick,500);
+    return()=>clearInterval(timerRef.current);
+  },[phase,game?.roundStartTime]);
+
+  const ref=()=>db.ref(`sessions/${SID}/dibuja`);
+  const clearDrawing=()=>{ ref().child('strokes').remove(); ref().child('live').remove(); };
+
+  // ── Acciones admin ──
+  const teamDrawer=(team)=>{
+    const m=Object.keys(team?.members||{});
+    if(m.length===0) return null;
+    return m[(team.drawerIdx||0)%m.length];
+  };
+  const sacarCarta=async()=>{
+    const sq=DIBUJA_BOARD[turnTeam?.pos||0];
+    const isAll=sq?.type==='all';
+    const cat=(sq&&DIBUJA_CATS[sq.type])?sq.type:null;
+    const newCard=cat?dibujaRandomCardForCat(cat):dibujaRandomCard();
+    clearDrawing();
+    await ref().update({card:newCard,allPlay:isAll,currentDrawer:teamDrawer(turnTeam),
+      phase:'mode',mode:null,modeRoll:null,moveRoll:null});
+  };
+  const tirarModo=async()=>{
+    const val=Math.random()<0.5?'mimica':'dibujo';
+    await ref().update({mode:val,modeRoll:{value:val,ts:Date.now()}});
+    setTimeout(()=>{ ref().update({phase:'draw',roundStartTime:Date.now()}); },750);
+  };
+  const otraCarta=async()=>{
+    const sq=DIBUJA_BOARD[turnTeam?.pos||0];
+    const cat=(sq&&DIBUJA_CATS[sq.type])?sq.type:null;
+    clearDrawing();
+    await ref().update({card:cat?dibujaRandomCardForCat(cat):dibujaRandomCard(),roundStartTime:Date.now()});
+  };
+  // Adivinaron: el equipo que adivinó (winnerTeamId) tira el dado y avanza.
+  const adivinaron=async(winnerTeamId)=>{
+    const move=1+Math.floor(Math.random()*6);
+    await ref().update({moveRoll:{value:move,ts:Date.now()},phase:'moved',lastWinner:winnerTeamId});
+    setTimeout(async()=>{
+      const wTeam=teams[winnerTeamId];
+      const newPos=Math.min(DIBUJA_GOAL,(wTeam.pos||0)+move);
+      const updates={};
+      updates[`teams/${winnerTeamId}/pos`]=newPos;
+      // rota el dibujante de ese equipo para la próxima
+      const memCount=Object.keys(wTeam.members||{}).length||1;
+      updates[`teams/${winnerTeamId}/drawerIdx`]=((wTeam.drawerIdx||0)+1)%memCount;
+      if(newPos>=DIBUJA_GOAL){
+        updates['gameState']='finished'; updates['winner']=winnerTeamId;
+      } else {
+        // el turno pasa al equipo que adivinó (gana el dado y el turno)
+        updates['turnIdx']=order.indexOf(winnerTeamId);
+        updates['phase']='idle'; updates['card']=null; updates['mode']=null;
+        updates['modeRoll']=null; updates['moveRoll']=null; updates['allPlay']=false;
+      }
+      await ref().update(updates);
+      clearDrawing();
+    },1400);
+  };
+  const seAcaboTiempo=async()=>{
+    clearDrawing();
+    await ref().update({turnIdx:(turnIdx+1)%order.length,phase:'idle',card:null,
+      mode:null,modeRoll:null,moveRoll:null,allPlay:false});
+  };
+  const finalizar=async()=>{ await ref().update({gameState:'finished'}); };
+  const cerrar=async()=>{
+    await ref().remove();
+    await db.ref(`sessions/${SID}`).update({phase:'waiting'});
+    if(onClose) onClose();
+  };
+  const empezar=async(teams,order)=>{
+    await ref().update({active:true,gameState:'playing',teams,order,turnIdx:0,
+      phase:'idle',card:null,mode:null,modeRoll:null,moveRoll:null,allPlay:false,
+      currentDrawer:null,strokes:null,live:null});
+  };
+
+  const myZone=users[myId]?.zone;
+  if(myZone!=='juegos'&&!isAdmin) return null;
+
+  // ── SETUP ──
+  if(isAdmin&&(!gState||gState==='setup')){
+    return <DibujaSetup juegosUsers={juegosUsers} onStart={empezar} onCancel={cerrar}/>;
+  }
+  if(!gState||gState==='setup'){
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
+        backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',
+        justifyContent:'center',gap:14,padding:24,textAlign:'center'}}>
+        <div style={{fontSize:46}}>🎨</div>
+        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:24,
+          color:'#ffd000',textTransform:'uppercase'}}>Dibujando la Biblia</div>
+        <div style={{color:'var(--muted)',fontSize:14}}>El anfitrión está armando los equipos…</div>
+        <Spinner size={24}/>
+      </div>
+    );
+  }
+
+  // ── FINISHED ──
+  if(gState==='finished'){
+    const ranking=order.map(tid=>teams[tid]).filter(Boolean).sort((a,b)=>(b.pos||0)-(a.pos||0));
+    const winner=game?.winner?teams[game.winner]:ranking[0];
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
+        backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',
+        justifyContent:'center',padding:24,gap:14,overflowY:'auto'}}>
+        <Confetti/>
+        <div style={{fontSize:56}}>🏆</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:28,
+          color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',margin:0,textAlign:'center'}}>
+          ¡{winner?.name||'Equipo'} ganó! {winner?.avatar}
+        </h2>
+        <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8,marginTop:8}}>
+          {ranking.map((t,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:14,
+              background:i===0?'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))':'rgba(255,255,255,.05)',
+              border:i===0?'2px solid #ffd000':`1px solid ${t.color}55`}}>
+              <span style={{fontSize:26}}>{t.avatar}</span>
+              <div style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:18,color:'#fff'}}>{t.name}</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:16,color:'#ffd000'}}>
+                {Math.round(((t.pos||0)/DIBUJA_GOAL)*100)}%
+              </div>
+            </div>
+          ))}
+        </div>
+        {isAdmin&&(<button onClick={cerrar} style={{marginTop:14,background:'#ffd000',border:'none',
+          borderRadius:14,padding:'14px 32px',color:'#07091f',fontWeight:900,fontSize:14,
+          fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer'}}>Cerrar juego</button>)}
+      </div>
+    );
+  }
+
+  // ── PLAYING ──
+  const cat=card?DIBUJA_CATS[card.category]:null;
+  const timeColor=timeLeft<15?'#ef4444':timeLeft<35?'#f97316':'#ffd000';
+  const drawer=drawerId?users[drawerId]:null;
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
+      backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',
+      padding:'16px 14px',gap:12,overflowY:'auto'}}>
+
+      {/* Encabezado de turno */}
+      <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',justifyContent:'center'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,
+          background:`${turnTeam?.color||'#ffd000'}22`,border:`1px solid ${turnTeam?.color||'#ffd000'}66`,
+          borderRadius:30,padding:'6px 14px'}}>
+          <span style={{fontSize:22}}>{turnTeam?.avatar}</span>
+          <div>
+            <div style={{fontSize:9,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em'}}>Turno de</div>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:15,color:'#fff'}}>
+              {allPlay?'¡TODOS PARTICIPAN!':turnTeam?.name}
+            </div>
+          </div>
+        </div>
+        {phase==='draw'&&(
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:30,color:timeColor}}>
+            {Math.floor(timeLeft/60)}:{String(timeLeft%60).padStart(2,'0')}
+          </div>
+        )}
+      </div>
+
+      {/* Tablero */}
+      <div style={{width:'100%',maxWidth:440}}>
+        <DibujaBoard teams={teams} order={order}/>
+      </div>
+
+      {/* Dados */}
+      {(phase==='mode'||phase==='moved')&&(
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          {game?.modeRoll&&(
+            <div style={{textAlign:'center'}}>
+              <DibujaDie roll={game.modeRoll} faces={{mimica:'🎭',dibujo:'✏️'}}/>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:10,
+                color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginTop:4}}>
+                {game.modeRoll.value==='mimica'?'Mímica':'Dibujo'}
+              </div>
+            </div>
+          )}
+          {game?.moveRoll&&phase==='moved'&&(
+            <div style={{textAlign:'center'}}>
+              <DibujaDie roll={game.moveRoll}/>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:10,
+                color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginTop:4}}>Avanza {game.moveRoll.value}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Carta + lienzo (durante draw) */}
+      {phase==='draw'&&(
+        <div style={{width:'100%',maxWidth:440,display:'flex',flexDirection:'column',gap:10}}>
+          {/* Modo */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+            <span style={{fontSize:18}}>{mode==='mimica'?'🎭':'✏️'}</span>
+            <span style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:16,
+              color:'#fff',textTransform:'uppercase',letterSpacing:'.05em'}}>
+              {mode==='mimica'?'Haz mímica':'Dibuja'}
+            </span>
+          </div>
+
+          {/* La palabra: solo el dibujante/admin la ve */}
+          {canSeeWord&&cat&&(
+            <div style={{background:'linear-gradient(135deg,#fff,#f8f5ef)',borderRadius:16,
+              padding:'14px 18px',border:`4px solid ${cat.color}`,textAlign:'center'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,
+                color:cat.dark,textTransform:'uppercase',letterSpacing:'.16em'}}>{cat.icon} {cat.label}</div>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:28,
+                color:'#0a0e2e',textTransform:'uppercase',lineHeight:1.05,marginTop:4}}>{card.word}</div>
+              {isDrawer&&<div style={{fontSize:11,color:'#a16207',marginTop:6}}>
+                {mode==='mimica'?'Actúa esta palabra ¡sin hablar!':'Dibújala ¡sin letras ni números!'}
+              </div>}
+            </div>
+          )}
+          {!canSeeWord&&(
+            <div style={{background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.1)',
+              borderRadius:16,padding:'12px',textAlign:'center'}}>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:16,
+                color:cat?cat.color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em'}}>
+                {cat?cat.label:'Adivina'} {cat?cat.icon:'🤔'}
+              </div>
+              <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>
+                {allPlay?'¡Todos pueden adivinar! Grita tu respuesta.'
+                  :isMyTurn?'¡Tu equipo adivina! Grita tu respuesta.'
+                  :'Observa: adivina el equipo en turno.'}
+              </div>
+            </div>
+          )}
+
+          {/* Lienzo de dibujo (solo en modo dibujo) */}
+          {mode==='dibujo'&&(
+            <>
+              <DibujaCanvas SID={SID} canDraw={canDraw}
+                color={turnTeam?.color||'#0a0e2e'}
+                strokes={game?.strokes} live={game?.live}/>
+              {canDraw&&(
+                <button onClick={()=>{ ref().child('strokes').remove(); ref().child('live').remove(); }}
+                  style={{alignSelf:'center',background:'rgba(239,68,68,.15)',border:'1px solid rgba(239,68,68,.35)',
+                  borderRadius:10,padding:'8px 16px',color:'#fca5a5',fontWeight:800,fontSize:12,
+                  fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>
+                  🧽 Borrar
+                </button>
+              )}
+            </>
+          )}
+          {mode==='mimica'&&(
+            <div style={{textAlign:'center',padding:'18px',background:'rgba(255,255,255,.04)',
+              borderRadius:14,border:'1px dashed rgba(255,255,255,.15)'}}>
+              <div style={{fontSize:38}}>🎭</div>
+              <div style={{fontSize:13,color:'var(--muted)',marginTop:6}}>
+                {isDrawer?'¡Actúa la palabra en vivo para tu equipo!':'El dibujante está actuando — ¡adivina!'}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Controles admin */}
+      {isAdmin&&(
+        <div style={{width:'100%',maxWidth:440,display:'flex',flexDirection:'column',gap:8,marginTop:4}}>
+          {phase==='idle'&&(
+            <button onClick={sacarCarta} style={{padding:'14px',borderRadius:12,border:'none',
+              background:'#ffd000',color:'#0a0e2e',fontFamily:'Barlow Condensed,sans-serif',
+              fontWeight:900,fontSize:15,letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer'}}>
+              🃏 Sacar carta {turnTeam?`· ${turnTeam.name}`:''}
+            </button>
+          )}
+          {phase==='mode'&&(
+            <button onClick={tirarModo} disabled={!!game?.modeRoll} style={{padding:'14px',borderRadius:12,border:'none',
+              background:game?.modeRoll?'rgba(255,255,255,.1)':'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+              color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:15,
+              letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer'}}>
+              🎲 Tirar dado: 🎭 mímica / ✏️ dibujo
+            </button>
+          )}
+          {phase==='draw'&&(
+            <>
+              <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,
+                color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.12em'}}>
+                {allPlay?'¿Qué equipo adivinó primero?':'Si adivinaron, confirma:'}
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:allPlay?'1fr 1fr':'1fr',gap:6}}>
+                {(allPlay?order:[turnTeamId]).map(tid=>(
+                  <button key={tid} onClick={()=>adivinaron(tid)} style={{display:'flex',alignItems:'center',gap:8,
+                    background:'rgba(34,197,94,.14)',border:'1px solid rgba(34,197,94,.35)',borderRadius:10,
+                    padding:'10px 12px',cursor:'pointer',color:'#fff',fontFamily:'Barlow Condensed,sans-serif',
+                    fontWeight:800,fontSize:14}}>
+                    <span style={{fontSize:18}}>{teams[tid]?.avatar}</span>
+                    <span style={{flex:1,textAlign:'left'}}>✅ {teams[tid]?.name}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{display:'flex',gap:6}}>
+                <button onClick={otraCarta} style={{flex:1,background:'rgba(139,92,246,.18)',
+                  border:'1px solid rgba(139,92,246,.4)',borderRadius:10,padding:'10px',color:'#c4b5fd',
+                  fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                  textTransform:'uppercase',cursor:'pointer'}}>🔄 Otra carta</button>
+                <button onClick={seAcaboTiempo} style={{flex:1,background:'rgba(239,68,68,.15)',
+                  border:'1px solid rgba(239,68,68,.35)',borderRadius:10,padding:'10px',color:'#fca5a5',
+                  fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+                  textTransform:'uppercase',cursor:'pointer'}}>⏭ Se acabó el tiempo</button>
+              </div>
+            </>
+          )}
+          {phase==='moved'&&(
+            <div style={{textAlign:'center',color:'var(--muted)',fontSize:13,padding:'8px'}}>
+              {teams[game?.lastWinner]?.name} avanza… <Spinner size={18}/>
+            </div>
+          )}
+          <div style={{display:'flex',gap:8,marginTop:6}}>
+            <button onClick={finalizar} style={{flex:1,background:'rgba(34,197,94,.15)',
+              border:'1px solid rgba(34,197,94,.35)',borderRadius:12,padding:'11px',color:'#86efac',
+              fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+              textTransform:'uppercase',cursor:'pointer'}}>🏆 Finalizar</button>
+            <button onClick={cerrar} style={{flex:1,background:'rgba(239,68,68,.15)',
+              border:'1px solid rgba(239,68,68,.35)',borderRadius:12,padding:'11px',color:'#fca5a5',
+              fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',letterSpacing:'.04em',
+              textTransform:'uppercase',cursor:'pointer'}}>✕ Cerrar</button>
+          </div>
+        </div>
+      )}
+      {!isAdmin&&phase==='idle'&&(
+        <div style={{textAlign:'center',color:'var(--muted)',fontSize:14,maxWidth:300}}>
+          Esperando que el anfitrión saque la carta… <Spinner size={20}/>
+        </div>
       )}
     </div>
   );
