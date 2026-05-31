@@ -120,7 +120,7 @@ const{useState,useRef,useEffect,useCallback,useMemo}=React;
 /* ════════════════════════ CONSTANTES ════════════════════════ */
 // Versión de la app. Al desplegar una nueva, los clientes abiertos la detectan
 // y se recargan solos (ver auto-actualización en App). Subir este valor en cada deploy.
-const APP_VERSION='2026-05-30-dibuja-1';
+const APP_VERSION='2026-05-30-dibuja-2';
 const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
@@ -8261,33 +8261,49 @@ function DibujaBoard({teams,order}){
 }
 
 /* Pantalla de armado de equipos (solo admin). */
-function DibujaSetup({juegosUsers,onStart,onCancel}){
-  const[numTeams,setNumTeams]=useState(Math.min(2,Math.max(2,juegosUsers.length)));
-  const[assign,setAssign]=useState({}); // uid -> teamIdx
-  const[teamAvatars,setTeamAvatars]=useState(()=>DIBUJA_TEAM_AVATARS.slice(0,6));
+/* Setup de equipos (admin) — escribe DIRECTO en Firebase para que todos lo
+   vean en vivo y la división sea determinista. */
+function DibujaSetup({game,SID,juegosUsers,onCancel,onContinue}){
+  const ref=()=>db.ref(`sessions/${SID}/dibuja`);
+  const order=game?.order||[];
+  const teams=game?.teams||{};
+  const numTeams=order.length||2;
 
-  const max=Math.max(2,Math.min(6,juegosUsers.length||2));
-  const repartirAzar=()=>{
-    const shuffled=[...juegosUsers].sort(()=>Math.random()-0.5);
-    const a={};
-    shuffled.forEach((u,i)=>{a[u.uid]=i%numTeams;});
-    setAssign(a);
-  };
-  const setTeam=(uid,t)=>setAssign(p=>({...p,[uid]:t}));
-  const allAssigned=juegosUsers.length>0&&juegosUsers.every(u=>assign[u.uid]!==undefined);
+  const maxTeams=Math.max(2,Math.min(6,juegosUsers.length||2));
 
-  const build=()=>{
-    const teams={},order=[];
-    for(let t=0;t<numTeams;t++){
-      const tid='t'+t;
-      order.push(tid);
-      const members={};
-      juegosUsers.forEach(u=>{ if(assign[u.uid]===t) members[u.uid]=true; });
-      teams[tid]={name:'Equipo '+(t+1),avatar:teamAvatars[t]||DIBUJA_TEAM_AVATARS[t],
-        color:DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length],members,pos:0,drawerIdx:0};
+  // Crear esqueleto de N equipos (conserva avatares previos si existen).
+  const buildSkeleton=async(n)=>{
+    const t={},ord=[];
+    for(let i=0;i<n;i++){
+      const tid='t'+i; ord.push(tid);
+      t[tid]={name:'Equipo '+(i+1),
+        avatar:teams['t'+i]?.avatar||DIBUJA_TEAM_AVATARS[i],
+        color:DIBUJA_TEAM_COLORS[i%DIBUJA_TEAM_COLORS.length],
+        members:{},captain:null,pos:0,drawerIdx:0};
     }
-    onStart(teams,order);
+    await ref().update({teams:t,order:ord});
   };
+  // Inicializa con 2 equipos si aún no hay.
+  useEffect(()=>{ if(order.length===0) buildSkeleton(2); },[order.length]);
+
+  // Mueve un usuario al equipo t (lo quita de los demás).
+  const assignUser=async(uid,t)=>{
+    const updates={};
+    order.forEach((tid,j)=>{ updates[`teams/${tid}/members/${uid}`]=(j===t)?true:null; });
+    await ref().update(updates);
+  };
+  const repartirAzar=async()=>{
+    const shuffled=[...juegosUsers].sort(()=>Math.random()-0.5);
+    const updates={};
+    shuffled.forEach((u,i)=>{
+      const t=i%order.length;
+      order.forEach((tid,j)=>{ updates[`teams/${tid}/members/${u.uid}`]=(j===t)?true:null; });
+    });
+    await ref().update(updates);
+  };
+  const setAvatar=(t,av)=>ref().child(`teams/${order[t]}/avatar`).set(av);
+  const teamOf=uid=>order.findIndex(tid=>teams[tid]?.members?.[uid]);
+  const allAssigned=juegosUsers.length>0&&juegosUsers.every(u=>teamOf(u.uid)>=0);
 
   return(
     <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
@@ -8308,8 +8324,8 @@ function DibujaSetup({juegosUsers,onStart,onCancel}){
           Cantidad de equipos
         </div>
         <div style={{display:'flex',gap:6}}>
-          {Array.from({length:max-1},(_,i)=>i+2).map(n=>(
-            <button key={n} onClick={()=>{setNumTeams(n);setAssign({});}} style={{
+          {Array.from({length:maxTeams-1},(_,i)=>i+2).map(n=>(
+            <button key={n} onClick={()=>buildSkeleton(n)} style={{
               flex:1,padding:'10px',borderRadius:10,cursor:'pointer',
               border:numTeams===n?'2px solid #ffd000':'1px solid rgba(255,255,255,.12)',
               background:numTeams===n?'rgba(255,208,0,.18)':'rgba(255,255,255,.04)',
@@ -8319,25 +8335,42 @@ function DibujaSetup({juegosUsers,onStart,onCancel}){
         </div>
       </div>
 
-      {/* Avatar de cada equipo */}
+      {/* Avatar de cada equipo + miembros actuales */}
       <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8}}>
-        {Array.from({length:numTeams}).map((_,t)=>(
-          <div key={t} style={{display:'flex',alignItems:'center',gap:10,
-            background:`${DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length]}1a`,
-            border:`1px solid ${DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length]}55`,
-            borderRadius:12,padding:'8px 10px'}}>
-            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,
-              color:DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length],width:78,flexShrink:0}}>Equipo {t+1}</div>
-            <div style={{display:'flex',gap:4,flexWrap:'wrap',flex:1}}>
-              {DIBUJA_TEAM_AVATARS.slice(0,8).map(av=>(
-                <button key={av} onClick={()=>setTeamAvatars(a=>{const n=[...a];n[t]=av;return n;})} style={{
-                  width:30,height:30,borderRadius:8,fontSize:16,cursor:'pointer',
-                  border:teamAvatars[t]===av?'2px solid #ffd000':'1px solid rgba(255,255,255,.15)',
-                  background:teamAvatars[t]===av?'rgba(255,208,0,.2)':'rgba(255,255,255,.05)'}}>{av}</button>
-              ))}
+        {order.map((tid,t)=>{
+          const team=teams[tid]||{};
+          const members=Object.keys(team.members||{});
+          return(
+            <div key={tid} style={{
+              background:`${DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length]}1a`,
+              border:`1px solid ${DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length]}55`,
+              borderRadius:12,padding:'8px 10px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,
+                  color:DIBUJA_TEAM_COLORS[t%DIBUJA_TEAM_COLORS.length],width:70,flexShrink:0}}>Equipo {t+1}</div>
+                <div style={{display:'flex',gap:4,flexWrap:'wrap',flex:1}}>
+                  {DIBUJA_TEAM_AVATARS.slice(0,8).map(av=>(
+                    <button key={av} onClick={()=>setAvatar(t,av)} style={{
+                      width:28,height:28,borderRadius:8,fontSize:15,cursor:'pointer',
+                      border:team.avatar===av?'2px solid #ffd000':'1px solid rgba(255,255,255,.15)',
+                      background:team.avatar===av?'rgba(255,208,0,.2)':'rgba(255,255,255,.05)'}}>{av}</button>
+                  ))}
+                </div>
+              </div>
+              {members.length>0&&(
+                <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:6}}>
+                  {members.map(uid=>users_safe(juegosUsers,uid)).filter(Boolean).map(u=>(
+                    <span key={u.uid} style={{display:'flex',alignItems:'center',gap:4,
+                      background:'rgba(255,255,255,.08)',borderRadius:20,padding:'2px 8px 2px 4px',
+                      fontSize:11,color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
+                      <AvatarBubble profile={u} size={18}/>{u.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Repartir */}
@@ -8356,24 +8389,27 @@ function DibujaSetup({juegosUsers,onStart,onCancel}){
         <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,
           color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.12em'}}>O asigna manualmente:</div>
         {juegosUsers.length===0&&(<div style={{color:'var(--muted)',fontSize:13,textAlign:'center',padding:10}}>Nadie en sala de juegos aún.</div>)}
-        {juegosUsers.map(u=>(
-          <div key={u.uid} style={{display:'flex',alignItems:'center',gap:8,
-            background:'rgba(255,255,255,.04)',borderRadius:10,padding:'6px 8px'}}>
-            <AvatarBubble profile={u} size={28}/>
-            <span style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-              fontSize:14,color:'#fff',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
-            <div style={{display:'flex',gap:4}}>
-              {Array.from({length:numTeams}).map((_,t)=>(
-                <button key={t} onClick={()=>setTeam(u.uid,t)} style={{
-                  width:30,height:30,borderRadius:8,cursor:'pointer',
-                  fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:13,
-                  border:assign[u.uid]===t?`2px solid ${DIBUJA_TEAM_COLORS[t]}`:'1px solid rgba(255,255,255,.12)',
-                  background:assign[u.uid]===t?`${DIBUJA_TEAM_COLORS[t]}33`:'rgba(255,255,255,.04)',
-                  color:assign[u.uid]===t?DIBUJA_TEAM_COLORS[t]:'#fff'}}>{t+1}</button>
-              ))}
+        {juegosUsers.map(u=>{
+          const myT=teamOf(u.uid);
+          return(
+            <div key={u.uid} style={{display:'flex',alignItems:'center',gap:8,
+              background:'rgba(255,255,255,.04)',borderRadius:10,padding:'6px 8px'}}>
+              <AvatarBubble profile={u} size={28}/>
+              <span style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+                fontSize:14,color:'#fff',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.name}</span>
+              <div style={{display:'flex',gap:4}}>
+                {order.map((tid,t)=>(
+                  <button key={t} onClick={()=>assignUser(u.uid,t)} style={{
+                    width:30,height:30,borderRadius:8,cursor:'pointer',
+                    fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:13,
+                    border:myT===t?`2px solid ${DIBUJA_TEAM_COLORS[t]}`:'1px solid rgba(255,255,255,.12)',
+                    background:myT===t?`${DIBUJA_TEAM_COLORS[t]}33`:'rgba(255,255,255,.04)',
+                    color:myT===t?DIBUJA_TEAM_COLORS[t]:'#fff'}}>{t+1}</button>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div style={{width:'100%',maxWidth:420,display:'flex',gap:8,marginTop:4}}>
@@ -8381,13 +8417,62 @@ function DibujaSetup({juegosUsers,onStart,onCancel}){
           border:'1px solid rgba(255,255,255,.12)',background:'rgba(255,255,255,.05)',
           color:'var(--muted)',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
           fontSize:13,letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>Cancelar</button>
-        <button onClick={build} disabled={!allAssigned} style={{flex:2,padding:'13px',borderRadius:12,
+        <button onClick={onContinue} disabled={!allAssigned} style={{flex:2,padding:'13px',borderRadius:12,
           border:'none',cursor:allAssigned?'pointer':'not-allowed',
           background:allAssigned?'linear-gradient(135deg,#ffd000,#e6a800)':'rgba(255,255,255,.1)',
           color:allAssigned?'#0a0e2e':'var(--muted)',fontFamily:'Barlow Condensed,sans-serif',
           fontWeight:900,fontSize:14,letterSpacing:'.05em',textTransform:'uppercase'}}>
-          {allAssigned?'🎨 Comenzar juego':'Asigna a todos'}
+          {allAssigned?'👑 Elegir capitanes →':'Asigna a todos'}
         </button>
+      </div>
+    </div>
+  );
+}
+// Helper: encuentra un usuario en la lista por uid.
+function users_safe(list,uid){ return list.find(u=>u.uid===uid)||null; }
+
+/* Vista de solo lectura de los equipos (para los que miran sin intervenir). */
+function DibujaTeamsWatch({teams,order,users,title,subtitle}){
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
+      backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',
+      padding:'20px 16px',gap:14,overflowY:'auto'}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:40}}>🎨</div>
+        <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:24,
+          color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',margin:0}}>{title}</h2>
+        {subtitle&&<p style={{color:'var(--muted)',fontSize:13,marginTop:4}}>{subtitle}</p>}
+      </div>
+      <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8}}>
+        {(order||[]).map((tid,t)=>{
+          const team=teams[tid]||{};
+          const members=Object.keys(team.members||{});
+          return(
+            <div key={tid} style={{
+              background:`${team.color||DIBUJA_TEAM_COLORS[t]}1a`,
+              border:`1px solid ${team.color||DIBUJA_TEAM_COLORS[t]}55`,
+              borderRadius:12,padding:'10px 12px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:members.length?6:0}}>
+                <span style={{fontSize:22}}>{team.avatar}</span>
+                <span style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:15,
+                  color:team.color||DIBUJA_TEAM_COLORS[t]}}>{team.name||'Equipo '+(t+1)}</span>
+              </div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                {members.map(uid=>users[uid]).filter(Boolean).map((u,i)=>(
+                  <span key={i} style={{display:'flex',alignItems:'center',gap:4,
+                    background:'rgba(255,255,255,.08)',borderRadius:20,padding:'2px 8px 2px 4px',
+                    fontSize:11,color:'#fff',fontFamily:'Barlow Condensed,sans-serif',fontWeight:700}}>
+                    <AvatarBubble profile={u} size={18}/>{u.name}
+                    {team.captain===Object.keys(team.members||{})[members.indexOf(uid)]&&''}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{color:'var(--muted)',fontSize:13,display:'flex',alignItems:'center',gap:8}}>
+        <Spinner size={18}/> El anfitrión está organizando el juego…
       </div>
     </div>
   );
@@ -8495,8 +8580,41 @@ function DibujaController({session,users,myId,isAdmin,SID,onClose}){
     await db.ref(`sessions/${SID}`).update({phase:'waiting'});
     if(onClose) onClose();
   };
-  const empezar=async(teams,order)=>{
-    await ref().update({active:true,gameState:'playing',teams,order,turnIdx:0,
+  // Pasar de armado de equipos a votación de capitanes.
+  const irACapitanes=async()=>{ await ref().update({gameState:'captains',votes:null}); };
+  // Cada jugador vota por el capitán de SU equipo.
+  const votarCapitan=async(targetUid)=>{
+    if(!myTeamId) return;
+    await ref().child(`votes/${myTeamId}/${myId}`).set(targetUid);
+  };
+  // Cerrar votación: define capitán de cada equipo (más votos; desempate aleatorio).
+  const cerrarVotacion=async()=>{
+    const votes=game?.votes||{};
+    const updates={};
+    order.forEach(tid=>{
+      const members=Object.keys(teams[tid]?.members||{});
+      if(members.length===0) return;
+      const tally={};
+      members.forEach(m=>tally[m]=0);
+      Object.values(votes[tid]||{}).forEach(v=>{ if(tally[v]!==undefined) tally[v]++; });
+      let best=members[0],bestN=-1;
+      members.forEach(m=>{ if(tally[m]>bestN){bestN=tally[m];best=m;} });
+      updates[`teams/${tid}/captain`]=best;
+    });
+    updates['gameState']='rolloff';
+    updates['startRolls']=null;
+    await ref().update(updates);
+  };
+  // Tiro para definir quién comienza: cada equipo tira; mayor empieza.
+  const tirarInicio=async(tid)=>{
+    const val=1+Math.floor(Math.random()*6);
+    await ref().child(`startRolls/${tid}`).set({value:val,ts:Date.now()});
+  };
+  const comenzarPartida=async()=>{
+    const rolls=game?.startRolls||{};
+    let bestTid=order[0],bestN=-1;
+    order.forEach(tid=>{ const v=rolls[tid]?.value||0; if(v>bestN){bestN=v;bestTid=tid;} });
+    await ref().update({gameState:'playing',turnIdx:order.indexOf(bestTid),
       phase:'idle',card:null,mode:null,modeRoll:null,moveRoll:null,allPlay:false,
       currentDrawer:null,strokes:null,live:null});
   };
@@ -8504,20 +8622,149 @@ function DibujaController({session,users,myId,isAdmin,SID,onClose}){
   const myZone=users[myId]?.zone;
   if(myZone!=='juegos'&&!isAdmin) return null;
 
-  // ── SETUP ──
-  if(isAdmin&&(!gState||gState==='setup')){
-    return <DibujaSetup juegosUsers={juegosUsers} onStart={empezar} onCancel={cerrar}/>;
+  // ── SETUP (armado de equipos) ──
+  if(gState==='setup'){
+    if(isAdmin) return <DibujaSetup game={game} SID={SID} juegosUsers={juegosUsers} onCancel={cerrar} onContinue={irACapitanes}/>;
+    return <DibujaTeamsWatch teams={teams} order={order} users={users}
+      title="Dibujando la Biblia" subtitle="El anfitrión está armando los equipos"/>;
   }
-  if(!gState||gState==='setup'){
+
+  // ── CAPITANES (cada equipo vota por separado) ──
+  if(gState==='captains'){
+    const votes=game?.votes||{};
+    // Vista para jugadores: votan dentro de su equipo.
     return(
       <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
         backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',
-        justifyContent:'center',gap:14,padding:24,textAlign:'center'}}>
-        <div style={{fontSize:46}}>🎨</div>
-        <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:24,
-          color:'#ffd000',textTransform:'uppercase'}}>Dibujando la Biblia</div>
-        <div style={{color:'var(--muted)',fontSize:14}}>El anfitrión está armando los equipos…</div>
-        <Spinner size={24}/>
+        padding:'20px 16px',gap:14,overflowY:'auto'}}>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:40}}>👑</div>
+          <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:24,
+            color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',margin:0}}>Elijan a su capitán</h2>
+          <p style={{color:'var(--muted)',fontSize:13,marginTop:4}}>Cada equipo vota por separado</p>
+        </div>
+
+        {/* Mi equipo: votar */}
+        {myTeamId&&(()=>{
+          const team=teams[myTeamId];
+          const members=Object.keys(team?.members||{});
+          const myVote=votes[myTeamId]?.[myId];
+          const tally={}; members.forEach(m=>tally[m]=0);
+          Object.values(votes[myTeamId]||{}).forEach(v=>{ if(tally[v]!==undefined) tally[v]++; });
+          return(
+            <div style={{width:'100%',maxWidth:420,background:`${team.color}1a`,
+              border:`1px solid ${team.color}55`,borderRadius:14,padding:'12px 14px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <span style={{fontSize:22}}>{team.avatar}</span>
+                <span style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:16,
+                  color:team.color}}>{team.name} · tu voto</span>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                {members.map(uid=>users[uid]).filter(Boolean).map(u=>(
+                  <button key={u.uid} onClick={()=>votarCapitan(u.uid)} style={{display:'flex',alignItems:'center',gap:8,
+                    background:myVote===u.uid?`${team.color}33`:'rgba(255,255,255,.05)',
+                    border:myVote===u.uid?`2px solid ${team.color}`:'1px solid rgba(255,255,255,.12)',
+                    borderRadius:10,padding:'8px 10px',cursor:'pointer',color:'#fff',
+                    fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,textAlign:'left'}}>
+                    <AvatarBubble profile={u} size={26}/>
+                    <span style={{flex:1}}>{u.name}{u.uid===myId?' (tú)':''}</span>
+                    <span style={{background:'rgba(255,255,255,.1)',borderRadius:20,padding:'1px 9px',
+                      fontSize:13,fontWeight:900}}>{tally[u.uid]||0}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+        {!myTeamId&&!isAdmin&&(
+          <div style={{color:'var(--muted)',fontSize:13}}>No estás en ningún equipo.</div>
+        )}
+
+        {/* Admin: progreso + cerrar votación */}
+        {isAdmin&&(
+          <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8}}>
+            <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:11,
+              color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.12em'}}>Progreso de votación</div>
+            {order.map(tid=>{
+              const team=teams[tid];
+              const memN=Object.keys(team?.members||{}).length;
+              const votedN=Object.keys(votes[tid]||{}).length;
+              return(
+                <div key={tid} style={{display:'flex',alignItems:'center',gap:8,
+                  background:'rgba(255,255,255,.04)',borderRadius:10,padding:'8px 10px'}}>
+                  <span style={{fontSize:18}}>{team?.avatar}</span>
+                  <span style={{flex:1,fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,fontSize:14,color:'#fff'}}>{team?.name}</span>
+                  <span style={{fontSize:12,color:votedN>=memN&&memN>0?'#10b981':'var(--muted)',fontWeight:700}}>{votedN}/{memN} votaron</span>
+                </div>
+              );
+            })}
+            <button onClick={cerrarVotacion} style={{padding:'13px',borderRadius:12,border:'none',
+              background:'linear-gradient(135deg,#ffd000,#e6a800)',color:'#0a0e2e',
+              fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:14,
+              letterSpacing:'.05em',textTransform:'uppercase',cursor:'pointer'}}>
+              ✅ Cerrar votación y continuar
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── ROLLOFF (quién comienza: mayor dado) ──
+  if(gState==='rolloff'){
+    const rolls=game?.startRolls||{};
+    const allRolled=order.every(tid=>rolls[tid]);
+    let leader=null,leadN=-1;
+    order.forEach(tid=>{ const v=rolls[tid]?.value||0; if(v>leadN){leadN=v;leader=tid;} });
+    return(
+      <div style={{position:'fixed',inset:0,zIndex:250,background:'rgba(7,9,31,.97)',
+        backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',
+        padding:'20px 16px',gap:14,overflowY:'auto'}}>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:40}}>🎲</div>
+          <h2 style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:24,
+            color:'#ffd000',textTransform:'uppercase',letterSpacing:'.05em',margin:0}}>¿Quién comienza?</h2>
+          <p style={{color:'var(--muted)',fontSize:13,marginTop:4}}>Cada equipo tira un dado · el mayor empieza</p>
+        </div>
+        <div style={{width:'100%',maxWidth:420,display:'flex',flexDirection:'column',gap:8}}>
+          {order.map(tid=>{
+            const team=teams[tid];
+            const roll=rolls[tid];
+            const isLeader=allRolled&&tid===leader;
+            const captainUid=team?.captain;
+            const iAmCaptain=captainUid===myId;
+            return(
+              <div key={tid} style={{display:'flex',alignItems:'center',gap:10,
+                background:isLeader?'rgba(255,208,0,.16)':`${team?.color}1a`,
+                border:isLeader?'2px solid #ffd000':`1px solid ${team?.color}55`,
+                borderRadius:12,padding:'10px 12px'}}>
+                <span style={{fontSize:22}}>{team?.avatar}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,fontSize:15,color:'#fff'}}>{team?.name}</div>
+                  {captainUid&&users[captainUid]&&(
+                    <div style={{fontSize:11,color:'var(--muted)'}}>👑 Capitán: {users[captainUid].name}</div>
+                  )}
+                </div>
+                {roll
+                  ? <DibujaDie roll={roll} size={44}/>
+                  : (iAmCaptain||isAdmin)
+                    ? <button onClick={()=>tirarInicio(tid)} style={{padding:'8px 14px',borderRadius:10,border:'none',
+                        background:team?.color||'#ffd000',color:'#0a0e2e',fontFamily:'Barlow Condensed,sans-serif',
+                        fontWeight:900,fontSize:13,letterSpacing:'.04em',textTransform:'uppercase',cursor:'pointer'}}>🎲 Tirar</button>
+                    : <span style={{fontSize:12,color:'var(--muted)'}}>esperando…</span>}
+              </div>
+            );
+          })}
+        </div>
+        {isAdmin&&(
+          <button onClick={comenzarPartida} disabled={!allRolled} style={{width:'100%',maxWidth:420,
+            padding:'13px',borderRadius:12,border:'none',cursor:allRolled?'pointer':'not-allowed',
+            background:allRolled?'linear-gradient(135deg,#ffd000,#e6a800)':'rgba(255,255,255,.1)',
+            color:allRolled?'#0a0e2e':'var(--muted)',fontFamily:'Barlow Condensed,sans-serif',
+            fontWeight:900,fontSize:14,letterSpacing:'.05em',textTransform:'uppercase'}}>
+            {allRolled?`🎨 Comienza ${teams[leader]?.name}`:'Faltan equipos por tirar'}
+          </button>
+        )}
       </div>
     );
   }
