@@ -120,7 +120,7 @@ const{useState,useRef,useEffect,useCallback,useMemo}=React;
 /* ════════════════════════ CONSTANTES ════════════════════════ */
 // Versión de la app. Al desplegar una nueva, los clientes abiertos la detectan
 // y se recargan solos (ver auto-actualización en App). Subir este valor en cada deploy.
-const APP_VERSION='2026-05-30-dibuja-2';
+const APP_VERSION='2026-06-06-semana10';
 const AVATARS=['🦁','🐺','🦊','🐻','🐼','🦋','🦅','🐬','🦄','🐉','⚡','🌟','🔥','🌊','🌙','🎭','🎸','⚽','🎮','🏄'];
 const COLORS=['#ffd000','#ec4899','#22d3ee','#10b981','#6366f1','#ef4444','#8b5cf6','#fb923c'];
 const REACTIONS=[{id:'heart',e:'❤️'},{id:'pray',e:'🙏'},{id:'thumbs',e:'👍'},{id:'smile',e:'😊'},{id:'cry',e:'😢'},{id:'party',e:'🎉'}];
@@ -1753,6 +1753,103 @@ const PRESENTATIONS=[
         ]},
       {type:'preview', label:'Un vistazo', title:'Arrepentimiento y perdón',
         text:'¿Alguna vez has sentido que, tras una semana de éxito profesional y metas cumplidas, tu conexión con lo trascendente se siente vacía y "fuera de cobertura"? El estudio de esta semana nos confronta con la paradoja de vivir vidas tan llenas de actividades necesarias que terminan por asfixiar nuestra relación con Dios, recordándonos que el verdadero descanso no es la ausencia de trabajo, sino la presencia de una persona. A través de la lente del arrepentimiento y el perdón, exploraremos si estamos intentando construir nuestro propio reino de autosuficiencia o si somos capaces de soltar el control para ser envueltos por una gracia que no se gana con esfuerzo, sino con entrega; una invitación urgente para una generación que lo tiene todo, pero que a menudo olvida lo único que realmente importa.'},
+      {type:'credits', title:'Conócenos — Ministerio Joven Unión Chilena',
+        platforms:[
+          {icon:'📘',label:'Facebook',value:'Ministerio Joven Chile'},
+          {icon:'📷',label:'Instagram',value:'Ministeriojovenchile'},
+          {icon:'✈️',label:'Telegram',value:'Escuela Sabática Jóvenes - Inverse'},
+          {icon:'▶️',label:'YouTube',value:'Ministerio Joven Unión Chilena'},
+          {icon:'🍎',label:'App Store',value:'https://rb.gy/jwpzw'},
+          {icon:'🤖',label:'Google Play',value:'https://rb.gy/3leq0'},
+        ],
+        people:['Makarina Valdivia F. — Ilustración, Resumen y Edición','Daniela Garcés B. — Ilustración, Resumen y Edición']},
+    ],
+  },
+  {
+    id:'semana10',
+    week:'Semana 10',
+    weekLong:'Décima semana',
+    title:'Arrepentimiento y perdón',
+    subtitle:'Éxodo 34:1-9',
+    icon:'🙏',
+    slides:[
+      {type:'cover',
+        material:'Material para el repaso de la lección 2T 2026',
+        org:'Ministerio Joven Unión Chilena',
+        bigTitle:'Creciendo en nuestra relación con Dios',
+        num:'10', lessonTitle:'Arrepentimiento y perdón', ref:'Éxodo 34:1-9'},
+      {type:'content', day:'SÁBADO', kicker:'INICIA',
+        title:'El ajetreo de la vida',
+        verses:['Lucas 10:40-42','Mateo 3:2','Marcos 1:15','Hechos 20:21'],
+        cards:[
+          {variant:'box',lead:'Las actividades y preocupaciones diarias pueden distraernos de lo más importante:',rest:'cultivar una relación cercana con Dios y dedicar tiempo a su presencia.'},
+          {variant:'box',lead:'El arrepentimiento surge cuando reconocemos que el pecado y las prioridades equivocadas han debilitado nuestra comunión con Él,',rest:'y acudimos a Cristo en busca de perdón y restauración.'},
+          {variant:'plain',lead:'Jesús ofrece su justicia',rest:'para cubrir nuestros pecados y transformar nuestra vida mediante su gracia.'},
+          {variant:'note',lead:'Tanto Juan el Bautista como Jesús enseñaron que el arrepentimiento y la fe son esenciales',rest:'para experimentar el reino de Dios y mantener una relación saludable con Él.'},
+        ]},
+      {type:'quote', day:'DOMINGO', kicker:'ESCRIBE',
+        name:'Ministerio Joven', handle:'@ministeriojoven',
+        text:'El arrepentimiento, cuando es sincero, lleva a cambiar la conducta o el hábito.'},
+      {type:'content', day:'LUNES', kicker:'ASIMILA',
+        title:'Gracia suficiente',
+        verses:['Éxodo 24:7-8','Éxodo 32:4-5','Éxodo 33:4-6','Éxodo 34:6-7','Lucas 18:13'],
+        cards:[
+          {variant:'box',lead:'El relato del becerro de oro muestra cuán fácilmente el ser humano puede apartarse de Dios,',rest:'aun después de haber prometido fidelidad y obediencia.'},
+          {variant:'box',lead:'A pesar de la gravedad del pecado y la rebelión de Israel, Dios se reveló como misericordioso, paciente y dispuesto a perdonar',rest:'a quienes se arrepienten sinceramente.'},
+          {variant:'plain',lead:'El perdón divino no ignora el pecado,',rest:'pero ofrece restauración a quienes reconocen su culpa y buscan la gracia de Dios.'},
+          {variant:'note',lead:'Gracias al plan de salvación, toda persona puede acercarse a Cristo con humildad,',rest:'confesando sus faltas y recibiendo su misericordia transformadora.'},
+        ]},
+      {type:'content', day:'MARTES', kicker:'INTERPRETA',
+        title:'La voz del Espíritu Santo',
+        verses:['Juan 16:8','Efesios 4:30'],
+        cards:[
+          {variant:'box',lead:'El verdadero arrepentimiento comienza cuando permitimos que el Espíritu Santo nos muestre nuestros pecados',rest:'sin justificarlos ni minimizarlos.'},
+          {variant:'box',lead:'La convicción del pecado es un regalo de Dios',rest:'que nos ayuda a reconocer nuestra necesidad de perdón y restaurar nuestra relación con Él.'},
+          {variant:'plain',lead:'Cuando respondemos a la voz del Espíritu con humildad,',rest:'Cristo nos ofrece su justicia y transforma nuestro carácter por medio de su gracia.'},
+          {variant:'note',lead:'La vida cristiana consiste en depender diariamente de Dios,',rest:'confiando en su misericordia y poder para vencer el pecado y crecer espiritualmente.'},
+        ]},
+      {type:'list', day:'MIÉRCOLES', kicker:'INVESTIGA',
+        items:[
+          {n:'01',title:'Invitaciones al arrepentimiento',refs:['Joel 2:12-14','Lucas 24:46-48','Hechos 3:18-19','Apocalipsis 3:19']},
+          {n:'02',title:'Un don de Dios',refs:['Hechos 5:31; 11:18','Romanos 2:4']},
+          {n:'03',title:'Promesas preciosas',refs:['Salmo 103:3, 8, 12','2 Pedro 3:9','1 Juan 1:9']},
+        ]},
+      {type:'content', day:'JUEVES', kicker:'ENFOCA',
+        title:'La ropa y la identidad',
+        verses:['Mateo 22:1-14','Isaías 64:6','Apocalipsis 19:8','Efesios 5:27','Isaías 61:10','Génesis 3:7'],
+        cards:[
+          {variant:'box',lead:'La justicia propia es insuficiente para presentarnos delante de Dios,',rest:'por lo que todos necesitamos la perfecta justicia de Cristo para ser aceptados en su reino.'},
+          {variant:'box',lead:'La parábola del vestido de bodas enseña que Jesús ofrece gratuitamente su manto de justicia',rest:'a quienes se arrepienten y lo reciben por fe.'},
+          {variant:'plain',lead:'Así como Dios vistió a Adán y Eva después de la caída,',rest:'Cristo cubre nuestra pecaminosidad con su carácter perfecto y sin mancha.'},
+          {variant:'note',lead:'La salvación no se obtiene por nuestras obras,',rest:'sino por aceptar el sacrificio de Jesús y permitir que su justicia transforme nuestra vida.'},
+        ]},
+      {type:'egw', day:'VIERNES', kicker:'REFLEXIONA',
+        title:'El arrepentimiento genuino',
+        text:'No es genuino ningún arrepentimiento que no obre una reforma. La justicia de Cristo no es un manto para cubrir pecados que no han sido confesados ni abandonados; es un principio de vida que transforma el carácter y rige la conducta. La santidad es integridad para con Dios; es la entrega total del corazón y la vida para que en ellos residan los principios del cielo.',
+        cite:'Elena de White, El Deseado de todas las gentes (ACES, 2008), p. 509.'},
+      {type:'dialoga',
+        columns:[
+          {title:'Misericordioso y clemente',items:[
+            '1. Cuando Dios hizo un pacto con Israel, ¿cuál fue su promesa y qué nivel de consecuencias simbolizaba la aspersión de sangre? (Éxo. 24:7-8).',
+            '2. ¿Qué tipo de rebelión impactante se produjo solo unas semanas después de que los israelitas hicieran el pacto con Dios? (Éxo. 32:1-6).',
+            '3. ¿Cuán dispuesto estaba Dios a perdonar a Israel por su descarado desafío contra él? (Éxo. 34:5-9).',
+            '4. ¿Cómo influye esta historia del éxodo en tu visión del carácter de Dios? ¿Qué te transmite sobre el amor de Dios y su disposición a perdonar?',
+          ]},
+          {title:'El verdadero arrepentimiento',items:[
+            '1. ¿De dónde proviene el verdadero arrepentimiento? (Hech. 5:31; Rom. 2:4).',
+            '2. ¿De quién dependemos para convencernos de pecado? (Juan 16:8, 13).',
+            '3. ¿Cómo se distingue entre el arrepentimiento genuino y el arrepentimiento falso? (ver la sección Reflexiona de esta semana para más detalles).',
+          ]},
+          {title:'El manto de justicia',items:[
+            '1. En la parábola de Jesús, ¿qué les sucede a aquellos que acuden al banquete de bodas real sin la vestimenta adecuada? (Mat. 22:11-13).',
+            '2. ¿Qué representa nuestra ropa sucia? (Isa. 64:6).',
+            '3. ¿Qué representa el manto limpio y blanco? (Isa. 61:10).',
+            '4. ¿Qué nos quita Dios para poder vestirnos con la justicia perfecta de Cristo? (Zac. 3:1-5).',
+            '5. ¿Cómo le explicarías el precioso regalo del manto de justicia de Cristo a un no cristiano o a un nuevo creyente?',
+          ]},
+        ]},
+      {type:'preview', label:'Un vistazo', title:'Reveses',
+        text:'En esta etapa de la vida, es común enfrentar «tormentas» inesperadas —como reveses profesionales, metas no cumplidas o relaciones que se rompen— que pueden llevarnos a cuestionar el cuidado de Dios. Sin embargo, así como la niña de la historia sonreía ante los relámpagos, estamos llamados a mirar hacia arriba con confianza. Aunque a menudo no entendamos el porqué del dolor, el ejemplo de fidelidad de Job y la promesa de que en la eternidad comprenderemos que nuestras mayores decepciones fueron en realidad bendiciones, nos dan perspectiva. En medio de este conflicto espiritual, el desafío no es entenderlo todo ahora, sino decidir si dejaremos que las crisis nos alejen de Dios o si las usaremos para aferrarnos a él con más fuerza y madurar nuestra fe.'},
       {type:'credits', title:'Conócenos — Ministerio Joven Unión Chilena',
         platforms:[
           {icon:'📘',label:'Facebook',value:'Ministerio Joven Chile'},
