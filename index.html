@@ -1865,6 +1865,40 @@ const PRESENTATIONS=[
 ];
 const findPresentation=id=>PRESENTATIONS.find(p=>p.id===id)||PRESENTATIONS[0];
 
+/* ════════════════════════ REPASO: VIDEOS (YOUTUBE) ════════════════════════ */
+/* Catálogo de videos del Repaso. Cada entrada se muestra en el menú "Videos".
+   Para agregar un video:
+     1. Copia el ID de YouTube (los 11 caracteres después de `v=` o de `youtu.be/`).
+        Ej: https://www.youtube.com/watch?v=ESTE_ES_EL_ID
+            https://youtu.be/ESTE_ES_EL_ID
+     2. Pega una nueva entrada {id, title, subtitle, icon, youtubeId} aquí abajo.
+   El admin elige el video desde el panel; todos los invitados ven el mismo,
+   sincronizado (play/pausa/seek vía Firebase Realtime Database). */
+const VIDEOS=[
+  // Video de demostración — reemplázalo con los links que vayas a usar.
+  {id:'demo', title:'Video de prueba', subtitle:'Reemplázalo con tu link',
+   icon:'🎬', youtubeId:'M7lc1UVf-VE'},
+];
+const findVideo=id=>VIDEOS.find(v=>v.id===id)||VIDEOS[0];
+
+/* Carga lazy de la YouTube IFrame API — una sola vez para toda la app. */
+let __ytApiPromise=null;
+function loadYouTubeAPI(){
+  if(__ytApiPromise) return __ytApiPromise;
+  __ytApiPromise=new Promise(resolve=>{
+    if(window.YT&&window.YT.Player) return resolve(window.YT);
+    const prev=window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady=()=>{
+      if(prev){try{prev();}catch(e){}}
+      resolve(window.YT);
+    };
+    const s=document.createElement('script');
+    s.src='https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+  });
+  return __ytApiPromise;
+}
+
 /* Logo compacto MRNT class para la esquina de la slide. */
 function SlideBrand(){
   return(
@@ -2441,6 +2475,231 @@ function PresentationMenu({onSelect,onClose}){
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ════════════════════════ REPASO: VIDEOS — MENÚ Y REPRODUCTOR ════════════════════════ */
+/* Menú de videos disponibles — el admin elige cuál proyectar. */
+function VideoMenu({onSelect,onClose}){
+  return(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{
+      position:'fixed',inset:0,zIndex:170,background:'rgba(7,9,31,.82)',
+      backdropFilter:'blur(6px)',display:'flex',alignItems:'center',
+      justifyContent:'center',padding:20,animation:'modalIn .2s ease'}}>
+      <div style={{width:'100%',maxWidth:460,
+        background:'linear-gradient(160deg,#0d1035,#0a0c28)',
+        border:'1px solid rgba(220,38,38,.35)',borderRadius:18,
+        padding:'20px 18px',boxShadow:'0 18px 50px rgba(0,0,0,.6)'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+          <div style={{fontFamily:'Barlow Condensed,sans-serif',fontWeight:900,
+            fontSize:17,color:'#ef4444',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            🎬 Elegir video
+          </div>
+          <button onClick={onClose} style={{background:'rgba(255,255,255,.06)',
+            border:'1px solid rgba(255,255,255,.1)',borderRadius:'50%',width:30,height:30,
+            color:'var(--muted)',fontSize:14,cursor:'pointer'}}>✕</button>
+        </div>
+        {VIDEOS.length===0?(
+          <div style={{fontFamily:'Barlow,sans-serif',fontSize:13,color:'var(--muted)',
+            textAlign:'center',padding:'24px 8px',lineHeight:1.5}}>
+            Aún no hay videos cargados. Agrega entradas en la constante <code>VIDEOS</code> de <code>index.html</code> con el ID de YouTube de cada video.
+          </div>
+        ):(
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {VIDEOS.map(v=>(
+              <button key={v.id} onClick={()=>onSelect(v.id)} style={{
+                display:'flex',alignItems:'center',gap:12,textAlign:'left',cursor:'pointer',
+                background:'rgba(220,38,38,.10)',border:'1px solid rgba(220,38,38,.30)',
+                borderRadius:12,padding:'12px 14px'}}>
+                <span style={{fontSize:26,flexShrink:0}}>{v.icon||'🎬'}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:'Barlow,sans-serif',fontWeight:700,
+                    fontSize:15,color:'#fff'}}>{v.title}</div>
+                  {v.subtitle&&(
+                    <div style={{fontFamily:'Barlow,sans-serif',fontSize:12,
+                      color:'rgba(255,255,255,.55)',marginTop:2}}>{v.subtitle}</div>
+                  )}
+                </div>
+                <span style={{color:'#ef4444',fontSize:18}}>▶</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* Overlay del reproductor de YouTube sincronizado.
+   - Admin: ve controles nativos de YouTube. Cada play/pausa/seek se guarda en
+     Firebase (sessions/<SID>/video) y los invitados se ajustan a ese estado.
+   - Invitados: ven el video sin controles; un overlay transparente bloquea
+     clicks. Botón "Activar audio" desmutea (autoplay arranca en mute por
+     política de los navegadores).
+*/
+function VideoOverlay({session,isAdmin,SID,onEnd}){
+  const vid=session?.video;
+  const meta=React.useMemo(()=>VIDEOS.find(v=>v.youtubeId===vid?.videoId),[vid?.videoId]);
+  const containerRef=useRef(null);
+  const playerRef=useRef(null);
+  const readyRef=useRef(false);
+  const vidRef=useRef(vid);
+  vidRef.current=vid;
+  const[muted,setMuted]=useState(true);
+
+  const writeState=(state,position)=>{
+    db.ref(`sessions/${SID}/video`).update({
+      state, position:Number(position)||0, updatedAt:Date.now(),
+    });
+  };
+
+  const syncFromFirebase=()=>{
+    const p=playerRef.current;
+    const v=vidRef.current;
+    if(!p||!readyRef.current||!v||!window.YT) return;
+    const target=v.state==='playing'
+      ?(v.position||0)+Math.max(0,(Date.now()-(v.updatedAt||Date.now()))/1000)
+      :(v.position||0);
+    let cur=0; try{cur=p.getCurrentTime()||0;}catch(e){}
+    if(Math.abs(cur-target)>1.2){
+      try{p.seekTo(target,true);}catch(e){}
+    }
+    let st=-1; try{st=p.getPlayerState();}catch(e){}
+    const YT=window.YT;
+    if(v.state==='playing'&&st!==YT.PlayerState.PLAYING){
+      try{p.playVideo();}catch(e){}
+    } else if(v.state==='paused'&&st===YT.PlayerState.PLAYING){
+      try{p.pauseVideo();}catch(e){}
+    }
+  };
+
+  // Inicializa el reproductor cuando cambia el videoId (o al montar).
+  useEffect(()=>{
+    if(!vid?.videoId) return;
+    let cancelled=false;
+    loadYouTubeAPI().then(YT=>{
+      if(cancelled) return;
+      if(playerRef.current){
+        try{playerRef.current.loadVideoById(vid.videoId);}catch(e){}
+        return;
+      }
+      readyRef.current=false;
+      playerRef.current=new YT.Player(containerRef.current,{
+        videoId:vid.videoId,
+        host:'https://www.youtube-nocookie.com',
+        playerVars:{rel:0,modestbranding:1,playsinline:1,
+          controls:isAdmin?1:0, disablekb:isAdmin?0:1, fs:isAdmin?1:0},
+        events:{
+          onReady:e=>{
+            readyRef.current=true;
+            try{e.target.mute();}catch(err){}
+            syncFromFirebase();
+          },
+          onStateChange:e=>{
+            if(!isAdmin) return;
+            const st=e.data;
+            if(st===YT.PlayerState.PLAYING){
+              writeState('playing',e.target.getCurrentTime());
+            } else if(st===YT.PlayerState.PAUSED){
+              writeState('paused',e.target.getCurrentTime());
+            } else if(st===YT.PlayerState.ENDED){
+              writeState('paused',e.target.getCurrentTime());
+            }
+          },
+        },
+      });
+    });
+    return()=>{cancelled=true;};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[vid?.videoId]);
+
+  // Limpia el reproductor al desmontar el overlay.
+  useEffect(()=>()=>{
+    try{playerRef.current?.destroy();}catch(e){}
+    playerRef.current=null;
+    readyRef.current=false;
+  },[]);
+
+  // Re-sincroniza a los invitados cuando cambia el estado en Firebase.
+  useEffect(()=>{
+    if(isAdmin) return;
+    syncFromFirebase();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[vid?.state,vid?.position,vid?.updatedAt,vid?.videoId]);
+
+  const unmute=()=>{
+    try{
+      playerRef.current?.unMute();
+      playerRef.current?.setVolume(100);
+    }catch(e){}
+    setMuted(false);
+  };
+
+  if(!vid?.active) return null;
+
+  return(
+    <div style={{position:'fixed',inset:0,zIndex:150,background:'#000',
+      display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{position:'relative',width:'100%',
+        maxWidth:'min(100vw, calc(100vh * 16 / 9))',aspectRatio:'16 / 9',
+        background:'#000'}}>
+        <div ref={containerRef} style={{width:'100%',height:'100%'}}/>
+        {!isAdmin&&(
+          // Capa que bloquea clics directos sobre el iframe para los invitados.
+          <div style={{position:'absolute',inset:0,pointerEvents:'auto',
+            background:'transparent'}}/>
+        )}
+      </div>
+
+      <div style={{position:'absolute',top:14,left:14,right:14,
+        display:'flex',alignItems:'center',justifyContent:'space-between',
+        gap:10,pointerEvents:'none'}}>
+        <div style={{pointerEvents:'auto',padding:'6px 12px',borderRadius:10,
+          background:'rgba(7,9,31,.7)',border:'1px solid rgba(255,255,255,.12)',
+          fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,fontSize:13,
+          color:'#fff',letterSpacing:'.05em',textTransform:'uppercase',
+          display:'flex',alignItems:'center',gap:8,maxWidth:'60%',
+          overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+          <span>🎬</span><span>{meta?.title||'Video'}</span>
+        </div>
+        <div style={{pointerEvents:'auto',display:'flex',gap:8}}>
+          {muted&&(
+            <button onClick={unmute} style={{
+              padding:'7px 12px',borderRadius:10,cursor:'pointer',
+              border:'1px solid rgba(255,208,0,.5)',background:'rgba(255,208,0,.18)',
+              color:'#ffd000',fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+              fontSize:12,letterSpacing:'.05em',textTransform:'uppercase'}}>
+              🔊 Activar audio
+            </button>
+          )}
+          {isAdmin&&(
+            <button onClick={onEnd} style={{
+              padding:'7px 12px',borderRadius:10,cursor:'pointer',
+              border:'1px solid rgba(239,68,68,.4)',background:'rgba(239,68,68,.18)',
+              color:'#ef4444',fontFamily:'Barlow Condensed,sans-serif',fontWeight:800,
+              fontSize:12,letterSpacing:'.05em',textTransform:'uppercase'}}>
+              ⏹ Cerrar video
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!isAdmin&&(
+        <div style={{position:'absolute',bottom:18,left:0,right:0,textAlign:'center',
+          pointerEvents:'none'}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:7,
+            background:'rgba(7,9,31,.6)',border:'1px solid rgba(255,255,255,.1)',
+            borderRadius:999,padding:'5px 11px',
+            fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
+            fontSize:11,color:'rgba(255,255,255,.6)',letterSpacing:'.12em',
+            textTransform:'uppercase'}}>
+            <span style={{width:7,height:7,borderRadius:'50%',background:'#6f8f3c',
+              animation:'pulse 1.5s infinite'}}/>
+            El anfitrión controla el video
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4171,7 +4430,7 @@ function DataDownloadModal({onClose}){
 }
 
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
-function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onOpenPresentationMenu,onEndPresentation,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
+function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onStartRepaso,onEndRepaso,onOpenPresentationMenu,onEndPresentation,onOpenVideoMenu,onEndVideo,onStartJuegos,onEndJuegos,onStartMision,onEndMision,onStartTemplo,onEndTemplo,onOpenStats,onToggleWordCloud,onResetSession,onOpenDownload,onOpenSurveyResults,surveyResponses}){
   const[open,setOpen]=useState(false);
   const[wcQ,setWcQ]=useState('');
   const phase=session?.phase||'waiting';
@@ -4385,6 +4644,24 @@ function AdminPanel({session,users,onStartConfra,onNextSpeaker,onEndConfra,onSta
                     fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
                     letterSpacing:'.04em',textTransform:'uppercase'}}>
                     ⏹ Cerrar presentación
+                  </button>
+                )}
+                {!session?.video?.active?(
+                  <button onClick={()=>{onOpenVideoMenu();setOpen(false);}} style={{
+                    background:'linear-gradient(135deg,#dc2626,#991b1b)',
+                    border:'1px solid rgba(220,38,38,.45)',
+                    borderRadius:10,padding:'10px',color:'#fff',
+                    fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                    letterSpacing:'.04em',textTransform:'uppercase'}}>
+                    🎬 Videos
+                  </button>
+                ):(
+                  <button onClick={()=>{onEndVideo();setOpen(false);}} style={{
+                    background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',
+                    borderRadius:10,padding:'10px',color:'#ef4444',
+                    fontWeight:800,fontSize:12,fontFamily:'Barlow Condensed,sans-serif',
+                    letterSpacing:'.04em',textTransform:'uppercase'}}>
+                    ⏹ Cerrar video
                   </button>
                 )}
                 {!session?.wordcloud?.active&&(
@@ -5499,6 +5776,7 @@ function App(){
 
   const[repasoChatOpen,setRepasoChatOpen]=useState(false);
   const[presMenuOpen,setPresMenuOpen]=useState(false);
+  const[videoMenuOpen,setVideoMenuOpen]=useState(false);
   const[guideOpen,setGuideOpen]=useState(false);
   const[wordCloudOpen, setWordCloudOpen] =useState(false);
   const[misionOpen,    setMisionOpen]    =useState(false);
@@ -6075,6 +6353,21 @@ function App(){
     await db.ref(`sessions/${SID.current}/presentation/active`).set(false);
   };
 
+  /* ── Video de YouTube sincronizado (admin controla; invitados siguen) ── */
+  const startVideo=async(catalogId)=>{
+    const v=findVideo(catalogId);
+    setRepasoChatOpen(false);
+    // Cierra presentación si hubiese una activa (mutuamente excluyentes).
+    await db.ref(`sessions/${SID.current}/presentation/active`).set(false);
+    await db.ref(`sessions/${SID.current}/video`).set({
+      active:true, videoId:v.youtubeId, title:v.title,
+      state:'paused', position:0, updatedAt:Date.now(),
+    });
+  };
+  const endVideo=async()=>{
+    await db.ref(`sessions/${SID.current}/video/active`).set(false);
+  };
+
   const toggleWordCloud=async(question='')=>{
     const isActive=session?.wordcloud?.active;
     if(isActive){
@@ -6581,6 +6874,8 @@ function App(){
           onEndRepaso={endRepaso}
           onOpenPresentationMenu={()=>setPresMenuOpen(true)}
           onEndPresentation={endPresentation}
+          onOpenVideoMenu={()=>setVideoMenuOpen(true)}
+          onEndVideo={endVideo}
           onStartJuegos={startJuegos}
           onEndJuegos={endJuegos}
           onStartMision={startMision}
@@ -6690,6 +6985,22 @@ function App(){
         <PresentationMenu
           onSelect={id=>{setPresMenuOpen(false);startPresentation(id);}}
           onClose={()=>setPresMenuOpen(false)}
+        />
+      )}
+
+      {/* Menú de videos — el admin elige cuál proyectar (YouTube sincronizado) */}
+      {videoMenuOpen&&isAdmin&&phase==='repaso'&&(
+        <VideoMenu
+          onSelect={id=>{setVideoMenuOpen(false);startVideo(id);}}
+          onClose={()=>setVideoMenuOpen(false)}
+        />
+      )}
+
+      {/* Reproductor de video — todos lo ven; el admin controla play/pausa/seek */}
+      {phase==='repaso'&&session?.video?.active&&(
+        <VideoOverlay
+          session={session} isAdmin={isAdmin}
+          SID={SID.current} onEnd={endVideo}
         />
       )}
 
