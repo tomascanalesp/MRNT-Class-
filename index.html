@@ -2711,8 +2711,49 @@ const SLIDE_T = {
   cardLead: '#39501c',
   cardBody: '#444b33',
   accent: '#6f8f3c',
-  accentDark: '#4d6a27'
+  accentDark: '#4d6a27',
+  // tokens dependientes del fondo (verde claro → títulos blancos)
+  heading: '#fff',
+  headingShadow: '0 2px 12px rgba(40,55,18,.32)',
+  plainLead: '#fefdf6',
+  plainBody: '#f2f0e4',
+  plainShadow: '0 1px 6px rgba(40,55,18,.35)',
+  accentSoft: '#b9cd86',
+  accent2: '#5a6a30',
+  panel: '#f3ecda',
+  panelAlt: '#ece5d2',
+  coverPanel: 'rgba(255,255,255,.55)',
+  shadow: '0 8px 22px rgba(60,81,29,.18)',
+  dotInactive: 'rgba(60,81,29,.28)'
 };
+
+/* Tema MRNT (página oficial): fondo crema, títulos navy, tarjetas blancas,
+   colores del plan MRNT (azul Misión, etc.). Usado en la presentación 12. */
+const MRNT_T = {
+  bg: 'linear-gradient(135deg,#f8f5ef 0%,#f4efe6 55%,#efe9dc 100%)',
+  ink: '#0a0e2e',
+  inkSoft: '#6e728a',
+  cardLead: '#0a0e2e',
+  cardBody: '#1a1e38',
+  accent: '#3b82f6',
+  accentDark: '#1d4ed8',
+  heading: '#0a0e2e',
+  headingShadow: 'none',
+  plainLead: '#0a0e2e',
+  plainBody: '#2a2e48',
+  plainShadow: 'none',
+  accentSoft: '#dbeafe',
+  accent2: '#7c3aed',
+  panel: '#ffffff',
+  panelAlt: '#eef2ff',
+  coverPanel: '#ffffff',
+  shadow: '0 10px 26px rgba(10,14,46,.12)',
+  dotInactive: 'rgba(10,14,46,.20)'
+};
+
+/* Tema activo de las slides. SlideView lo fija al inicio de cada render
+   (síncrono), y los componentes auxiliares lo toman por defecto. */
+let __ST = SLIDE_T;
 
 /* Una slide por cada día del repaso de la semana — Mateo 5–7. */
 /* Presentaciones disponibles para el repaso. Cada una se etiqueta con su
@@ -3376,7 +3417,9 @@ function loadYouTubeAPI() {
 }
 
 /* Logo compacto MRNT class para la esquina de la slide. */
-function SlideBrand() {
+function SlideBrand({
+  T = __ST
+} = {}) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -3385,7 +3428,7 @@ function SlideBrand() {
       background: 'rgba(255,255,255,.82)',
       borderRadius: 12,
       padding: '6px 12px 6px 8px',
-      boxShadow: '0 4px 14px rgba(60,81,29,.18)'
+      boxShadow: T.shadow
     }
   }, /*#__PURE__*/React.createElement(BookLogo, {
     size: 34
@@ -3398,7 +3441,7 @@ function SlideBrand() {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 'clamp(15px,1.8vw,20px)',
-      color: SLIDE_T.ink,
+      color: T.ink,
       letterSpacing: '.02em'
     }
   }, "MRNT class"), /*#__PURE__*/React.createElement("div", {
@@ -3406,7 +3449,7 @@ function SlideBrand() {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 'clamp(8px,1vw,10px)',
-      color: SLIDE_T.inkSoft,
+      color: T.inkSoft,
       letterSpacing: '.18em',
       textTransform: 'uppercase'
     }
@@ -3416,7 +3459,8 @@ function SlideBrand() {
 /* Insignia lateral del día (kicker + día con flecha). */
 function DayBadge({
   kicker,
-  day
+  day,
+  T = __ST
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3431,7 +3475,7 @@ function DayBadge({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 'clamp(11px,1.4vw,16px)',
-      color: SLIDE_T.accentDark,
+      color: T.accentDark,
       letterSpacing: '.12em'
     }
   }, kicker), /*#__PURE__*/React.createElement("div", {
@@ -3440,11 +3484,11 @@ function DayBadge({
       height: 'clamp(30px,3.6vw,42px)',
       borderRadius: '50%',
       background: 'rgba(255,255,255,.5)',
-      border: `2px solid ${SLIDE_T.accentDark}`,
+      border: `2px solid ${T.accentDark}`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: SLIDE_T.accentDark,
+      color: T.accentDark,
       fontSize: 'clamp(15px,1.9vw,20px)',
       fontWeight: 900
     }
@@ -3453,7 +3497,7 @@ function DayBadge({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 'clamp(8px,1vw,11px)',
-      color: SLIDE_T.inkSoft,
+      color: T.inkSoft,
       letterSpacing: '.16em'
     }
   }, day));
@@ -3461,7 +3505,8 @@ function DayBadge({
 
 /* Caja de versículos (REF. BÍBLICA). */
 function VersesBox({
-  verses
+  verses,
+  T = __ST
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3471,7 +3516,7 @@ function VersesBox({
       background: 'rgba(255,255,255,.74)',
       borderRadius: 12,
       padding: '8px 13px',
-      boxShadow: '0 4px 14px rgba(60,81,29,.16)',
+      boxShadow: T.shadow,
       maxWidth: '46%'
     }
   }, /*#__PURE__*/React.createElement("span", {
@@ -3489,7 +3534,7 @@ function VersesBox({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 'clamp(8px,1vw,11px)',
-      color: SLIDE_T.accentDark,
+      color: T.accentDark,
       letterSpacing: '.12em',
       textTransform: 'uppercase',
       marginBottom: 2
@@ -3500,7 +3545,7 @@ function VersesBox({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 'clamp(8px,1vw,12px)',
-      color: SLIDE_T.accentDark,
+      color: T.accentDark,
       letterSpacing: '.03em'
     }
   }, "• ", v))));
@@ -3511,7 +3556,8 @@ function SlideShell({
   children,
   index,
   total,
-  footer
+  footer,
+  T = __ST
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3519,7 +3565,7 @@ function SlideShell({
       width: 'min(96vw,1180px)',
       maxHeight: '90vh',
       overflowY: 'auto',
-      background: SLIDE_T.bg,
+      background: T.bg,
       borderRadius: 22,
       boxShadow: '0 26px 70px rgba(10,14,46,.55)',
       padding: 'clamp(18px,3vw,38px)',
@@ -3560,7 +3606,7 @@ function SlideShell({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 'clamp(9px,1.1vw,12px)',
-      color: SLIDE_T.inkSoft,
+      color: T.inkSoft,
       letterSpacing: '.14em',
       textTransform: 'uppercase'
     }
@@ -3579,7 +3625,7 @@ function SlideShell({
       width: i === index ? 16 : 7,
       height: 7,
       borderRadius: 4,
-      background: i === index ? SLIDE_T.accentDark : 'rgba(60,81,29,.28)',
+      background: i === index ? T.accentDark : T.dotInactive,
       transition: 'all .2s'
     }
   })))));
@@ -3590,8 +3636,10 @@ function SlideView({
   slide,
   index,
   total,
-  footer
+  footer,
+  T = SLIDE_T
 }) {
+  __ST = T; // fija el tema activo para los componentes auxiliares de esta slide
   // ── Portada ──
   if (slide.type === 'cover') {
     return /*#__PURE__*/React.createElement(SlideShell, {
@@ -3612,7 +3660,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(10px,1.3vw,15px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         letterSpacing: '.1em',
         textTransform: 'uppercase',
         lineHeight: 1.4
@@ -3626,20 +3674,21 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(34px,6.4vw,76px)',
         lineHeight: .96,
-        color: '#fff',
+        color: T.heading,
         textTransform: 'uppercase',
         letterSpacing: '.01em',
-        textShadow: '0 3px 14px rgba(40,55,18,.35)'
+        textShadow: T.headingShadow
       }
     }, slide.bigTitle), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 'clamp(12px,2vw,22px)',
-        background: 'rgba(255,255,255,.55)',
+        background: T.coverPanel,
         borderRadius: 16,
         padding: 'clamp(10px,1.6vw,18px) clamp(16px,2.4vw,30px)',
-        marginTop: 8
+        marginTop: 8,
+        boxShadow: T.shadow
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3647,7 +3696,7 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(44px,7vw,90px)',
         lineHeight: .9,
-        color: SLIDE_T.accentDark
+        color: T.accentDark
       }
     }, slide.num), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3659,7 +3708,7 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(18px,2.8vw,34px)',
         lineHeight: 1,
-        color: SLIDE_T.ink,
+        color: T.ink,
         textTransform: 'uppercase',
         letterSpacing: '.04em'
       }
@@ -3668,7 +3717,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(12px,1.6vw,18px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         letterSpacing: '.14em',
         textTransform: 'uppercase',
         marginTop: 3
@@ -3700,13 +3749,13 @@ function SlideView({
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        background: '#f3ecda',
+        background: T.panel,
         borderRadius: 18,
         padding: 'clamp(18px,2.6vw,30px)',
         maxWidth: 620,
         width: '100%',
-        boxShadow: '0 10px 28px rgba(60,81,29,.2)',
-        border: `3px solid ${SLIDE_T.accent}`
+        boxShadow: T.shadow,
+        border: `3px solid ${T.accent}`
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3720,7 +3769,7 @@ function SlideView({
         width: 40,
         height: 40,
         borderRadius: '50%',
-        background: SLIDE_T.accent,
+        background: T.accent,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -3731,14 +3780,14 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(14px,1.7vw,18px)',
-        color: SLIDE_T.cardLead
+        color: T.cardLead
       }
     }, slide.name, " 🔵"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 400,
         fontSize: 'clamp(11px,1.3vw,14px)',
-        color: SLIDE_T.cardBody
+        color: T.cardBody
       }
     }, slide.handle))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3746,7 +3795,7 @@ function SlideView({
         fontWeight: 500,
         textAlign: 'center',
         fontSize: 'clamp(16px,2.2vw,26px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.5
       }
     }, slide.text), /*#__PURE__*/React.createElement("div", {
@@ -3798,19 +3847,19 @@ function SlideView({
         height: 'clamp(54px,7vw,92px)',
         flexShrink: 0,
         borderRadius: '50%',
-        background: i % 2 ? SLIDE_T.accent : '#b9cd86',
+        background: i % 2 ? T.accent : T.accentSoft,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(22px,3.2vw,42px)',
-        color: SLIDE_T.accentDark
+        color: T.accentDark
       }
     }, it.n), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
-        borderBottom: `1.5px solid ${SLIDE_T.accent}66`,
+        borderBottom: `1.5px solid ${T.accent}66`,
         paddingBottom: 8
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -3818,14 +3867,14 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(16px,2.1vw,26px)',
-        color: SLIDE_T.cardLead
+        color: T.cardLead
       }
     }, it.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 500,
         fontSize: 'clamp(12px,1.5vw,18px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         marginTop: 3
       }
     }, it.refs.join(' · ')))))));
@@ -3860,25 +3909,25 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(24px,4vw,48px)',
         lineHeight: 1,
-        color: '#fff',
+        color: T.heading,
         textTransform: 'uppercase',
         letterSpacing: '.02em'
       }
     }, slide.title)), /*#__PURE__*/React.createElement(SlideBrand, null)), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: '#f3ecda',
+        background: T.panel,
         borderRadius: 14,
         padding: 'clamp(16px,2.4vw,30px)',
         marginTop: 'clamp(14px,2.2vw,24px)',
-        border: `3px solid ${SLIDE_T.accent}`,
-        boxShadow: '0 10px 26px rgba(60,81,29,.18)'
+        border: `3px solid ${T.accent}`,
+        boxShadow: T.shadow
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 400,
         fontSize: 'clamp(13px,1.7vw,21px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.6
       }
     }, slide.text)), /*#__PURE__*/React.createElement("div", {
@@ -3887,9 +3936,9 @@ function SlideView({
         fontWeight: 600,
         fontStyle: 'italic',
         fontSize: 'clamp(11px,1.4vw,16px)',
-        color: '#fff',
+        color: T.heading,
         marginTop: 12,
-        textShadow: '0 1px 6px rgba(40,55,18,.3)'
+        textShadow: T.headingShadow
       }
     }, slide.cite));
   }
@@ -3918,7 +3967,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(26px,4.4vw,52px)',
-        color: SLIDE_T.accentDark,
+        color: T.accentDark,
         textTransform: 'uppercase',
         letterSpacing: '.06em'
       }
@@ -3936,11 +3985,11 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(13px,1.6vw,19px)',
-        color: ci === 1 ? '#5a6a30' : SLIDE_T.cardLead,
+        color: ci === 1 ? T.accent2 : T.cardLead,
         textTransform: 'uppercase',
         textAlign: 'center',
         letterSpacing: '.04em',
-        borderTop: `3px solid ${SLIDE_T.accent}`,
+        borderTop: `3px solid ${T.accent}`,
         paddingTop: 10,
         marginBottom: 10
       }
@@ -3956,7 +4005,7 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 500,
         fontSize: 'clamp(11px,1.25vw,15px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.4
       }
     }, q)))))));
@@ -3980,7 +4029,7 @@ function SlideView({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: SLIDE_T.accent,
+        background: T.accent,
         borderRadius: 16,
         padding: 'clamp(20px,3vw,40px)',
         minHeight: 160
@@ -3993,7 +4042,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(26px,4vw,48px)',
-        color: SLIDE_T.accentDark,
+        color: T.accentDark,
         textAlign: 'center',
         textTransform: 'uppercase',
         letterSpacing: '.1em'
@@ -4003,7 +4052,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(15px,2vw,24px)',
-        color: SLIDE_T.cardLead,
+        color: T.cardLead,
         textAlign: 'center',
         textTransform: 'uppercase',
         letterSpacing: '.12em',
@@ -4015,7 +4064,7 @@ function SlideView({
         fontWeight: 400,
         textAlign: 'justify',
         fontSize: 'clamp(12px,1.5vw,18px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.55
       }
     }, slide.text))));
@@ -4033,7 +4082,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(20px,3.2vw,40px)',
-        color: SLIDE_T.accentDark,
+        color: T.accentDark,
         textAlign: 'center',
         textTransform: 'uppercase',
         letterSpacing: '.04em'
@@ -4043,7 +4092,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(11px,1.4vw,16px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         textAlign: 'center',
         letterSpacing: '.14em',
         textTransform: 'uppercase',
@@ -4062,7 +4111,7 @@ function SlideView({
         display: 'flex',
         alignItems: 'center',
         gap: 9,
-        background: 'rgba(255,255,255,.55)',
+        background: T.coverPanel,
         borderRadius: 10,
         padding: '8px 12px'
       }
@@ -4075,7 +4124,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(9px,1.1vw,12px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         letterSpacing: '.08em',
         textTransform: 'uppercase'
       }
@@ -4084,7 +4133,7 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 600,
         fontSize: 'clamp(11px,1.35vw,15px)',
-        color: SLIDE_T.cardLead,
+        color: T.cardLead,
         wordBreak: 'break-all'
       }
     }, p.value))))), /*#__PURE__*/React.createElement("div", {
@@ -4100,7 +4149,7 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 600,
         fontSize: 'clamp(11px,1.4vw,16px)',
-        color: SLIDE_T.cardBody
+        color: T.cardBody
       }
     }, person)), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4137,10 +4186,10 @@ function SlideView({
       fontWeight: 900,
       fontSize: 'clamp(22px,3.8vw,46px)',
       lineHeight: 1,
-      color: '#fff',
+      color: T.heading,
       textTransform: 'uppercase',
       letterSpacing: '.02em',
-      textShadow: '0 2px 10px rgba(40,55,18,.3)'
+      textShadow: T.headingShadow
     }
   }, slide.title)), /*#__PURE__*/React.createElement(SlideBrand, null)), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4169,18 +4218,18 @@ function SlideView({
           fontFamily: 'Barlow,sans-serif',
           fontWeight: 800,
           fontSize: 'clamp(13px,1.5vw,19px)',
-          color: '#fefdf6',
+          color: T.plainLead,
           lineHeight: 1.45,
-          textShadow: '0 1px 6px rgba(40,55,18,.35)'
+          textShadow: T.plainShadow
         }
       }, c.lead, ' '), /*#__PURE__*/React.createElement("span", {
         style: {
           fontFamily: 'Barlow,sans-serif',
           fontWeight: 400,
           fontSize: 'clamp(13px,1.45vw,18px)',
-          color: '#f2f0e4',
+          color: T.plainBody,
           lineHeight: 1.45,
-          textShadow: '0 1px 6px rgba(40,55,18,.35)'
+          textShadow: T.plainShadow
         }
       }, c.rest));
     }
@@ -4188,11 +4237,11 @@ function SlideView({
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        background: note ? '#ece5d2' : '#f3ecda',
+        background: note ? T.panelAlt : T.panel,
         borderRadius: 12,
         padding: 'clamp(10px,1.4vw,18px)',
-        borderLeft: note ? 'none' : `5px solid ${SLIDE_T.accent}`,
-        boxShadow: '0 6px 18px rgba(60,81,29,.14)'
+        borderLeft: note ? 'none' : `5px solid ${T.accent}`,
+        boxShadow: T.shadow
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -4200,7 +4249,7 @@ function SlideView({
         fontWeight: 800,
         fontStyle: note ? 'italic' : 'normal',
         fontSize: 'clamp(13px,1.5vw,19px)',
-        color: SLIDE_T.cardLead,
+        color: T.cardLead,
         lineHeight: 1.42
       }
     }, c.lead, ' '), /*#__PURE__*/React.createElement("span", {
@@ -4209,7 +4258,7 @@ function SlideView({
         fontWeight: 400,
         fontStyle: note ? 'italic' : 'normal',
         fontSize: 'clamp(13px,1.45vw,18px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.45
       }
     }, c.rest));
@@ -4272,7 +4321,8 @@ function PresentationOverlay({
     slide: slide,
     index: idx,
     total: total,
-    footer: footer
+    footer: footer,
+    T: deck.id === 'semana12' ? MRNT_T : SLIDE_T
   }), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
