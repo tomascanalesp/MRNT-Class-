@@ -2711,134 +2711,49 @@ const SLIDE_T = {
   cardLead: '#39501c',
   cardBody: '#444b33',
   accent: '#6f8f3c',
-  accentDark: '#4d6a27'
+  accentDark: '#4d6a27',
+  // tokens dependientes del fondo (verde claro → títulos blancos)
+  heading: '#fff',
+  headingShadow: '0 2px 12px rgba(40,55,18,.32)',
+  plainLead: '#fefdf6',
+  plainBody: '#f2f0e4',
+  plainShadow: '0 1px 6px rgba(40,55,18,.35)',
+  accentSoft: '#b9cd86',
+  accent2: '#5a6a30',
+  panel: '#f3ecda',
+  panelAlt: '#ece5d2',
+  coverPanel: 'rgba(255,255,255,.55)',
+  shadow: '0 8px 22px rgba(60,81,29,.18)',
+  dotInactive: 'rgba(60,81,29,.28)'
 };
 
-/* ════════════════════════ BIBLIA LOCAL (RV1909 · dominio público) ════════════════════════ */
-/*
- * Texto de los versículos guardado DENTRO del repositorio para que se lea
- * sin conexión a internet. Versión: Reina-Valera 1909 (dominio público).
- *
- * ¿Por qué RV1909 y no RVR1960? La Reina-Valera 1960 tiene derechos de autor
- * de las Sociedades Bíblicas Unidas, por lo que no puede copiarse de forma
- * libre a un repositorio público. La RV1909 es de dominio público y lee casi
- * idéntica en estos pasajes clásicos.
- *
- * Para reemplazar por RVR1960 (si tienes licencia): edita el texto de cada
- * entrada de abajo manteniendo la misma clave (debe coincidir EXACTAMENTE con
- * la referencia escrita en el array `verses` de la slide) y, si quieres,
- * cambia BIBLE_VERSION al nombre de tu versión.
- *
- * Estructura: clave = referencia tal como aparece en la slide → array de
- * versículos { n: número, t: texto }.
- */
-const BIBLE_VERSION = 'RV1909';
-const BIBLE_VERSES = {
-  'Mateo 28:19': [
-    { n: 19, t: 'Por tanto, id, y haced discípulos á todas las naciones, bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo;' },
-  ],
-  'Apocalipsis 14:6-12': [
-    { n: 6, t: 'Y vi otro ángel volar por en medio del cielo, que tenía el evangelio eterno para predicarlo á los que moran en la tierra, y á toda nación y tribu y lengua y pueblo,' },
-    { n: 7, t: 'Diciendo en alta voz: Temed á Dios, y dadle honra; porque la hora de su juicio es venida; y adorad á aquel que ha hecho el cielo y la tierra y el mar y las fuentes de las aguas.' },
-    { n: 8, t: 'Y otro ángel le siguió, diciendo: Ha caído, ha caído Babilonia, aquella grande ciudad, porque ella ha dado á beber á todas las naciones del vino del furor de su fornicación.' },
-    { n: 9, t: 'Y el tercer ángel los siguió, diciendo en alta voz: Si alguno adora á la bestia y á su imagen, y toma la señal en su frente, ó en su mano,' },
-    { n: 10, t: 'Este también beberá del vino de la ira de Dios, el cual está echado puro en el cáliz de su ira; y será atormentado con fuego y azufre delante de los santos ángeles, y delante del Cordero:' },
-    { n: 11, t: 'Y el humo del tormento de ellos sube para siempre jamás. Y los que adoran á la bestia y á su imagen, no tienen reposo día ni noche, ni cualquiera que tomare la señal de su nombre.' },
-    { n: 12, t: 'Aquí está la paciencia de los santos; aquí están los que guardan los mandamientos de Dios, y la fe de Jesús.' },
-  ],
-  'Hechos 4:13': [
-    { n: 13, t: 'Entonces viendo la constancia de Pedro y de Juan, sabido que eran hombres sin letras é ignorantes, se maravillaban; y les conocían que habían estado con Jesús.' },
-  ],
-  'Hechos 1:8': [
-    { n: 8, t: 'Mas recibiréis la virtud del Espíritu Santo que vendrá sobre vosotros; y me seréis testigos en Jerusalem, en toda Judea, y Samaria, y hasta lo último de la tierra.' },
-  ],
-  'Hechos 4:9': [
-    { n: 9, t: 'Pues que somos hoy demandados acerca del beneficio hecho á un hombre enfermo, de qué manera éste haya sido sanado,' },
-  ],
-  'Hechos 4:20': [
-    { n: 20, t: 'Porque no podemos dejar de decir lo que hemos visto y oído.' },
-  ],
-  'Hechos 4:29, 31': [
-    { n: 29, t: 'Y ahora, Señor, mira sus amenazas, y da á tus siervos que con toda confianza hablen tu palabra;' },
-    { n: 31, t: 'Y como hubieron orado, el lugar en que estaban congregados tembló; y todos fueron llenos del Espíritu Santo, y hablaron la palabra de Dios con confianza.' },
-  ],
-  'Isaías 50:4': [
-    { n: 4, t: 'El Señor Jehová me dió lengua de sabios, para saber hablar en sazón palabra al cansado; despertará de mañana, despertaráme de mañana oído, para que oiga como los sabios.' },
-  ],
-  '1 Pedro 3:15': [
-    { n: 15, t: 'Sino santificad al Señor Dios en vuestros corazones, y estad siempre aparejados para responder con mansedumbre y reverencia á cada uno que os demande razón de la esperanza que hay en vosotros:' },
-  ],
-  '1 Juan 4:7-11': [
-    { n: 7, t: 'Carísimos, amémonos unos á otros; porque el amor es de Dios. Cualquiera que ama, es nacido de Dios, y conoce á Dios.' },
-    { n: 8, t: 'El que no ama, no conoce á Dios; porque Dios es amor.' },
-    { n: 9, t: 'En esto se mostró el amor de Dios para con nosotros, en que Dios envió á su Hijo unigénito al mundo, para que vivamos por él.' },
-    { n: 10, t: 'En esto consiste el amor: no que nosotros hayamos amado á Dios, sino que él nos amó á nosotros, y ha enviado á su Hijo en propiciación por nuestros pecados.' },
-    { n: 11, t: 'Amados, si Dios así nos ha amado, debemos también nosotros amarnos unos á otros.' },
-  ],
-  'Romanos 5:8': [
-    { n: 8, t: 'Mas Dios encarece su caridad para con nosotros, porque siendo aún pecadores, Cristo murió por nosotros.' },
-  ],
-  'Juan 3:16': [
-    { n: 16, t: 'Porque de tal manera amó Dios al mundo, que ha dado á su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.' },
-  ],
-  'Juan 15:9-10': [
-    { n: 9, t: 'Como el Padre me amó, también yo os he amado: estad en mi amor.' },
-    { n: 10, t: 'Si guardareis mis mandamientos, estaréis en mi amor; como yo también he guardado los mandamientos de mi Padre, y estoy en su amor.' },
-  ],
-  'Romanos 8:38-39': [
-    { n: 38, t: 'Por lo cual estoy cierto que ni la muerte, ni la vida, ni ángeles, ni principados, ni potestades, ni lo presente, ni lo por venir,' },
-    { n: 39, t: 'Ni lo alto, ni lo bajo, ni ninguna criatura nos podrá apartar del amor de Dios, que es en Cristo Jesús Señor nuestro.' },
-  ],
-  'Efesios 3:17-19': [
-    { n: 17, t: 'Que habite Cristo por la fe en vuestros corazones; para que, arraigados y fundados en amor,' },
-    { n: 18, t: 'Podáis bien comprender con todos los santos cuál sea la anchura y la longura y la profundidad y la altura,' },
-    { n: 19, t: 'Y conocer el amor de Cristo, que excede á todo conocimiento, para que seáis llenos de toda la plenitud de Dios.' },
-  ],
-  '1 Corintios 13:1-3': [
-    { n: 1, t: 'Si yo hablase lenguas humanas y angélicas, y no tengo caridad, vengo á ser como metal que resuena, ó címbalo que retiñe.' },
-    { n: 2, t: 'Y si tuviese profecía, y entendiese todos los misterios y toda ciencia; y si tuviese toda la fe, de tal manera que traspasase los montes, y no tengo caridad, nada soy.' },
-    { n: 3, t: 'Y si repartiese toda mi hacienda para dar de comer á pobres, y si entregase mi cuerpo para ser quemado, y no tengo caridad, de nada me sirve.' },
-  ],
-  'Juan 13:35': [
-    { n: 35, t: 'En esto conocerán todos que sois mis discípulos, si tuviereis amor los unos con los otros.' },
-  ],
-  '1 Juan 4:20-21': [
-    { n: 20, t: 'Si alguno dice, Yo amo á Dios, y aborrece á su hermano, es mentiroso. Porque el que no ama á su hermano al cual ha visto, ¿cómo puede amar á Dios á quien no ha visto?' },
-    { n: 21, t: 'Y nosotros tenemos este mandamiento de él: Que el que ama á Dios, ame también á su hermano.' },
-  ],
-  'Mateo 9:36': [
-    { n: 36, t: 'Y viendo las gentes, tuvo compasión de ellas; porque estaban derramadas y esparcidas como ovejas que no tienen pastor.' },
-  ],
-  '2 Corintios 5:14': [
-    { n: 14, t: 'Porque el amor de Cristo nos constriñe, pensando esto: Que si uno murió por todos, luego todos son muertos;' },
-  ],
-  'Jeremías 20:9': [
-    { n: 9, t: 'Y dije: No me acordaré más de él, ni hablaré más en su nombre: empero fué en mi corazón como un fuego ardiente metido en mis huesos; trabajé por sufrirlo, y no pude.' },
-  ],
-  'Génesis 2:16-17': [
-    { n: 16, t: 'Y mandó Jehová Dios al hombre, diciendo: De todo árbol del huerto comerás;' },
-    { n: 17, t: 'Mas del árbol de ciencia del bien y del mal no comerás de él; porque el día que de él comieres, morirás.' },
-  ],
-  'Génesis 7:1': [
-    { n: 1, t: 'Y Jehová dijo á Noé: Entra tú y toda tu casa en el arca porque á ti he visto justo delante de mí en esta generación.' },
-  ],
-  'Deuteronomio 4:29-31': [
-    { n: 29, t: 'Mas si desde allí buscares á Jehová tu Dios, lo hallarás, si lo buscares de todo tu corazón y de toda tu alma.' },
-    { n: 30, t: 'Cuando estuvieres en angustia, y te alcanzaren todas estas cosas, si en los postreros días te volvieres á Jehová tu Dios, y oyeres su voz;' },
-    { n: 31, t: 'Porque Dios misericordioso es Jehová tu Dios; no te dejará, ni te destruirá, ni se olvidará del pacto de tus padres que les juró.' },
-  ],
-  'Mateo 4:23-25': [
-    { n: 23, t: 'Y rodeó Jesús toda Galilea, enseñando en las sinagogas de ellos, y predicando el evangelio del reino, y sanando toda enfermedad y toda dolencia en el pueblo.' },
-    { n: 24, t: 'Y corría su fama por toda la Siria; y le trajeron todos los que tenían mal: los tomados de diversas enfermedades y tormentos, y los endemoniados, y lunáticos, y paralíticos, y los sanó.' },
-    { n: 25, t: 'Y le siguieron muchas gentes de Galilea y de Decápolis y de Jerusalem y de Judea y de la otra parte del Jordán.' },
-  ],
-  'Mateo 23:37': [
-    { n: 37, t: '¡Jerusalem, Jerusalem, que matas á los profetas, y apedreas á los que son enviados á ti! ¡cuántas veces quise juntar tus hijos, como la gallina junta sus pollos debajo de las alas, y no quisiste!' },
-  ],
-  'Apocalipsis 12:11': [
-    { n: 11, t: 'Y ellos le han vencido por la sangre del Cordero, y por la palabra de su testimonio; y no han amado sus vidas hasta la muerte.' },
-  ],
+/* Tema MRNT (página oficial): fondo crema, títulos navy, tarjetas blancas,
+   colores del plan MRNT (azul Misión, etc.). Usado en la presentación 12. */
+const MRNT_T = {
+  bg: 'linear-gradient(135deg,#f8f5ef 0%,#f4efe6 55%,#efe9dc 100%)',
+  ink: '#0a0e2e',
+  inkSoft: '#6e728a',
+  cardLead: '#0a0e2e',
+  cardBody: '#1a1e38',
+  accent: '#3b82f6',
+  accentDark: '#1d4ed8',
+  heading: '#0a0e2e',
+  headingShadow: 'none',
+  plainLead: '#0a0e2e',
+  plainBody: '#2a2e48',
+  plainShadow: 'none',
+  accentSoft: '#dbeafe',
+  accent2: '#7c3aed',
+  panel: '#ffffff',
+  panelAlt: '#eef2ff',
+  coverPanel: '#ffffff',
+  shadow: '0 10px 26px rgba(10,14,46,.12)',
+  dotInactive: 'rgba(10,14,46,.20)'
 };
+
+/* Tema activo de las slides. SlideView lo fija al inicio de cada render
+   (síncrono), y los componentes auxiliares lo toman por defecto. */
+let __ST = SLIDE_T;
 
 /* Una slide por cada día del repaso de la semana — Mateo 5–7. */
 /* Presentaciones disponibles para el repaso. Cada una se etiqueta con su
@@ -3502,7 +3417,9 @@ function loadYouTubeAPI() {
 }
 
 /* Logo compacto MRNT class para la esquina de la slide. */
-function SlideBrand() {
+function SlideBrand({
+  T = __ST
+} = {}) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -3511,7 +3428,7 @@ function SlideBrand() {
       background: 'rgba(255,255,255,.82)',
       borderRadius: 12,
       padding: '6px 12px 6px 8px',
-      boxShadow: '0 4px 14px rgba(60,81,29,.18)'
+      boxShadow: T.shadow
     }
   }, /*#__PURE__*/React.createElement(BookLogo, {
     size: 34
@@ -3524,7 +3441,7 @@ function SlideBrand() {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 'clamp(15px,1.8vw,20px)',
-      color: SLIDE_T.ink,
+      color: T.ink,
       letterSpacing: '.02em'
     }
   }, "MRNT class"), /*#__PURE__*/React.createElement("div", {
@@ -3532,7 +3449,7 @@ function SlideBrand() {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 'clamp(8px,1vw,10px)',
-      color: SLIDE_T.inkSoft,
+      color: T.inkSoft,
       letterSpacing: '.18em',
       textTransform: 'uppercase'
     }
@@ -3542,7 +3459,8 @@ function SlideBrand() {
 /* Insignia lateral del día (kicker + día con flecha). */
 function DayBadge({
   kicker,
-  day
+  day,
+  T = __ST
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3557,7 +3475,7 @@ function DayBadge({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 'clamp(11px,1.4vw,16px)',
-      color: SLIDE_T.accentDark,
+      color: T.accentDark,
       letterSpacing: '.12em'
     }
   }, kicker), /*#__PURE__*/React.createElement("div", {
@@ -3566,11 +3484,11 @@ function DayBadge({
       height: 'clamp(30px,3.6vw,42px)',
       borderRadius: '50%',
       background: 'rgba(255,255,255,.5)',
-      border: `2px solid ${SLIDE_T.accentDark}`,
+      border: `2px solid ${T.accentDark}`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: SLIDE_T.accentDark,
+      color: T.accentDark,
       fontSize: 'clamp(15px,1.9vw,20px)',
       fontWeight: 900
     }
@@ -3579,18 +3497,16 @@ function DayBadge({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 'clamp(8px,1vw,11px)',
-      color: SLIDE_T.inkSoft,
+      color: T.inkSoft,
       letterSpacing: '.16em'
     }
   }, day));
 }
 
-/* Caja de versículos (REF. BÍBLICA). Cada referencia es clicable: abre el
-   texto guardado localmente (ver BIBLE_VERSES). `onVerseClick(ref)` decide si
-   se transmite a todos (admin) o se ve solo en mi dispositivo (invitado). */
+/* Caja de versículos (REF. BÍBLICA). */
 function VersesBox({
   verses,
-  onVerseClick
+  T = __ST
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3600,7 +3516,7 @@ function VersesBox({
       background: 'rgba(255,255,255,.74)',
       borderRadius: 12,
       padding: '8px 13px',
-      boxShadow: '0 4px 14px rgba(60,81,29,.16)',
+      boxShadow: T.shadow,
       maxWidth: '46%'
     }
   }, /*#__PURE__*/React.createElement("span", {
@@ -3618,40 +3534,21 @@ function VersesBox({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 'clamp(8px,1vw,11px)',
-      color: SLIDE_T.accentDark,
+      color: T.accentDark,
       letterSpacing: '.12em',
       textTransform: 'uppercase',
       marginBottom: 2
     }
-  }, "Ref. bíblica"), verses.map((v, i) => {
-    const hasText = !!BIBLE_VERSES[v];
-    const clickable = hasText && !!onVerseClick;
-    return /*#__PURE__*/React.createElement(clickable ? "button" : "span", {
-      key: i,
-      onClick: clickable ? () => onVerseClick(v) : undefined,
-      title: clickable ? 'Abrir versículo' : undefined,
-      style: {
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 3,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 700,
-        fontSize: 'clamp(8px,1vw,12px)',
-        color: SLIDE_T.accentDark,
-        letterSpacing: '.03em',
-        textAlign: 'left',
-        background: clickable ? 'rgba(60,81,29,.08)' : 'transparent',
-        border: clickable ? `1px solid ${SLIDE_T.accent}` : 'none',
-        borderRadius: clickable ? 7 : 0,
-        padding: clickable ? '1px 7px' : 0,
-        margin: clickable ? '1px 0' : 0,
-        cursor: clickable ? 'pointer' : 'default',
-        textDecoration: clickable ? 'underline' : 'none',
-        textDecorationStyle: 'dotted',
-        textUnderlineOffset: 2
-      }
-    }, "• ", v, clickable ? ' 📖' : '');
-  })));
+  }, "Ref. bíblica"), verses.map((v, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 'clamp(8px,1vw,12px)',
+      color: T.accentDark,
+      letterSpacing: '.03em'
+    }
+  }, "• ", v))));
 }
 
 /* Marco común de cada slide: logo arriba + contenido + pie de progreso. */
@@ -3659,7 +3556,8 @@ function SlideShell({
   children,
   index,
   total,
-  footer
+  footer,
+  T = __ST
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3667,7 +3565,7 @@ function SlideShell({
       width: 'min(96vw,1180px)',
       maxHeight: '90vh',
       overflowY: 'auto',
-      background: SLIDE_T.bg,
+      background: T.bg,
       borderRadius: 22,
       boxShadow: '0 26px 70px rgba(10,14,46,.55)',
       padding: 'clamp(18px,3vw,38px)',
@@ -3708,7 +3606,7 @@ function SlideShell({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 'clamp(9px,1.1vw,12px)',
-      color: SLIDE_T.inkSoft,
+      color: T.inkSoft,
       letterSpacing: '.14em',
       textTransform: 'uppercase'
     }
@@ -3727,7 +3625,7 @@ function SlideShell({
       width: i === index ? 16 : 7,
       height: 7,
       borderRadius: 4,
-      background: i === index ? SLIDE_T.accentDark : 'rgba(60,81,29,.28)',
+      background: i === index ? T.accentDark : T.dotInactive,
       transition: 'all .2s'
     }
   })))));
@@ -3739,8 +3637,9 @@ function SlideView({
   index,
   total,
   footer,
-  onVerseClick
+  T = SLIDE_T
 }) {
+  __ST = T; // fija el tema activo para los componentes auxiliares de esta slide
   // ── Portada ──
   if (slide.type === 'cover') {
     return /*#__PURE__*/React.createElement(SlideShell, {
@@ -3761,7 +3660,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(10px,1.3vw,15px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         letterSpacing: '.1em',
         textTransform: 'uppercase',
         lineHeight: 1.4
@@ -3775,20 +3674,21 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(34px,6.4vw,76px)',
         lineHeight: .96,
-        color: '#fff',
+        color: T.heading,
         textTransform: 'uppercase',
         letterSpacing: '.01em',
-        textShadow: '0 3px 14px rgba(40,55,18,.35)'
+        textShadow: T.headingShadow
       }
     }, slide.bigTitle), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 'clamp(12px,2vw,22px)',
-        background: 'rgba(255,255,255,.55)',
+        background: T.coverPanel,
         borderRadius: 16,
         padding: 'clamp(10px,1.6vw,18px) clamp(16px,2.4vw,30px)',
-        marginTop: 8
+        marginTop: 8,
+        boxShadow: T.shadow
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3796,7 +3696,7 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(44px,7vw,90px)',
         lineHeight: .9,
-        color: SLIDE_T.accentDark
+        color: T.accentDark
       }
     }, slide.num), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3808,7 +3708,7 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(18px,2.8vw,34px)',
         lineHeight: 1,
-        color: SLIDE_T.ink,
+        color: T.ink,
         textTransform: 'uppercase',
         letterSpacing: '.04em'
       }
@@ -3817,7 +3717,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(12px,1.6vw,18px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         letterSpacing: '.14em',
         textTransform: 'uppercase',
         marginTop: 3
@@ -3849,13 +3749,13 @@ function SlideView({
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        background: '#f3ecda',
+        background: T.panel,
         borderRadius: 18,
         padding: 'clamp(18px,2.6vw,30px)',
         maxWidth: 620,
         width: '100%',
-        boxShadow: '0 10px 28px rgba(60,81,29,.2)',
-        border: `3px solid ${SLIDE_T.accent}`
+        boxShadow: T.shadow,
+        border: `3px solid ${T.accent}`
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3869,7 +3769,7 @@ function SlideView({
         width: 40,
         height: 40,
         borderRadius: '50%',
-        background: SLIDE_T.accent,
+        background: T.accent,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -3880,14 +3780,14 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(14px,1.7vw,18px)',
-        color: SLIDE_T.cardLead
+        color: T.cardLead
       }
     }, slide.name, " 🔵"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 400,
         fontSize: 'clamp(11px,1.3vw,14px)',
-        color: SLIDE_T.cardBody
+        color: T.cardBody
       }
     }, slide.handle))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3895,7 +3795,7 @@ function SlideView({
         fontWeight: 500,
         textAlign: 'center',
         fontSize: 'clamp(16px,2.2vw,26px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.5
       }
     }, slide.text), /*#__PURE__*/React.createElement("div", {
@@ -3947,19 +3847,19 @@ function SlideView({
         height: 'clamp(54px,7vw,92px)',
         flexShrink: 0,
         borderRadius: '50%',
-        background: i % 2 ? SLIDE_T.accent : '#b9cd86',
+        background: i % 2 ? T.accent : T.accentSoft,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(22px,3.2vw,42px)',
-        color: SLIDE_T.accentDark
+        color: T.accentDark
       }
     }, it.n), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
-        borderBottom: `1.5px solid ${SLIDE_T.accent}66`,
+        borderBottom: `1.5px solid ${T.accent}66`,
         paddingBottom: 8
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -3967,14 +3867,14 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(16px,2.1vw,26px)',
-        color: SLIDE_T.cardLead
+        color: T.cardLead
       }
     }, it.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 500,
         fontSize: 'clamp(12px,1.5vw,18px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         marginTop: 3
       }
     }, it.refs.join(' · ')))))));
@@ -4009,25 +3909,25 @@ function SlideView({
         fontWeight: 900,
         fontSize: 'clamp(24px,4vw,48px)',
         lineHeight: 1,
-        color: '#fff',
+        color: T.heading,
         textTransform: 'uppercase',
         letterSpacing: '.02em'
       }
     }, slide.title)), /*#__PURE__*/React.createElement(SlideBrand, null)), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: '#f3ecda',
+        background: T.panel,
         borderRadius: 14,
         padding: 'clamp(16px,2.4vw,30px)',
         marginTop: 'clamp(14px,2.2vw,24px)',
-        border: `3px solid ${SLIDE_T.accent}`,
-        boxShadow: '0 10px 26px rgba(60,81,29,.18)'
+        border: `3px solid ${T.accent}`,
+        boxShadow: T.shadow
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 400,
         fontSize: 'clamp(13px,1.7vw,21px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.6
       }
     }, slide.text)), /*#__PURE__*/React.createElement("div", {
@@ -4036,9 +3936,9 @@ function SlideView({
         fontWeight: 600,
         fontStyle: 'italic',
         fontSize: 'clamp(11px,1.4vw,16px)',
-        color: '#fff',
+        color: T.heading,
         marginTop: 12,
-        textShadow: '0 1px 6px rgba(40,55,18,.3)'
+        textShadow: T.headingShadow
       }
     }, slide.cite));
   }
@@ -4067,7 +3967,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(26px,4.4vw,52px)',
-        color: SLIDE_T.accentDark,
+        color: T.accentDark,
         textTransform: 'uppercase',
         letterSpacing: '.06em'
       }
@@ -4085,11 +3985,11 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(13px,1.6vw,19px)',
-        color: ci === 1 ? '#5a6a30' : SLIDE_T.cardLead,
+        color: ci === 1 ? T.accent2 : T.cardLead,
         textTransform: 'uppercase',
         textAlign: 'center',
         letterSpacing: '.04em',
-        borderTop: `3px solid ${SLIDE_T.accent}`,
+        borderTop: `3px solid ${T.accent}`,
         paddingTop: 10,
         marginBottom: 10
       }
@@ -4105,7 +4005,7 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 500,
         fontSize: 'clamp(11px,1.25vw,15px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.4
       }
     }, q)))))));
@@ -4129,7 +4029,7 @@ function SlideView({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: SLIDE_T.accent,
+        background: T.accent,
         borderRadius: 16,
         padding: 'clamp(20px,3vw,40px)',
         minHeight: 160
@@ -4142,7 +4042,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(26px,4vw,48px)',
-        color: SLIDE_T.accentDark,
+        color: T.accentDark,
         textAlign: 'center',
         textTransform: 'uppercase',
         letterSpacing: '.1em'
@@ -4152,7 +4052,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(15px,2vw,24px)',
-        color: SLIDE_T.cardLead,
+        color: T.cardLead,
         textAlign: 'center',
         textTransform: 'uppercase',
         letterSpacing: '.12em',
@@ -4164,7 +4064,7 @@ function SlideView({
         fontWeight: 400,
         textAlign: 'justify',
         fontSize: 'clamp(12px,1.5vw,18px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.55
       }
     }, slide.text))));
@@ -4182,7 +4082,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 'clamp(20px,3.2vw,40px)',
-        color: SLIDE_T.accentDark,
+        color: T.accentDark,
         textAlign: 'center',
         textTransform: 'uppercase',
         letterSpacing: '.04em'
@@ -4192,7 +4092,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(11px,1.4vw,16px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         textAlign: 'center',
         letterSpacing: '.14em',
         textTransform: 'uppercase',
@@ -4211,7 +4111,7 @@ function SlideView({
         display: 'flex',
         alignItems: 'center',
         gap: 9,
-        background: 'rgba(255,255,255,.55)',
+        background: T.coverPanel,
         borderRadius: 10,
         padding: '8px 12px'
       }
@@ -4224,7 +4124,7 @@ function SlideView({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 'clamp(9px,1.1vw,12px)',
-        color: SLIDE_T.inkSoft,
+        color: T.inkSoft,
         letterSpacing: '.08em',
         textTransform: 'uppercase'
       }
@@ -4233,7 +4133,7 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 600,
         fontSize: 'clamp(11px,1.35vw,15px)',
-        color: SLIDE_T.cardLead,
+        color: T.cardLead,
         wordBreak: 'break-all'
       }
     }, p.value))))), /*#__PURE__*/React.createElement("div", {
@@ -4249,7 +4149,7 @@ function SlideView({
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 600,
         fontSize: 'clamp(11px,1.4vw,16px)',
-        color: SLIDE_T.cardBody
+        color: T.cardBody
       }
     }, person)), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4286,10 +4186,10 @@ function SlideView({
       fontWeight: 900,
       fontSize: 'clamp(22px,3.8vw,46px)',
       lineHeight: 1,
-      color: '#fff',
+      color: T.heading,
       textTransform: 'uppercase',
       letterSpacing: '.02em',
-      textShadow: '0 2px 10px rgba(40,55,18,.3)'
+      textShadow: T.headingShadow
     }
   }, slide.title)), /*#__PURE__*/React.createElement(SlideBrand, null)), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4318,18 +4218,18 @@ function SlideView({
           fontFamily: 'Barlow,sans-serif',
           fontWeight: 800,
           fontSize: 'clamp(13px,1.5vw,19px)',
-          color: '#fefdf6',
+          color: T.plainLead,
           lineHeight: 1.45,
-          textShadow: '0 1px 6px rgba(40,55,18,.35)'
+          textShadow: T.plainShadow
         }
       }, c.lead, ' '), /*#__PURE__*/React.createElement("span", {
         style: {
           fontFamily: 'Barlow,sans-serif',
           fontWeight: 400,
           fontSize: 'clamp(13px,1.45vw,18px)',
-          color: '#f2f0e4',
+          color: T.plainBody,
           lineHeight: 1.45,
-          textShadow: '0 1px 6px rgba(40,55,18,.35)'
+          textShadow: T.plainShadow
         }
       }, c.rest));
     }
@@ -4337,11 +4237,11 @@ function SlideView({
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        background: note ? '#ece5d2' : '#f3ecda',
+        background: note ? T.panelAlt : T.panel,
         borderRadius: 12,
         padding: 'clamp(10px,1.4vw,18px)',
-        borderLeft: note ? 'none' : `5px solid ${SLIDE_T.accent}`,
-        boxShadow: '0 6px 18px rgba(60,81,29,.14)'
+        borderLeft: note ? 'none' : `5px solid ${T.accent}`,
+        boxShadow: T.shadow
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -4349,7 +4249,7 @@ function SlideView({
         fontWeight: 800,
         fontStyle: note ? 'italic' : 'normal',
         fontSize: 'clamp(13px,1.5vw,19px)',
-        color: SLIDE_T.cardLead,
+        color: T.cardLead,
         lineHeight: 1.42
       }
     }, c.lead, ' '), /*#__PURE__*/React.createElement("span", {
@@ -4358,139 +4258,13 @@ function SlideView({
         fontWeight: 400,
         fontStyle: note ? 'italic' : 'normal',
         fontSize: 'clamp(13px,1.45vw,18px)',
-        color: SLIDE_T.cardBody,
+        color: T.cardBody,
         lineHeight: 1.45
       }
     }, c.rest));
   })), slide.verses && slide.verses.length > 0 && /*#__PURE__*/React.createElement(VersesBox, {
-    verses: slide.verses,
-    onVerseClick: onVerseClick
+    verses: slide.verses
   })));
-}
-
-/* Overlay que muestra el texto de un versículo leído desde el repo (offline).
-   - `ref`: referencia a mostrar (clave de BIBLE_VERSES) o null para no mostrar.
-   - `broadcast`: true si lo está transmitiendo el admin a todos.
-   - `canClose`: si el usuario actual puede cerrarlo.
-   Se ve bien en celular: texto grande, scrolleable, ocupa toda la pantalla. */
-function VerseOverlay({
-  refStr,
-  broadcast,
-  canClose,
-  onClose
-}) {
-  if (!refStr) return null;
-  const passage = BIBLE_VERSES[refStr];
-  return /*#__PURE__*/React.createElement("div", {
-    onClick: e => {
-      if (e.target === e.currentTarget && canClose) onClose();
-    },
-    style: {
-      position: 'fixed',
-      inset: 0,
-      zIndex: 200,
-      background: 'rgba(4,6,18,.86)',
-      backdropFilter: 'blur(7px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 16,
-      animation: 'modalIn .2s ease'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: '100%',
-      maxWidth: 560,
-      maxHeight: '90vh',
-      display: 'flex',
-      flexDirection: 'column',
-      background: 'linear-gradient(160deg,#fbf9f3,#f3efe3)',
-      border: '1px solid rgba(60,81,29,.25)',
-      borderRadius: 20,
-      boxShadow: '0 22px 60px rgba(0,0,0,.6)',
-      overflow: 'hidden'
-    }
-  },
-  /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      padding: '16px 18px 12px',
-      borderBottom: '1px solid rgba(60,81,29,.14)'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: { fontSize: 24 }
-  }, "📖"), /*#__PURE__*/React.createElement("div", {
-    style: { flex: 1, minWidth: 0 }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 900,
-      fontSize: 22,
-      color: SLIDE_T.accentDark,
-      letterSpacing: '.02em',
-      lineHeight: 1.05
-    }
-  }, refStr), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 700,
-      fontSize: 11,
-      color: SLIDE_T.inkSoft,
-      letterSpacing: '.14em',
-      textTransform: 'uppercase'
-    }
-  }, BIBLE_VERSION, broadcast ? ' · 🔴 En vivo' : '')), canClose && /*#__PURE__*/React.createElement("button", {
-    onClick: onClose,
-    style: {
-      width: 38,
-      height: 38,
-      flexShrink: 0,
-      borderRadius: 11,
-      border: '1px solid rgba(60,81,29,.2)',
-      background: 'rgba(60,81,29,.07)',
-      color: SLIDE_T.accentDark,
-      fontSize: 18,
-      cursor: 'pointer'
-    }
-  }, "✕")),
-  /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '16px 20px 20px',
-      overflowY: 'auto'
-    }
-  }, passage ? passage.map((v, i) => /*#__PURE__*/React.createElement("p", {
-    key: i,
-    style: {
-      margin: '0 0 12px',
-      fontSize: 'clamp(17px,2.4vw,21px)',
-      lineHeight: 1.6,
-      color: SLIDE_T.ink
-    }
-  }, /*#__PURE__*/React.createElement("sup", {
-    style: {
-      fontWeight: 900,
-      color: SLIDE_T.accentDark,
-      marginRight: 5,
-      fontSize: '.7em'
-    }
-  }, v.n), v.t)) : /*#__PURE__*/React.createElement("p", {
-    style: { fontSize: 16, color: SLIDE_T.inkSoft }
-  }, "Texto no disponible en el repositorio.")),
-  broadcast && !canClose && /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '10px 18px',
-      borderTop: '1px solid rgba(60,81,29,.14)',
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 700,
-      fontSize: 12,
-      color: SLIDE_T.inkSoft,
-      letterSpacing: '.1em',
-      textTransform: 'uppercase',
-      textAlign: 'center'
-    }
-  }, "El anfitrión está mostrando este versículo")));
 }
 
 /* Overlay de presentación sincronizada: todos ven la slide; el admin avanza. */
@@ -4502,8 +4276,7 @@ function PresentationOverlay({
   onEnd,
   onToggleWordCloud,
   onToggleQR,
-  qrOn,
-  onVerseClick
+  qrOn
 }) {
   const pres = session?.presentation;
   const wcActive = !!session?.wordcloud?.active;
@@ -4549,7 +4322,7 @@ function PresentationOverlay({
     index: idx,
     total: total,
     footer: footer,
-    onVerseClick: onVerseClick
+    T: deck.id === 'semana12' ? MRNT_T : SLIDE_T
   }), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -11565,9 +11338,6 @@ function App() {
   const [qrPos, setQrPos] = useState(null); // {x,y} en px desde top-left | null
   // Visibilidad del QR (el admin puede ocultarlo/mostrarlo, p. ej. durante la presentación)
   const [qrVisible, setQrVisible] = useState(true);
-  // Versículo abierto SOLO en mi dispositivo (invitado). El admin transmite a
-  // todos vía session.presentation.verse; el invitado lo ve solo para sí aquí.
-  const [localVerse, setLocalVerse] = useState(null); // ref string | null
   // Toast cuando todos respondieron la encuesta (solo admin)
   const [surveyAllNotify, setSurveyAllNotify] = useState(null); // {done,total} | null
   const surveyAllNotifyShownRef = useRef(false);
@@ -12217,29 +11987,7 @@ function App() {
     if (next !== cur.slide) await db.ref(`sessions/${SID.current}/presentation/slide`).set(next);
   };
   const endPresentation = async () => {
-    await db.ref(`sessions/${SID.current}/presentation/verse`).remove();
     await db.ref(`sessions/${SID.current}/presentation/active`).set(false);
-  };
-
-  /* ── Versículo clicable (lectura local, sin internet) ──
-     Admin: transmite el texto a TODOS (se guarda en la sesión).
-     Invitado: lo abre SOLO en su dispositivo (estado local). */
-  const openVerse = ref => {
-    if (!BIBLE_VERSES[ref]) return;
-    if (isAdmin) {
-      db.ref(`sessions/${SID.current}/presentation/verse`).set({
-        ref,
-        at: Date.now()
-      });
-    } else {
-      setLocalVerse(ref);
-    }
-  };
-  const closeVerse = () => {
-    if (isAdmin && sessionRef.current?.presentation?.verse) {
-      db.ref(`sessions/${SID.current}/presentation/verse`).remove();
-    }
-    setLocalVerse(null);
   };
 
   /* ── Video de YouTube sincronizado (admin controla; invitados siguen) ── */
@@ -13279,13 +13027,7 @@ function App() {
     onEnd: endPresentation,
     onToggleWordCloud: (question = '') => toggleWordCloud(question),
     onToggleQR: () => setQrVisible(v => !v),
-    qrOn: qrVisible,
-    onVerseClick: openVerse
-  }), /*#__PURE__*/React.createElement(VerseOverlay, {
-    refStr: session?.presentation?.verse?.ref || localVerse,
-    broadcast: !!session?.presentation?.verse?.ref,
-    canClose: isAdmin || !session?.presentation?.verse?.ref,
-    onClose: closeVerse
+    qrOn: qrVisible
   }), repasoChatOpen && phase === 'repaso' && (users[UID.current]?.zone === 'repaso' || isAdmin) && /*#__PURE__*/React.createElement(RepasoChat, {
     msgs: msgs,
     session: session,
