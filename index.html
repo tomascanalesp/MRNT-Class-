@@ -1468,7 +1468,7 @@ function ConfraSpeakerPanel({
         position: 'fixed',
         inset: 0,
         zIndex: 150,
-        background: 'rgba(7,9,31,.96)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(12px)',
         display: 'flex',
         flexDirection: 'column',
@@ -1520,7 +1520,7 @@ function ConfraSpeakerPanel({
       position: 'fixed',
       inset: 0,
       zIndex: 150,
-      background: 'rgba(7,9,31,.92)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(10px)',
       display: 'flex',
       flexDirection: 'column',
@@ -1557,15 +1557,15 @@ function ConfraSpeakerPanel({
     }
   }), "Confraternización · ", idx + 1, " de ", queue.length), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(145deg,rgba(245,158,11,.08),rgba(7,9,31,.6))',
-      border: `2px solid ${speaker.color || '#f59e0b'}55`,
+      background: 'linear-gradient(145deg,rgba(245,158,11,.12),#ffffff)',
+      border: `3px solid ${speaker.color || '#f59e0b'}`,
       borderRadius: 22,
       padding: '22px 20px',
       textAlign: 'center',
       width: '100%',
       maxWidth: 340,
       animation: 'speakerPop .55s ease',
-      boxShadow: `0 0 40px ${speaker.color || '#f59e0b'}18`
+      boxShadow: `0 16px 44px rgba(10,14,46,.14)`
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1583,8 +1583,8 @@ function ConfraSpeakerPanel({
       fontWeight: 900,
       fontSize: 30,
       letterSpacing: '-.01em',
-      color: speaker.color || '#ffd000',
-      textShadow: `0 0 20px ${speaker.color || '#ffd000'}66`
+      color: speaker.color || '#0a0e2e',
+      textShadow: 'none'
     }
   }, isMe ? '¡Es tu turno!' : speaker.name), !isMe && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1597,12 +1597,12 @@ function ConfraSpeakerPanel({
   }, "está compartiendo"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
-      background: 'rgba(255,255,255,.04)',
-      border: '1px solid rgba(255,255,255,.08)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 14,
       padding: '12px 14px',
       fontSize: 14,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.55,
       fontStyle: 'italic'
     }
@@ -1637,7 +1637,7 @@ function ConfraSpeakerPanel({
     }, REACTIONS.filter(r => totals[r.id] > 0).map(r => /*#__PURE__*/React.createElement("div", {
       key: r.id,
       style: {
-        background: 'rgba(255,255,255,.08)',
+        background: 'rgba(10,14,46,.1)',
         border: `1px solid ${speaker.color || '#ffd000'}33`,
         borderRadius: 20,
         padding: '4px 10px',
@@ -1674,8 +1674,8 @@ function ConfraSpeakerPanel({
       }, /*#__PURE__*/React.createElement("button", {
         onClick: () => onReact(r.id),
         style: {
-          background: selected ? `${speaker.color || '#ffd000'}28` : 'rgba(255,255,255,.05)',
-          border: selected ? `2px solid ${speaker.color || '#ffd000'}` : '2px solid rgba(255,255,255,.12)',
+          background: selected ? `${speaker.color || '#ffd000'}28` : 'rgba(10,14,46,.05)',
+          border: selected ? `2px solid ${speaker.color || '#ffd000'}` : '2px solid rgba(10,14,46,.15)',
           borderRadius: 50,
           width: 52,
           height: 52,
@@ -1726,7 +1726,7 @@ function ConfraSpeakerPanel({
       width: i === idx ? 22 : 8,
       height: 8,
       borderRadius: 4,
-      background: i < idx ? '#10b981' : i === idx ? speaker.color || '#ffd000' : 'rgba(255,255,255,.12)',
+      background: i < idx ? '#10b981' : i === idx ? speaker.color || '#ffd000' : 'rgba(10,14,46,.15)',
       transition: 'all .35s cubic-bezier(0.23,1,0.32,1)'
     }
   }))), isMe && /*#__PURE__*/React.createElement("button", {
@@ -1742,7 +1742,7 @@ function ConfraSpeakerPanel({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: `0 0 28px ${speaker.color || '#ffd000'}44`,
+      boxShadow: `0 10px 26px ${speaker.color || '#ffd000'}33`,
       marginTop: 4
     }
   }, isLast ? 'Listo, todos compartieron ✨' : 'Terminé → Siguiente'), isAdmin && /*#__PURE__*/React.createElement("div", {
@@ -1782,8 +1782,8 @@ function ConfraSpeakerPanel({
     }
   }, "✓ Finalizar confra")), !isMe && !isAdmin && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.03)',
-      border: '1px solid rgba(255,255,255,.07)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 12,
       padding: '8px 16px',
       fontSize: 11,
