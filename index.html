@@ -41,6 +41,7 @@
     body.landing{background:var(--cream);color:var(--ink)}
     body.landing-dark{background:#0a0e2e;color:var(--white)}
     body.in-room,body.in-room #root{height:100%;overflow:hidden}
+    body.in-room{background:#f8f5ef}
     input,textarea{outline:none;transition:border-color .2s,box-shadow .2s}
     input:focus,textarea:focus{border-color:var(--yellow)!important;
       box-shadow:0 0 0 3px rgba(255,208,0,.15)!important}
@@ -1468,7 +1469,7 @@ function ConfraSpeakerPanel({
         position: 'fixed',
         inset: 0,
         zIndex: 150,
-        background: 'rgba(7,9,31,.96)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(12px)',
         display: 'flex',
         flexDirection: 'column',
@@ -1520,7 +1521,7 @@ function ConfraSpeakerPanel({
       position: 'fixed',
       inset: 0,
       zIndex: 150,
-      background: 'rgba(7,9,31,.92)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(10px)',
       display: 'flex',
       flexDirection: 'column',
@@ -1557,15 +1558,15 @@ function ConfraSpeakerPanel({
     }
   }), "Confraternización · ", idx + 1, " de ", queue.length), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(145deg,rgba(245,158,11,.08),rgba(7,9,31,.6))',
-      border: `2px solid ${speaker.color || '#f59e0b'}55`,
+      background: 'linear-gradient(145deg,rgba(245,158,11,.12),#ffffff)',
+      border: `3px solid ${speaker.color || '#f59e0b'}`,
       borderRadius: 22,
       padding: '22px 20px',
       textAlign: 'center',
       width: '100%',
       maxWidth: 340,
       animation: 'speakerPop .55s ease',
-      boxShadow: `0 0 40px ${speaker.color || '#f59e0b'}18`
+      boxShadow: `0 16px 44px rgba(10,14,46,.14)`
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1583,8 +1584,8 @@ function ConfraSpeakerPanel({
       fontWeight: 900,
       fontSize: 30,
       letterSpacing: '-.01em',
-      color: speaker.color || '#ffd000',
-      textShadow: `0 0 20px ${speaker.color || '#ffd000'}66`
+      color: speaker.color || '#0a0e2e',
+      textShadow: 'none'
     }
   }, isMe ? '¡Es tu turno!' : speaker.name), !isMe && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1597,12 +1598,12 @@ function ConfraSpeakerPanel({
   }, "está compartiendo"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
-      background: 'rgba(255,255,255,.04)',
-      border: '1px solid rgba(255,255,255,.08)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 14,
       padding: '12px 14px',
       fontSize: 14,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.55,
       fontStyle: 'italic'
     }
@@ -1637,7 +1638,7 @@ function ConfraSpeakerPanel({
     }, REACTIONS.filter(r => totals[r.id] > 0).map(r => /*#__PURE__*/React.createElement("div", {
       key: r.id,
       style: {
-        background: 'rgba(255,255,255,.08)',
+        background: 'rgba(10,14,46,.1)',
         border: `1px solid ${speaker.color || '#ffd000'}33`,
         borderRadius: 20,
         padding: '4px 10px',
@@ -1674,8 +1675,8 @@ function ConfraSpeakerPanel({
       }, /*#__PURE__*/React.createElement("button", {
         onClick: () => onReact(r.id),
         style: {
-          background: selected ? `${speaker.color || '#ffd000'}28` : 'rgba(255,255,255,.05)',
-          border: selected ? `2px solid ${speaker.color || '#ffd000'}` : '2px solid rgba(255,255,255,.12)',
+          background: selected ? `${speaker.color || '#ffd000'}28` : 'rgba(10,14,46,.05)',
+          border: selected ? `2px solid ${speaker.color || '#ffd000'}` : '2px solid rgba(10,14,46,.15)',
           borderRadius: 50,
           width: 52,
           height: 52,
@@ -1726,7 +1727,7 @@ function ConfraSpeakerPanel({
       width: i === idx ? 22 : 8,
       height: 8,
       borderRadius: 4,
-      background: i < idx ? '#10b981' : i === idx ? speaker.color || '#ffd000' : 'rgba(255,255,255,.12)',
+      background: i < idx ? '#10b981' : i === idx ? speaker.color || '#ffd000' : 'rgba(10,14,46,.15)',
       transition: 'all .35s cubic-bezier(0.23,1,0.32,1)'
     }
   }))), isMe && /*#__PURE__*/React.createElement("button", {
@@ -1742,7 +1743,7 @@ function ConfraSpeakerPanel({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: `0 0 28px ${speaker.color || '#ffd000'}44`,
+      boxShadow: `0 10px 26px ${speaker.color || '#ffd000'}33`,
       marginTop: 4
     }
   }, isLast ? 'Listo, todos compartieron ✨' : 'Terminé → Siguiente'), isAdmin && /*#__PURE__*/React.createElement("div", {
@@ -1782,8 +1783,8 @@ function ConfraSpeakerPanel({
     }
   }, "✓ Finalizar confra")), !isMe && !isAdmin && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.03)',
-      border: '1px solid rgba(255,255,255,.07)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 12,
       padding: '8px 16px',
       fontSize: 11,
@@ -1881,7 +1882,7 @@ function RepasoChatScreen({
       }, m.name)), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12,
-          color: 'white',
+          color: '#0a0e2e',
           lineHeight: 1.45,
           fontStyle: m.tag === 'Reflexión' || m.tag === 'Oración' ? 'italic' : 'normal',
           paddingLeft: 2
@@ -1919,11 +1920,12 @@ function RepasoChatScreen({
       }
     }) : /*#__PURE__*/React.createElement("span", null, m.avatar || '👤')), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'rgba(7,9,31,.93)',
+        background: 'rgba(248,245,239,.95)',
         padding: '6px 12px',
         borderRadius: '4px 12px 12px 12px',
         border: `1px solid ${c}33`,
         backdropFilter: 'blur(4px)',
+        boxShadow: '0 6px 18px rgba(10,14,46,.12)',
         maxWidth: '85%'
       }
     }, /*#__PURE__*/React.createElement("span", {
@@ -1945,7 +1947,7 @@ function RepasoChatScreen({
     }) : /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 13,
-        color: 'white'
+        color: '#0a0e2e'
       }
     }, m.text)));
   }));
@@ -1997,8 +1999,8 @@ function TagMessageModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.7)',
-      backdropFilter: 'blur(6px)',
+      background: 'rgba(10,14,46,.45)',
+      backdropFilter: 'blur(4px)',
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center'
@@ -2008,9 +2010,10 @@ function TagMessageModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: `1px solid ${t.color}44`,
       borderRadius: '20px 20px 0 0',
+      boxShadow: '0 -16px 50px rgba(10,14,46,.22)',
       padding: '20px 18px 32px',
       animation: 'modalIn .25s ease'
     }
@@ -2065,9 +2068,9 @@ function TagMessageModal({
       width: '100%',
       padding: '12px 14px',
       borderRadius: 12,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: `1px solid ${t.color}44`,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif',
       resize: 'none',
@@ -2087,7 +2090,7 @@ function TagMessageModal({
       padding: '11px',
       borderRadius: 12,
       border: 'none',
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       color: 'var(--muted)',
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -2110,7 +2113,7 @@ function TagMessageModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: text.trim() ? `0 0 20px ${t.color}44` : undefined
+      boxShadow: text.trim() ? `0 10px 26px ${t.color}33` : undefined
     }
   }, sending ? 'Enviando...' : 'Enviar →'))));
 }
@@ -2177,11 +2180,11 @@ function RepasoChat({
       zIndex: 155,
       display: 'flex',
       flexDirection: 'column',
-      background: 'var(--navy)'
+      background: '#f8f5ef'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#0a1950)',
+      background: '#f8f5ef',
       borderBottom: '1px solid rgba(59,130,246,.2)',
       padding: '10px 14px',
       flexShrink: 0,
@@ -2261,8 +2264,8 @@ function RepasoChat({
   }) : /*#__PURE__*/React.createElement("span", null, u.avatar || '👤')))), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -2391,7 +2394,7 @@ function RepasoChat({
       }, m.time)), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 14,
-          color: 'var(--white)',
+          color: '#0a0e2e',
           lineHeight: 1.55,
           fontStyle: m.tag === 'Reflexión' || m.tag === 'Oración' ? 'italic' : 'normal',
           paddingLeft: 4
@@ -2416,8 +2419,8 @@ function RepasoChat({
             padding: '3px 7px',
             borderRadius: 20,
             border: 'none',
-            background: active ? `${tc}33` : 'rgba(255,255,255,.06)',
-            outline: active ? `1px solid ${tc}77` : '1px solid rgba(255,255,255,.1)',
+            background: active ? `${tc}33` : 'rgba(10,14,46,.06)',
+            outline: active ? `1px solid ${tc}77` : '1px solid rgba(10,14,46,.12)',
             cursor: 'pointer',
             fontSize: 13,
             transition: 'all .15s'
@@ -2489,12 +2492,12 @@ function RepasoChat({
       }
     }, m.time)), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: isMe ? `${c}18` : 'rgba(255,255,255,.05)',
-        border: `1px solid ${isMe ? c + '44' : 'rgba(255,255,255,.08)'}`,
+        background: isMe ? `${c}18` : 'rgba(10,14,46,.04)',
+        border: `1px solid ${isMe ? c + '44' : 'rgba(10,14,46,.1)'}`,
         padding: m.type === 'image' ? 6 : '8px 12px',
         borderRadius: isMe ? '12px 4px 12px 12px' : '4px 12px 12px 12px',
         fontSize: 13,
-        color: 'var(--white)',
+        color: '#0a0e2e',
         lineHeight: 1.5,
         wordBreak: 'break-word'
       }
@@ -2518,7 +2521,7 @@ function RepasoChat({
       position: 'fixed',
       inset: 0,
       zIndex: 300,
-      background: 'rgba(0,0,0,.92)',
+      background: 'rgba(10,14,46,.85)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -2556,7 +2559,7 @@ function RepasoChat({
     style: {
       padding: '8px 14px',
       borderTop: '1px solid rgba(59,130,246,.1)',
-      background: 'rgba(7,9,31,.98)',
+      background: '#f8f5ef',
       flexShrink: 0,
       display: 'flex',
       flexWrap: 'wrap',
@@ -2577,7 +2580,7 @@ function RepasoChat({
     style: {
       padding: '10px 12px 14px',
       borderTop: '1px solid rgba(59,130,246,.12)',
-      background: 'rgba(7,9,31,.98)',
+      background: '#f8f5ef',
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -2667,9 +2670,9 @@ function RepasoChat({
       flex: 1,
       padding: '10px 14px',
       borderRadius: 22,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.04)',
       border: '1px solid rgba(59,130,246,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       outline: 'none',
       fontFamily: 'Barlow,sans-serif'
@@ -2682,7 +2685,7 @@ function RepasoChat({
       height: 38,
       flexShrink: 0,
       borderRadius: '50%',
-      background: text.trim() ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(255,255,255,.05)',
+      background: text.trim() ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(10,14,46,.06)',
       border: 'none',
       color: 'white',
       fontSize: 17,
@@ -2690,7 +2693,7 @@ function RepasoChat({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: text.trim() ? '0 0 14px rgba(59,130,246,.4)' : undefined
+      boxShadow: text.trim() ? '0 10px 22px rgba(59,130,246,.33)' : undefined
     }
   }, "↑"))), tagModal && /*#__PURE__*/React.createElement(TagMessageModal, {
     tagType: tagModal,
@@ -4609,7 +4612,7 @@ function VerseOverlay({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'rgba(4,6,18,.86)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(7px)',
       display: 'flex',
       alignItems: 'center',
@@ -4627,7 +4630,7 @@ function VerseOverlay({
       background: 'linear-gradient(160deg,#fbf9f3,#f3efe3)',
       border: '1px solid rgba(60,81,29,.25)',
       borderRadius: 20,
-      boxShadow: '0 22px 60px rgba(0,0,0,.6)',
+      boxShadow: '0 22px 60px rgba(10,14,46,.3)',
       overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -5056,7 +5059,7 @@ function PresentationOverlay({
       position: 'fixed',
       inset: 0,
       zIndex: 175,
-      background: 'rgba(4,6,18,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -5068,11 +5071,11 @@ function PresentationOverlay({
     style: {
       width: '100%',
       maxWidth: 420,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(59,130,246,.35)',
       borderRadius: 18,
       padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(0,0,0,.6)'
+      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5090,14 +5093,14 @@ function PresentationOverlay({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#60a5fa',
+      color: '#1d4ed8',
       textTransform: 'uppercase',
       letterSpacing: '.04em'
     }
   }, "Nube de palabras")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12.5,
-      color: 'rgba(247,243,235,.7)',
+      color: 'rgba(10,14,46,.6)',
       marginBottom: 12,
       lineHeight: 1.5
     }
@@ -5116,9 +5119,9 @@ function PresentationOverlay({
       width: '100%',
       padding: '11px 14px',
       borderRadius: 10,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: '1px solid rgba(59,130,246,.3)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none'
@@ -5135,8 +5138,8 @@ function PresentationOverlay({
       flex: 1,
       padding: '11px',
       borderRadius: 10,
-      border: '1px solid rgba(255,255,255,.12)',
-      background: 'rgba(255,255,255,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
+      background: 'rgba(10,14,46,.05)',
       color: 'var(--muted)',
       cursor: 'pointer',
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -5163,7 +5166,7 @@ function PresentationOverlay({
       fontSize: 13,
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: '0 6px 18px rgba(59,130,246,.4)'
+      boxShadow: '0 8px 22px rgba(59,130,246,.33)'
     }
   }, "☁️ Abrir nube")))));
 }
@@ -5179,7 +5182,7 @@ function PresentationMenu({
       position: 'fixed',
       inset: 0,
       zIndex: 170,
-      background: 'rgba(7,9,31,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -5191,11 +5194,11 @@ function PresentationMenu({
     style: {
       width: '100%',
       maxWidth: 460,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(111,143,60,.35)',
       borderRadius: 18,
       padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(0,0,0,.6)'
+      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5209,15 +5212,15 @@ function PresentationMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 17,
-      color: '#a3c46a',
+      color: '#4d6a27',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
   }, "▶️ Elegir presentación"), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -5259,7 +5262,7 @@ function PresentationMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 13,
-      color: '#a3c46a',
+      color: '#4d6a27',
       textTransform: 'uppercase',
       letterSpacing: '.06em'
     }
@@ -5268,14 +5271,14 @@ function PresentationMenu({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 700,
       fontSize: 15,
-      color: '#fff',
+      color: '#0a0e2e',
       marginTop: 1
     }
   }, p.title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 12,
-      color: 'rgba(255,255,255,.55)',
+      color: 'rgba(10,14,46,.55)',
       marginTop: 2
     }
   }, p.subtitle, " · ", p.slides.length, " slides")), /*#__PURE__*/React.createElement("span", {
@@ -5298,7 +5301,7 @@ function VideoMenu({
       position: 'fixed',
       inset: 0,
       zIndex: 170,
-      background: 'rgba(7,9,31,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -5310,11 +5313,11 @@ function VideoMenu({
     style: {
       width: '100%',
       maxWidth: 460,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(220,38,38,.35)',
       borderRadius: 18,
       padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(0,0,0,.6)'
+      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5335,8 +5338,8 @@ function VideoMenu({
   }, "🎬 Elegir video"), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -5387,13 +5390,13 @@ function VideoMenu({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 700,
       fontSize: 15,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, v.title), v.subtitle && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 12,
-      color: 'rgba(255,255,255,.55)',
+      color: 'rgba(10,14,46,.55)',
       marginTop: 2
     }
   }, v.subtitle)), /*#__PURE__*/React.createElement("span", {
@@ -5745,14 +5748,14 @@ function GuideShot({
       maxWidth: 360,
       borderRadius: 18,
       overflow: 'hidden',
-      background: '#0a0e2e',
-      border: '1px solid rgba(247,243,235,.12)',
-      boxShadow: '0 12px 34px rgba(0,0,0,.45)'
+      background: '#f8f5ef',
+      border: '1px solid rgba(10,14,46,.12)',
+      boxShadow: '0 12px 34px rgba(10,14,46,.18)'
     }
   }, children), caption && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
-      color: 'rgba(247,243,235,.55)',
+      color: 'rgba(10,14,46,.55)',
       fontStyle: 'italic',
       textAlign: 'center',
       maxWidth: 340,
@@ -5786,7 +5789,7 @@ function GuideAvatar({
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: size * .5,
-      boxShadow: `0 0 10px ${color}55`
+      boxShadow: `0 6px 16px ${color}33`
     }
   }, emoji), label && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5806,8 +5809,8 @@ function GuideTopbarShot({
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(8,11,34,.96)',
-      borderBottom: '1px solid rgba(247,243,235,.08)',
+      background: '#f8f5ef',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       padding: '8px 10px',
       display: 'flex',
       alignItems: 'center',
@@ -5844,9 +5847,9 @@ function GuideTopbarShot({
       width: 24,
       height: 24,
       borderRadius: '50%',
-      border: highlightGuide ? '2px solid #ffd000' : '1px solid rgba(247,243,235,.25)',
-      background: highlightGuide ? 'rgba(255,208,0,.18)' : 'rgba(247,243,235,.04)',
-      color: highlightGuide ? '#ffd000' : 'rgba(247,243,235,.6)',
+      border: highlightGuide ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.25)',
+      background: highlightGuide ? 'rgba(255,208,0,.18)' : 'rgba(10,14,46,.04)',
+      color: highlightGuide ? '#ffd000' : 'rgba(10,14,46,.6)',
       fontSize: 13,
       fontWeight: 800,
       display: 'flex',
@@ -5858,7 +5861,7 @@ function GuideTopbarShot({
     style: {
       height: 24,
       width: 1,
-      background: 'rgba(247,243,235,.12)'
+      background: 'rgba(10,14,46,.12)'
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5870,12 +5873,12 @@ function GuideTopbarShot({
     style: {
       fontFamily: 'var(--serif)',
       fontSize: 18,
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, "8"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 8,
-      color: 'rgba(247,243,235,.45)',
+      color: 'rgba(10,14,46,.45)',
       textTransform: 'uppercase',
       letterSpacing: '.14em',
       fontWeight: 600
@@ -5884,14 +5887,14 @@ function GuideTopbarShot({
     style: {
       height: 24,
       width: 1,
-      background: 'rgba(247,243,235,.12)'
+      background: 'rgba(10,14,46,.12)'
     }
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'var(--serif)',
       fontStyle: 'italic',
       fontSize: 13,
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, phaseLabel))), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5938,7 +5941,7 @@ function GuideModal({
   onClose,
   isAdmin
 }) {
-  const G = '#ffd000'; // dorado MRNT
+  const G = '#a16207'; // dorado MRNT
   const sectionStyle = {
     marginBottom: 26
   };
@@ -5977,7 +5980,7 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 16,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.03em',
       marginBottom: 5
@@ -5985,7 +5988,7 @@ function GuideModal({
   }, title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6
     }
   }, children)));
@@ -6031,7 +6034,7 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.02em',
       lineHeight: 1
@@ -6043,7 +6046,7 @@ function GuideModal({
       position: 'fixed',
       inset: 0,
       zIndex: 240,
-      background: 'rgba(4,6,18,.86)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'flex-start',
@@ -6055,10 +6058,10 @@ function GuideModal({
     style: {
       width: '100%',
       maxWidth: 560,
-      background: 'linear-gradient(170deg,#0d1035,#080b22 60%)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.22)',
       borderRadius: 22,
-      boxShadow: '0 24px 70px rgba(0,0,0,.7)',
+      boxShadow: '0 24px 70px rgba(10,14,46,.22)',
       animation: 'modalIn .3s ease',
       overflow: 'hidden',
       marginBottom: '4vh'
@@ -6079,9 +6082,9 @@ function GuideModal({
       width: 32,
       height: 32,
       borderRadius: '50%',
-      border: '1px solid rgba(247,243,235,.14)',
-      background: 'rgba(247,243,235,.06)',
-      color: '#f7f3eb',
+      border: '1px solid rgba(10,14,46,.14)',
+      background: 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontSize: 15,
       display: 'flex',
       alignItems: 'center',
@@ -6104,7 +6107,7 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.03em',
       lineHeight: 1
@@ -6112,7 +6115,7 @@ function GuideModal({
   }, "Cómo usar Maranata Class"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: 'rgba(255,208,0,.85)',
+      color: 'rgba(161,98,7,.95)',
       fontWeight: 600,
       letterSpacing: '.06em',
       marginTop: 4
@@ -6120,13 +6123,13 @@ function GuideModal({
   }, "Guía de la sala virtual · IASD Las Condes"))), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 13,
-      color: 'rgba(247,243,235,.7)',
+      color: 'rgba(10,14,46,.7)',
       lineHeight: 1.6,
       marginTop: 14
     }
   }, "Maranata Class es nuestra sala virtual: tu avatar se mueve entre las zonas del", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, " Plan MRNT"), " (Misión, Relación, Nutrición y Templo) y participas en cada actividad. Aquí tienes todo lo que necesitas saber. 👇")), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6135,7 +6138,7 @@ function GuideModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: sectionStyle
   }, /*#__PURE__*/React.createElement(SectionTitle, {
-    color: "#ffd000",
+    color: "#a16207",
     icon: "🚪",
     kicker: "Para empezar",
     title: "Tus primeros pasos"
@@ -6194,7 +6197,7 @@ function GuideModal({
     title: "Arrastra tu avatar"
   }, "Mantén presionado tu ícono y ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "arrástralo"), " hacia la zona donde quieras estar. Cada zona es una parte del Plan MRNT."), /*#__PURE__*/React.createElement(GuideShot, {
     caption: "Las 6 zonas del Plan MRNT. Arrastra tu avatar a la que corresponda."
@@ -6278,13 +6281,13 @@ function GuideModal({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6,
       marginBottom: 14
     }
   }, "Es el momento de ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#eab308'
+      color: '#a16207'
     }
   }, "compartir y conocernos"), ". El anfitrión da la palabra a cada persona por turnos. Puedes reaccionar con emojis mientras alguien habla. 🙌"), /*#__PURE__*/React.createElement(SectionTitle, {
     color: "#fb923c",
@@ -6296,7 +6299,7 @@ function GuideModal({
     title: "Sigue la presentación"
   }, "Cuando el anfitrión inicia la ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "presentación"), ", a todos les aparece la misma diapositiva. Él la va avanzando y tú solo miras."), /*#__PURE__*/React.createElement(GuideShot, {
     caption: "Todos ven la misma diapositiva del repaso, sincronizada en vivo."
@@ -6375,7 +6378,7 @@ function GuideModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px',
-      background: '#07091f',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       gap: 10
@@ -6392,8 +6395,8 @@ function GuideModal({
     size: 28
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.08)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: '4px 12px 12px 12px',
       padding: '7px 11px',
       maxWidth: '78%'
@@ -6402,14 +6405,14 @@ function GuideModal({
     style: {
       fontSize: 10,
       fontWeight: 700,
-      color: '#ffd000',
+      color: '#a16207',
       fontFamily: 'Barlow Condensed,sans-serif',
       marginRight: 6
     }
   }, "Sofía"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 12,
-      color: '#f0f2ff'
+      color: '#0a0e2e'
     }
   }, "¡Qué bueno este punto! 🙌"))), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6451,7 +6454,7 @@ function GuideModal({
   }, "Isidora")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: '#f0f2ff',
+      color: '#0a0e2e',
       fontStyle: 'italic'
     }
   }, "Oremos por sabiduría para vivir lo aprendido.")))), /*#__PURE__*/React.createElement(Step, {
@@ -6471,7 +6474,7 @@ function GuideModal({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6,
       marginBottom: 12
     }
@@ -6513,18 +6516,18 @@ function GuideModal({
     style: {
       fontWeight: 800,
       fontSize: 13,
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, g.n), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11.5,
-      color: 'rgba(247,243,235,.65)'
+      color: 'rgba(10,14,46,.65)'
     }
   }, g.d))))), /*#__PURE__*/React.createElement(GuideShot, {
     caption: "En el Kahoot eliges una de las 4 opciones de color. ¡Rápido suma más puntos!"
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: '#07091f',
+      background: '#f8f5ef',
       padding: '14px'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -6540,7 +6543,7 @@ function GuideModal({
   }, "Pregunta 3 / 10"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: '#f0f2ff',
+      color: '#0a0e2e',
       fontWeight: 600,
       marginBottom: 12,
       lineHeight: 1.4
@@ -6590,12 +6593,12 @@ function GuideModal({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6
     }
   }, "Al final, el momento del Templo invita a la reflexión. Suele abrirse una", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#a78bfa'
+      color: '#7c3aed'
     }
   }, " encuesta semanal"), " corta para conocer tu experiencia. Respóndela: ¡tu opinión ayuda a mejorar cada clase! 💜")), isAdmin && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6606,14 +6609,14 @@ function GuideModal({
       padding: 16
     }
   }, /*#__PURE__*/React.createElement(SectionTitle, {
-    color: "#ffd000",
+    color: "#a16207",
     icon: "⚙️",
     kicker: "Solo anfitrión",
     title: "Panel de administración"
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.8)',
+      color: 'rgba(10,14,46,.8)',
       lineHeight: 1.7
     }
   }, "Como anfitrión, usa el botón ", /*#__PURE__*/React.createElement("strong", {
@@ -6630,11 +6633,11 @@ function GuideModal({
     }
   }, /*#__PURE__*/React.createElement("li", null, "Inicia y finaliza cada actividad: Confra, Repaso, Juegos, Misión y Templo."), /*#__PURE__*/React.createElement("li", null, "En Repaso: ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "Iniciar presentación"), " (elige cuál proyectar), avanza con ◀ ▶ o las flechas del teclado, y abre la ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "nube de palabras ☁️"), " cuando quieras."), /*#__PURE__*/React.createElement("li", null, "Comparte el ", /*#__PURE__*/React.createElement("strong", {
     style: {
@@ -6650,14 +6653,14 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.04em'
     }
   }, "¡Listo! Ya puedes participar 🎉"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: 'rgba(247,243,235,.55)',
+      color: 'rgba(10,14,46,.55)',
       marginTop: 6,
       marginBottom: 16
     }
@@ -6674,7 +6677,7 @@ function GuideModal({
       fontSize: 15,
       letterSpacing: '.06em',
       textTransform: 'uppercase',
-      boxShadow: '0 8px 24px rgba(255,208,0,.4)'
+      boxShadow: '0 8px 24px rgba(255,208,0,.33)'
     }
   }, "Entendido")))));
 }
@@ -6705,7 +6708,7 @@ function DraggableQR({
         position: 'fixed',
         inset: 0,
         zIndex: 210,
-        background: 'rgba(10,14,46,.92)',
+        background: 'rgba(10,14,46,.45)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -6723,7 +6726,7 @@ function DraggableQR({
         flexDirection: 'column',
         alignItems: 'center',
         gap: 16,
-        boxShadow: '0 24px 60px rgba(0,0,0,.5)',
+        boxShadow: '0 24px 60px rgba(10,14,46,.3)',
         maxWidth: '92vmin'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -6891,71 +6894,146 @@ function ActivityEndBanner({
   phase,
   onDismiss
 }) {
+  // Mensajes de cierre de cada fase del Plan MRNT. La estética (color, letra,
+  // ícono) se hereda de ZONES para mantener coherencia con la sala.
   const msgs = {
     confra: {
       title: '¡Confraternización completada!',
-      msg: 'Muevan su ícono a la sala de Repaso Bíblico 📖',
-      color: '#f59e0b'
+      msg: 'Muevan su ícono a la sala de Repaso Bíblico 📖'
     },
     repaso: {
       title: '¡Repaso finalizado!',
-      msg: 'Muevan su ícono a la sala de Juegos 🎮',
-      color: '#3b82f6'
+      msg: 'Muevan su ícono a la sala de Juegos 🎮'
+    },
+    juegos: {
+      title: '¡Juegos finalizados!',
+      msg: 'Muevan su ícono a la sala de Misión ✈️'
+    },
+    mision: {
+      title: '¡Misión completada!',
+      msg: 'Muevan su ícono al Templo ⛪'
+    },
+    templo: {
+      title: '¡Templo finalizado!',
+      msg: 'Gracias por acompañarnos hoy. ¡Nos vemos la próxima! 🙏'
     }
   };
   const info = msgs[phase];
   if (!info) return null;
+  const zone = ZONES[phase] || {};
+  const accent = zone.color || '#0a0e2e';
+  // Texto legible sobre el acento: tinta sobre amarillo (confra), blanco en el resto.
+  const onAccent = phase === 'confra' ? '#0a0e2e' : '#fff';
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
       inset: 0,
       zIndex: 160,
-      background: 'rgba(7,9,31,.9)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(10,14,46,.45)',
+      backdropFilter: 'blur(3px)',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 14,
       padding: 24,
-      textAlign: 'center'
+      animation: 'fadeUp .25s ease-out'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 60,
-      animation: 'bounce 1s infinite'
+      position: 'relative',
+      width: '100%',
+      maxWidth: 360,
+      background: '#f8f5ef',
+      borderRadius: 22,
+      border: '1px solid rgba(10,14,46,.08)',
+      boxShadow: '0 24px 70px rgba(10,14,46,.28)',
+      padding: '38px 30px 30px',
+      textAlign: 'center',
+      overflow: 'hidden',
+      animation: 'modalIn .3s ease-out'
     }
-  }, "🎉"), /*#__PURE__*/React.createElement("h2", {
+  },
+  // Franja de acento superior con el color de la zona
+  /*#__PURE__*/React.createElement("div", {
     style: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 6,
+      background: accent
+    }
+  }),
+  // Insignia MRNT (letra de la zona, o ícono si no tiene letra)
+  /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 60,
+      height: 60,
+      margin: '0 auto',
+      borderRadius: 16,
+      background: accent,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: onAccent,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: zone.letter ? 30 : 28,
+      boxShadow: `0 10px 24px ${accent}40`
+    }
+  }, zone.letter || zone.icon || '🎉'),
+  // Sub-rótulo MRNT
+  zone.mrnt && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 16,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      letterSpacing: '.2em',
+      textTransform: 'uppercase',
+      color: accent
+    }
+  }, zone.mrnt),
+  // Título
+  /*#__PURE__*/React.createElement("h2", {
+    style: {
+      marginTop: 6,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: info.color,
+      lineHeight: 1.05,
+      color: '#0a0e2e',
       textTransform: 'uppercase',
-      letterSpacing: '.04em'
+      letterSpacing: '.02em'
     }
-  }, info.title), /*#__PURE__*/React.createElement("p", {
+  }, info.title),
+  // Mensaje
+  /*#__PURE__*/React.createElement("p", {
     style: {
-      color: 'var(--white)',
-      fontSize: 16,
+      margin: '12px auto 0',
       maxWidth: 280,
+      color: '#3b3f5a',
+      fontSize: 15,
       lineHeight: 1.6
     }
-  }, info.msg), /*#__PURE__*/React.createElement("button", {
+  }, info.msg),
+  // Botón
+  /*#__PURE__*/React.createElement("button", {
     onClick: onDismiss,
     style: {
-      background: `linear-gradient(135deg,${info.color},${info.color}cc)`,
+      marginTop: 24,
+      background: accent,
       border: 'none',
       borderRadius: 12,
-      padding: '12px 28px',
-      color: '#07091f',
-      fontWeight: 800,
-      fontSize: 14,
+      padding: '13px 30px',
+      color: onAccent,
       fontFamily: 'Barlow Condensed,sans-serif',
-      letterSpacing: '.04em',
-      marginTop: 8
+      fontWeight: 800,
+      fontSize: 15,
+      textTransform: 'uppercase',
+      letterSpacing: '.06em',
+      boxShadow: `0 8px 20px ${accent}40`
     }
-  }, "Entendido ✓"));
+  }, "Entendido ✓")));
 }
 
 /* ════════════════════════ NUBE DE PALABRAS ════════════════════════ */
@@ -7047,11 +7125,11 @@ function WordCloudActivity({
       zIndex: 180,
       display: 'flex',
       flexDirection: 'column',
-      background: 'var(--navy)'
+      background: '#f8f5ef'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(7,9,31,.98)',
+      background: '#f8f5ef',
       borderBottom: '1px solid rgba(59,130,246,.2)',
       padding: '10px 14px',
       flexShrink: 0,
@@ -7093,8 +7171,8 @@ function WordCloudActivity({
   }, isAdmin && rawWords.length > 0 && /*#__PURE__*/React.createElement("button", {
     onClick: handleClear,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 8,
       padding: '5px 9px',
       color: 'var(--muted)',
@@ -7119,8 +7197,8 @@ function WordCloudActivity({
   }, "⏹ Terminar"), !isAdmin && /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -7133,9 +7211,9 @@ function WordCloudActivity({
   }, "✕"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 0,
-      borderBottom: '1px solid rgba(255,255,255,.06)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0
     }
   }, [{
@@ -7200,7 +7278,7 @@ function WordCloudActivity({
   }, "📖 Pregunta del repaso"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 15,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.6,
       fontWeight: 500
     }
@@ -7256,9 +7334,9 @@ function WordCloudActivity({
       flex: 1,
       padding: '12px 16px',
       borderRadius: 24,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       border: '1px solid rgba(59,130,246,.25)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       outline: 'none',
       fontFamily: 'Barlow,sans-serif'
@@ -7272,13 +7350,13 @@ function WordCloudActivity({
       flexShrink: 0,
       borderRadius: '50%',
       border: 'none',
-      background: input.trim() && !sending ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(255,255,255,.06)',
+      background: input.trim() && !sending ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(10,14,46,.06)',
       color: input.trim() && !sending ? 'white' : 'var(--muted)',
       fontSize: 20,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: input.trim() && !sending ? '0 0 16px rgba(59,130,246,.4)' : undefined
+      boxShadow: input.trim() && !sending ? '0 10px 24px rgba(59,130,246,.33)' : undefined
     }
   }, sending ? /*#__PURE__*/React.createElement(Spinner, {
     size: 18,
@@ -7328,7 +7406,7 @@ function WordCloudActivity({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: '0 4px 16px rgba(59,130,246,.4)'
+      boxShadow: '0 8px 22px rgba(59,130,246,.33)'
     }
   }, "☁️ Ver Nube →")), justSent && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7353,7 +7431,7 @@ function WordCloudActivity({
       padding: '24px 18px',
       gap: '2px 14px',
       overflowY: 'auto',
-      background: 'radial-gradient(ellipse at 50% 40%,#0a0e2a,#07091f)'
+      background: 'radial-gradient(ellipse at 50% 40%,#ffffff,#f8f5ef)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7370,7 +7448,7 @@ function WordCloudActivity({
       width: wordHash('w' + i) % 2 + 1,
       height: wordHash('w' + i) % 2 + 1,
       borderRadius: '50%',
-      background: 'rgba(255,255,255,.12)'
+      background: 'rgba(10,14,46,.08)'
     }
   }))), sorted.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7388,7 +7466,7 @@ function WordCloudActivity({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 15,
-      color: 'white',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.1em',
       marginTop: 8
@@ -7410,7 +7488,7 @@ function WordCloudActivity({
         fontWeight: data.count >= 3 ? 900 : data.count >= 2 ? 800 : 600,
         color: c,
         transform: `translate(${jx}px,${jy}px) rotate(${rot}deg)`,
-        textShadow: sz > 34 ? `0 0 ${sz * .55}px ${c}55` : undefined,
+        textShadow: 'none',
         letterSpacing: '-.01em',
         lineHeight: .95,
         padding: '0 4px',
@@ -7494,13 +7572,13 @@ function MisionActivity({
       zIndex: 170,
       display: 'flex',
       flexDirection: 'column',
-      background: 'linear-gradient(170deg,#070920,#0a1240 55%,#0d1450)'
+      background: 'linear-gradient(170deg,#f8f5ef,#efeae0)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '10px 14px',
       borderBottom: '1px solid rgba(59,130,246,.22)',
-      background: 'rgba(7,9,31,.65)',
+      background: 'rgba(248,245,239,.85)',
       backdropFilter: 'blur(10px)',
       display: 'flex',
       alignItems: 'center',
@@ -7546,8 +7624,8 @@ function MisionActivity({
   }, isOver ? 'Tiempo extra' : 'Tiempo: ' + formatTime(remaining)))), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -7576,7 +7654,7 @@ function MisionActivity({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
-      color: 'rgba(147,197,253,.95)',
+      color: '#1d4ed8',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       textTransform: 'uppercase',
@@ -7591,11 +7669,11 @@ function MisionActivity({
     maxLength: 240,
     style: {
       width: '100%',
-      background: 'rgba(255,255,255,.04)',
-      border: '1px solid rgba(255,255,255,.12)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 10,
       padding: '10px 12px',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       resize: 'none',
@@ -7661,15 +7739,15 @@ function MisionActivity({
   }, "Tu compromiso"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 14,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.4,
       wordBreak: 'break-word'
     }
   }, myCommitment.text)), /*#__PURE__*/React.createElement("button", {
     onClick: removeCommitment,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 6,
       padding: '4px 8px',
       color: 'var(--muted)',
@@ -7717,7 +7795,7 @@ function MisionActivity({
   }, commitmentList.map(([uid, c]) => /*#__PURE__*/React.createElement("div", {
     key: uid,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       border: `1px solid ${c.color || '#3b82f6'}33`,
       borderRadius: 10,
       padding: '10px 12px',
@@ -7745,7 +7823,7 @@ function MisionActivity({
   }, c.name, uid === myId ? ' · tú' : ''), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.4,
       wordBreak: 'break-word'
     }
@@ -7767,7 +7845,7 @@ function MisionActivity({
       key: p.id,
       onClick: () => togglePrayer(p.id),
       style: {
-        background: iPray ? `linear-gradient(160deg,${p.color}33,${p.color}1a)` : 'rgba(255,255,255,.04)',
+        background: iPray ? `linear-gradient(160deg,${p.color}33,${p.color}1a)` : 'rgba(10,14,46,.04)',
         border: `2px solid ${iPray ? p.color : p.color + '33'}`,
         borderRadius: 14,
         padding: '14px 10px',
@@ -7809,7 +7887,7 @@ function MisionActivity({
     }, p.desc), /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 2,
-        background: iPray ? p.color : 'rgba(255,255,255,.06)',
+        background: iPray ? p.color : 'rgba(10,14,46,.06)',
         color: iPray ? '#fff' : 'var(--muted)',
         padding: '5px 12px',
         borderRadius: 20,
@@ -7913,7 +7991,7 @@ function JoinActivityPrompt({
       position: 'fixed',
       inset: 0,
       zIndex: 230,
-      background: 'rgba(7,9,31,.78)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -7924,12 +8002,12 @@ function JoinActivityPrompt({
     style: {
       width: '100%',
       maxWidth: 340,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: `2px solid ${color}55`,
       borderRadius: 20,
       padding: '24px 22px',
       textAlign: 'center',
-      boxShadow: `0 0 40px ${color}33`,
+      boxShadow: `0 18px 44px ${color}33`,
       animation: 'modalIn .3s ease'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -7952,7 +8030,7 @@ function JoinActivityPrompt({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 22,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.2,
       marginBottom: 18
     }
@@ -7967,9 +8045,9 @@ function JoinActivityPrompt({
       flex: 1,
       padding: 12,
       borderRadius: 12,
-      border: '1px solid rgba(255,255,255,.18)',
-      background: 'rgba(255,255,255,.06)',
-      color: 'var(--white)',
+      border: '1px solid rgba(10,14,46,.16)',
+      background: 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 14,
@@ -7985,14 +8063,14 @@ function JoinActivityPrompt({
       borderRadius: 12,
       border: 'none',
       background: `linear-gradient(135deg,${color},${z.colorDark || color})`,
-      color: '#07091f',
+      color: '#f8f5ef',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
       letterSpacing: '.05em',
       textTransform: 'uppercase',
       cursor: 'pointer',
-      boxShadow: `0 0 24px ${color}55`
+      boxShadow: `0 10px 26px ${color}55`
     }
   }, "Sí, unirme"))));
 }
@@ -8020,7 +8098,7 @@ function SurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8030,7 +8108,7 @@ function SurveyModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(16,185,129,.3)',
       borderRadius: '20px 20px 0 0',
       padding: '28px 22px 32px',
@@ -8120,7 +8198,7 @@ function SurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.85)',
+      background: '#f8f5ef',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
@@ -8150,7 +8228,7 @@ function SurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8160,7 +8238,7 @@ function SurveyModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.25)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 36px',
@@ -8193,7 +8271,7 @@ function SurveyModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em',
       textAlign: 'center',
@@ -8206,9 +8284,9 @@ function SurveyModal({
       width: 32,
       height: 32,
       borderRadius: 8,
-      border: '1px solid rgba(255,255,255,.12)',
-      background: 'rgba(255,255,255,.06)',
-      color: 'var(--white)',
+      border: '1px solid rgba(10,14,46,.12)',
+      background: 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontSize: 18,
       lineHeight: 1,
       cursor: 'pointer',
@@ -8221,7 +8299,7 @@ function SurveyModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       marginBottom: 10
@@ -8240,8 +8318,8 @@ function SurveyModal({
       height: 40,
       borderRadius: 10,
       border: 'none',
-      background: days === d ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(255,255,255,.08)',
-      color: days === d ? '#07091f' : 'var(--white)',
+      background: days === d ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.08)',
+      color: days === d ? '#f8f5ef' : '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 16,
@@ -8254,7 +8332,7 @@ function SurveyModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       marginBottom: 10
@@ -8278,7 +8356,7 @@ function SurveyModal({
       padding: '10px',
       borderRadius: 12,
       border: 'none',
-      background: bible === opt.v ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(255,255,255,.06)',
+      background: bible === opt.v ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(10,14,46,.06)',
       color: bible === opt.v ? 'white' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
@@ -8294,7 +8372,7 @@ function SurveyModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       marginBottom: 10
@@ -8318,7 +8396,7 @@ function SurveyModal({
       padding: '10px',
       borderRadius: 12,
       border: 'none',
-      background: mission === opt.v ? 'linear-gradient(135deg,#8b5cf6,#6d28d9)' : 'rgba(255,255,255,.06)',
+      background: mission === opt.v ? 'linear-gradient(135deg,#8b5cf6,#6d28d9)' : 'rgba(10,14,46,.06)',
       color: mission === opt.v ? 'white' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
@@ -8334,7 +8412,7 @@ function SurveyModal({
       borderRadius: 10,
       background: 'rgba(239,68,68,.12)',
       border: '1px solid rgba(239,68,68,.35)',
-      color: '#fca5a5',
+      color: '#b91c1c',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       textAlign: 'center'
@@ -8348,13 +8426,13 @@ function SurveyModal({
       borderRadius: 12,
       border: 'none',
       background: bible !== null && mission !== null && !sending ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'var(--muted2)',
-      color: bible !== null && mission !== null && !sending ? '#07091f' : 'var(--muted)',
+      color: bible !== null && mission !== null && !sending ? '#f8f5ef' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 15,
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: bible !== null && mission !== null && !sending ? '0 0 24px rgba(255,208,0,.4)' : undefined,
+      boxShadow: bible !== null && mission !== null && !sending ? '0 10px 26px rgba(255,208,0,.33)' : undefined,
       cursor: bible !== null && mission !== null && !sending ? 'pointer' : 'default'
     }
   }, sending ? 'Enviando…' : 'Enviar respuestas →')));
@@ -8407,7 +8485,7 @@ function AdminSurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8418,7 +8496,7 @@ function AdminSurveyModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 32px',
@@ -8446,7 +8524,7 @@ function AdminSurveyModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: allDone ? '#10b981' : '#ffd000',
+      color: allDone ? '#10b981' : '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -8488,7 +8566,7 @@ function AdminSurveyModal({
       borderRadius: 10,
       background: surveyActive ? 'rgba(239,68,68,.15)' : 'linear-gradient(135deg,#10b981,#059669)',
       border: surveyActive ? '1px solid rgba(239,68,68,.4)' : 'none',
-      color: surveyActive ? '#f87171' : 'white',
+      color: surveyActive ? '#dc2626' : 'white',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 12,
@@ -8504,7 +8582,7 @@ function AdminSurveyModal({
       borderRadius: 10,
       background: 'rgba(255,208,0,.1)',
       border: '1px solid rgba(255,208,0,.3)',
-      color: '#ffd000',
+      color: '#a16207',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 12,
@@ -8522,7 +8600,7 @@ function AdminSurveyModal({
   }, [{
     label: 'Prom. días',
     value: (list.reduce((s, r) => s + r.daysStudied, 0) / list.length).toFixed(1),
-    color: '#ffd000'
+    color: '#a16207'
   }, {
     label: 'Est. Biblia',
     value: list.filter(r => r.hasBibleStudents).length,
@@ -8534,7 +8612,7 @@ function AdminSurveyModal({
   }].map(st => /*#__PURE__*/React.createElement("div", {
     key: st.label,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 10,
       padding: '10px 6px',
       textAlign: 'center',
@@ -8597,7 +8675,7 @@ function AdminSurveyModal({
       fontSize: 11,
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       background: 'rgba(16,185,129,.12)',
       padding: '3px 8px',
       borderRadius: 20,
@@ -8615,7 +8693,7 @@ function AdminSurveyModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 10,
-      color: '#ffd000',
+      color: '#a16207',
       letterSpacing: '.1em',
       textTransform: 'uppercase',
       marginBottom: 6
@@ -8638,7 +8716,7 @@ function AdminSurveyModal({
       fontSize: 11,
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       background: 'rgba(255,208,0,.1)',
       padding: '3px 8px',
       borderRadius: 20,
@@ -8654,18 +8732,18 @@ function AdminSurveyModal({
   }, "Aún no hay respuestas") : list.map((r, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
-      background: 'rgba(255,255,255,.03)',
+      background: 'rgba(10,14,46,.03)',
       borderRadius: 10,
       padding: '10px 12px',
       marginBottom: 8,
-      border: '1px solid rgba(255,255,255,.06)'
+      border: '1px solid rgba(10,14,46,.08)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginBottom: 5
     }
   }, r.name), /*#__PURE__*/React.createElement("div", {
@@ -8685,7 +8763,7 @@ function AdminSurveyModal({
       borderRadius: 10,
       background: 'rgba(239,68,68,.08)',
       border: '1px solid rgba(239,68,68,.2)',
-      color: '#f87171',
+      color: '#dc2626',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 11,
@@ -8864,14 +8942,14 @@ function DataDownloadModal({
     icon: '📦',
     label: 'Todos juntos',
     desc: 'Un archivo con todo',
-    color: '#ffd000'
+    color: '#a16207'
   }];
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8882,7 +8960,7 @@ function DataDownloadModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 32px',
@@ -8910,7 +8988,7 @@ function DataDownloadModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -8933,7 +9011,7 @@ function DataDownloadModal({
     }
   }, "Genera un archivo de texto separado por tabulaciones — pegable directamente en Google Sheets / Excel."), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.03)',
+      background: 'rgba(10,14,46,.03)',
       border: '1px solid rgba(255,208,0,.12)',
       borderRadius: 12,
       padding: '10px 12px',
@@ -8975,13 +9053,13 @@ function DataDownloadModal({
       width: '100%',
       padding: '7px 9px',
       borderRadius: 8,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       border: '1px solid rgba(255,208,0,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 12,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none',
-      colorScheme: 'dark'
+      colorScheme: 'light'
     }
   })), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9003,13 +9081,13 @@ function DataDownloadModal({
       width: '100%',
       padding: '7px 9px',
       borderRadius: 8,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       border: '1px solid rgba(255,208,0,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 12,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none',
-      colorScheme: 'dark'
+      colorScheme: 'light'
     }
   })), (startDate || endDate) && /*#__PURE__*/React.createElement("button", {
     onClick: () => {
@@ -9023,7 +9101,7 @@ function DataDownloadModal({
       borderRadius: 8,
       background: 'rgba(239,68,68,.1)',
       border: '1px solid rgba(239,68,68,.3)',
-      color: '#f87171',
+      color: '#dc2626',
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
@@ -9043,7 +9121,7 @@ function DataDownloadModal({
       onClick: () => handle(o.id),
       disabled: anyBusy,
       style: {
-        background: isBusy ? `${o.color}33` : 'rgba(255,255,255,.04)',
+        background: isBusy ? `${o.color}33` : 'rgba(10,14,46,.04)',
         border: `1px solid ${isBusy ? o.color + '88' : o.color + '33'}`,
         borderRadius: 12,
         padding: '12px 14px',
@@ -9130,7 +9208,7 @@ function AdminPanel({
     waiting: 'var(--muted)',
     confra: '#eab308',
     repaso: '#fb923c',
-    juegos: '#fdba74',
+    juegos: '#c2410c',
     mision: '#3b82f6',
     templo: '#7c3aed'
   }[phase];
@@ -9159,11 +9237,11 @@ function AdminPanel({
       right: 16,
       zIndex: 120,
       width: 288,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 16,
       padding: 16,
-      boxShadow: '0 8px 40px rgba(0,0,0,.7)',
+      boxShadow: '0 8px 40px rgba(10,14,46,.25)',
       animation: 'modalIn .2s ease'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -9171,7 +9249,7 @@ function AdminPanel({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       marginBottom: 12,
@@ -9210,7 +9288,7 @@ function AdminPanel({
   }, {
     label: 'N · Juegos',
     count: juegosUsers.length,
-    color: '#fdba74'
+    color: '#c2410c'
   }, {
     label: 'T · Templo',
     count: temploUsers.length,
@@ -9218,7 +9296,7 @@ function AdminPanel({
   }].map(z => /*#__PURE__*/React.createElement("div", {
     key: z.label,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 8,
       padding: '6px 4px',
       textAlign: 'center',
@@ -9258,7 +9336,7 @@ function AdminPanel({
         border: `1px solid ${all ? 'rgba(16,185,129,.4)' : 'rgba(139,92,246,.35)'}`,
         borderRadius: 10,
         padding: '9px',
-        color: all ? '#10b981' : '#a78bfa',
+        color: all ? '#10b981' : '#7c3aed',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -9287,7 +9365,7 @@ function AdminPanel({
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 10,
       padding: '9px',
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9304,7 +9382,7 @@ function AdminPanel({
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 10,
       padding: '9px',
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9321,7 +9399,7 @@ function AdminPanel({
       border: '1px solid rgba(239,68,68,.25)',
       borderRadius: 10,
       padding: '9px',
-      color: '#f87171',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9331,7 +9409,7 @@ function AdminPanel({
   }, "🔄 Reiniciar sesión"), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 1,
-      background: 'rgba(255,255,255,.06)'
+      background: 'rgba(10,14,46,.1)'
     }
   }), phase === 'waiting' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9511,7 +9589,7 @@ function AdminPanel({
       border: 'none',
       borderRadius: 10,
       padding: '10px',
-      color: '#07091f',
+      color: '#f8f5ef',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9616,9 +9694,9 @@ function AdminPanel({
     style: {
       padding: '8px 10px',
       borderRadius: 8,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: '1px solid rgba(59,130,246,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 11,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none'
@@ -9756,7 +9834,7 @@ function EditProfileModal({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,.75)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)'
     },
     onClick: e => e.target === e.currentTarget && onClose()
@@ -9766,7 +9844,7 @@ function EditProfileModal({
       maxWidth: 480,
       overflowY: 'auto',
       maxHeight: '90vh',
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 20px 32px',
@@ -9792,7 +9870,7 @@ function EditProfileModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -9839,7 +9917,7 @@ function EditProfileModal({
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: 12,
-      color: '#07091f',
+      color: '#f8f5ef',
       fontWeight: 800
     }
   }, "📷")), /*#__PURE__*/React.createElement("div", {
@@ -9849,7 +9927,7 @@ function EditProfileModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginBottom: 6
     }
   }, "Foto de perfil"), /*#__PURE__*/React.createElement("div", {
@@ -9864,7 +9942,7 @@ function EditProfileModal({
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 8,
       padding: '6px 10px',
-      color: '#ffd000',
+      color: '#a16207',
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700
@@ -9876,7 +9954,7 @@ function EditProfileModal({
       border: '1px solid rgba(239,68,68,.2)',
       borderRadius: 8,
       padding: '6px 10px',
-      color: '#f87171',
+      color: '#dc2626',
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700
@@ -9919,9 +9997,9 @@ function EditProfileModal({
       width: '100%',
       padding: '11px 14px',
       borderRadius: 10,
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       border: '1px solid rgba(255,208,0,.15)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif'
     }
@@ -9950,15 +10028,15 @@ function EditProfileModal({
     key: a,
     onClick: () => setAvatar(a),
     style: {
-      background: avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(255,255,255,.03)',
-      border: avatar === a ? `2px solid ${color}` : '2px solid rgba(255,255,255,.06)',
+      background: avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(10,14,46,.03)',
+      border: avatar === a ? `2px solid ${color}` : '2px solid rgba(10,14,46,.1)',
       borderRadius: 10,
       padding: '7px 2px',
       fontSize: 19,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: avatar === a ? `0 0 12px ${color}55` : 'none',
+      boxShadow: avatar === a ? `0 6px 16px ${color}55` : 'none',
       transition: 'all .15s'
     }
   }, a)))), /*#__PURE__*/React.createElement("div", {
@@ -9991,14 +10069,14 @@ function EditProfileModal({
       borderRadius: '50%',
       background: c,
       cursor: 'pointer',
-      border: color === c ? '3px solid white' : '3px solid transparent',
-      boxShadow: color === c ? `0 0 14px ${c}` : 'none',
+      border: color === c ? '3px solid #0a0e2e' : '3px solid transparent',
+      boxShadow: color === c ? `0 6px 16px ${c}66` : 'none',
       transition: 'all .15s'
     }
   })))), err && /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 10,
-      color: '#fca5a5',
+      color: '#dc2626',
       fontSize: 12,
       background: 'rgba(239,68,68,.08)',
       borderRadius: 8,
@@ -10013,7 +10091,7 @@ function EditProfileModal({
       borderRadius: 12,
       border: 'none',
       background: !name.trim() || saving ? 'var(--muted2)' : 'linear-gradient(135deg,#ffd000,#e6a800)',
-      color: !name.trim() || saving ? 'var(--muted)' : '#07091f',
+      color: !name.trim() || saving ? 'var(--muted)' : '#f8f5ef',
       fontSize: 15,
       fontWeight: 800,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -10026,7 +10104,7 @@ function EditProfileModal({
     }
   }, saving ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Spinner, {
     size: 18,
-    color: "#07091f"
+    color: "#f8f5ef"
   }), "Guardando...") : 'Guardar cambios ✓')));
 }
 
@@ -10055,7 +10133,7 @@ function AttendanceModal({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,.75)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)'
     },
     onClick: e => e.target === e.currentTarget && onClose()
@@ -10065,7 +10143,7 @@ function AttendanceModal({
       maxWidth: 480,
       maxHeight: '85vh',
       overflowY: 'auto',
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 32px',
@@ -10091,7 +10169,7 @@ function AttendanceModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -10114,7 +10192,7 @@ function AttendanceModal({
   }, [{
     label: 'Total clases',
     value: sessions.length,
-    color: '#ffd000'
+    color: '#a16207'
   }, {
     label: 'Este año',
     value: sessions.filter(([s]) => s.startsWith(new Date().getFullYear().toString())).length,
@@ -10126,7 +10204,7 @@ function AttendanceModal({
   }].map(st => /*#__PURE__*/React.createElement("div", {
     key: st.label,
     style: {
-      background: 'rgba(255,255,255,.03)',
+      background: 'rgba(10,14,46,.03)',
       borderRadius: 10,
       padding: '10px 8px',
       borderLeft: `3px solid ${st.color}`,
@@ -10151,7 +10229,7 @@ function AttendanceModal({
   }, st.label)))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 10,
       padding: 3,
       marginBottom: 16,
@@ -10172,7 +10250,7 @@ function AttendanceModal({
       borderRadius: 8,
       border: 'none',
       background: activeTab === t.id ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'transparent',
-      color: activeTab === t.id ? '#07091f' : 'var(--muted)',
+      color: activeTab === t.id ? '#f8f5ef' : 'var(--muted)',
       fontSize: 12,
       fontWeight: 700,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -10255,15 +10333,15 @@ function AttendanceModal({
     }, {
       label: '🥇 Ganadas',
       value: wins,
-      color: '#ffd000'
+      color: '#a16207'
     }, {
       label: '🏅 Top 3',
       value: top3,
-      color: '#f59e0b'
+      color: '#b45309'
     }].map(st => /*#__PURE__*/React.createElement("div", {
       key: st.label,
       style: {
-        background: 'rgba(255,255,255,.03)',
+        background: 'rgba(10,14,46,.03)',
         borderRadius: 10,
         padding: '10px 8px',
         borderLeft: `3px solid ${st.color}`,
@@ -10298,8 +10376,8 @@ function AttendanceModal({
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        background: g.rank === 1 ? 'rgba(255,208,0,.07)' : 'rgba(255,255,255,.03)',
-        border: g.rank === 1 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(255,255,255,.05)',
+        background: g.rank === 1 ? 'rgba(255,208,0,.07)' : 'rgba(10,14,46,.03)',
+        border: g.rank === 1 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(10,14,46,.08)',
         borderRadius: 12,
         padding: '10px 14px',
         marginBottom: 7
@@ -10337,7 +10415,7 @@ function AttendanceModal({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 20,
-        color: '#ffd000'
+        color: '#a16207'
       }
     }, g.score, " pts"))));
   })()));
@@ -10386,7 +10464,7 @@ function AdminStatsModal({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)'
     },
     onClick: e => e.target === e.currentTarget && onClose()
@@ -10396,7 +10474,7 @@ function AdminStatsModal({
       maxWidth: 520,
       maxHeight: '90vh',
       overflowY: 'auto',
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '22px 22px 0 0',
       padding: '18px 18px 32px',
@@ -10422,7 +10500,7 @@ function AdminStatsModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -10446,7 +10524,7 @@ function AdminStatsModal({
     label: 'Jóvenes',
     value: data.length,
     icon: '👥',
-    color: '#ffd000'
+    color: '#a16207'
   }, {
     label: 'Asistencias',
     value: data.reduce((s, u) => s + u.attCount, 0),
@@ -10460,7 +10538,7 @@ function AdminStatsModal({
   }].map(st => /*#__PURE__*/React.createElement("div", {
     key: st.label,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 12,
       padding: '10px 8px',
       textAlign: 'center',
@@ -10491,7 +10569,7 @@ function AdminStatsModal({
   }, st.label)))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 10,
       padding: 3,
       marginBottom: 14,
@@ -10512,7 +10590,7 @@ function AdminStatsModal({
       borderRadius: 8,
       border: 'none',
       background: tab === t.id ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'transparent',
-      color: tab === t.id ? '#07091f' : 'var(--muted)',
+      color: tab === t.id ? '#f8f5ef' : 'var(--muted)',
       fontSize: 12,
       fontWeight: 700,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -10536,9 +10614,9 @@ function AdminStatsModal({
       width: '100%',
       padding: '9px 14px',
       borderRadius: 10,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: '1px solid rgba(255,208,0,.15)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       marginBottom: 12,
@@ -10556,7 +10634,7 @@ function AdminStatsModal({
     });
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'rgba(255,255,255,.03)',
+        background: 'rgba(10,14,46,.03)',
         borderRadius: 14,
         padding: 14,
         marginBottom: 12,
@@ -10580,7 +10658,7 @@ function AdminStatsModal({
       style: {
         fontWeight: 700,
         fontSize: 14,
-        color: 'white'
+        color: '#0a0e2e'
       }
     }, u.name), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10605,7 +10683,7 @@ function AdminStatsModal({
     }, [{
       l: 'Clases',
       v: u.attCount,
-      c: '#ffd000'
+      c: '#a16207'
     }, {
       l: 'Este año',
       v: u.attThisYear,
@@ -10617,11 +10695,11 @@ function AdminStatsModal({
     }, {
       l: '🥇 Ganadas',
       v: u.gameWins,
-      c: '#f59e0b'
+      c: '#b45309'
     }].map(st => /*#__PURE__*/React.createElement("div", {
       key: st.l,
       style: {
-        background: 'rgba(255,255,255,.03)',
+        background: 'rgba(10,14,46,.03)',
         borderRadius: 8,
         padding: '7px 4px',
         textAlign: 'center',
@@ -10691,8 +10769,8 @@ function AdminStatsModal({
       display: 'flex',
       alignItems: 'center',
       gap: 10,
-      background: selected === u.uid ? 'rgba(255,208,0,.07)' : 'rgba(255,255,255,.025)',
-      border: selected === u.uid ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(255,255,255,.05)',
+      background: selected === u.uid ? 'rgba(255,208,0,.07)' : 'rgba(10,14,46,.03)',
+      border: selected === u.uid ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(10,14,46,.08)',
       borderRadius: 12,
       padding: '10px 12px',
       marginBottom: 6,
@@ -10719,7 +10797,7 @@ function AdminStatsModal({
     style: {
       fontSize: 13,
       fontWeight: 600,
-      color: 'white'
+      color: '#0a0e2e'
     }
   }, u.name), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10734,7 +10812,7 @@ function AdminStatsModal({
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, u.attCount))), filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10759,8 +10837,8 @@ function AdminStatsModal({
       display: 'flex',
       alignItems: 'center',
       gap: 10,
-      background: i === 0 ? 'rgba(255,208,0,.08)' : 'rgba(255,255,255,.025)',
-      border: i === 0 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(255,255,255,.05)',
+      background: i === 0 ? 'rgba(255,208,0,.08)' : 'rgba(10,14,46,.03)',
+      border: i === 0 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(10,14,46,.08)',
       borderRadius: 12,
       padding: '10px 12px',
       marginBottom: 6
@@ -10782,7 +10860,7 @@ function AdminStatsModal({
     style: {
       fontSize: 13,
       fontWeight: 600,
-      color: 'white'
+      color: '#0a0e2e'
     }
   }, u.name), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10794,7 +10872,7 @@ function AdminStatsModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, u.gameWins, "🥇"))), gameRankings.filter(u => u.gameCount > 0).length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -11727,7 +11805,7 @@ function AuthModal({
 /* ════════════════════════ SHARED STYLES ════════════════════════ */
 const pageWrap = {
   minHeight: '100vh',
-  background: 'var(--navy)',
+  background: '#f8f5ef',
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'center',
@@ -11739,20 +11817,20 @@ const cardStyle = {
   maxWidth: 400,
   position: 'relative',
   zIndex: 1,
-  background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
-  border: '1px solid rgba(255,208,0,.15)',
+  background: '#ffffff',
+  border: '1px solid rgba(10,14,46,.1)',
   borderRadius: 20,
   padding: '28px 22px',
-  boxShadow: '0 0 60px rgba(255,208,0,.06),0 8px 40px rgba(0,0,0,.7)',
+  boxShadow: '0 24px 70px rgba(10,14,46,.22)',
   animation: 'fadeUp .4s ease'
 };
 const inputStyle = {
   width: '100%',
   padding: '12px 14px',
   borderRadius: 10,
-  background: 'rgba(255,255,255,.04)',
-  border: '1px solid rgba(255,208,0,.15)',
-  color: 'var(--white)',
+  background: 'rgba(10,14,46,.04)',
+  border: '1px solid rgba(10,14,46,.12)',
+  color: '#0a0e2e',
   fontSize: 14,
   fontFamily: 'Barlow,sans-serif'
 };
@@ -11778,7 +11856,7 @@ const btnYellow = dis => ({
   fontFamily: 'Barlow Condensed,sans-serif',
   letterSpacing: '.06em',
   textTransform: 'uppercase',
-  boxShadow: dis ? 'none' : '0 0 24px rgba(255,208,0,.35)',
+  boxShadow: dis ? 'none' : '0 10px 26px rgba(255,208,0,.33)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -12593,10 +12671,12 @@ function App() {
     }
   };
   const endJuegos = async () => {
+    setEndBanner('juegos'); // local inmediato para el admin
     await db.ref(`sessions/${SID.current}`).update({
       phase: 'waiting',
       'juegos/active': false
     });
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('juegos');
   };
   const startMision = async (_misionUsers = [], mode = 'commitments') => {
     try {
@@ -12615,10 +12695,12 @@ function App() {
   };
   const endMision = async () => {
     setMisionOpen(false);
+    setEndBanner('mision'); // local inmediato para el admin
     await db.ref(`sessions/${SID.current}`).update({
       phase: 'waiting',
       'mision/active': false
     });
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('mision');
   };
   const startTemplo = async () => {
     try {
@@ -12647,11 +12729,13 @@ function App() {
     }
   };
   const endTemplo = async () => {
+    setEndBanner('templo'); // local inmediato para el admin
     await db.ref(`sessions/${SID.current}`).update({
       phase: 'waiting',
       'templo/active': false,
       'survey/active': false
     });
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('templo');
   };
   const resetSession = async () => {
     setConfraOpen(false);
@@ -12780,7 +12864,7 @@ function App() {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 22,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.04em'
     }
@@ -12869,8 +12953,8 @@ function App() {
       avatar: a
     })),
     style: {
-      background: profile.avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(255,255,255,.03)',
-      border: profile.avatar === a ? `2px solid ${profile.color}` : '2px solid rgba(255,255,255,.06)',
+      background: profile.avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(10,14,46,.03)',
+      border: profile.avatar === a ? `2px solid ${profile.color}` : '2px solid rgba(10,14,46,.1)',
       borderRadius: 10,
       padding: '7px 2px',
       fontSize: 19,
@@ -12903,8 +12987,8 @@ function App() {
       borderRadius: '50%',
       background: c,
       cursor: 'pointer',
-      border: profile.color === c ? '3px solid white' : '3px solid transparent',
-      boxShadow: profile.color === c ? `0 0 14px ${c}` : 'none',
+      border: profile.color === c ? '3px solid #0a0e2e' : '3px solid transparent',
+      boxShadow: profile.color === c ? `0 6px 16px ${c}66` : 'none',
       transition: 'all .15s'
     }
   })))), /*#__PURE__*/React.createElement("button", {
@@ -12917,7 +13001,7 @@ function App() {
   }), "Guardando...") : 'Entrar a la sala ✨'), setupError && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
-      color: '#fca5a5',
+      color: '#dc2626',
       fontSize: 12,
       background: 'rgba(239,68,68,.08)',
       borderRadius: 8,
@@ -12943,15 +13027,15 @@ function App() {
 
   /* ════ ROOM ════ */
   const iconBtn = {
-    background: 'rgba(247,243,235,.04)',
-    border: '1px solid rgba(247,243,235,.1)',
+    background: 'rgba(10,14,46,.05)',
+    border: '1px solid rgba(10,14,46,.12)',
     borderRadius: 50,
     width: 36,
     height: 36,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#f7f3eb',
+    color: '#0a0e2e',
     cursor: 'pointer',
     transition: 'all .15s'
   };
@@ -12961,14 +13045,14 @@ function App() {
       inset: 0,
       display: 'flex',
       flexDirection: 'column',
-      background: '#0a0e2e',
+      background: '#f8f5ef',
       fontFamily: 'var(--sans)'
     }
   }, /*#__PURE__*/React.createElement("header", {
     style: {
-      background: 'rgba(8,11,34,.92)',
+      background: 'rgba(248,245,239,.92)',
       backdropFilter: 'blur(14px)',
-      borderBottom: '1px solid rgba(247,243,235,.08)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       padding: isMobile ? '8px 10px' : '10px 12px',
       display: 'flex',
       alignItems: 'center',
@@ -13021,7 +13105,7 @@ function App() {
       fontFamily: 'var(--display)',
       fontWeight: 900,
       fontSize: 15,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       letterSpacing: '.04em'
     }
   }, "MARANATA"), /*#__PURE__*/React.createElement("div", {
@@ -13029,7 +13113,7 @@ function App() {
       fontFamily: 'var(--display)',
       fontWeight: 600,
       fontSize: 9,
-      color: 'rgba(247,243,235,.45)',
+      color: 'rgba(10,14,46,.5)',
       letterSpacing: '.22em',
       marginTop: 2
     }
@@ -13041,9 +13125,9 @@ function App() {
       height: isMobile ? 26 : 28,
       flexShrink: 0,
       borderRadius: '50%',
-      border: '1px solid rgba(255,208,0,.35)',
-      background: 'rgba(255,208,0,.1)',
-      color: '#ffd000',
+      border: '1.5px solid rgba(10,14,46,.25)',
+      background: 'transparent',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: isMobile ? 14 : 15,
@@ -13056,7 +13140,7 @@ function App() {
     style: {
       height: isMobile ? 28 : 32,
       width: 1,
-      background: 'rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.12)',
       flexShrink: 0
     }
   }), /*#__PURE__*/React.createElement("div", {
@@ -13073,7 +13157,7 @@ function App() {
   }, !isMobile && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: 'rgba(247,243,235,.4)',
+      color: 'rgba(10,14,46,.5)',
       textTransform: 'uppercase',
       letterSpacing: '.16em',
       fontWeight: 600,
@@ -13090,14 +13174,14 @@ function App() {
       fontFamily: 'var(--serif)',
       fontSize: isMobile ? 20 : 22,
       fontWeight: 500,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       lineHeight: 1,
       letterSpacing: '-.01em'
     }
   }, usersArr.length), isMobile && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
-      color: 'rgba(247,243,235,.45)',
+      color: 'rgba(10,14,46,.5)',
       textTransform: 'uppercase',
       letterSpacing: '.14em',
       fontWeight: 600
@@ -13106,7 +13190,7 @@ function App() {
     style: {
       height: isMobile ? 28 : 32,
       width: 1,
-      background: 'rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.12)',
       flexShrink: 0
     }
   }), /*#__PURE__*/React.createElement("div", {
@@ -13140,7 +13224,7 @@ function App() {
   }, !isMobile && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
-      color: 'rgba(247,243,235,.4)',
+      color: 'rgba(10,14,46,.5)',
       textTransform: 'uppercase',
       letterSpacing: '.16em',
       fontWeight: 600,
@@ -13152,7 +13236,7 @@ function App() {
       fontStyle: 'italic',
       fontSize: isMobile ? 14 : 18,
       fontWeight: 500,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       letterSpacing: '-.01em',
       whiteSpace: 'nowrap',
       overflow: 'hidden',
@@ -13173,11 +13257,11 @@ function App() {
       display: 'flex',
       alignItems: 'center',
       gap: isMobile ? 0 : 8,
-      background: 'rgba(247,243,235,.04)',
-      border: '1px solid rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 50,
       padding: isMobile ? 3 : '5px 14px 5px 5px',
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       transition: 'all .15s',
       cursor: 'pointer'
     }
@@ -13258,7 +13342,7 @@ function App() {
     style: {
       width: 1,
       height: 24,
-      background: 'rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.12)',
       margin: '0 4px'
     }
   }), /*#__PURE__*/React.createElement("button", {
@@ -13268,7 +13352,7 @@ function App() {
       ...iconBtn,
       width: isMobile ? 32 : 36,
       height: isMobile ? 32 : 36,
-      color: 'rgba(247,243,235,.5)'
+      color: 'rgba(10,14,46,.5)'
     }
   }, /*#__PURE__*/React.createElement("svg", {
     width: "16",
@@ -13305,19 +13389,19 @@ function App() {
       fontWeight: 700,
       letterSpacing: '.22em',
       textTransform: 'uppercase',
-      color: '#ffd000',
+      color: '#a16207',
       flexShrink: 0,
-      background: 'rgba(255,208,0,.1)',
+      background: 'rgba(255,208,0,.16)',
       padding: '4px 10px',
       borderRadius: 50,
-      border: '1px solid rgba(255,208,0,.25)'
+      border: '1px solid rgba(161,98,7,.3)'
     }
   }, "● En espera"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'var(--serif)',
       fontStyle: 'italic',
       fontSize: isMobile ? 13 : 15,
-      color: 'rgba(247,243,235,.7)',
+      color: 'rgba(10,14,46,.65)',
       letterSpacing: '-.01em',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
@@ -14586,14 +14670,14 @@ function KahootQuestion({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'var(--navy)',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#141744)',
+      background: '#f8f5ef',
       padding: '10px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -14629,7 +14713,7 @@ function KahootQuestion({
   }, showResult ? '✓' : timeLeft)), !showResult && /*#__PURE__*/React.createElement("div", {
     style: {
       height: 5,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.08)',
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -14651,7 +14735,7 @@ function KahootQuestion({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#141744)',
+      background: '#f8f5ef',
       border: '1px solid rgba(139,92,246,.2)',
       borderRadius: 16,
       padding: '14px 16px',
@@ -14661,9 +14745,9 @@ function KahootQuestion({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       fontSize: 16,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.4,
-      boxShadow: '0 4px 20px rgba(0,0,0,.4)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.16)'
     }
   }, question.text)), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -14680,17 +14764,20 @@ function KahootQuestion({
     let bg = ANS_COLORS[i];
     let border = 'transparent';
     let badge = null;
+    let dimmed = false;
     if (showResult) {
       if (isCorrect) {
-        border = 'white';
+        border = '#0a0e2e';
         badge = '✅';
       } else {
-        bg = 'rgba(255,255,255,.06)';
-        border = 'rgba(255,255,255,.1)';
+        bg = 'rgba(10,14,46,.06)';
+        border = 'rgba(10,14,46,.1)';
+        dimmed = true;
       }
     } else if (answered && !isMyAnswer) {
-      bg = 'rgba(255,255,255,.06)';
-      border = 'rgba(255,255,255,.08)';
+      bg = 'rgba(10,14,46,.06)';
+      border = 'rgba(10,14,46,.1)';
+      dimmed = true;
     }
     return /*#__PURE__*/React.createElement("button", {
       key: i,
@@ -14707,12 +14794,12 @@ function KahootQuestion({
         justifyContent: 'center',
         gap: 5,
         minHeight: 88,
-        color: 'white',
+        color: dimmed ? 'rgba(10,14,46,.5)' : 'white',
         textAlign: 'center',
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 600,
         fontSize: 13,
-        boxShadow: isMyAnswer && !showResult ? `0 0 18px ${ANS_COLORS[i]}88` : isMyAnswer && showResult && isCorrect ? '0 0 0 3px white' : undefined,
+        boxShadow: isMyAnswer && !showResult ? `0 10px 26px ${ANS_COLORS[i]}66` : isMyAnswer && showResult && isCorrect ? '0 0 0 3px #0a0e2e' : undefined,
         animation: isMyAnswer && !showResult ? 'answerPop .3s ease' : undefined,
         outline: isMyAnswer && showResult && !isCorrect ? '3px solid #ef4444' : undefined,
         transition: 'background .4s,border .4s',
@@ -14742,7 +14829,7 @@ function KahootQuestion({
       bottom: 20,
       left: '50%',
       transform: 'translateX(-50%)',
-      background: 'rgba(7,9,31,.95)',
+      background: '#f8f5ef',
       border: '1px solid rgba(139,92,246,.3)',
       borderRadius: 20,
       padding: '8px 20px',
@@ -14774,7 +14861,7 @@ function KahootResultCard({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'var(--navy)',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -14837,7 +14924,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 34,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, "+", pointsEarned), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -14846,7 +14933,7 @@ function KahootResultCard({
     }
   }, "puntos", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
     style: {
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontWeight: 700
     }
   }, "Total: ", myScore))), /*#__PURE__*/React.createElement("div", {
@@ -14875,7 +14962,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 20px rgba(139,92,246,.4)',
+      boxShadow: '0 10px 26px rgba(139,92,246,.33)',
       cursor: 'pointer'
     }
   }, "Siguiente →"), /*#__PURE__*/React.createElement("button", {
@@ -14891,7 +14978,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 20px rgba(16,185,129,.35)',
+      boxShadow: '0 10px 26px rgba(16,185,129,.33)',
       cursor: 'pointer'
     }
   }, "🏁 Terminar")) : /*#__PURE__*/React.createElement("button", {
@@ -14907,7 +14994,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 20px rgba(16,185,129,.35)',
+      boxShadow: '0 10px 26px rgba(16,185,129,.33)',
       cursor: 'pointer'
     }
   }, "Ver ganador 🏆")), !isAdmin && /*#__PURE__*/React.createElement("div", {
@@ -14971,14 +15058,14 @@ function KahootLeaderboard({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'var(--navy)',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
     }
   }, isFinished && /*#__PURE__*/React.createElement(Confetti, null), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#141744)',
+      background: '#f8f5ef',
       padding: '14px 20px',
       flexShrink: 0,
       textAlign: 'center',
@@ -14989,7 +15076,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 22,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.08em'
     }
@@ -15012,7 +15099,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.06em'
     }
@@ -15033,7 +15120,7 @@ function KahootLeaderboard({
   }, REACTIONS.map(r => reactionTotals[r.id] > 0 && /*#__PURE__*/React.createElement("div", {
     key: r.id,
     style: {
-      background: 'rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
       borderRadius: 20,
       padding: '4px 10px',
       fontSize: 18,
@@ -15044,13 +15131,13 @@ function KahootLeaderboard({
   }, r.e, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 12,
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 700
     }
   }, reactionTotals[r.id]))))), isFinished && !isWinner && winner && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '10px 16px',
-      borderBottom: '1px solid rgba(255,255,255,.06)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -15078,8 +15165,8 @@ function KahootLeaderboard({
       key: r.id,
       onClick: () => toggleReaction(r.id),
       style: {
-        background: selected ? 'rgba(255,208,0,.2)' : 'rgba(255,255,255,.06)',
-        border: selected ? '1.5px solid rgba(255,208,0,.5)' : '1px solid rgba(255,255,255,.1)',
+        background: selected ? 'rgba(255,208,0,.2)' : 'rgba(10,14,46,.06)',
+        border: selected ? '1.5px solid rgba(255,208,0,.5)' : '1px solid rgba(10,14,46,.12)',
         borderRadius: 16,
         padding: '6px 12px',
         cursor: 'pointer',
@@ -15088,7 +15175,7 @@ function KahootLeaderboard({
         alignItems: 'center',
         gap: 4,
         transition: 'all .2s',
-        boxShadow: selected ? '0 0 10px rgba(255,208,0,.3)' : undefined
+        boxShadow: selected ? '0 6px 16px rgba(255,208,0,.3)' : undefined
       }
     }, r.e, count > 0 && /*#__PURE__*/React.createElement("span", {
       style: {
@@ -15109,8 +15196,8 @@ function KahootLeaderboard({
       display: 'flex',
       alignItems: 'center',
       gap: 12,
-      background: i === 0 && isFinished ? 'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))' : 'rgba(255,255,255,.03)',
-      border: i === 0 && isFinished ? '1px solid rgba(255,208,0,.25)' : '1px solid rgba(255,255,255,.05)',
+      background: i === 0 && isFinished ? 'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))' : 'rgba(10,14,46,.03)',
+      border: i === 0 && isFinished ? '1px solid rgba(255,208,0,.25)' : '1px solid rgba(10,14,46,.08)',
       borderRadius: 12,
       padding: '10px 14px',
       marginBottom: 8,
@@ -15123,7 +15210,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: i < 3 ? 22 : 16,
-      color: i < 3 ? '#ffd000' : 'var(--muted)'
+      color: i < 3 ? '#a16207' : 'var(--muted)'
     }
   }, i < 3 ? medals[i] : i + 1), /*#__PURE__*/React.createElement(AvatarBubble, {
     profile: item.user,
@@ -15134,14 +15221,14 @@ function KahootLeaderboard({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       fontSize: 14,
-      color: 'white'
+      color: '#0a0e2e'
     }
   }, item.user.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, item.score)))), isAdmin && isFinished && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -15163,7 +15250,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 22px rgba(139,92,246,.4)',
+      boxShadow: '0 10px 26px rgba(139,92,246,.33)',
       cursor: 'pointer'
     }
   }, "Cerrar juego ✓")));
@@ -15182,7 +15269,7 @@ function GameSelectMenu({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -15207,7 +15294,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: 'white',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       margin: 0
@@ -15233,7 +15320,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(255,208,0,.08)'
+      boxShadow: '0 10px 26px rgba(255,208,0,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15249,7 +15336,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15257,7 +15344,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15272,7 +15359,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "📝 ", game.questions.length, " preguntas"), /*#__PURE__*/React.createElement("span", null, "⏱ ", GAME_TIMER, "s por pregunta"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       opacity: .6
     }
   }, "›"))), /*#__PURE__*/React.createElement("button", {
@@ -15289,7 +15376,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(255,208,0,.1)'
+      boxShadow: '0 10px 26px rgba(255,208,0,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15305,7 +15392,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15313,7 +15400,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15328,7 +15415,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "👥 Por turnos"), /*#__PURE__*/React.createElement("span", null, "⏱ 3 min"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -15345,7 +15432,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(34,211,238,.1)'
+      boxShadow: '0 10px 26px rgba(34,211,238,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15361,7 +15448,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#22d3ee',
+      color: '#0891b2',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15369,7 +15456,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15384,7 +15471,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "👥 Por turnos"), /*#__PURE__*/React.createElement("span", null, "🤔 Sin tiempo"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#22d3ee',
+      color: '#0891b2',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -15401,7 +15488,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(46,204,113,.1)'
+      boxShadow: '0 10px 26px rgba(46,204,113,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15417,7 +15504,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#2ecc71',
+      color: '#15803d',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15425,7 +15512,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15440,7 +15527,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "👥 Equipos"), /*#__PURE__*/React.createElement("span", null, "🎲 Con dados"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#2ecc71',
+      color: '#15803d',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -15536,7 +15623,7 @@ function KahootSetup({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       flexDirection: 'column',
@@ -15545,7 +15632,7 @@ function KahootSetup({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px 16px',
-      borderBottom: '1px solid rgba(255,255,255,.06)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0,
       display: 'flex',
       alignItems: 'center',
@@ -15567,7 +15654,7 @@ function KahootSetup({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: 'white',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.06em'
     }
@@ -15586,8 +15673,8 @@ function KahootSetup({
       height: 28,
       borderRadius: 8,
       border: 'none',
-      background: i === qIdx ? '#8b5cf6' : 'rgba(255,255,255,.1)',
-      color: 'white',
+      background: i === qIdx ? '#8b5cf6' : 'rgba(10,14,46,.06)',
+      color: i === qIdx ? 'white' : '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 12,
@@ -15600,7 +15687,7 @@ function KahootSetup({
       height: 28,
       borderRadius: 8,
       border: 'none',
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       color: 'var(--muted)',
       fontSize: 16,
       cursor: 'pointer'
@@ -15631,10 +15718,10 @@ function KahootSetup({
     placeholder: "Escribe la pregunta aquí...",
     style: {
       width: '100%',
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 12,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif',
       padding: '12px 14px',
@@ -15659,11 +15746,11 @@ function KahootSetup({
       border: 'none',
       flexShrink: 0,
       background: q.correct === i ? ANS_COLORS[i] : `${ANS_COLORS[i]}28`,
-      color: 'white',
+      color: q.correct === i ? 'white' : '#0a0e2e',
       fontSize: 14,
       fontWeight: 700,
       cursor: 'pointer',
-      boxShadow: q.correct === i ? `0 0 12px ${ANS_COLORS[i]}77` : undefined,
+      boxShadow: q.correct === i ? `0 6px 16px ${ANS_COLORS[i]}66` : undefined,
       transition: 'background .2s'
     }
   }, q.correct === i ? '✓' : ANS_SHAPES[i]), /*#__PURE__*/React.createElement("input", {
@@ -15676,7 +15763,7 @@ function KahootSetup({
       borderRadius: 10,
       background: `${ANS_COLORS[i]}18`,
       border: `1px solid ${ANS_COLORS[i]}44`,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none'
@@ -15684,7 +15771,7 @@ function KahootSetup({
   })))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '12px 14px',
-      borderTop: '1px solid rgba(255,255,255,.06)',
+      borderTop: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
@@ -15705,7 +15792,7 @@ function KahootSetup({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.06em',
       textTransform: 'uppercase',
-      boxShadow: canStart && juegosCount > 0 ? '0 0 24px rgba(139,92,246,.4)' : undefined
+      boxShadow: canStart && juegosCount > 0 ? '0 10px 26px rgba(139,92,246,.33)' : undefined
     }
   }, juegosCount === 0 ? 'Nadie en sala de juegos' : !canStart ? 'Completa todas las preguntas' : `🎮 Iniciar (${questions.length} preguntas)`), /*#__PURE__*/React.createElement("button", {
     onClick: onCancel,
@@ -15714,7 +15801,7 @@ function KahootSetup({
       padding: 10,
       borderRadius: 12,
       border: 'none',
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       color: 'var(--muted)',
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -15857,7 +15944,7 @@ function KahootController({
           letterSpacing: '.04em',
           textTransform: 'uppercase',
           cursor: 'pointer',
-          boxShadow: '0 8px 24px rgba(234,88,12,.5)'
+          boxShadow: '0 8px 24px rgba(234,88,12,.4)'
         }
       }, "🎮 Elegir juego");
     }
@@ -15927,7 +16014,7 @@ function KahootController({
           position: 'fixed',
           inset: 0,
           zIndex: 250,
-          background: 'rgba(7,9,31,.95)',
+          background: 'rgba(248,245,239,.96)',
           backdropFilter: 'blur(6px)',
           display: 'flex',
           flexDirection: 'column',
@@ -15951,7 +16038,7 @@ function KahootController({
         position: 'fixed',
         inset: 0,
         zIndex: 210,
-        background: 'rgba(7,9,31,.96)',
+        background: '#f8f5ef',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -16092,7 +16179,7 @@ function KahootController({
         position: 'fixed',
         inset: 0,
         zIndex: 190,
-        background: 'rgba(7,9,31,.96)',
+        background: '#f8f5ef',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -16251,7 +16338,7 @@ function TabuController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -16270,7 +16357,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 30,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.06em',
         margin: 0,
@@ -16293,15 +16380,15 @@ function TabuController({
         gap: 12,
         padding: '12px 16px',
         borderRadius: 14,
-        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(255,255,255,.05)',
-        border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(255,255,255,.08)'
+        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)',
+        border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.1)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: i === 0 ? '#ffd000' : '#fff',
+        color: i === 0 ? '#a16207' : '#0a0e2e',
         width: 36,
         textAlign: 'center'
       }
@@ -16314,14 +16401,14 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, r.user.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#ffd000'
+        color: '#a16207'
       }
     }, r.pts, " pts")))), isAdmin && /*#__PURE__*/React.createElement("button", {
       onClick: cerrar,
@@ -16331,7 +16418,7 @@ function TabuController({
         border: 'none',
         borderRadius: 14,
         padding: '14px 32px',
-        color: '#07091f',
+        color: '#f8f5ef',
         fontWeight: 900,
         fontSize: 14,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16342,13 +16429,13 @@ function TabuController({
     }, "Cerrar juego"));
   }
   if (gState === 'playing' && currentCard && currentSpeaker) {
-    const timeColor = timeLeft < 30 ? '#ef4444' : timeLeft < 60 ? '#f97316' : '#ffd000';
+    const timeColor = timeLeft < 30 ? '#ef4444' : timeLeft < 60 ? '#c2410c' : '#a16207';
     return /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -16377,7 +16464,7 @@ function TabuController({
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        background: 'rgba(255,255,255,.06)',
+        background: 'rgba(10,14,46,.06)',
         padding: '10px 16px',
         borderRadius: 30,
         border: '1px solid rgba(255,208,0,.2)'
@@ -16397,7 +16484,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, currentSpeaker.name))), isSpeaker || isAdmin ? showCard || isSpeaker ? /*#__PURE__*/React.createElement("div", {
       style: {
@@ -16406,7 +16493,7 @@ function TabuController({
         background: 'linear-gradient(135deg,#fff,#f8f5ef)',
         borderRadius: 24,
         padding: '20px 22px',
-        boxShadow: '0 20px 60px rgba(0,0,0,.5)',
+        boxShadow: '0 20px 50px rgba(10,14,46,.22)',
         border: '4px solid #ffd000'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -16424,7 +16511,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 32,
-        color: '#07091f',
+        color: '#f8f5ef',
         textTransform: 'uppercase',
         letterSpacing: '.02em',
         lineHeight: 1.05,
@@ -16474,7 +16561,7 @@ function TabuController({
         background: 'rgba(255,208,0,.1)',
         border: '2px dashed #ffd000',
         borderRadius: 24,
-        color: '#ffd000',
+        color: '#a16207',
         fontSize: 16,
         fontWeight: 800,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16487,8 +16574,8 @@ function TabuController({
         width: '100%',
         maxWidth: 380,
         padding: '40px 24px',
-        background: 'rgba(255,255,255,.04)',
-        border: '1px solid rgba(255,255,255,.1)',
+        background: 'rgba(10,14,46,.04)',
+        border: '1px solid rgba(10,14,46,.12)',
         borderRadius: 24,
         textAlign: 'center'
       }
@@ -16502,7 +16589,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#fff',
+        color: '#0a0e2e',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         marginBottom: 8
@@ -16551,7 +16638,7 @@ function TabuController({
         borderRadius: 10,
         padding: '8px 10px',
         cursor: 'pointer',
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 14,
@@ -16581,7 +16668,7 @@ function TabuController({
         border: '1px solid rgba(139,92,246,.4)',
         borderRadius: 10,
         padding: '10px',
-        color: '#c4b5fd',
+        color: '#7c3aed',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16597,7 +16684,7 @@ function TabuController({
         border: '1px solid rgba(239,68,68,.35)',
         borderRadius: 10,
         padding: '10px',
-        color: '#fca5a5',
+        color: '#dc2626',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16617,7 +16704,7 @@ function TabuController({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -16641,7 +16728,7 @@ function TabuController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       margin: 0
@@ -16667,7 +16754,7 @@ function TabuController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 11,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.15em',
       marginBottom: 8
@@ -16679,7 +16766,7 @@ function TabuController({
       alignItems: 'center',
       gap: 8,
       padding: '4px 0',
-      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(255,255,255,.05)' : 'none'
+      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(10,14,46,.08)' : 'none'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -16698,14 +16785,14 @@ function TabuController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, r.user.name), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, r.pts)))), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -16723,7 +16810,7 @@ function TabuController({
       background: juegosUsers.length === 0 ? 'rgba(255,208,0,.2)' : '#ffd000',
       border: 'none',
       borderRadius: 14,
-      color: '#07091f',
+      color: '#f8f5ef',
       fontWeight: 900,
       fontSize: 14,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -16762,12 +16849,12 @@ function TabuController({
       display: 'flex',
       alignItems: 'center',
       gap: 8,
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.12)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 10,
       padding: '8px 10px',
       cursor: 'pointer',
-      color: '#fff',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
@@ -16797,7 +16884,7 @@ function TabuController({
       border: '1px solid rgba(34,197,94,.4)',
       borderRadius: 14,
       padding: '12px',
-      color: '#86efac',
+      color: '#15803d',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -16813,7 +16900,7 @@ function TabuController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 14,
       padding: '12px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -16932,7 +17019,7 @@ function QuienSoyController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -16951,7 +17038,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 30,
-        color: '#22d3ee',
+        color: '#0891b2',
         textTransform: 'uppercase',
         letterSpacing: '.06em',
         margin: 0,
@@ -16974,15 +17061,15 @@ function QuienSoyController({
         gap: 12,
         padding: '12px 16px',
         borderRadius: 14,
-        background: i === 0 ? 'linear-gradient(135deg,rgba(34,211,238,.22),rgba(34,211,238,.06))' : 'rgba(255,255,255,.05)',
-        border: i === 0 ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,.08)'
+        background: i === 0 ? 'linear-gradient(135deg,rgba(34,211,238,.22),rgba(34,211,238,.06))' : 'rgba(10,14,46,.04)',
+        border: i === 0 ? '2px solid #22d3ee' : '1px solid rgba(10,14,46,.1)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: i === 0 ? '#22d3ee' : '#fff',
+        color: i === 0 ? '#0891b2' : '#0a0e2e',
         width: 36,
         textAlign: 'center'
       }
@@ -16995,14 +17082,14 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, r.user.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#22d3ee'
+        color: '#0891b2'
       }
     }, r.pts, " pts")))), isAdmin && /*#__PURE__*/React.createElement("button", {
       onClick: cerrar,
@@ -17028,7 +17115,7 @@ function QuienSoyController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -17043,7 +17130,7 @@ function QuienSoyController({
         alignItems: 'center',
         gap: 10,
         marginTop: 8,
-        background: 'rgba(255,255,255,.06)',
+        background: 'rgba(10,14,46,.06)',
         padding: '10px 16px',
         borderRadius: 30,
         border: '1px solid rgba(34,211,238,.3)'
@@ -17063,7 +17150,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, currentPlayer.name))), isPlayer || isAdmin && adminRevealed ? /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17072,7 +17159,7 @@ function QuienSoyController({
         background: 'linear-gradient(135deg,#0e7490,#22d3ee)',
         borderRadius: 24,
         padding: '24px 22px',
-        boxShadow: '0 20px 60px rgba(0,0,0,.5)',
+        boxShadow: '0 20px 50px rgba(14,116,144,.3)',
         border: '4px solid #22d3ee',
         color: '#fff'
       }
@@ -17098,7 +17185,7 @@ function QuienSoyController({
         lineHeight: 1.05,
         marginBottom: 14,
         textAlign: 'center',
-        textShadow: '0 2px 12px rgba(0,0,0,.3)'
+        textShadow: 'none'
       }
     }, character.nombre), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17202,7 +17289,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#fff',
+        color: '#0a0e2e',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         marginBottom: 8
@@ -17225,7 +17312,7 @@ function QuienSoyController({
         border: '1px solid rgba(34,211,238,.45)',
         borderRadius: 12,
         padding: '10px 20px',
-        color: '#22d3ee',
+        color: '#0891b2',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 13,
@@ -17238,8 +17325,8 @@ function QuienSoyController({
         width: '100%',
         maxWidth: 380,
         padding: '30px 24px',
-        background: 'rgba(255,255,255,.04)',
-        border: '1px solid rgba(255,255,255,.1)',
+        background: 'rgba(10,14,46,.04)',
+        border: '1px solid rgba(10,14,46,.12)',
         borderRadius: 24,
         textAlign: 'center'
       }
@@ -17253,7 +17340,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#fff',
+        color: '#0a0e2e',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         marginBottom: 8
@@ -17280,7 +17367,7 @@ function QuienSoyController({
         background: 'rgba(34,211,238,.08)',
         borderRadius: 8,
         fontSize: 13,
-        color: '#a5f3fc'
+        color: '#0e7490'
       }
     }, "✓ \"¿Eres del Nuevo Testamento?\""), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17288,7 +17375,7 @@ function QuienSoyController({
         background: 'rgba(34,211,238,.08)',
         borderRadius: 8,
         fontSize: 13,
-        color: '#a5f3fc'
+        color: '#0e7490'
       }
     }, "✓ \"¿Eres hombre?\""), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17296,7 +17383,7 @@ function QuienSoyController({
         background: 'rgba(34,211,238,.08)',
         borderRadius: 8,
         fontSize: 13,
-        color: '#a5f3fc'
+        color: '#0e7490'
       }
     }, "✓ \"¿Hiciste milagros?\""))), isAdmin && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17335,7 +17422,7 @@ function QuienSoyController({
         borderRadius: 10,
         padding: '8px 10px',
         cursor: 'pointer',
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 14,
@@ -17365,7 +17452,7 @@ function QuienSoyController({
         border: '1px solid rgba(139,92,246,.4)',
         borderRadius: 10,
         padding: '10px',
-        color: '#c4b5fd',
+        color: '#7c3aed',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -17381,7 +17468,7 @@ function QuienSoyController({
         border: '1px solid rgba(239,68,68,.35)',
         borderRadius: 10,
         padding: '10px',
-        color: '#fca5a5',
+        color: '#dc2626',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -17401,7 +17488,7 @@ function QuienSoyController({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -17425,7 +17512,7 @@ function QuienSoyController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#22d3ee',
+      color: '#0891b2',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       margin: 0
@@ -17451,7 +17538,7 @@ function QuienSoyController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 11,
-      color: '#22d3ee',
+      color: '#0891b2',
       textTransform: 'uppercase',
       letterSpacing: '.15em',
       marginBottom: 8
@@ -17463,7 +17550,7 @@ function QuienSoyController({
       alignItems: 'center',
       gap: 8,
       padding: '4px 0',
-      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(255,255,255,.05)' : 'none'
+      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(10,14,46,.08)' : 'none'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -17482,14 +17569,14 @@ function QuienSoyController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, r.user.name), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
-      color: '#22d3ee'
+      color: '#0891b2'
     }
   }, r.pts)))), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -17546,12 +17633,12 @@ function QuienSoyController({
       display: 'flex',
       alignItems: 'center',
       gap: 8,
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.12)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 10,
       padding: '8px 10px',
       cursor: 'pointer',
-      color: '#fff',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
@@ -17581,7 +17668,7 @@ function QuienSoyController({
       border: '1px solid rgba(34,197,94,.4)',
       borderRadius: 14,
       padding: '12px',
-      color: '#86efac',
+      color: '#15803d',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -17597,7 +17684,7 @@ function QuienSoyController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 14,
       padding: '12px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -17696,7 +17783,7 @@ function DibujaCanvas({
       position: 'relative',
       touchAction: 'none',
       cursor: canDraw ? 'crosshair' : 'default',
-      boxShadow: '0 10px 30px rgba(0,0,0,.4)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.18)'
     }
   }, /*#__PURE__*/React.createElement("svg", {
     width: "100%",
@@ -17770,7 +17857,7 @@ function DibujaDie({
       fontWeight: 900,
       fontSize: size * .5,
       color: '#0a0e2e',
-      boxShadow: '0 6px 18px rgba(0,0,0,.35)',
+      boxShadow: '0 6px 18px rgba(10,14,46,.18)',
       animation: anim ? 'diceRoll .6s ease' : undefined
     }
   }, face);
@@ -17787,7 +17874,7 @@ function DibujaBoard({
       background: 'linear-gradient(160deg,#ffd000,#f97316)',
       borderRadius: 16,
       padding: 12,
-      boxShadow: '0 10px 30px rgba(0,0,0,.4)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -17987,7 +18074,7 @@ function DibujaSetup({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -18009,7 +18096,7 @@ function DibujaSetup({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em',
       margin: 0
@@ -18024,8 +18111,8 @@ function DibujaSetup({
     style: {
       width: '100%',
       maxWidth: 420,
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 14,
       padding: '12px 14px'
     }
@@ -18054,9 +18141,9 @@ function DibujaSetup({
       padding: '10px',
       borderRadius: 10,
       cursor: 'pointer',
-      border: numTeams === n ? '2px solid #ffd000' : '1px solid rgba(255,255,255,.12)',
-      background: numTeams === n ? 'rgba(255,208,0,.18)' : 'rgba(255,255,255,.04)',
-      color: numTeams === n ? '#ffd000' : '#fff',
+      border: numTeams === n ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.12)',
+      background: numTeams === n ? 'rgba(255,208,0,.18)' : 'rgba(10,14,46,.04)',
+      color: numTeams === n ? '#a16207' : '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18
@@ -18111,8 +18198,8 @@ function DibujaSetup({
         borderRadius: 8,
         fontSize: 15,
         cursor: 'pointer',
-        border: team.avatar === av ? '2px solid #ffd000' : '1px solid rgba(255,255,255,.15)',
-        background: team.avatar === av ? 'rgba(255,208,0,.2)' : 'rgba(255,255,255,.05)'
+        border: team.avatar === av ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.15)',
+        background: team.avatar === av ? 'rgba(255,208,0,.2)' : 'rgba(10,14,46,.05)'
       }
     }, av)))), members.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -18127,11 +18214,11 @@ function DibujaSetup({
         display: 'flex',
         alignItems: 'center',
         gap: 4,
-        background: 'rgba(255,255,255,.08)',
+        background: 'rgba(10,14,46,.08)',
         borderRadius: 20,
         padding: '2px 8px 2px 4px',
         fontSize: 11,
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700
       }
@@ -18194,7 +18281,7 @@ function DibujaSetup({
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        background: 'rgba(255,255,255,.04)',
+        background: 'rgba(10,14,46,.04)',
         borderRadius: 10,
         padding: '6px 8px'
       }
@@ -18207,7 +18294,7 @@ function DibujaSetup({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 14,
-        color: '#fff',
+        color: '#0a0e2e',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
@@ -18228,9 +18315,9 @@ function DibujaSetup({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 13,
-        border: myT === t ? `2px solid ${DIBUJA_TEAM_COLORS[t]}` : '1px solid rgba(255,255,255,.12)',
-        background: myT === t ? `${DIBUJA_TEAM_COLORS[t]}33` : 'rgba(255,255,255,.04)',
-        color: myT === t ? DIBUJA_TEAM_COLORS[t] : '#fff'
+        border: myT === t ? `2px solid ${DIBUJA_TEAM_COLORS[t]}` : '1px solid rgba(10,14,46,.12)',
+        background: myT === t ? `${DIBUJA_TEAM_COLORS[t]}33` : 'rgba(10,14,46,.04)',
+        color: myT === t ? DIBUJA_TEAM_COLORS[t] : '#0a0e2e'
       }
     }, t + 1))));
   })), /*#__PURE__*/React.createElement("div", {
@@ -18247,8 +18334,8 @@ function DibujaSetup({
       flex: 1,
       padding: '13px',
       borderRadius: 12,
-      border: '1px solid rgba(255,255,255,.12)',
-      background: 'rgba(255,255,255,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
+      background: 'rgba(10,14,46,.05)',
       color: 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
@@ -18266,7 +18353,7 @@ function DibujaSetup({
       borderRadius: 12,
       border: 'none',
       cursor: allAssigned ? 'pointer' : 'not-allowed',
-      background: allAssigned ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(255,255,255,.1)',
+      background: allAssigned ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)',
       color: allAssigned ? '#0a0e2e' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
@@ -18294,7 +18381,7 @@ function DibujaTeamsWatch({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -18316,7 +18403,7 @@ function DibujaTeamsWatch({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 24,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em',
       margin: 0
@@ -18376,11 +18463,11 @@ function DibujaTeamsWatch({
         display: 'flex',
         alignItems: 'center',
         gap: 4,
-        background: 'rgba(255,255,255,.08)',
+        background: 'rgba(10,14,46,.08)',
         borderRadius: 20,
         padding: '2px 8px 2px 4px',
         fontSize: 11,
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700
       }
@@ -18665,7 +18752,7 @@ function DibujaController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -18687,7 +18774,7 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         margin: 0
@@ -18747,12 +18834,12 @@ function DibujaController({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          background: myVote === u.uid ? `${team.color}33` : 'rgba(255,255,255,.05)',
-          border: myVote === u.uid ? `2px solid ${team.color}` : '1px solid rgba(255,255,255,.12)',
+          background: myVote === u.uid ? `${team.color}33` : 'rgba(10,14,46,.05)',
+          border: myVote === u.uid ? `2px solid ${team.color}` : '1px solid rgba(10,14,46,.12)',
           borderRadius: 10,
           padding: '8px 10px',
           cursor: 'pointer',
-          color: '#fff',
+          color: '#0a0e2e',
           fontFamily: 'Barlow Condensed,sans-serif',
           fontWeight: 700,
           fontSize: 14,
@@ -18767,7 +18854,7 @@ function DibujaController({
         }
       }, u.name, u.uid === myId ? ' (tú)' : ''), /*#__PURE__*/React.createElement("span", {
         style: {
-          background: 'rgba(255,255,255,.1)',
+          background: 'rgba(10,14,46,.08)',
           borderRadius: 20,
           padding: '1px 9px',
           fontSize: 13,
@@ -18806,7 +18893,7 @@ function DibujaController({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          background: 'rgba(255,255,255,.04)',
+          background: 'rgba(10,14,46,.04)',
           borderRadius: 10,
           padding: '8px 10px'
         }
@@ -18820,7 +18907,7 @@ function DibujaController({
           fontFamily: 'Barlow Condensed,sans-serif',
           fontWeight: 700,
           fontSize: 14,
-          color: '#fff'
+          color: '#0a0e2e'
         }
       }, team?.name), /*#__PURE__*/React.createElement("span", {
         style: {
@@ -18865,7 +18952,7 @@ function DibujaController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -18887,7 +18974,7 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         margin: 0
@@ -18936,7 +19023,7 @@ function DibujaController({
           fontFamily: 'Barlow Condensed,sans-serif',
           fontWeight: 900,
           fontSize: 15,
-          color: '#fff'
+          color: '#0a0e2e'
         }
       }, team?.name), captainUid && users[captainUid] && /*#__PURE__*/React.createElement("div", {
         style: {
@@ -18977,7 +19064,7 @@ function DibujaController({
         borderRadius: 12,
         border: 'none',
         cursor: allRolled ? 'pointer' : 'not-allowed',
-        background: allRolled ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(255,255,255,.1)',
+        background: allRolled ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)',
         color: allRolled ? '#0a0e2e' : 'var(--muted)',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
@@ -18997,7 +19084,7 @@ function DibujaController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -19016,7 +19103,7 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 28,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         margin: 0,
@@ -19039,7 +19126,7 @@ function DibujaController({
         gap: 12,
         padding: '12px 16px',
         borderRadius: 14,
-        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(255,255,255,.05)',
+        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)',
         border: i === 0 ? '2px solid #ffd000' : `1px solid ${t.color}55`
       }
     }, /*#__PURE__*/React.createElement("span", {
@@ -19052,14 +19139,14 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, t.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 16,
-        color: '#ffd000'
+        color: '#a16207'
       }
     }, Math.round((t.pos || 0) / DIBUJA_GOAL * 100), "%")))), isAdmin && /*#__PURE__*/React.createElement("button", {
       onClick: cerrar,
@@ -19082,14 +19169,14 @@ function DibujaController({
 
   // ── PLAYING ──
   const cat = card ? DIBUJA_CATS[card.category] : null;
-  const timeColor = timeLeft < 15 ? '#ef4444' : timeLeft < 35 ? '#f97316' : '#ffd000';
+  const timeColor = timeLeft < 15 ? '#ef4444' : timeLeft < 35 ? '#c2410c' : '#a16207';
   const drawer = drawerId ? users[drawerId] : null;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -19132,7 +19219,7 @@ function DibujaController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 15,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, allPlay ? '¡TODOS PARTICIPAN!' : turnTeam?.name))), phase === 'draw' && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -19215,7 +19302,7 @@ function DibujaController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 16,
-      color: '#fff',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -19254,8 +19341,8 @@ function DibujaController({
     }
   }, mode === 'mimica' ? 'Actúa esta palabra ¡sin hablar!' : 'Dibújala ¡sin letras ni números!')), !canSeeWord && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.04)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 16,
       padding: '12px',
       textAlign: 'center'
@@ -19292,7 +19379,7 @@ function DibujaController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 10,
       padding: '8px 16px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19304,9 +19391,9 @@ function DibujaController({
     style: {
       textAlign: 'center',
       padding: '18px',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 14,
-      border: '1px dashed rgba(255,255,255,.15)'
+      border: '1px dashed rgba(10,14,46,.15)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -19349,8 +19436,8 @@ function DibujaController({
       padding: '14px',
       borderRadius: 12,
       border: 'none',
-      background: game?.modeRoll ? 'rgba(255,255,255,.1)' : 'linear-gradient(135deg,#8b5cf6,#6d28d9)',
-      color: '#fff',
+      background: game?.modeRoll ? 'rgba(10,14,46,.1)' : 'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+      color: game?.modeRoll ? '#0a0e2e' : '#fff',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 15,
@@ -19385,7 +19472,7 @@ function DibujaController({
       borderRadius: 10,
       padding: '10px 12px',
       cursor: 'pointer',
-      color: '#fff',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 14
@@ -19412,7 +19499,7 @@ function DibujaController({
       border: '1px solid rgba(139,92,246,.4)',
       borderRadius: 10,
       padding: '10px',
-      color: '#c4b5fd',
+      color: '#7c3aed',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19428,7 +19515,7 @@ function DibujaController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 10,
       padding: '10px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19459,7 +19546,7 @@ function DibujaController({
       border: '1px solid rgba(34,197,94,.35)',
       borderRadius: 12,
       padding: '11px',
-      color: '#86efac',
+      color: '#15803d',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19475,7 +19562,7 @@ function DibujaController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 12,
       padding: '11px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19513,7 +19600,7 @@ function CountdownTimer({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 110,
-      color: '#ffd000',
+      color: '#a16207',
       lineHeight: 1,
       animation: 'countdownPop .7s ease'
     },
