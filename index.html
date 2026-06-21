@@ -6785,7 +6785,7 @@ function DraggableQR({
         letterSpacing: '.12em',
         lineHeight: 1
       }
-    }, "📲 Únete a la sala"), /*#__PURE__*/React.createElement("img", {
+    }, "📲 ¡Únete a la clase!"), /*#__PURE__*/React.createElement("img", {
       src: `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=0&data=${encodeURIComponent(url)}`,
       alt: "QR para unirse a la sala",
       style: {
@@ -6885,9 +6885,9 @@ function DraggableQR({
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: isMed ? 5 : 0
+      gap: isMed ? 5 : 3
     }
-  }, isMed && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -6895,7 +6895,7 @@ function DraggableQR({
       width: '100%',
       justifyContent: 'center'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, isMed && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 11,
       color: 'rgba(10,14,46,.35)'
@@ -6904,13 +6904,15 @@ function DraggableQR({
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
-      fontSize: 13,
+      fontSize: isMed ? 13 : 8.5,
       color: '#0a0e2e',
       textTransform: 'uppercase',
-      letterSpacing: '.12em',
-      lineHeight: 1
+      letterSpacing: isMed ? '.12em' : '0',
+      lineHeight: 1.05,
+      textAlign: 'center',
+      whiteSpace: isMed ? 'nowrap' : 'normal'
     }
-  }, "📲 Únete")), /*#__PURE__*/React.createElement("img", {
+  }, "📲 ¡Únete a la clase!")), /*#__PURE__*/React.createElement("img", {
     src: `https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=0&data=${encodeURIComponent(url)}`,
     alt: "QR para unirse a la sala",
     width: W,
@@ -11000,7 +11002,7 @@ function ScreenView({
       letterSpacing: '.12em',
       lineHeight: 1
     }
-  }, "📲 Únete"), /*#__PURE__*/React.createElement("img", {
+  }, "📲 ¡Únete a la clase!"), /*#__PURE__*/React.createElement("img", {
     src: `https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=0&data=${encodeURIComponent(window.location.origin + window.location.pathname)}`,
     alt: "Escanear para unirse a la sala",
     width: 220,
