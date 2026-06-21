@@ -11804,7 +11804,7 @@ function AuthModal({
 /* ════════════════════════ SHARED STYLES ════════════════════════ */
 const pageWrap = {
   minHeight: '100vh',
-  background: 'var(--navy)',
+  background: '#f8f5ef',
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'center',
@@ -11816,20 +11816,20 @@ const cardStyle = {
   maxWidth: 400,
   position: 'relative',
   zIndex: 1,
-  background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
-  border: '1px solid rgba(255,208,0,.15)',
+  background: '#ffffff',
+  border: '1px solid rgba(10,14,46,.1)',
   borderRadius: 20,
   padding: '28px 22px',
-  boxShadow: '0 0 60px rgba(255,208,0,.06),0 8px 40px rgba(0,0,0,.7)',
+  boxShadow: '0 24px 70px rgba(10,14,46,.22)',
   animation: 'fadeUp .4s ease'
 };
 const inputStyle = {
   width: '100%',
   padding: '12px 14px',
   borderRadius: 10,
-  background: 'rgba(255,255,255,.04)',
-  border: '1px solid rgba(255,208,0,.15)',
-  color: 'var(--white)',
+  background: 'rgba(10,14,46,.04)',
+  border: '1px solid rgba(10,14,46,.12)',
+  color: '#0a0e2e',
   fontSize: 14,
   fontFamily: 'Barlow,sans-serif'
 };
@@ -11855,7 +11855,7 @@ const btnYellow = dis => ({
   fontFamily: 'Barlow Condensed,sans-serif',
   letterSpacing: '.06em',
   textTransform: 'uppercase',
-  boxShadow: dis ? 'none' : '0 0 24px rgba(255,208,0,.35)',
+  boxShadow: dis ? 'none' : '0 10px 26px rgba(255,208,0,.33)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -12863,7 +12863,7 @@ function App() {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 22,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.04em'
     }
@@ -12952,8 +12952,8 @@ function App() {
       avatar: a
     })),
     style: {
-      background: profile.avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(255,255,255,.03)',
-      border: profile.avatar === a ? `2px solid ${profile.color}` : '2px solid rgba(255,255,255,.06)',
+      background: profile.avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(10,14,46,.03)',
+      border: profile.avatar === a ? `2px solid ${profile.color}` : '2px solid rgba(10,14,46,.1)',
       borderRadius: 10,
       padding: '7px 2px',
       fontSize: 19,
@@ -12986,8 +12986,8 @@ function App() {
       borderRadius: '50%',
       background: c,
       cursor: 'pointer',
-      border: profile.color === c ? '3px solid white' : '3px solid transparent',
-      boxShadow: profile.color === c ? `0 0 14px ${c}` : 'none',
+      border: profile.color === c ? '3px solid #0a0e2e' : '3px solid transparent',
+      boxShadow: profile.color === c ? `0 6px 16px ${c}66` : 'none',
       transition: 'all .15s'
     }
   })))), /*#__PURE__*/React.createElement("button", {
@@ -13000,7 +13000,7 @@ function App() {
   }), "Guardando...") : 'Entrar a la sala ✨'), setupError && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
-      color: '#fca5a5',
+      color: '#dc2626',
       fontSize: 12,
       background: 'rgba(239,68,68,.08)',
       borderRadius: 8,
