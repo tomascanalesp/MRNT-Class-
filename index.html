@@ -14669,14 +14669,14 @@ function KahootQuestion({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'var(--navy)',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#141744)',
+      background: '#f8f5ef',
       padding: '10px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -14712,7 +14712,7 @@ function KahootQuestion({
   }, showResult ? '✓' : timeLeft)), !showResult && /*#__PURE__*/React.createElement("div", {
     style: {
       height: 5,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.08)',
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -14734,7 +14734,7 @@ function KahootQuestion({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#141744)',
+      background: '#f8f5ef',
       border: '1px solid rgba(139,92,246,.2)',
       borderRadius: 16,
       padding: '14px 16px',
@@ -14744,9 +14744,9 @@ function KahootQuestion({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       fontSize: 16,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.4,
-      boxShadow: '0 4px 20px rgba(0,0,0,.4)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.16)'
     }
   }, question.text)), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -14763,17 +14763,20 @@ function KahootQuestion({
     let bg = ANS_COLORS[i];
     let border = 'transparent';
     let badge = null;
+    let dimmed = false;
     if (showResult) {
       if (isCorrect) {
-        border = 'white';
+        border = '#0a0e2e';
         badge = '✅';
       } else {
-        bg = 'rgba(255,255,255,.06)';
-        border = 'rgba(255,255,255,.1)';
+        bg = 'rgba(10,14,46,.06)';
+        border = 'rgba(10,14,46,.1)';
+        dimmed = true;
       }
     } else if (answered && !isMyAnswer) {
-      bg = 'rgba(255,255,255,.06)';
-      border = 'rgba(255,255,255,.08)';
+      bg = 'rgba(10,14,46,.06)';
+      border = 'rgba(10,14,46,.1)';
+      dimmed = true;
     }
     return /*#__PURE__*/React.createElement("button", {
       key: i,
@@ -14790,12 +14793,12 @@ function KahootQuestion({
         justifyContent: 'center',
         gap: 5,
         minHeight: 88,
-        color: 'white',
+        color: dimmed ? 'rgba(10,14,46,.5)' : 'white',
         textAlign: 'center',
         fontFamily: 'Barlow,sans-serif',
         fontWeight: 600,
         fontSize: 13,
-        boxShadow: isMyAnswer && !showResult ? `0 0 18px ${ANS_COLORS[i]}88` : isMyAnswer && showResult && isCorrect ? '0 0 0 3px white' : undefined,
+        boxShadow: isMyAnswer && !showResult ? `0 10px 26px ${ANS_COLORS[i]}66` : isMyAnswer && showResult && isCorrect ? '0 0 0 3px #0a0e2e' : undefined,
         animation: isMyAnswer && !showResult ? 'answerPop .3s ease' : undefined,
         outline: isMyAnswer && showResult && !isCorrect ? '3px solid #ef4444' : undefined,
         transition: 'background .4s,border .4s',
@@ -14825,7 +14828,7 @@ function KahootQuestion({
       bottom: 20,
       left: '50%',
       transform: 'translateX(-50%)',
-      background: 'rgba(7,9,31,.95)',
+      background: '#f8f5ef',
       border: '1px solid rgba(139,92,246,.3)',
       borderRadius: 20,
       padding: '8px 20px',
@@ -14857,7 +14860,7 @@ function KahootResultCard({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'var(--navy)',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -14920,7 +14923,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 34,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, "+", pointsEarned), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -14929,7 +14932,7 @@ function KahootResultCard({
     }
   }, "puntos", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
     style: {
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontWeight: 700
     }
   }, "Total: ", myScore))), /*#__PURE__*/React.createElement("div", {
@@ -14958,7 +14961,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 20px rgba(139,92,246,.4)',
+      boxShadow: '0 10px 26px rgba(139,92,246,.33)',
       cursor: 'pointer'
     }
   }, "Siguiente →"), /*#__PURE__*/React.createElement("button", {
@@ -14974,7 +14977,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 20px rgba(16,185,129,.35)',
+      boxShadow: '0 10px 26px rgba(16,185,129,.33)',
       cursor: 'pointer'
     }
   }, "🏁 Terminar")) : /*#__PURE__*/React.createElement("button", {
@@ -14990,7 +14993,7 @@ function KahootResultCard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 20px rgba(16,185,129,.35)',
+      boxShadow: '0 10px 26px rgba(16,185,129,.33)',
       cursor: 'pointer'
     }
   }, "Ver ganador 🏆")), !isAdmin && /*#__PURE__*/React.createElement("div", {
@@ -15054,14 +15057,14 @@ function KahootLeaderboard({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'var(--navy)',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
     }
   }, isFinished && /*#__PURE__*/React.createElement(Confetti, null), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#141744)',
+      background: '#f8f5ef',
       padding: '14px 20px',
       flexShrink: 0,
       textAlign: 'center',
@@ -15072,7 +15075,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 22,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.08em'
     }
@@ -15095,7 +15098,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.06em'
     }
@@ -15116,7 +15119,7 @@ function KahootLeaderboard({
   }, REACTIONS.map(r => reactionTotals[r.id] > 0 && /*#__PURE__*/React.createElement("div", {
     key: r.id,
     style: {
-      background: 'rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
       borderRadius: 20,
       padding: '4px 10px',
       fontSize: 18,
@@ -15127,13 +15130,13 @@ function KahootLeaderboard({
   }, r.e, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 12,
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 700
     }
   }, reactionTotals[r.id]))))), isFinished && !isWinner && winner && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '10px 16px',
-      borderBottom: '1px solid rgba(255,255,255,.06)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -15161,8 +15164,8 @@ function KahootLeaderboard({
       key: r.id,
       onClick: () => toggleReaction(r.id),
       style: {
-        background: selected ? 'rgba(255,208,0,.2)' : 'rgba(255,255,255,.06)',
-        border: selected ? '1.5px solid rgba(255,208,0,.5)' : '1px solid rgba(255,255,255,.1)',
+        background: selected ? 'rgba(255,208,0,.2)' : 'rgba(10,14,46,.06)',
+        border: selected ? '1.5px solid rgba(255,208,0,.5)' : '1px solid rgba(10,14,46,.12)',
         borderRadius: 16,
         padding: '6px 12px',
         cursor: 'pointer',
@@ -15171,7 +15174,7 @@ function KahootLeaderboard({
         alignItems: 'center',
         gap: 4,
         transition: 'all .2s',
-        boxShadow: selected ? '0 0 10px rgba(255,208,0,.3)' : undefined
+        boxShadow: selected ? '0 6px 16px rgba(255,208,0,.3)' : undefined
       }
     }, r.e, count > 0 && /*#__PURE__*/React.createElement("span", {
       style: {
@@ -15192,8 +15195,8 @@ function KahootLeaderboard({
       display: 'flex',
       alignItems: 'center',
       gap: 12,
-      background: i === 0 && isFinished ? 'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))' : 'rgba(255,255,255,.03)',
-      border: i === 0 && isFinished ? '1px solid rgba(255,208,0,.25)' : '1px solid rgba(255,255,255,.05)',
+      background: i === 0 && isFinished ? 'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))' : 'rgba(10,14,46,.03)',
+      border: i === 0 && isFinished ? '1px solid rgba(255,208,0,.25)' : '1px solid rgba(10,14,46,.08)',
       borderRadius: 12,
       padding: '10px 14px',
       marginBottom: 8,
@@ -15206,7 +15209,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: i < 3 ? 22 : 16,
-      color: i < 3 ? '#ffd000' : 'var(--muted)'
+      color: i < 3 ? '#a16207' : 'var(--muted)'
     }
   }, i < 3 ? medals[i] : i + 1), /*#__PURE__*/React.createElement(AvatarBubble, {
     profile: item.user,
@@ -15217,14 +15220,14 @@ function KahootLeaderboard({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       fontSize: 14,
-      color: 'white'
+      color: '#0a0e2e'
     }
   }, item.user.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, item.score)))), isAdmin && isFinished && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -15246,7 +15249,7 @@ function KahootLeaderboard({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase',
-      boxShadow: '0 0 22px rgba(139,92,246,.4)',
+      boxShadow: '0 10px 26px rgba(139,92,246,.33)',
       cursor: 'pointer'
     }
   }, "Cerrar juego ✓")));
@@ -15265,7 +15268,7 @@ function GameSelectMenu({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -15290,7 +15293,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: 'white',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       margin: 0
@@ -15316,7 +15319,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(255,208,0,.08)'
+      boxShadow: '0 10px 26px rgba(255,208,0,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15332,7 +15335,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15340,7 +15343,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15355,7 +15358,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "📝 ", game.questions.length, " preguntas"), /*#__PURE__*/React.createElement("span", null, "⏱ ", GAME_TIMER, "s por pregunta"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       opacity: .6
     }
   }, "›"))), /*#__PURE__*/React.createElement("button", {
@@ -15372,7 +15375,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(255,208,0,.1)'
+      boxShadow: '0 10px 26px rgba(255,208,0,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15388,7 +15391,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15396,7 +15399,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15411,7 +15414,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "👥 Por turnos"), /*#__PURE__*/React.createElement("span", null, "⏱ 3 min"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -15428,7 +15431,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(34,211,238,.1)'
+      boxShadow: '0 10px 26px rgba(34,211,238,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15444,7 +15447,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#22d3ee',
+      color: '#0891b2',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15452,7 +15455,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15467,7 +15470,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "👥 Por turnos"), /*#__PURE__*/React.createElement("span", null, "🤔 Sin tiempo"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#22d3ee',
+      color: '#0891b2',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -15484,7 +15487,7 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 0 24px rgba(46,204,113,.1)'
+      boxShadow: '0 10px 26px rgba(46,204,113,.16)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -15500,7 +15503,7 @@ function GameSelectMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#2ecc71',
+      color: '#15803d',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -15508,7 +15511,7 @@ function GameSelectMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginTop: 3,
       lineHeight: 1.4
     }
@@ -15523,7 +15526,7 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "👥 Equipos"), /*#__PURE__*/React.createElement("span", null, "🎲 Con dados"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#2ecc71',
+      color: '#15803d',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -15619,7 +15622,7 @@ function KahootSetup({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       flexDirection: 'column',
@@ -15628,7 +15631,7 @@ function KahootSetup({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px 16px',
-      borderBottom: '1px solid rgba(255,255,255,.06)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0,
       display: 'flex',
       alignItems: 'center',
@@ -15650,7 +15653,7 @@ function KahootSetup({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: 'white',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.06em'
     }
@@ -15669,8 +15672,8 @@ function KahootSetup({
       height: 28,
       borderRadius: 8,
       border: 'none',
-      background: i === qIdx ? '#8b5cf6' : 'rgba(255,255,255,.1)',
-      color: 'white',
+      background: i === qIdx ? '#8b5cf6' : 'rgba(10,14,46,.06)',
+      color: i === qIdx ? 'white' : '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 12,
@@ -15683,7 +15686,7 @@ function KahootSetup({
       height: 28,
       borderRadius: 8,
       border: 'none',
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       color: 'var(--muted)',
       fontSize: 16,
       cursor: 'pointer'
@@ -15714,10 +15717,10 @@ function KahootSetup({
     placeholder: "Escribe la pregunta aquí...",
     style: {
       width: '100%',
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 12,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif',
       padding: '12px 14px',
@@ -15742,11 +15745,11 @@ function KahootSetup({
       border: 'none',
       flexShrink: 0,
       background: q.correct === i ? ANS_COLORS[i] : `${ANS_COLORS[i]}28`,
-      color: 'white',
+      color: q.correct === i ? 'white' : '#0a0e2e',
       fontSize: 14,
       fontWeight: 700,
       cursor: 'pointer',
-      boxShadow: q.correct === i ? `0 0 12px ${ANS_COLORS[i]}77` : undefined,
+      boxShadow: q.correct === i ? `0 6px 16px ${ANS_COLORS[i]}66` : undefined,
       transition: 'background .2s'
     }
   }, q.correct === i ? '✓' : ANS_SHAPES[i]), /*#__PURE__*/React.createElement("input", {
@@ -15759,7 +15762,7 @@ function KahootSetup({
       borderRadius: 10,
       background: `${ANS_COLORS[i]}18`,
       border: `1px solid ${ANS_COLORS[i]}44`,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none'
@@ -15767,7 +15770,7 @@ function KahootSetup({
   })))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '12px 14px',
-      borderTop: '1px solid rgba(255,255,255,.06)',
+      borderTop: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
@@ -15788,7 +15791,7 @@ function KahootSetup({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.06em',
       textTransform: 'uppercase',
-      boxShadow: canStart && juegosCount > 0 ? '0 0 24px rgba(139,92,246,.4)' : undefined
+      boxShadow: canStart && juegosCount > 0 ? '0 10px 26px rgba(139,92,246,.33)' : undefined
     }
   }, juegosCount === 0 ? 'Nadie en sala de juegos' : !canStart ? 'Completa todas las preguntas' : `🎮 Iniciar (${questions.length} preguntas)`), /*#__PURE__*/React.createElement("button", {
     onClick: onCancel,
@@ -15797,7 +15800,7 @@ function KahootSetup({
       padding: 10,
       borderRadius: 12,
       border: 'none',
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       color: 'var(--muted)',
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -15940,7 +15943,7 @@ function KahootController({
           letterSpacing: '.04em',
           textTransform: 'uppercase',
           cursor: 'pointer',
-          boxShadow: '0 8px 24px rgba(234,88,12,.5)'
+          boxShadow: '0 8px 24px rgba(234,88,12,.4)'
         }
       }, "🎮 Elegir juego");
     }
@@ -16010,7 +16013,7 @@ function KahootController({
           position: 'fixed',
           inset: 0,
           zIndex: 250,
-          background: 'rgba(7,9,31,.95)',
+          background: 'rgba(248,245,239,.96)',
           backdropFilter: 'blur(6px)',
           display: 'flex',
           flexDirection: 'column',
@@ -16034,7 +16037,7 @@ function KahootController({
         position: 'fixed',
         inset: 0,
         zIndex: 210,
-        background: 'rgba(7,9,31,.96)',
+        background: '#f8f5ef',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -16175,7 +16178,7 @@ function KahootController({
         position: 'fixed',
         inset: 0,
         zIndex: 190,
-        background: 'rgba(7,9,31,.96)',
+        background: '#f8f5ef',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -16334,7 +16337,7 @@ function TabuController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -16353,7 +16356,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 30,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.06em',
         margin: 0,
@@ -16376,15 +16379,15 @@ function TabuController({
         gap: 12,
         padding: '12px 16px',
         borderRadius: 14,
-        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(255,255,255,.05)',
-        border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(255,255,255,.08)'
+        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)',
+        border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.1)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: i === 0 ? '#ffd000' : '#fff',
+        color: i === 0 ? '#a16207' : '#0a0e2e',
         width: 36,
         textAlign: 'center'
       }
@@ -16397,14 +16400,14 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, r.user.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#ffd000'
+        color: '#a16207'
       }
     }, r.pts, " pts")))), isAdmin && /*#__PURE__*/React.createElement("button", {
       onClick: cerrar,
@@ -16414,7 +16417,7 @@ function TabuController({
         border: 'none',
         borderRadius: 14,
         padding: '14px 32px',
-        color: '#07091f',
+        color: '#f8f5ef',
         fontWeight: 900,
         fontSize: 14,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16425,13 +16428,13 @@ function TabuController({
     }, "Cerrar juego"));
   }
   if (gState === 'playing' && currentCard && currentSpeaker) {
-    const timeColor = timeLeft < 30 ? '#ef4444' : timeLeft < 60 ? '#f97316' : '#ffd000';
+    const timeColor = timeLeft < 30 ? '#ef4444' : timeLeft < 60 ? '#c2410c' : '#a16207';
     return /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -16460,7 +16463,7 @@ function TabuController({
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        background: 'rgba(255,255,255,.06)',
+        background: 'rgba(10,14,46,.06)',
         padding: '10px 16px',
         borderRadius: 30,
         border: '1px solid rgba(255,208,0,.2)'
@@ -16480,7 +16483,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, currentSpeaker.name))), isSpeaker || isAdmin ? showCard || isSpeaker ? /*#__PURE__*/React.createElement("div", {
       style: {
@@ -16489,7 +16492,7 @@ function TabuController({
         background: 'linear-gradient(135deg,#fff,#f8f5ef)',
         borderRadius: 24,
         padding: '20px 22px',
-        boxShadow: '0 20px 60px rgba(0,0,0,.5)',
+        boxShadow: '0 20px 50px rgba(10,14,46,.22)',
         border: '4px solid #ffd000'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -16507,7 +16510,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 32,
-        color: '#07091f',
+        color: '#f8f5ef',
         textTransform: 'uppercase',
         letterSpacing: '.02em',
         lineHeight: 1.05,
@@ -16557,7 +16560,7 @@ function TabuController({
         background: 'rgba(255,208,0,.1)',
         border: '2px dashed #ffd000',
         borderRadius: 24,
-        color: '#ffd000',
+        color: '#a16207',
         fontSize: 16,
         fontWeight: 800,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16570,8 +16573,8 @@ function TabuController({
         width: '100%',
         maxWidth: 380,
         padding: '40px 24px',
-        background: 'rgba(255,255,255,.04)',
-        border: '1px solid rgba(255,255,255,.1)',
+        background: 'rgba(10,14,46,.04)',
+        border: '1px solid rgba(10,14,46,.12)',
         borderRadius: 24,
         textAlign: 'center'
       }
@@ -16585,7 +16588,7 @@ function TabuController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#fff',
+        color: '#0a0e2e',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         marginBottom: 8
@@ -16634,7 +16637,7 @@ function TabuController({
         borderRadius: 10,
         padding: '8px 10px',
         cursor: 'pointer',
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 14,
@@ -16664,7 +16667,7 @@ function TabuController({
         border: '1px solid rgba(139,92,246,.4)',
         borderRadius: 10,
         padding: '10px',
-        color: '#c4b5fd',
+        color: '#7c3aed',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16680,7 +16683,7 @@ function TabuController({
         border: '1px solid rgba(239,68,68,.35)',
         borderRadius: 10,
         padding: '10px',
-        color: '#fca5a5',
+        color: '#dc2626',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -16700,7 +16703,7 @@ function TabuController({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -16724,7 +16727,7 @@ function TabuController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       margin: 0
@@ -16750,7 +16753,7 @@ function TabuController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 11,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.15em',
       marginBottom: 8
@@ -16762,7 +16765,7 @@ function TabuController({
       alignItems: 'center',
       gap: 8,
       padding: '4px 0',
-      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(255,255,255,.05)' : 'none'
+      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(10,14,46,.08)' : 'none'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -16781,14 +16784,14 @@ function TabuController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, r.user.name), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, r.pts)))), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -16806,7 +16809,7 @@ function TabuController({
       background: juegosUsers.length === 0 ? 'rgba(255,208,0,.2)' : '#ffd000',
       border: 'none',
       borderRadius: 14,
-      color: '#07091f',
+      color: '#f8f5ef',
       fontWeight: 900,
       fontSize: 14,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -16845,12 +16848,12 @@ function TabuController({
       display: 'flex',
       alignItems: 'center',
       gap: 8,
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.12)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 10,
       padding: '8px 10px',
       cursor: 'pointer',
-      color: '#fff',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
@@ -16880,7 +16883,7 @@ function TabuController({
       border: '1px solid rgba(34,197,94,.4)',
       borderRadius: 14,
       padding: '12px',
-      color: '#86efac',
+      color: '#15803d',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -16896,7 +16899,7 @@ function TabuController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 14,
       padding: '12px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -17015,7 +17018,7 @@ function QuienSoyController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -17034,7 +17037,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 30,
-        color: '#22d3ee',
+        color: '#0891b2',
         textTransform: 'uppercase',
         letterSpacing: '.06em',
         margin: 0,
@@ -17057,15 +17060,15 @@ function QuienSoyController({
         gap: 12,
         padding: '12px 16px',
         borderRadius: 14,
-        background: i === 0 ? 'linear-gradient(135deg,rgba(34,211,238,.22),rgba(34,211,238,.06))' : 'rgba(255,255,255,.05)',
-        border: i === 0 ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,.08)'
+        background: i === 0 ? 'linear-gradient(135deg,rgba(34,211,238,.22),rgba(34,211,238,.06))' : 'rgba(10,14,46,.04)',
+        border: i === 0 ? '2px solid #22d3ee' : '1px solid rgba(10,14,46,.1)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: i === 0 ? '#22d3ee' : '#fff',
+        color: i === 0 ? '#0891b2' : '#0a0e2e',
         width: 36,
         textAlign: 'center'
       }
@@ -17078,14 +17081,14 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, r.user.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#22d3ee'
+        color: '#0891b2'
       }
     }, r.pts, " pts")))), isAdmin && /*#__PURE__*/React.createElement("button", {
       onClick: cerrar,
@@ -17111,7 +17114,7 @@ function QuienSoyController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -17126,7 +17129,7 @@ function QuienSoyController({
         alignItems: 'center',
         gap: 10,
         marginTop: 8,
-        background: 'rgba(255,255,255,.06)',
+        background: 'rgba(10,14,46,.06)',
         padding: '10px 16px',
         borderRadius: 30,
         border: '1px solid rgba(34,211,238,.3)'
@@ -17146,7 +17149,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, currentPlayer.name))), isPlayer || isAdmin && adminRevealed ? /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17155,7 +17158,7 @@ function QuienSoyController({
         background: 'linear-gradient(135deg,#0e7490,#22d3ee)',
         borderRadius: 24,
         padding: '24px 22px',
-        boxShadow: '0 20px 60px rgba(0,0,0,.5)',
+        boxShadow: '0 20px 50px rgba(14,116,144,.3)',
         border: '4px solid #22d3ee',
         color: '#fff'
       }
@@ -17181,7 +17184,7 @@ function QuienSoyController({
         lineHeight: 1.05,
         marginBottom: 14,
         textAlign: 'center',
-        textShadow: '0 2px 12px rgba(0,0,0,.3)'
+        textShadow: 'none'
       }
     }, character.nombre), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17285,7 +17288,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#fff',
+        color: '#0a0e2e',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         marginBottom: 8
@@ -17308,7 +17311,7 @@ function QuienSoyController({
         border: '1px solid rgba(34,211,238,.45)',
         borderRadius: 12,
         padding: '10px 20px',
-        color: '#22d3ee',
+        color: '#0891b2',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 13,
@@ -17321,8 +17324,8 @@ function QuienSoyController({
         width: '100%',
         maxWidth: 380,
         padding: '30px 24px',
-        background: 'rgba(255,255,255,.04)',
-        border: '1px solid rgba(255,255,255,.1)',
+        background: 'rgba(10,14,46,.04)',
+        border: '1px solid rgba(10,14,46,.12)',
         borderRadius: 24,
         textAlign: 'center'
       }
@@ -17336,7 +17339,7 @@ function QuienSoyController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 22,
-        color: '#fff',
+        color: '#0a0e2e',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         marginBottom: 8
@@ -17363,7 +17366,7 @@ function QuienSoyController({
         background: 'rgba(34,211,238,.08)',
         borderRadius: 8,
         fontSize: 13,
-        color: '#a5f3fc'
+        color: '#0e7490'
       }
     }, "✓ \"¿Eres del Nuevo Testamento?\""), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17371,7 +17374,7 @@ function QuienSoyController({
         background: 'rgba(34,211,238,.08)',
         borderRadius: 8,
         fontSize: 13,
-        color: '#a5f3fc'
+        color: '#0e7490'
       }
     }, "✓ \"¿Eres hombre?\""), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17379,7 +17382,7 @@ function QuienSoyController({
         background: 'rgba(34,211,238,.08)',
         borderRadius: 8,
         fontSize: 13,
-        color: '#a5f3fc'
+        color: '#0e7490'
       }
     }, "✓ \"¿Hiciste milagros?\""))), isAdmin && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -17418,7 +17421,7 @@ function QuienSoyController({
         borderRadius: 10,
         padding: '8px 10px',
         cursor: 'pointer',
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 14,
@@ -17448,7 +17451,7 @@ function QuienSoyController({
         border: '1px solid rgba(139,92,246,.4)',
         borderRadius: 10,
         padding: '10px',
-        color: '#c4b5fd',
+        color: '#7c3aed',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -17464,7 +17467,7 @@ function QuienSoyController({
         border: '1px solid rgba(239,68,68,.35)',
         borderRadius: 10,
         padding: '10px',
-        color: '#fca5a5',
+        color: '#dc2626',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -17484,7 +17487,7 @@ function QuienSoyController({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -17508,7 +17511,7 @@ function QuienSoyController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#22d3ee',
+      color: '#0891b2',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       margin: 0
@@ -17534,7 +17537,7 @@ function QuienSoyController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 11,
-      color: '#22d3ee',
+      color: '#0891b2',
       textTransform: 'uppercase',
       letterSpacing: '.15em',
       marginBottom: 8
@@ -17546,7 +17549,7 @@ function QuienSoyController({
       alignItems: 'center',
       gap: 8,
       padding: '4px 0',
-      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(255,255,255,.05)' : 'none'
+      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(10,14,46,.08)' : 'none'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -17565,14 +17568,14 @@ function QuienSoyController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, r.user.name), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
-      color: '#22d3ee'
+      color: '#0891b2'
     }
   }, r.pts)))), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -17629,12 +17632,12 @@ function QuienSoyController({
       display: 'flex',
       alignItems: 'center',
       gap: 8,
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.12)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 10,
       padding: '8px 10px',
       cursor: 'pointer',
-      color: '#fff',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 14,
@@ -17664,7 +17667,7 @@ function QuienSoyController({
       border: '1px solid rgba(34,197,94,.4)',
       borderRadius: 14,
       padding: '12px',
-      color: '#86efac',
+      color: '#15803d',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -17680,7 +17683,7 @@ function QuienSoyController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 14,
       padding: '12px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -17779,7 +17782,7 @@ function DibujaCanvas({
       position: 'relative',
       touchAction: 'none',
       cursor: canDraw ? 'crosshair' : 'default',
-      boxShadow: '0 10px 30px rgba(0,0,0,.4)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.18)'
     }
   }, /*#__PURE__*/React.createElement("svg", {
     width: "100%",
@@ -17853,7 +17856,7 @@ function DibujaDie({
       fontWeight: 900,
       fontSize: size * .5,
       color: '#0a0e2e',
-      boxShadow: '0 6px 18px rgba(0,0,0,.35)',
+      boxShadow: '0 6px 18px rgba(10,14,46,.18)',
       animation: anim ? 'diceRoll .6s ease' : undefined
     }
   }, face);
@@ -17870,7 +17873,7 @@ function DibujaBoard({
       background: 'linear-gradient(160deg,#ffd000,#f97316)',
       borderRadius: 16,
       padding: 12,
-      boxShadow: '0 10px 30px rgba(0,0,0,.4)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -18070,7 +18073,7 @@ function DibujaSetup({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -18092,7 +18095,7 @@ function DibujaSetup({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em',
       margin: 0
@@ -18107,8 +18110,8 @@ function DibujaSetup({
     style: {
       width: '100%',
       maxWidth: 420,
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 14,
       padding: '12px 14px'
     }
@@ -18137,9 +18140,9 @@ function DibujaSetup({
       padding: '10px',
       borderRadius: 10,
       cursor: 'pointer',
-      border: numTeams === n ? '2px solid #ffd000' : '1px solid rgba(255,255,255,.12)',
-      background: numTeams === n ? 'rgba(255,208,0,.18)' : 'rgba(255,255,255,.04)',
-      color: numTeams === n ? '#ffd000' : '#fff',
+      border: numTeams === n ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.12)',
+      background: numTeams === n ? 'rgba(255,208,0,.18)' : 'rgba(10,14,46,.04)',
+      color: numTeams === n ? '#a16207' : '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18
@@ -18194,8 +18197,8 @@ function DibujaSetup({
         borderRadius: 8,
         fontSize: 15,
         cursor: 'pointer',
-        border: team.avatar === av ? '2px solid #ffd000' : '1px solid rgba(255,255,255,.15)',
-        background: team.avatar === av ? 'rgba(255,208,0,.2)' : 'rgba(255,255,255,.05)'
+        border: team.avatar === av ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.15)',
+        background: team.avatar === av ? 'rgba(255,208,0,.2)' : 'rgba(10,14,46,.05)'
       }
     }, av)))), members.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -18210,11 +18213,11 @@ function DibujaSetup({
         display: 'flex',
         alignItems: 'center',
         gap: 4,
-        background: 'rgba(255,255,255,.08)',
+        background: 'rgba(10,14,46,.08)',
         borderRadius: 20,
         padding: '2px 8px 2px 4px',
         fontSize: 11,
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700
       }
@@ -18277,7 +18280,7 @@ function DibujaSetup({
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        background: 'rgba(255,255,255,.04)',
+        background: 'rgba(10,14,46,.04)',
         borderRadius: 10,
         padding: '6px 8px'
       }
@@ -18290,7 +18293,7 @@ function DibujaSetup({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700,
         fontSize: 14,
-        color: '#fff',
+        color: '#0a0e2e',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
@@ -18311,9 +18314,9 @@ function DibujaSetup({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 13,
-        border: myT === t ? `2px solid ${DIBUJA_TEAM_COLORS[t]}` : '1px solid rgba(255,255,255,.12)',
-        background: myT === t ? `${DIBUJA_TEAM_COLORS[t]}33` : 'rgba(255,255,255,.04)',
-        color: myT === t ? DIBUJA_TEAM_COLORS[t] : '#fff'
+        border: myT === t ? `2px solid ${DIBUJA_TEAM_COLORS[t]}` : '1px solid rgba(10,14,46,.12)',
+        background: myT === t ? `${DIBUJA_TEAM_COLORS[t]}33` : 'rgba(10,14,46,.04)',
+        color: myT === t ? DIBUJA_TEAM_COLORS[t] : '#0a0e2e'
       }
     }, t + 1))));
   })), /*#__PURE__*/React.createElement("div", {
@@ -18330,8 +18333,8 @@ function DibujaSetup({
       flex: 1,
       padding: '13px',
       borderRadius: 12,
-      border: '1px solid rgba(255,255,255,.12)',
-      background: 'rgba(255,255,255,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
+      background: 'rgba(10,14,46,.05)',
       color: 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
@@ -18349,7 +18352,7 @@ function DibujaSetup({
       borderRadius: 12,
       border: 'none',
       cursor: allAssigned ? 'pointer' : 'not-allowed',
-      background: allAssigned ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(255,255,255,.1)',
+      background: allAssigned ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)',
       color: allAssigned ? '#0a0e2e' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
@@ -18377,7 +18380,7 @@ function DibujaTeamsWatch({
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -18399,7 +18402,7 @@ function DibujaTeamsWatch({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 24,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em',
       margin: 0
@@ -18459,11 +18462,11 @@ function DibujaTeamsWatch({
         display: 'flex',
         alignItems: 'center',
         gap: 4,
-        background: 'rgba(255,255,255,.08)',
+        background: 'rgba(10,14,46,.08)',
         borderRadius: 20,
         padding: '2px 8px 2px 4px',
         fontSize: 11,
-        color: '#fff',
+        color: '#0a0e2e',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 700
       }
@@ -18748,7 +18751,7 @@ function DibujaController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -18770,7 +18773,7 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         margin: 0
@@ -18830,12 +18833,12 @@ function DibujaController({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          background: myVote === u.uid ? `${team.color}33` : 'rgba(255,255,255,.05)',
-          border: myVote === u.uid ? `2px solid ${team.color}` : '1px solid rgba(255,255,255,.12)',
+          background: myVote === u.uid ? `${team.color}33` : 'rgba(10,14,46,.05)',
+          border: myVote === u.uid ? `2px solid ${team.color}` : '1px solid rgba(10,14,46,.12)',
           borderRadius: 10,
           padding: '8px 10px',
           cursor: 'pointer',
-          color: '#fff',
+          color: '#0a0e2e',
           fontFamily: 'Barlow Condensed,sans-serif',
           fontWeight: 700,
           fontSize: 14,
@@ -18850,7 +18853,7 @@ function DibujaController({
         }
       }, u.name, u.uid === myId ? ' (tú)' : ''), /*#__PURE__*/React.createElement("span", {
         style: {
-          background: 'rgba(255,255,255,.1)',
+          background: 'rgba(10,14,46,.08)',
           borderRadius: 20,
           padding: '1px 9px',
           fontSize: 13,
@@ -18889,7 +18892,7 @@ function DibujaController({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          background: 'rgba(255,255,255,.04)',
+          background: 'rgba(10,14,46,.04)',
           borderRadius: 10,
           padding: '8px 10px'
         }
@@ -18903,7 +18906,7 @@ function DibujaController({
           fontFamily: 'Barlow Condensed,sans-serif',
           fontWeight: 700,
           fontSize: 14,
-          color: '#fff'
+          color: '#0a0e2e'
         }
       }, team?.name), /*#__PURE__*/React.createElement("span", {
         style: {
@@ -18948,7 +18951,7 @@ function DibujaController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -18970,7 +18973,7 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 24,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         margin: 0
@@ -19019,7 +19022,7 @@ function DibujaController({
           fontFamily: 'Barlow Condensed,sans-serif',
           fontWeight: 900,
           fontSize: 15,
-          color: '#fff'
+          color: '#0a0e2e'
         }
       }, team?.name), captainUid && users[captainUid] && /*#__PURE__*/React.createElement("div", {
         style: {
@@ -19060,7 +19063,7 @@ function DibujaController({
         borderRadius: 12,
         border: 'none',
         cursor: allRolled ? 'pointer' : 'not-allowed',
-        background: allRolled ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(255,255,255,.1)',
+        background: allRolled ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)',
         color: allRolled ? '#0a0e2e' : 'var(--muted)',
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
@@ -19080,7 +19083,7 @@ function DibujaController({
         position: 'fixed',
         inset: 0,
         zIndex: 250,
-        background: 'rgba(7,9,31,.97)',
+        background: '#f8f5ef',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
@@ -19099,7 +19102,7 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 28,
-        color: '#ffd000',
+        color: '#a16207',
         textTransform: 'uppercase',
         letterSpacing: '.05em',
         margin: 0,
@@ -19122,7 +19125,7 @@ function DibujaController({
         gap: 12,
         padding: '12px 16px',
         borderRadius: 14,
-        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(255,255,255,.05)',
+        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)',
         border: i === 0 ? '2px solid #ffd000' : `1px solid ${t.color}55`
       }
     }, /*#__PURE__*/React.createElement("span", {
@@ -19135,14 +19138,14 @@ function DibujaController({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 800,
         fontSize: 18,
-        color: '#fff'
+        color: '#0a0e2e'
       }
     }, t.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 16,
-        color: '#ffd000'
+        color: '#a16207'
       }
     }, Math.round((t.pos || 0) / DIBUJA_GOAL * 100), "%")))), isAdmin && /*#__PURE__*/React.createElement("button", {
       onClick: cerrar,
@@ -19165,14 +19168,14 @@ function DibujaController({
 
   // ── PLAYING ──
   const cat = card ? DIBUJA_CATS[card.category] : null;
-  const timeColor = timeLeft < 15 ? '#ef4444' : timeLeft < 35 ? '#f97316' : '#ffd000';
+  const timeColor = timeLeft < 15 ? '#ef4444' : timeLeft < 35 ? '#c2410c' : '#a16207';
   const drawer = drawerId ? users[drawerId] : null;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
       inset: 0,
       zIndex: 250,
-      background: 'rgba(7,9,31,.97)',
+      background: '#f8f5ef',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       flexDirection: 'column',
@@ -19215,7 +19218,7 @@ function DibujaController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 15,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, allPlay ? '¡TODOS PARTICIPAN!' : turnTeam?.name))), phase === 'draw' && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -19298,7 +19301,7 @@ function DibujaController({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 16,
-      color: '#fff',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -19337,8 +19340,8 @@ function DibujaController({
     }
   }, mode === 'mimica' ? 'Actúa esta palabra ¡sin hablar!' : 'Dibújala ¡sin letras ni números!')), !canSeeWord && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.04)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 16,
       padding: '12px',
       textAlign: 'center'
@@ -19375,7 +19378,7 @@ function DibujaController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 10,
       padding: '8px 16px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19387,9 +19390,9 @@ function DibujaController({
     style: {
       textAlign: 'center',
       padding: '18px',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 14,
-      border: '1px dashed rgba(255,255,255,.15)'
+      border: '1px dashed rgba(10,14,46,.15)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -19432,8 +19435,8 @@ function DibujaController({
       padding: '14px',
       borderRadius: 12,
       border: 'none',
-      background: game?.modeRoll ? 'rgba(255,255,255,.1)' : 'linear-gradient(135deg,#8b5cf6,#6d28d9)',
-      color: '#fff',
+      background: game?.modeRoll ? 'rgba(10,14,46,.1)' : 'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+      color: game?.modeRoll ? '#0a0e2e' : '#fff',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 15,
@@ -19468,7 +19471,7 @@ function DibujaController({
       borderRadius: 10,
       padding: '10px 12px',
       cursor: 'pointer',
-      color: '#fff',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 14
@@ -19495,7 +19498,7 @@ function DibujaController({
       border: '1px solid rgba(139,92,246,.4)',
       borderRadius: 10,
       padding: '10px',
-      color: '#c4b5fd',
+      color: '#7c3aed',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19511,7 +19514,7 @@ function DibujaController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 10,
       padding: '10px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19542,7 +19545,7 @@ function DibujaController({
       border: '1px solid rgba(34,197,94,.35)',
       borderRadius: 12,
       padding: '11px',
-      color: '#86efac',
+      color: '#15803d',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19558,7 +19561,7 @@ function DibujaController({
       border: '1px solid rgba(239,68,68,.35)',
       borderRadius: 12,
       padding: '11px',
-      color: '#fca5a5',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -19596,7 +19599,7 @@ function CountdownTimer({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 110,
-      color: '#ffd000',
+      color: '#a16207',
       lineHeight: 1,
       animation: 'countdownPop .7s ease'
     },
