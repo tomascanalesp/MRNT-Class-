@@ -8484,7 +8484,7 @@ function AdminSurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8495,7 +8495,7 @@ function AdminSurveyModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 32px',
@@ -8523,7 +8523,7 @@ function AdminSurveyModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: allDone ? '#10b981' : '#ffd000',
+      color: allDone ? '#10b981' : '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -8565,7 +8565,7 @@ function AdminSurveyModal({
       borderRadius: 10,
       background: surveyActive ? 'rgba(239,68,68,.15)' : 'linear-gradient(135deg,#10b981,#059669)',
       border: surveyActive ? '1px solid rgba(239,68,68,.4)' : 'none',
-      color: surveyActive ? '#f87171' : 'white',
+      color: surveyActive ? '#dc2626' : 'white',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 12,
@@ -8581,7 +8581,7 @@ function AdminSurveyModal({
       borderRadius: 10,
       background: 'rgba(255,208,0,.1)',
       border: '1px solid rgba(255,208,0,.3)',
-      color: '#ffd000',
+      color: '#a16207',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 12,
@@ -8599,7 +8599,7 @@ function AdminSurveyModal({
   }, [{
     label: 'Prom. días',
     value: (list.reduce((s, r) => s + r.daysStudied, 0) / list.length).toFixed(1),
-    color: '#ffd000'
+    color: '#a16207'
   }, {
     label: 'Est. Biblia',
     value: list.filter(r => r.hasBibleStudents).length,
@@ -8611,7 +8611,7 @@ function AdminSurveyModal({
   }].map(st => /*#__PURE__*/React.createElement("div", {
     key: st.label,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 10,
       padding: '10px 6px',
       textAlign: 'center',
@@ -8674,7 +8674,7 @@ function AdminSurveyModal({
       fontSize: 11,
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       background: 'rgba(16,185,129,.12)',
       padding: '3px 8px',
       borderRadius: 20,
@@ -8692,7 +8692,7 @@ function AdminSurveyModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 10,
-      color: '#ffd000',
+      color: '#a16207',
       letterSpacing: '.1em',
       textTransform: 'uppercase',
       marginBottom: 6
@@ -8715,7 +8715,7 @@ function AdminSurveyModal({
       fontSize: 11,
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       background: 'rgba(255,208,0,.1)',
       padding: '3px 8px',
       borderRadius: 20,
@@ -8731,18 +8731,18 @@ function AdminSurveyModal({
   }, "Aún no hay respuestas") : list.map((r, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
-      background: 'rgba(255,255,255,.03)',
+      background: 'rgba(10,14,46,.03)',
       borderRadius: 10,
       padding: '10px 12px',
       marginBottom: 8,
-      border: '1px solid rgba(255,255,255,.06)'
+      border: '1px solid rgba(10,14,46,.08)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginBottom: 5
     }
   }, r.name), /*#__PURE__*/React.createElement("div", {
@@ -8762,7 +8762,7 @@ function AdminSurveyModal({
       borderRadius: 10,
       background: 'rgba(239,68,68,.08)',
       border: '1px solid rgba(239,68,68,.2)',
-      color: '#f87171',
+      color: '#dc2626',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 11,
@@ -8941,14 +8941,14 @@ function DataDownloadModal({
     icon: '📦',
     label: 'Todos juntos',
     desc: 'Un archivo con todo',
-    color: '#ffd000'
+    color: '#a16207'
   }];
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8959,7 +8959,7 @@ function DataDownloadModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 32px',
@@ -8987,7 +8987,7 @@ function DataDownloadModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -9010,7 +9010,7 @@ function DataDownloadModal({
     }
   }, "Genera un archivo de texto separado por tabulaciones — pegable directamente en Google Sheets / Excel."), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.03)',
+      background: 'rgba(10,14,46,.03)',
       border: '1px solid rgba(255,208,0,.12)',
       borderRadius: 12,
       padding: '10px 12px',
@@ -9052,13 +9052,13 @@ function DataDownloadModal({
       width: '100%',
       padding: '7px 9px',
       borderRadius: 8,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       border: '1px solid rgba(255,208,0,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 12,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none',
-      colorScheme: 'dark'
+      colorScheme: 'light'
     }
   })), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9080,13 +9080,13 @@ function DataDownloadModal({
       width: '100%',
       padding: '7px 9px',
       borderRadius: 8,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       border: '1px solid rgba(255,208,0,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 12,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none',
-      colorScheme: 'dark'
+      colorScheme: 'light'
     }
   })), (startDate || endDate) && /*#__PURE__*/React.createElement("button", {
     onClick: () => {
@@ -9100,7 +9100,7 @@ function DataDownloadModal({
       borderRadius: 8,
       background: 'rgba(239,68,68,.1)',
       border: '1px solid rgba(239,68,68,.3)',
-      color: '#f87171',
+      color: '#dc2626',
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
@@ -9120,7 +9120,7 @@ function DataDownloadModal({
       onClick: () => handle(o.id),
       disabled: anyBusy,
       style: {
-        background: isBusy ? `${o.color}33` : 'rgba(255,255,255,.04)',
+        background: isBusy ? `${o.color}33` : 'rgba(10,14,46,.04)',
         border: `1px solid ${isBusy ? o.color + '88' : o.color + '33'}`,
         borderRadius: 12,
         padding: '12px 14px',
@@ -9207,7 +9207,7 @@ function AdminPanel({
     waiting: 'var(--muted)',
     confra: '#eab308',
     repaso: '#fb923c',
-    juegos: '#fdba74',
+    juegos: '#c2410c',
     mision: '#3b82f6',
     templo: '#7c3aed'
   }[phase];
@@ -9236,11 +9236,11 @@ function AdminPanel({
       right: 16,
       zIndex: 120,
       width: 288,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 16,
       padding: 16,
-      boxShadow: '0 8px 40px rgba(0,0,0,.7)',
+      boxShadow: '0 8px 40px rgba(10,14,46,.25)',
       animation: 'modalIn .2s ease'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -9248,7 +9248,7 @@ function AdminPanel({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.06em',
       marginBottom: 12,
@@ -9287,7 +9287,7 @@ function AdminPanel({
   }, {
     label: 'N · Juegos',
     count: juegosUsers.length,
-    color: '#fdba74'
+    color: '#c2410c'
   }, {
     label: 'T · Templo',
     count: temploUsers.length,
@@ -9295,7 +9295,7 @@ function AdminPanel({
   }].map(z => /*#__PURE__*/React.createElement("div", {
     key: z.label,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 8,
       padding: '6px 4px',
       textAlign: 'center',
@@ -9335,7 +9335,7 @@ function AdminPanel({
         border: `1px solid ${all ? 'rgba(16,185,129,.4)' : 'rgba(139,92,246,.35)'}`,
         borderRadius: 10,
         padding: '9px',
-        color: all ? '#10b981' : '#a78bfa',
+        color: all ? '#10b981' : '#7c3aed',
         fontWeight: 800,
         fontSize: 12,
         fontFamily: 'Barlow Condensed,sans-serif',
@@ -9364,7 +9364,7 @@ function AdminPanel({
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 10,
       padding: '9px',
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9381,7 +9381,7 @@ function AdminPanel({
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 10,
       padding: '9px',
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9398,7 +9398,7 @@ function AdminPanel({
       border: '1px solid rgba(239,68,68,.25)',
       borderRadius: 10,
       padding: '9px',
-      color: '#f87171',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9408,7 +9408,7 @@ function AdminPanel({
   }, "🔄 Reiniciar sesión"), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 1,
-      background: 'rgba(255,255,255,.06)'
+      background: 'rgba(10,14,46,.1)'
     }
   }), phase === 'waiting' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9588,7 +9588,7 @@ function AdminPanel({
       border: 'none',
       borderRadius: 10,
       padding: '10px',
-      color: '#07091f',
+      color: '#f8f5ef',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -9693,9 +9693,9 @@ function AdminPanel({
     style: {
       padding: '8px 10px',
       borderRadius: 8,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: '1px solid rgba(59,130,246,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 11,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none'
@@ -9833,7 +9833,7 @@ function EditProfileModal({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,.75)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)'
     },
     onClick: e => e.target === e.currentTarget && onClose()
@@ -9843,7 +9843,7 @@ function EditProfileModal({
       maxWidth: 480,
       overflowY: 'auto',
       maxHeight: '90vh',
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 20px 32px',
@@ -9869,7 +9869,7 @@ function EditProfileModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -9916,7 +9916,7 @@ function EditProfileModal({
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: 12,
-      color: '#07091f',
+      color: '#f8f5ef',
       fontWeight: 800
     }
   }, "📷")), /*#__PURE__*/React.createElement("div", {
@@ -9926,7 +9926,7 @@ function EditProfileModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       marginBottom: 6
     }
   }, "Foto de perfil"), /*#__PURE__*/React.createElement("div", {
@@ -9941,7 +9941,7 @@ function EditProfileModal({
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: 8,
       padding: '6px 10px',
-      color: '#ffd000',
+      color: '#a16207',
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700
@@ -9953,7 +9953,7 @@ function EditProfileModal({
       border: '1px solid rgba(239,68,68,.2)',
       borderRadius: 8,
       padding: '6px 10px',
-      color: '#f87171',
+      color: '#dc2626',
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700
@@ -9996,9 +9996,9 @@ function EditProfileModal({
       width: '100%',
       padding: '11px 14px',
       borderRadius: 10,
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       border: '1px solid rgba(255,208,0,.15)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif'
     }
@@ -10027,15 +10027,15 @@ function EditProfileModal({
     key: a,
     onClick: () => setAvatar(a),
     style: {
-      background: avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(255,255,255,.03)',
-      border: avatar === a ? `2px solid ${color}` : '2px solid rgba(255,255,255,.06)',
+      background: avatar === a ? 'rgba(255,208,0,.15)' : 'rgba(10,14,46,.03)',
+      border: avatar === a ? `2px solid ${color}` : '2px solid rgba(10,14,46,.1)',
       borderRadius: 10,
       padding: '7px 2px',
       fontSize: 19,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: avatar === a ? `0 0 12px ${color}55` : 'none',
+      boxShadow: avatar === a ? `0 6px 16px ${color}55` : 'none',
       transition: 'all .15s'
     }
   }, a)))), /*#__PURE__*/React.createElement("div", {
@@ -10068,14 +10068,14 @@ function EditProfileModal({
       borderRadius: '50%',
       background: c,
       cursor: 'pointer',
-      border: color === c ? '3px solid white' : '3px solid transparent',
-      boxShadow: color === c ? `0 0 14px ${c}` : 'none',
+      border: color === c ? '3px solid #0a0e2e' : '3px solid transparent',
+      boxShadow: color === c ? `0 6px 16px ${c}66` : 'none',
       transition: 'all .15s'
     }
   })))), err && /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 10,
-      color: '#fca5a5',
+      color: '#dc2626',
       fontSize: 12,
       background: 'rgba(239,68,68,.08)',
       borderRadius: 8,
@@ -10090,7 +10090,7 @@ function EditProfileModal({
       borderRadius: 12,
       border: 'none',
       background: !name.trim() || saving ? 'var(--muted2)' : 'linear-gradient(135deg,#ffd000,#e6a800)',
-      color: !name.trim() || saving ? 'var(--muted)' : '#07091f',
+      color: !name.trim() || saving ? 'var(--muted)' : '#f8f5ef',
       fontSize: 15,
       fontWeight: 800,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -10103,7 +10103,7 @@ function EditProfileModal({
     }
   }, saving ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Spinner, {
     size: 18,
-    color: "#07091f"
+    color: "#f8f5ef"
   }), "Guardando...") : 'Guardar cambios ✓')));
 }
 
@@ -10132,7 +10132,7 @@ function AttendanceModal({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,.75)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(4px)'
     },
     onClick: e => e.target === e.currentTarget && onClose()
@@ -10142,7 +10142,7 @@ function AttendanceModal({
       maxWidth: 480,
       maxHeight: '85vh',
       overflowY: 'auto',
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 32px',
@@ -10168,7 +10168,7 @@ function AttendanceModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -10191,7 +10191,7 @@ function AttendanceModal({
   }, [{
     label: 'Total clases',
     value: sessions.length,
-    color: '#ffd000'
+    color: '#a16207'
   }, {
     label: 'Este año',
     value: sessions.filter(([s]) => s.startsWith(new Date().getFullYear().toString())).length,
@@ -10203,7 +10203,7 @@ function AttendanceModal({
   }].map(st => /*#__PURE__*/React.createElement("div", {
     key: st.label,
     style: {
-      background: 'rgba(255,255,255,.03)',
+      background: 'rgba(10,14,46,.03)',
       borderRadius: 10,
       padding: '10px 8px',
       borderLeft: `3px solid ${st.color}`,
@@ -10228,7 +10228,7 @@ function AttendanceModal({
   }, st.label)))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 10,
       padding: 3,
       marginBottom: 16,
@@ -10249,7 +10249,7 @@ function AttendanceModal({
       borderRadius: 8,
       border: 'none',
       background: activeTab === t.id ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'transparent',
-      color: activeTab === t.id ? '#07091f' : 'var(--muted)',
+      color: activeTab === t.id ? '#f8f5ef' : 'var(--muted)',
       fontSize: 12,
       fontWeight: 700,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -10332,15 +10332,15 @@ function AttendanceModal({
     }, {
       label: '🥇 Ganadas',
       value: wins,
-      color: '#ffd000'
+      color: '#a16207'
     }, {
       label: '🏅 Top 3',
       value: top3,
-      color: '#f59e0b'
+      color: '#b45309'
     }].map(st => /*#__PURE__*/React.createElement("div", {
       key: st.label,
       style: {
-        background: 'rgba(255,255,255,.03)',
+        background: 'rgba(10,14,46,.03)',
         borderRadius: 10,
         padding: '10px 8px',
         borderLeft: `3px solid ${st.color}`,
@@ -10375,8 +10375,8 @@ function AttendanceModal({
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        background: g.rank === 1 ? 'rgba(255,208,0,.07)' : 'rgba(255,255,255,.03)',
-        border: g.rank === 1 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(255,255,255,.05)',
+        background: g.rank === 1 ? 'rgba(255,208,0,.07)' : 'rgba(10,14,46,.03)',
+        border: g.rank === 1 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(10,14,46,.08)',
         borderRadius: 12,
         padding: '10px 14px',
         marginBottom: 7
@@ -10414,7 +10414,7 @@ function AttendanceModal({
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
         fontSize: 20,
-        color: '#ffd000'
+        color: '#a16207'
       }
     }, g.score, " pts"))));
   })()));
@@ -10463,7 +10463,7 @@ function AdminStatsModal({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)'
     },
     onClick: e => e.target === e.currentTarget && onClose()
@@ -10473,7 +10473,7 @@ function AdminStatsModal({
       maxWidth: 520,
       maxHeight: '90vh',
       overflowY: 'auto',
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.2)',
       borderRadius: '22px 22px 0 0',
       padding: '18px 18px 32px',
@@ -10499,7 +10499,7 @@ function AdminStatsModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
@@ -10523,7 +10523,7 @@ function AdminStatsModal({
     label: 'Jóvenes',
     value: data.length,
     icon: '👥',
-    color: '#ffd000'
+    color: '#a16207'
   }, {
     label: 'Asistencias',
     value: data.reduce((s, u) => s + u.attCount, 0),
@@ -10537,7 +10537,7 @@ function AdminStatsModal({
   }].map(st => /*#__PURE__*/React.createElement("div", {
     key: st.label,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 12,
       padding: '10px 8px',
       textAlign: 'center',
@@ -10568,7 +10568,7 @@ function AdminStatsModal({
   }, st.label)))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 10,
       padding: 3,
       marginBottom: 14,
@@ -10589,7 +10589,7 @@ function AdminStatsModal({
       borderRadius: 8,
       border: 'none',
       background: tab === t.id ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'transparent',
-      color: tab === t.id ? '#07091f' : 'var(--muted)',
+      color: tab === t.id ? '#f8f5ef' : 'var(--muted)',
       fontSize: 12,
       fontWeight: 700,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -10613,9 +10613,9 @@ function AdminStatsModal({
       width: '100%',
       padding: '9px 14px',
       borderRadius: 10,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: '1px solid rgba(255,208,0,.15)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       marginBottom: 12,
@@ -10633,7 +10633,7 @@ function AdminStatsModal({
     });
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'rgba(255,255,255,.03)',
+        background: 'rgba(10,14,46,.03)',
         borderRadius: 14,
         padding: 14,
         marginBottom: 12,
@@ -10657,7 +10657,7 @@ function AdminStatsModal({
       style: {
         fontWeight: 700,
         fontSize: 14,
-        color: 'white'
+        color: '#0a0e2e'
       }
     }, u.name), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10682,7 +10682,7 @@ function AdminStatsModal({
     }, [{
       l: 'Clases',
       v: u.attCount,
-      c: '#ffd000'
+      c: '#a16207'
     }, {
       l: 'Este año',
       v: u.attThisYear,
@@ -10694,11 +10694,11 @@ function AdminStatsModal({
     }, {
       l: '🥇 Ganadas',
       v: u.gameWins,
-      c: '#f59e0b'
+      c: '#b45309'
     }].map(st => /*#__PURE__*/React.createElement("div", {
       key: st.l,
       style: {
-        background: 'rgba(255,255,255,.03)',
+        background: 'rgba(10,14,46,.03)',
         borderRadius: 8,
         padding: '7px 4px',
         textAlign: 'center',
@@ -10768,8 +10768,8 @@ function AdminStatsModal({
       display: 'flex',
       alignItems: 'center',
       gap: 10,
-      background: selected === u.uid ? 'rgba(255,208,0,.07)' : 'rgba(255,255,255,.025)',
-      border: selected === u.uid ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(255,255,255,.05)',
+      background: selected === u.uid ? 'rgba(255,208,0,.07)' : 'rgba(10,14,46,.03)',
+      border: selected === u.uid ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(10,14,46,.08)',
       borderRadius: 12,
       padding: '10px 12px',
       marginBottom: 6,
@@ -10796,7 +10796,7 @@ function AdminStatsModal({
     style: {
       fontSize: 13,
       fontWeight: 600,
-      color: 'white'
+      color: '#0a0e2e'
     }
   }, u.name), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10811,7 +10811,7 @@ function AdminStatsModal({
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, u.attCount))), filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10836,8 +10836,8 @@ function AdminStatsModal({
       display: 'flex',
       alignItems: 'center',
       gap: 10,
-      background: i === 0 ? 'rgba(255,208,0,.08)' : 'rgba(255,255,255,.025)',
-      border: i === 0 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(255,255,255,.05)',
+      background: i === 0 ? 'rgba(255,208,0,.08)' : 'rgba(10,14,46,.03)',
+      border: i === 0 ? '1px solid rgba(255,208,0,.2)' : '1px solid rgba(10,14,46,.08)',
       borderRadius: 12,
       padding: '10px 12px',
       marginBottom: 6
@@ -10859,7 +10859,7 @@ function AdminStatsModal({
     style: {
       fontSize: 13,
       fontWeight: 600,
-      color: 'white'
+      color: '#0a0e2e'
     }
   }, u.name), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10871,7 +10871,7 @@ function AdminStatsModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#ffd000'
+      color: '#a16207'
     }
   }, u.gameWins, "🥇"))), gameRankings.filter(u => u.gameCount > 0).length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
