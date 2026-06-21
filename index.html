@@ -4778,7 +4778,7 @@ function PresentationOverlay({
       position: 'fixed',
       inset: 0,
       zIndex: 150,
-      background: 'radial-gradient(ellipse at top,#11173f,#070a1f)',
+      background: 'radial-gradient(ellipse at top,#fbf9f4,#ece6db)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -4815,11 +4815,11 @@ function PresentationOverlay({
       gap: 10,
       flexWrap: 'wrap',
       justifyContent: 'center',
-      background: 'rgba(7,9,31,.88)',
-      border: '1px solid rgba(255,255,255,.12)',
+      background: 'rgba(255,255,255,.96)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 16,
       padding: '8px 10px',
-      boxShadow: '0 10px 30px rgba(0,0,0,.5)',
+      boxShadow: '0 10px 30px rgba(10,14,46,.18)',
       pointerEvents: 'auto',
       maxWidth: '100%'
     }
@@ -4832,8 +4832,8 @@ function PresentationOverlay({
       borderRadius: 12,
       border: 'none',
       cursor: idx === 0 ? 'default' : 'pointer',
-      background: idx === 0 ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.12)',
-      color: idx === 0 ? 'rgba(255,255,255,.3)' : '#fff',
+      background: idx === 0 ? 'rgba(10,14,46,.05)' : 'rgba(10,14,46,.12)',
+      color: idx === 0 ? 'rgba(10,14,46,.3)' : '#0a0e2e',
       fontSize: 18
     }
   }, "◀"), /*#__PURE__*/React.createElement("div", {
@@ -4843,14 +4843,14 @@ function PresentationOverlay({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 15,
-      color: '#fff',
+      color: '#0a0e2e',
       letterSpacing: '.05em'
     }
   }, idx + 1, " / ", total, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       fontWeight: 700,
-      color: 'rgba(255,255,255,.5)',
+      color: 'rgba(10,14,46,.5)',
       letterSpacing: '.12em',
       textTransform: 'uppercase'
     }
@@ -4863,8 +4863,8 @@ function PresentationOverlay({
       borderRadius: 12,
       border: 'none',
       cursor: idx === total - 1 ? 'default' : 'pointer',
-      background: idx === total - 1 ? 'rgba(255,255,255,.05)' : 'linear-gradient(135deg,#6f8f3c,#4d6a27)',
-      color: idx === total - 1 ? 'rgba(255,255,255,.3)' : '#fff',
+      background: idx === total - 1 ? 'rgba(10,14,46,.05)' : '#0a0e2e',
+      color: idx === total - 1 ? 'rgba(10,14,46,.3)' : '#ffffff',
       fontSize: 18
     }
   }, "▶"), (onToggleWordCloud || onToggleQR) && /*#__PURE__*/React.createElement("div", {
@@ -4880,16 +4880,16 @@ function PresentationOverlay({
       height: 42,
       borderRadius: 12,
       cursor: 'pointer',
-      border: `1px solid ${moreOpen ? 'rgba(255,255,255,.3)' : 'rgba(255,255,255,.18)'}`,
-      background: moreOpen ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.08)',
-      color: '#fff',
+      border: `1px solid ${moreOpen ? 'rgba(10,14,46,.3)' : 'rgba(10,14,46,.15)'}`,
+      background: moreOpen ? 'rgba(10,14,46,.1)' : 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase'
     }
-  }, "⋯ Otras acciones"), moreOpen && /*#__PURE__*/React.createElement("div", {
+  }, "Más acciones"), moreOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 50,
@@ -4899,11 +4899,11 @@ function PresentationOverlay({
       flexDirection: 'column',
       gap: 7,
       width: 200,
-      background: 'rgba(7,9,31,.97)',
-      border: '1px solid rgba(255,255,255,.14)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 14,
       padding: 10,
-      boxShadow: '0 12px 34px rgba(0,0,0,.6)',
+      boxShadow: '0 12px 34px rgba(10,14,46,.2)',
       animation: 'modalIn .18s ease'
     }
   }, onToggleWordCloud && /*#__PURE__*/React.createElement("button", {
@@ -4925,14 +4925,14 @@ function PresentationOverlay({
       textAlign: 'left',
       border: `1px solid ${wcActive ? 'rgba(16,185,129,.5)' : 'rgba(59,130,246,.45)'}`,
       background: wcActive ? 'rgba(16,185,129,.16)' : 'rgba(59,130,246,.14)',
-      color: wcActive ? '#10b981' : '#60a5fa',
+      color: wcActive ? '#10b981' : '#1d4ed8',
       fontWeight: 800,
       fontSize: 12.5,
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase'
     }
-  }, wcActive ? '☁️ Cerrar nube de palabras' : '☁️ Abrir nube de palabras'), onToggleQR && /*#__PURE__*/React.createElement("button", {
+  }, wcActive ? 'Cerrar nube de palabras' : 'Abrir nube de palabras'), onToggleQR && /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       onToggleQR();
       setMoreOpen(false);
@@ -4945,14 +4945,14 @@ function PresentationOverlay({
       textAlign: 'left',
       border: `1px solid ${qrOn ? 'rgba(255,208,0,.6)' : 'rgba(255,208,0,.4)'}`,
       background: qrOn ? 'rgba(255,208,0,.2)' : 'rgba(255,208,0,.1)',
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 800,
       fontSize: 12.5,
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.04em',
       textTransform: 'uppercase'
     }
-  }, qrOn ? '📲 Ocultar QR' : '📲 Mostrar QR'))), onToggleQR && /*#__PURE__*/React.createElement("button", {
+  }, qrOn ? 'Ocultar QR' : 'Mostrar QR'))), onToggleQR && /*#__PURE__*/React.createElement("button", {
     onClick: onToggleQR,
     title: "Mostrar/ocultar QR",
     style: {
@@ -4962,14 +4962,14 @@ function PresentationOverlay({
       cursor: 'pointer',
       border: `1px solid ${qrOn ? 'rgba(255,208,0,.6)' : 'rgba(255,208,0,.4)'}`,
       background: qrOn ? 'rgba(255,208,0,.2)' : 'rgba(255,208,0,.1)',
-      color: '#ffd000',
+      color: '#a16207',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase'
     }
-  }, qrOn ? '📲 Ocultar QR' : '📲 QR'), /*#__PURE__*/React.createElement("button", {
+  }, qrOn ? 'Ocultar QR' : 'QR'), /*#__PURE__*/React.createElement("button", {
     onClick: toggleFullscreen,
     title: isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa',
     style: {
@@ -4978,9 +4978,9 @@ function PresentationOverlay({
       height: 42,
       borderRadius: 12,
       cursor: 'pointer',
-      border: '1px solid rgba(255,255,255,.18)',
-      background: 'rgba(255,255,255,.08)',
-      color: '#fff',
+      border: '1px solid rgba(10,14,46,.15)',
+      background: 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontSize: 16
     }
   }, isFullscreen ? '🗗' : '⛶'), /*#__PURE__*/React.createElement("button", {
@@ -4992,7 +4992,7 @@ function PresentationOverlay({
       borderRadius: 12,
       border: '1px solid rgba(239,68,68,.4)',
       background: 'rgba(239,68,68,.12)',
-      color: '#ef4444',
+      color: '#dc2626',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -5000,7 +5000,7 @@ function PresentationOverlay({
       textTransform: 'uppercase',
       cursor: 'pointer'
     }
-  }, "⏹ Finalizar"))) : /*#__PURE__*/React.createElement("div", {
+  }, "Finalizar"))) : /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
       left: 0,
@@ -5020,14 +5020,14 @@ function PresentationOverlay({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 12,
-      color: 'rgba(255,255,255,.6)',
+      color: 'rgba(10,14,46,.6)',
       letterSpacing: '.12em',
       textTransform: 'uppercase',
       display: 'flex',
       alignItems: 'center',
       gap: 7,
-      background: 'rgba(7,9,31,.7)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(255,255,255,.92)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 14,
       padding: '8px 12px'
     }
@@ -5048,9 +5048,9 @@ function PresentationOverlay({
       height: 38,
       borderRadius: 12,
       cursor: 'pointer',
-      border: '1px solid rgba(255,255,255,.15)',
-      background: 'rgba(7,9,31,.7)',
-      color: '#fff',
+      border: '1px solid rgba(10,14,46,.15)',
+      background: 'rgba(255,255,255,.92)',
+      color: '#0a0e2e',
       fontSize: 15
     }
   }, isFullscreen ? '🗗' : '⛶')), wcPrompt && /*#__PURE__*/React.createElement("div", {
@@ -5084,11 +5084,7 @@ function PresentationOverlay({
       gap: 9,
       marginBottom: 6
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 22
-    }
-  }, "☁️"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
@@ -5168,7 +5164,7 @@ function PresentationOverlay({
       textTransform: 'uppercase',
       boxShadow: '0 8px 22px rgba(59,130,246,.33)'
     }
-  }, "☁️ Abrir nube")))));
+  }, "Abrir nube")))));
 }
 
 /* Menú de presentaciones disponibles — el admin elige cuál proyectar. */
@@ -5195,44 +5191,56 @@ function PresentationMenu({
       width: '100%',
       maxWidth: 460,
       background: '#f8f5ef',
-      border: '1px solid rgba(111,143,60,.35)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 18,
-      padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
+      padding: '22px 20px',
+      boxShadow: '0 24px 70px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: 14
+      marginBottom: 18
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
-      fontSize: 17,
-      color: '#4d6a27',
+      fontSize: 19,
+      color: '#0a0e2e',
       textTransform: 'uppercase',
-      letterSpacing: '.05em'
+      letterSpacing: '.06em',
+      lineHeight: 1
     }
-  }, "▶️ Elegir presentación"), /*#__PURE__*/React.createElement("button", {
+  }, "Elegir presentación"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 600,
+      fontSize: 11,
+      color: 'rgba(10,14,46,.45)',
+      textTransform: 'uppercase',
+      letterSpacing: '.2em',
+      marginTop: 5
+    }
+  }, "Repaso bíblico")), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(10,14,46,.06)',
-      border: '1px solid rgba(10,14,46,.12)',
+      background: 'transparent',
+      border: '1px solid rgba(10,14,46,.18)',
       borderRadius: '50%',
       width: 30,
       height: 30,
-      color: 'var(--muted)',
+      color: 'rgba(10,14,46,.55)',
       fontSize: 14,
-      cursor: 'pointer'
+      cursor: 'pointer',
+      flexShrink: 0
     }
   }, "✕")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 10
+      gap: 8
     }
   }, PRESENTATIONS.map(p => /*#__PURE__*/React.createElement("button", {
     key: p.id,
@@ -5240,31 +5248,35 @@ function PresentationMenu({
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 12,
+      gap: 14,
       textAlign: 'left',
       cursor: 'pointer',
-      background: 'rgba(111,143,60,.12)',
-      border: '1px solid rgba(111,143,60,.35)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 12,
-      padding: '12px 14px'
+      padding: '13px 16px'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 26,
+      width: 3,
+      alignSelf: 'stretch',
+      borderRadius: 3,
+      background: '#0a0e2e',
       flexShrink: 0
     }
-  }, p.icon || '📊'), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
-      flex: 1
+      flex: 1,
+      minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 900,
-      fontSize: 13,
-      color: '#4d6a27',
+      fontWeight: 700,
+      fontSize: 11,
+      color: 'rgba(10,14,46,.5)',
       textTransform: 'uppercase',
-      letterSpacing: '.06em'
+      letterSpacing: '.16em'
     }
   }, p.week), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5272,21 +5284,30 @@ function PresentationMenu({
       fontWeight: 700,
       fontSize: 15,
       color: '#0a0e2e',
-      marginTop: 1
+      marginTop: 2
     }
   }, p.title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 12,
-      color: 'rgba(10,14,46,.55)',
+      color: 'rgba(10,14,46,.5)',
       marginTop: 2
     }
-  }, p.subtitle, " · ", p.slides.length, " slides")), /*#__PURE__*/React.createElement("span", {
+  }, p.subtitle, " · ", p.slides.length, " slides")), /*#__PURE__*/React.createElement("svg", {
+    width: 16,
+    height: 16,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "rgba(10,14,46,.35)",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
     style: {
-      color: '#6f8f3c',
-      fontSize: 18
+      flexShrink: 0
     }
-  }, "▶"))))));
+  }, /*#__PURE__*/React.createElement("polyline", {
+    points: "9 18 15 12 9 6"
+  })))))));
 }
 
 /* ════════════════════════ REPASO: VIDEOS — MENÚ Y REPRODUCTOR ════════════════════════ */
@@ -5314,38 +5335,50 @@ function VideoMenu({
       width: '100%',
       maxWidth: 460,
       background: '#f8f5ef',
-      border: '1px solid rgba(220,38,38,.35)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 18,
-      padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
+      padding: '22px 20px',
+      boxShadow: '0 24px 70px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: 14
+      marginBottom: 18
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
-      fontSize: 17,
-      color: '#ef4444',
+      fontSize: 19,
+      color: '#0a0e2e',
       textTransform: 'uppercase',
-      letterSpacing: '.05em'
+      letterSpacing: '.06em',
+      lineHeight: 1
     }
-  }, "🎬 Elegir video"), /*#__PURE__*/React.createElement("button", {
+  }, "Elegir video"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 600,
+      fontSize: 11,
+      color: 'rgba(10,14,46,.45)',
+      textTransform: 'uppercase',
+      letterSpacing: '.2em',
+      marginTop: 5
+    }
+  }, "Proyección")), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(10,14,46,.06)',
-      border: '1px solid rgba(10,14,46,.12)',
+      background: 'transparent',
+      border: '1px solid rgba(10,14,46,.18)',
       borderRadius: '50%',
       width: 30,
       height: 30,
-      color: 'var(--muted)',
+      color: 'rgba(10,14,46,.55)',
       fontSize: 14,
-      cursor: 'pointer'
+      cursor: 'pointer',
+      flexShrink: 0
     }
   }, "✕")), VIDEOS.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5371,19 +5404,23 @@ function VideoMenu({
       gap: 12,
       textAlign: 'left',
       cursor: 'pointer',
-      background: 'rgba(220,38,38,.10)',
-      border: '1px solid rgba(220,38,38,.30)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 12,
-      padding: '12px 14px'
+      padding: '13px 16px'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 26,
+      width: 3,
+      alignSelf: 'stretch',
+      borderRadius: 3,
+      background: '#0a0e2e',
       flexShrink: 0
     }
-  }, v.icon || '🎬'), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
-      flex: 1
+      flex: 1,
+      minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5396,15 +5433,24 @@ function VideoMenu({
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 12,
-      color: 'rgba(10,14,46,.55)',
+      color: 'rgba(10,14,46,.5)',
       marginTop: 2
     }
-  }, v.subtitle)), /*#__PURE__*/React.createElement("span", {
+  }, v.subtitle)), /*#__PURE__*/React.createElement("svg", {
+    width: 16,
+    height: 16,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "rgba(10,14,46,.35)",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
     style: {
-      color: '#ef4444',
-      fontSize: 18
+      flexShrink: 0
     }
-  }, "▶"))))));
+  }, /*#__PURE__*/React.createElement("polyline", {
+    points: "9 18 15 12 9 6"
+  })))))));
 }
 
 /* Overlay del reproductor de YouTube sincronizado.
@@ -15284,12 +15330,7 @@ function GameSelectMenu({
       textAlign: 'center',
       marginBottom: 4
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 42,
-      marginBottom: 8
-    }
-  }, "🎮"), /*#__PURE__*/React.createElement("h2", {
+  }, /*#__PURE__*/React.createElement("h2", {
     style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
@@ -15311,8 +15352,8 @@ function GameSelectMenu({
     style: {
       width: '100%',
       maxWidth: 380,
-      background: 'linear-gradient(135deg,rgba(255,208,0,.12),rgba(255,208,0,.04))',
-      border: '1px solid rgba(255,208,0,.3)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 20,
       padding: '16px 20px',
       textAlign: 'left',
@@ -15320,14 +15361,17 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 10px 26px rgba(255,208,0,.16)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.1)'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 38,
+      width: 4,
+      alignSelf: 'stretch',
+      borderRadius: 4,
+      background: '#eab308',
       flexShrink: 0
     }
-  }, game.icon), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
@@ -15356,7 +15400,7 @@ function GameSelectMenu({
       display: 'flex',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("span", null, "📝 ", game.questions.length, " preguntas"), /*#__PURE__*/React.createElement("span", null, "⏱ ", GAME_TIMER, "s por pregunta"))), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, "", game.questions.length, " preguntas"), /*#__PURE__*/React.createElement("span", null, "", GAME_TIMER, "s por pregunta"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
       color: '#a16207',
@@ -15367,8 +15411,8 @@ function GameSelectMenu({
     style: {
       width: '100%',
       maxWidth: 380,
-      background: 'linear-gradient(135deg,rgba(255,208,0,.18),rgba(239,68,68,.08))',
-      border: '1px solid rgba(255,208,0,.35)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 20,
       padding: '16px 20px',
       textAlign: 'left',
@@ -15376,14 +15420,17 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 10px 26px rgba(255,208,0,.16)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.1)'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 38,
+      width: 4,
+      alignSelf: 'stretch',
+      borderRadius: 4,
+      background: '#d97706',
       flexShrink: 0
     }
-  }, "🤐"), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
@@ -15412,7 +15459,7 @@ function GameSelectMenu({
       display: 'flex',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("span", null, "👥 Por turnos"), /*#__PURE__*/React.createElement("span", null, "⏱ 3 min"))), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, "Por turnos"), /*#__PURE__*/React.createElement("span", null, "3 min"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
       color: '#a16207',
@@ -15423,8 +15470,8 @@ function GameSelectMenu({
     style: {
       width: '100%',
       maxWidth: 380,
-      background: 'linear-gradient(135deg,rgba(34,211,238,.18),rgba(34,211,238,.04))',
-      border: '1px solid rgba(34,211,238,.35)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 20,
       padding: '16px 20px',
       textAlign: 'left',
@@ -15432,14 +15479,17 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 10px 26px rgba(34,211,238,.16)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.1)'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 38,
+      width: 4,
+      alignSelf: 'stretch',
+      borderRadius: 4,
+      background: '#0891b2',
       flexShrink: 0
     }
-  }, "❓"), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
@@ -15468,7 +15518,7 @@ function GameSelectMenu({
       display: 'flex',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("span", null, "👥 Por turnos"), /*#__PURE__*/React.createElement("span", null, "🤔 Sin tiempo"))), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, "Por turnos"), /*#__PURE__*/React.createElement("span", null, "Sin tiempo"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
       color: '#0891b2',
@@ -15479,8 +15529,8 @@ function GameSelectMenu({
     style: {
       width: '100%',
       maxWidth: 380,
-      background: 'linear-gradient(135deg,rgba(46,204,113,.18),rgba(243,156,18,.08))',
-      border: '1px solid rgba(46,204,113,.35)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 20,
       padding: '16px 20px',
       textAlign: 'left',
@@ -15488,14 +15538,17 @@ function GameSelectMenu({
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 10px 26px rgba(46,204,113,.16)'
+      boxShadow: '0 12px 30px rgba(10,14,46,.1)'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 38,
+      width: 4,
+      alignSelf: 'stretch',
+      borderRadius: 4,
+      background: '#15803d',
       flexShrink: 0
     }
-  }, "🎨"), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
@@ -15524,7 +15577,7 @@ function GameSelectMenu({
       display: 'flex',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("span", null, "👥 Equipos"), /*#__PURE__*/React.createElement("span", null, "🎲 Con dados"))), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, "Equipos"), /*#__PURE__*/React.createElement("span", null, "Con dados"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
       color: '#15803d',
@@ -15535,8 +15588,8 @@ function GameSelectMenu({
     style: {
       width: '100%',
       maxWidth: 380,
-      background: 'rgba(139,92,246,.1)',
-      border: '1px solid rgba(139,92,246,.25)',
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: 20,
       padding: '14px 20px',
       textAlign: 'left',
@@ -15545,12 +15598,15 @@ function GameSelectMenu({
       alignItems: 'center',
       gap: 16
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 32,
+      width: 4,
+      alignSelf: 'stretch',
+      borderRadius: 4,
+      background: '#8b5cf6',
       flexShrink: 0
     }
-  }, "✏️"), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
