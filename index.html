@@ -2755,14 +2755,14 @@ const MRNT_T = {
    (síncrono), y los componentes auxiliares lo toman por defecto. */
 let __ST = SLIDE_T;
 
-/* ════════════════════════ BIBLIA LOCAL (RV1909 · dominio público) ════════════════════════ */
+/* ════════════════════════ BIBLIA LOCAL (TCP · sin derechos de autor) ════════════════════════ */
 /*
  * Texto de los versículos guardado DENTRO del repositorio para que se lea
- * sin conexión a internet. Versión: Reina-Valera 1909 (dominio público).
+ * sin conexión a internet. Versión: «Santa Biblia TCP» (sin derechos de autor)
+ * — extraída del PDF que el equipo subió a Drive.
  *
- * ¿Por qué RV1909 y no RVR1960/NVI? Esas versiones tienen derechos de autor y
- * no pueden copiarse libremente a un repositorio público. La RV1909 es de
- * dominio público y lee casi idéntica en estos pasajes clásicos.
+ * Antes usábamos la Reina-Valera 1909 (dominio público); ahora migramos a TCP
+ * para que el texto luzca en español contemporáneo.
  *
  * Para reemplazar el texto: edita cada entrada manteniendo la misma clave (debe
  * coincidir EXACTAMENTE con la referencia escrita en el array `verses` de la
@@ -2771,111 +2771,283 @@ let __ST = SLIDE_T;
  * Estructura: clave = referencia tal como aparece en la slide → array de
  * versículos { n: número, t: texto }.
  */
-const BIBLE_VERSION = 'RV1909';
+const BIBLE_VERSION = 'TCP';
 const BIBLE_VERSES = {
-  'Mateo 28:19': [
-    { n: 19, t: 'Por tanto, id, y haced discípulos á todas las naciones, bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo;' },
-  ],
-  'Apocalipsis 14:6-12': [
-    { n: 6, t: 'Y vi otro ángel volar por en medio del cielo, que tenía el evangelio eterno para predicarlo á los que moran en la tierra, y á toda nación y tribu y lengua y pueblo,' },
-    { n: 7, t: 'Diciendo en alta voz: Temed á Dios, y dadle honra; porque la hora de su juicio es venida; y adorad á aquel que ha hecho el cielo y la tierra y el mar y las fuentes de las aguas.' },
-    { n: 8, t: 'Y otro ángel le siguió, diciendo: Ha caído, ha caído Babilonia, aquella grande ciudad, porque ella ha dado á beber á todas las naciones del vino del furor de su fornicación.' },
-    { n: 9, t: 'Y el tercer ángel los siguió, diciendo en alta voz: Si alguno adora á la bestia y á su imagen, y toma la señal en su frente, ó en su mano,' },
-    { n: 10, t: 'Este también beberá del vino de la ira de Dios, el cual está echado puro en el cáliz de su ira; y será atormentado con fuego y azufre delante de los santos ángeles, y delante del Cordero:' },
-    { n: 11, t: 'Y el humo del tormento de ellos sube para siempre jamás. Y los que adoran á la bestia y á su imagen, no tienen reposo día ni noche, ni cualquiera que tomare la señal de su nombre.' },
-    { n: 12, t: 'Aquí está la paciencia de los santos; aquí están los que guardan los mandamientos de Dios, y la fe de Jesús.' },
-  ],
-  'Hechos 4:13': [
-    { n: 13, t: 'Entonces viendo la constancia de Pedro y de Juan, sabido que eran hombres sin letras é ignorantes, se maravillaban; y les conocían que habían estado con Jesús.' },
-  ],
-  'Hechos 1:8': [
-    { n: 8, t: 'Mas recibiréis la virtud del Espíritu Santo que vendrá sobre vosotros; y me seréis testigos en Jerusalem, en toda Judea, y Samaria, y hasta lo último de la tierra.' },
-  ],
-  'Hechos 4:9': [
-    { n: 9, t: 'Pues que somos hoy demandados acerca del beneficio hecho á un hombre enfermo, de qué manera éste haya sido sanado,' },
-  ],
-  'Hechos 4:20': [
-    { n: 20, t: 'Porque no podemos dejar de decir lo que hemos visto y oído.' },
-  ],
-  'Hechos 4:29, 31': [
-    { n: 29, t: 'Y ahora, Señor, mira sus amenazas, y da á tus siervos que con toda confianza hablen tu palabra;' },
-    { n: 31, t: 'Y como hubieron orado, el lugar en que estaban congregados tembló; y todos fueron llenos del Espíritu Santo, y hablaron la palabra de Dios con confianza.' },
-  ],
-  'Isaías 50:4': [
-    { n: 4, t: 'El Señor Jehová me dió lengua de sabios, para saber hablar en sazón palabra al cansado; despertará de mañana, despertaráme de mañana oído, para que oiga como los sabios.' },
-  ],
-  '1 Pedro 3:15': [
-    { n: 15, t: 'Sino santificad al Señor Dios en vuestros corazones, y estad siempre aparejados para responder con mansedumbre y reverencia á cada uno que os demande razón de la esperanza que hay en vosotros:' },
-  ],
-  '1 Juan 4:7-11': [
-    { n: 7, t: 'Carísimos, amémonos unos á otros; porque el amor es de Dios. Cualquiera que ama, es nacido de Dios, y conoce á Dios.' },
-    { n: 8, t: 'El que no ama, no conoce á Dios; porque Dios es amor.' },
-    { n: 9, t: 'En esto se mostró el amor de Dios para con nosotros, en que Dios envió á su Hijo unigénito al mundo, para que vivamos por él.' },
-    { n: 10, t: 'En esto consiste el amor: no que nosotros hayamos amado á Dios, sino que él nos amó á nosotros, y ha enviado á su Hijo en propiciación por nuestros pecados.' },
-    { n: 11, t: 'Amados, si Dios así nos ha amado, debemos también nosotros amarnos unos á otros.' },
-  ],
-  'Romanos 5:8': [
-    { n: 8, t: 'Mas Dios encarece su caridad para con nosotros, porque siendo aún pecadores, Cristo murió por nosotros.' },
-  ],
-  'Juan 3:16': [
-    { n: 16, t: 'Porque de tal manera amó Dios al mundo, que ha dado á su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.' },
-  ],
-  'Juan 15:9-10': [
-    { n: 9, t: 'Como el Padre me amó, también yo os he amado: estad en mi amor.' },
-    { n: 10, t: 'Si guardareis mis mandamientos, estaréis en mi amor; como yo también he guardado los mandamientos de mi Padre, y estoy en su amor.' },
-  ],
-  'Romanos 8:38-39': [
-    { n: 38, t: 'Por lo cual estoy cierto que ni la muerte, ni la vida, ni ángeles, ni principados, ni potestades, ni lo presente, ni lo por venir,' },
-    { n: 39, t: 'Ni lo alto, ni lo bajo, ni ninguna criatura nos podrá apartar del amor de Dios, que es en Cristo Jesús Señor nuestro.' },
-  ],
-  'Efesios 3:17-19': [
-    { n: 17, t: 'Que habite Cristo por la fe en vuestros corazones; para que, arraigados y fundados en amor,' },
-    { n: 18, t: 'Podáis bien comprender con todos los santos cuál sea la anchura y la longura y la profundidad y la altura,' },
-    { n: 19, t: 'Y conocer el amor de Cristo, que excede á todo conocimiento, para que seáis llenos de toda la plenitud de Dios.' },
-  ],
   '1 Corintios 13:1-3': [
-    { n: 1, t: 'Si yo hablase lenguas humanas y angélicas, y no tengo caridad, vengo á ser como metal que resuena, ó címbalo que retiñe.' },
-    { n: 2, t: 'Y si tuviese profecía, y entendiese todos los misterios y toda ciencia; y si tuviese toda la fe, de tal manera que traspasase los montes, y no tengo caridad, nada soy.' },
-    { n: 3, t: 'Y si repartiese toda mi hacienda para dar de comer á pobres, y si entregase mi cuerpo para ser quemado, y no tengo caridad, de nada me sirve.' },
+    { n: 1, t: 'Si hablo en lenguas humanas y angelicales, pero no tengo amor, no soy más que un metal que resuena o un platillo que hace ruido.' },
+    { n: 2, t: 'Si tengo el don de profecía y entiendo todos los misterios y poseo todo conocimiento, y si tengo una fe que logra trasladar montañas, pero me falta el amor, no soy nada.' },
+    { n: 3, t: 'Si reparto entre los pobres todo lo que poseo, y si entrego mi cuerpo para que lo consuman las llamas, pero no tengo amor, nada gano con eso.' },
   ],
-  'Juan 13:35': [
-    { n: 35, t: 'En esto conocerán todos que sois mis discípulos, si tuviereis amor los unos con los otros.' },
+  '1 Corintios 4:5': [
+    { n: 5, t: 'Por lo tanto, no juzguen nada antes de tiempo; esperen hasta que venga el Señor. Él sacará a la luz lo que está oculto en la oscuridad y pondrá al descubierto las intenciones de cada corazón. Entonces cada uno recibirá de Dios la alabanza que le corresponda.' },
+  ],
+  '1 Juan 3:4': [
+    { n: 4, t: 'Todo el que comete pecado quebranta la ley; de hecho, el pecado es transgresión de la ley.' },
   ],
   '1 Juan 4:20-21': [
-    { n: 20, t: 'Si alguno dice, Yo amo á Dios, y aborrece á su hermano, es mentiroso. Porque el que no ama á su hermano al cual ha visto, ¿cómo puede amar á Dios á quien no ha visto?' },
-    { n: 21, t: 'Y nosotros tenemos este mandamiento de él: Que el que ama á Dios, ame también á su hermano.' },
+    { n: 20, t: 'Si alguien afirma: «Yo amo a Dios», pero odia a su hermano, es un mentiroso; pues el que no ama a su hermano, a quien ha visto, no puede amar a Dios, a quien no ha visto.' },
+    { n: 21, t: 'Y él nos ha dado este mandamiento: el que ama a Dios, ame también a su hermano.' },
   ],
-  'Mateo 9:36': [
-    { n: 36, t: 'Y viendo las gentes, tuvo compasión de ellas; porque estaban derramadas y esparcidas como ovejas que no tienen pastor.' },
+  '1 Juan 4:7-11': [
+    { n: 7, t: 'Queridos hermanos, amémonos los unos a los otros, porque el amor viene de Dios, y todo el que ama ha nacido de él y lo conoce.' },
+    { n: 8, t: 'El que no ama no conoce a Dios, porque Dios es amor.' },
+    { n: 9, t: 'Así manifestó Dios su amor entre nosotros: en que envió a su Hijo unigénito al mundo para que vivamos por medio de él.' },
+    { n: 10, t: 'En esto consiste el amor: no en que nosotros hayamos amado a Dios, sino en que él nos amó y envió a su Hijo para que fuera ofrecido como sacrificio por el perdón de nuestros pecados.' },
+    { n: 11, t: 'Queridos hermanos, ya que Dios nos ha amado así, también nosotros debemos amarnos los unos a los otros.' },
+  ],
+  '1 Juan 5:3': [
+    { n: 3, t: 'En esto consiste el amor a Dios: en que obedezcamos sus mandamientos. Y éstos no son difíciles de cumplir,' },
+  ],
+  '1 Pedro 3:15': [
+    { n: 15, t: 'Más bien, honren en su corazón a Cristo como Señor. Estén siempre preparados para responder a todo el que les pida razón de la esperanza que hay en ustedes.' },
   ],
   '2 Corintios 5:14': [
-    { n: 14, t: 'Porque el amor de Cristo nos constriñe, pensando esto: Que si uno murió por todos, luego todos son muertos;' },
-  ],
-  'Jeremías 20:9': [
-    { n: 9, t: 'Y dije: No me acordaré más de él, ni hablaré más en su nombre: empero fué en mi corazón como un fuego ardiente metido en mis huesos; trabajé por sufrirlo, y no pude.' },
-  ],
-  'Génesis 2:16-17': [
-    { n: 16, t: 'Y mandó Jehová Dios al hombre, diciendo: De todo árbol del huerto comerás;' },
-    { n: 17, t: 'Mas del árbol de ciencia del bien y del mal no comerás de él; porque el día que de él comieres, morirás.' },
-  ],
-  'Génesis 7:1': [
-    { n: 1, t: 'Y Jehová dijo á Noé: Entra tú y toda tu casa en el arca porque á ti he visto justo delante de mí en esta generación.' },
-  ],
-  'Deuteronomio 4:29-31': [
-    { n: 29, t: 'Mas si desde allí buscares á Jehová tu Dios, lo hallarás, si lo buscares de todo tu corazón y de toda tu alma.' },
-    { n: 30, t: 'Cuando estuvieres en angustia, y te alcanzaren todas estas cosas, si en los postreros días te volvieres á Jehová tu Dios, y oyeres su voz;' },
-    { n: 31, t: 'Porque Dios misericordioso es Jehová tu Dios; no te dejará, ni te destruirá, ni se olvidará del pacto de tus padres que les juró.' },
-  ],
-  'Mateo 4:23-25': [
-    { n: 23, t: 'Y rodeó Jesús toda Galilea, enseñando en las sinagogas de ellos, y predicando el evangelio del reino, y sanando toda enfermedad y toda dolencia en el pueblo.' },
-    { n: 24, t: 'Y corría su fama por toda la Siria; y le trajeron todos los que tenían mal: los tomados de diversas enfermedades y tormentos, y los endemoniados, y lunáticos, y paralíticos, y los sanó.' },
-    { n: 25, t: 'Y le siguieron muchas gentes de Galilea y de Decápolis y de Jerusalem y de Judea y de la otra parte del Jordán.' },
-  ],
-  'Mateo 23:37': [
-    { n: 37, t: '¡Jerusalem, Jerusalem, que matas á los profetas, y apedreas á los que son enviados á ti! ¡cuántas veces quise juntar tus hijos, como la gallina junta sus pollos debajo de las alas, y no quisiste!' },
+    { n: 14, t: 'El amor de Cristo nos obliga, porque estamos convencidos de que uno murió por todos, y por consiguiente todos murieron.' },
   ],
   'Apocalipsis 12:11': [
-    { n: 11, t: 'Y ellos le han vencido por la sangre del Cordero, y por la palabra de su testimonio; y no han amado sus vidas hasta la muerte.' },
+    { n: 11, t: 'Ellos lo han vencido por medio de la sangre del Cordero y por el mensaje del cual dieron testimonio; no valoraron tanto su vida como para evitar la muerte.' },
+  ],
+  'Apocalipsis 14:6-12': [
+    { n: 6, t: 'Luego vi a otro ángel que volaba en medio del cielo, y que llevaba el evangelio eterno para anunciarlo a los que viven en la tierra, a toda nación, raza, lengua y pueblo.' },
+    { n: 7, t: 'Gritaba a gran voz: «Teman a Dios y denle gloria, porque ha llegado la hora de su juicio. Adoren al que hizo el cielo, la tierra, el mar y los manantiales.»' },
+    { n: 8, t: 'Lo seguía un segundo ángel que gritaba: «¡Ya cayó! Ya cayó la gran Babilonia, la que hizo que todas las naciones bebieran el excitante vino de su adulterio.»' },
+    { n: 9, t: 'Los seguía un tercer ángel que clamaba a grandes voces: «Si alguien adora a la bestia y a su imagen, y se deja poner en la frente o en la mano la marca de la bestia,' },
+    { n: 10, t: 'beberá también el vino del furor de Dios, que en la copa de su ira está puro, no diluido. Será atormentado con fuego y azufre, en presencia de los santos ángeles y del Cordero.' },
+    { n: 11, t: 'El humo de ese tormento sube por los siglos de los siglos. No habrá descanso ni de día ni de noche para el que adore a la bestia y su imagen, ni para quien se deje poner la marca de su nombre.»' },
+    { n: 12, t: '¡En esto consiste la perseverancia de los santos, los cuales obedecen los mandamientos de Dios y se mantienen fieles a Jesús!' },
+  ],
+  'Apocalipsis 19:8': [
+    { n: 8, t: 'y se le ha concedido vestirse de lino fino, limpio y resplandeciente.»' },
+  ],
+  'Deuteronomio 4:29-31': [
+    { n: 29, t: '»Pero si desde allí buscas al SEÑOR tu Dios con todo tu corazón y con toda tu alma, lo encontrarás.' },
+    { n: 30, t: 'Y al cabo del tiempo, cuando hayas vivido en medio de todas esas angustias y dolores, volverás al SEÑOR tu Dios y escucharás su voz.' },
+    { n: 31, t: 'Porque el SEÑOR tu Dios es un Dios compasivo, que no te abandonará ni te destruirá, ni se olvidará del pacto que mediante juramento hizo con tus antepasados.' },
+  ],
+  'Efesios 3:17-19': [
+    { n: 17, t: 'para que por fe Cristo habite en sus corazones. Y pido que, arraigados y cimentados en amor,' },
+    { n: 18, t: 'puedan comprender, junto con todos los santos, cuán ancho y largo, alto y profundo es el amor de Cristo;' },
+    { n: 19, t: 'en fin, que conozcan ese amor que sobrepasa nuestroconocimiento, para que sean llenos de la plenitud de Dios.' },
+  ],
+  'Efesios 4:30': [
+    { n: 30, t: 'No agravien al Espíritu Santo de Dios, con el cual fueron sellados para el día de la redención.' },
+  ],
+  'Efesios 5:27': [
+    { n: 27, t: 'para presentársela a sí mismo como una iglesia radiante, sin mancha ni arruga ni ninguna otra imperfección, sino santa e intachable.' },
+  ],
+  'Génesis 2:16-17': [
+    { n: 16, t: 'y le dio este mandato: «Puedes comer de todos los árboles del jardín,' },
+    { n: 17, t: 'pero del árbol del conocimiento del bien y del mal no deberás comer. El día que de él comas, ciertamente morirás.»' },
+  ],
+  'Génesis 3:7': [
+    { n: 7, t: 'En ese momento se les abrieron los ojos, y tomaron conciencia de su desnudez. Por eso, para cubrirse entretejieron hojas de higuera.' },
+  ],
+  'Génesis 7:1': [
+    { n: 1, t: 'El SEÑOR le dijo a Noé: «Entra en el arca con toda tu familia, porque tú eres el único hombre justo que he encontrado en esta generación.' },
+  ],
+  'Hechos 1:8': [
+    { n: 8, t: 'Pero cuando venga el Espíritu Santo sobre ustedes, recibirán poder y serán mis testigos tanto en Jerusalén como en toda Judea y Samaria, y hasta los confines de la tierra.' },
+  ],
+  'Hechos 20:21': [
+    { n: 21, t: 'A judíos y a griegos les he instado a convertirse a Dios y a creer en nuestro Señor Jesús.' },
+  ],
+  'Hechos 4:13': [
+    { n: 13, t: 'Los gobernantes, al ver la osadía con que hablaban Pedro y Juan, y al darse cuenta de que eran gente sin estudios ni preparación, quedaron asombrados y reconocieron que habían estado con Jesús.' },
+  ],
+  'Hechos 4:20': [
+    { n: 20, t: 'Nosotros no podemos dejar de hablar de lo que hemos visto y oído.' },
+  ],
+  'Hechos 4:29, 31': [
+    { n: 29, t: 'Ahora, Señor, toma en cuenta sus amenazas y concede a tus siervos el proclamar tu palabra sin temor alguno.' },
+    { n: 31, t: 'Después de haber orado, tembló el lugar en que estaban reunidos; todos fueron llenos del Espíritu Santo, y proclamaban la palabra de Dios sin temor alguno.' },
+  ],
+  'Hechos 4:9': [
+    { n: 9, t: 'Hoy se nos procesa por haber favorecido a un inválido, ¡y se nos pregunta cómo fue sanado!' },
+  ],
+  'Isaías 50:4': [
+    { n: 4, t: 'El SEÑOR omnipotente me ha concedido tener una lengua instruida, para sostener con mi palabra al fatigado. Todas las mañanas me despierta, y también me despierta el oído, para que escuche como los discípulos.' },
+  ],
+  'Isaías 59:2': [
+    { n: 2, t: 'Son las iniquidades de ustedes las que los separan de su Dios. Son estos pecados los que lo llevan a ocultar su rostro para no escuchar.' },
+  ],
+  'Isaías 61:10': [
+    { n: 10, t: 'Me deleito mucho en el SEÑOR; me regocijo en mi Dios. Porque él me vistió con ropas de salvación y me cubrió con el manto de la justicia. Soy semejante a un novio que luce su diadema, o una novia adornada con sus joyas.' },
+  ],
+  'Isaías 64:6': [
+    { n: 6, t: 'Todos somos como gente impura; todos nuestros actos de justicia son como trapos de inmundicia. Todos nos marchitamos como hojas: nuestras iniquidades nos arrastran como el viento.' },
+  ],
+  'Jeremías 17:9': [
+    { n: 9, t: 'Nada hay tan engañoso como el corazón. No tiene remedio. ¿Quién puede comprenderlo?' },
+  ],
+  'Jeremías 20:9': [
+    { n: 9, t: 'Si digo: «No me acordaré más de él, ni hablaré más en su nombre», entonces su palabra en mi interior se vuelve un fuego ardiente que me cala hasta los huesos. He hecho todo lo posible por contenerla, pero ya no puedo más.' },
+  ],
+  'Juan 13:35': [
+    { n: 35, t: 'De este modo todos sabrán que son mis discípulos, si se aman los unos a los otros.' },
+  ],
+  'Juan 14:15': [
+    { n: 15, t: '»Si ustedes me aman, obedecerán mis mandamientos.' },
+  ],
+  'Juan 15:9-10': [
+    { n: 9, t: '»Así como el Padre me ha amado a mí, también yo los he amado a ustedes. Permanezcan en mi amor.' },
+    { n: 10, t: 'Si obedecen mis mandamientos, permanecerán en mi amor, así como yo he obedecido los mandamientos de mi Padre y permanezco en su amor.' },
+  ],
+  'Juan 16:8': [
+    { n: 8, t: 'Y cuando él venga, convencerá al mundo de su error en cuanto al pecado, a la justicia y al juicio;' },
+  ],
+  'Juan 17:3': [
+    { n: 3, t: 'Y ésta es la vida eterna: que te conozcan a ti, el único Dios verdadero, y a Jesucristo, a quien tú has enviado.' },
+  ],
+  'Juan 3:16': [
+    { n: 16, t: '»Porque tanto amó Dios al mundo, que dio a su Hijo unigénito, para que todo el que cree en él no se pierda, sino que tenga vida eterna.' },
+  ],
+  'Lucas 10:40-42': [
+    { n: 40, t: 'Marta, por su parte, se sentía abrumada porque tenía mucho que hacer. Así que se acercó a él y le dijo: —Señor, ¿no te importa que mi hermana me haya dejado sirviendo sola? ¡Dile que me ayude!' },
+    { n: 41, t: '—Marta, Marta —le contestó Jesús—, estás inquieta y preocupada por muchas cosas,' },
+    { n: 42, t: 'pero sólo una es necesaria. María ha escogido la mejor, y nadie se la quitará.' },
+  ],
+  'Lucas 18:13': [
+    { n: 13, t: '–16' },
+  ],
+  'Marcos 12:30-31': [
+    { n: 30, t: 'Ama al Señor tu Dios con todo tu corazón, con toda tu alma, con toda tu mente y con todas tus fuerzas.”' },
+    { n: 31, t: 'El segundo es: “Ama a tu prójimo como a ti mismo.” No hay otro mandamiento más importante que éstos.' },
+  ],
+  'Marcos 1:15': [
+    { n: 15, t: '«Se ha cumplido el tiempo —decía—. El reino de Dios está cerca. ¡Arrepiéntanse y crean las buenas nuevas!»' },
+  ],
+  'Mateo 22:1-14': [
+    { n: 1, t: 'Jesús volvió a hablarles en parábolas, y les dijo:' },
+    { n: 2, t: '«El reino de los cielos es como un rey que preparó un banquete de bodas para su hijo.' },
+    { n: 3, t: 'Mandó a sus siervos que llamaran a los invitados, pero éstos se negaron a asistir al banquete.' },
+    { n: 4, t: 'Luego mandó a otros siervos y les ordenó: “Digan a los invitados que ya he preparado mi comida: Ya han matado mis bueyes y mis reses cebadas, y todo está listo. Vengan al banquete de bodas.”' },
+    { n: 5, t: 'Pero ellos no hicieron caso y se fueron: uno a su campo, otro a su negocio.' },
+    { n: 6, t: 'Los demás agarraron a los siervos, los maltrataron y los mataron.' },
+    { n: 7, t: 'El rey se enfureció. Mandó su ejército a destruir a los asesinos y a incendiar su ciudad.' },
+    { n: 8, t: 'Luego dijo a sus siervos: “El banquete de bodas está preparado, pero los que invité no merecían venir.' },
+    { n: 9, t: 'Vayan al cruce de los caminos e inviten al banquete a todos los que encuentren.”' },
+    { n: 10, t: 'Así que los siervos salieron a los caminos y reunieron a todos los que pudieron encontrar, buenos y malos, y se llenó de invitados el salón de bodas.' },
+    { n: 11, t: '»Cuando el rey entró a ver a los invitados, notó que allí había un hombre que no estaba vestido con el traje de boda.' },
+    { n: 12, t: '“Amigo, ¿cómo entraste aquí sin el traje de boda?”, le dijo. El hombre se quedó callado.' },
+    { n: 13, t: '–17; Lc 20:' },
+    { n: 14, t: 'Porque muchos son los invitados, pero pocos los escogidos.» El pago de impuestos al césar 22:' },
+  ],
+  'Mateo 22:40': [
+    { n: 40, t: 'De estos dos mandamientos dependen toda la ley y los profetas. ¿De quién es hijo el Cristo? 22:' },
+  ],
+  'Mateo 23:37': [
+    { n: 37, t: '»¡Jerusalén, Jerusalén, que matas a los profetas y apedreas a los que se te envían! ¡Cuántas veces quise reunir a tus hijos, como reúne la gallina a sus pollitos debajo de sus alas, pero no quisiste!' },
+  ],
+  'Mateo 28:19': [
+    { n: 19, t: 'Por tanto, vayan y hagan discípulos de todas las naciones, bautizándolos en el nombre del Padre y del Hijo y del Espíritu Santo,' },
+  ],
+  'Mateo 3:2': [
+    { n: 2, t: 'Decía: «Arrepiéntanse, porque el reino de los cielos está cerca.»' },
+  ],
+  'Mateo 3:9': [
+    { n: 9, t: '–11; Lc 3:' },
+  ],
+  'Mateo 4:23-25': [
+    { n: 23, t: 'Jesús recorría toda Galilea, enseñando en las sinagogas, anunciando las buenas nuevas del reino, y sanando toda enfermedad y dolencia entre la gente.' },
+    { n: 24, t: 'Su fama se extendió por toda Siria, y le llevaban todos los que padecían de diversas enfermedades, los que sufrían de dolores graves, los endemoniados, los epilépticos y los paralíticos, y él los sanaba.' },
+    { n: 25, t: 'Lo seguían grandes multitudes de Galilea, Decápolis, Jerusalén, Judea y de la región al otro lado del Jordán.' },
+  ],
+  'Mateo 5:20': [
+    { n: 20, t: 'Porque les digo a ustedes, que no van a entrar en el reino de los cielos a menos que su justicia supere a la de los fariseos y de los maestros de la ley. El homicidio 5:' },
+  ],
+  'Mateo 5:21, 27, 31, 33, 38, 43': [
+    { n: 21, t: '»Ustedes han oído que se dijo a sus antepasados: “No mates, y todo el que mate quedará sujeto al juicio del tribunal.”' },
+    { n: 27, t: '»Ustedes han oído que se dijo: “No cometas adulterio.”' },
+    { n: 31, t: '»Se ha dicho: “El que repudia a su esposa debe darle un certificado de divorcio.”' },
+    { n: 33, t: '»También han oído que se dijo a sus antepasados: “No faltes a tu juramento, sino cumple con tus promesas al Señor.”' },
+    { n: 38, t: '»Ustedes han oído que se dijo: “Ojo por ojo y diente por diente.”' },
+    { n: 43, t: '»Ustedes han oído que se dijo: “Ama a tu prójimo y odia a tu enemigo.”' },
+  ],
+  'Mateo 5:22': [
+    { n: 22, t: 'Pero yo les digo que todo el que se enoje con su hermano quedará sujeto al juicio del tribunal. Es más,cualquiera que insulte a su hermano quedará sujeto al juicio del Consejo. Pero cualquiera que lo maldiga quedará sujeto al juicio del infierno.' },
+  ],
+  'Mateo 5:28-29': [
+    { n: 28, t: 'Pero yo les digo que cualquiera que mira a una mujer y la codicia ya ha cometido adulterio con ella en el corazón.' },
+    { n: 29, t: 'Por tanto, si tu ojo derecho te hace pecar, sácatelo y tíralo. Más te vale perder una sola parte de tu cuerpo, y no que todo él sea arrojado al infierno.' },
+  ],
+  'Mateo 5:44': [
+    { n: 44, t: 'Pero yo les digo: Amen a sus enemigos y oren por quienes los persiguen,' },
+  ],
+  'Mateo 6:2': [
+    { n: 2, t: '–4' },
+  ],
+  'Mateo 6:33': [
+    { n: 33, t: 'Más bien, busquen primeramente el reino de Dios y su justicia, y todas estas cosas les serán añadidas.' },
+  ],
+  'Mateo 7:1-2': [
+    { n: 1, t: '»No juzguen a nadie, para que nadie los juzgue a ustedes.' },
+    { n: 2, t: 'Porque tal como juzguen se les juzgará, y con la medida que midan a otros, se les medirá a ustedes.' },
+  ],
+  'Mateo 7:21': [
+    { n: 21, t: '»No todo el que me dice: “Señor, Señor”, entrará en el reino de los cielos, sino sólo el que hace la voluntad de mi Padre que está en el cielo.' },
+  ],
+  'Mateo 7:24-29': [
+    { n: 24, t: '»Por tanto, todo el que me oye estas palabras y las pone en práctica es como un hombre prudente que construyó su casa sobre la roca.' },
+    { n: 25, t: 'Cayeron las lluvias, crecieron los ríos, y soplaron los vientos y azotaron aquella casa; con todo, la casa no se derrumbó porque estaba cimentada sobre la roca.' },
+    { n: 26, t: 'Pero todo el que me oye estas palabras y no las pone en práctica es como un hombre insensato que construyó su casa sobre la arena.' },
+    { n: 27, t: 'Cayeron las lluvias, crecieron los ríos, y soplaron los vientos y azotaron aquella casa, y ésta se derrumbó, y grande fue su ruina.»' },
+    { n: 28, t: 'Cuando Jesús terminó de decir estas cosas, las multitudes se asombraron de su enseñanza,' },
+    { n: 29, t: 'porque les enseñaba como quien tenía autoridad, y no como los maestros de la ley.' },
+  ],
+  'Mateo 9:36': [
+    { n: 36, t: 'Al ver a las multitudes, tuvo compasión de ellas, porque estaban agobiadas y desamparadas, como ovejas sin pastor.' },
+  ],
+  'Oseas 4:1, 6, 10': [
+    { n: 1, t: 'Escuchen, israelitas, la palabra del SEÑOR, porque el SEÑOR va a entrar en juicio contra los habitantes del país: «Ya no hay entre mi pueblo fidelidad ni amor, ni conocimiento de Dios.' },
+    { n: 6, t: 'pues por falta de conocimiento mi pueblo ha sido destruido.»Puesto que rechazaste el conocimiento, yo también te rechazo como mi sacerdote. Ya que te olvidaste de la ley de tu Dios, yo también me olvidaré de tus hijos.' },
+    { n: 10, t: '»Comerán, pero no quedarán satisfechos; se prostituirán, pero no se saciarán; porque han abandonado al SEÑOR' },
+  ],
+  'Romanos 10:3': [
+    { n: 3, t: 'No conociendo la justicia que proviene de Dios, y procurando establecer la suya propia, no se sometieron a la justicia de Dios.' },
+  ],
+  'Romanos 5:8': [
+    { n: 8, t: 'Pero Dios demuestra su amor por nosotros en esto: en que cuando todavía éramos pecadores, Cristo murió por nosotros.' },
+  ],
+  'Romanos 8:38-39': [
+    { n: 38, t: 'Pues estoy convencido de que ni la muerte ni la vida, ni los ángeles ni los demonios, ni lo presente ni lo por venir, ni los poderes,' },
+    { n: 39, t: 'ni lo alto ni lo profundo, ni cosa alguna en toda la creación, podrá apartarnos del amor que Dios nos ha manifestado en Cristo Jesús nuestro Señor.' },
+  ],
+  'Salmos 51:5': [
+    { n: 5, t: 'Yo sé que soy malo de nacimiento; pecador me concibió mi madre.' },
+  ],
+  'Éxodo 20:3-17': [
+    { n: 3, t: '»No tengas otros dioses además de mí.' },
+    { n: 4, t: '»No te hagas ningún ídolo, ni nada que guarde semejanza con lo que hay arriba en el cielo, ni con lo que hay abajo en la tierra, ni con lo que hay en las aguas debajo de la tierra.' },
+    { n: 5, t: 'No te inclines delante de ellos ni los adores. Yo, el SEÑOR tu Dios, soy un Dios celoso. Cuando los padres son malvados y me odian, yo castigo a sus hijos hasta la tercera y cuarta generación.' },
+    { n: 6, t: 'Por el contrario, cuando me aman y cumplen mis mandamientos, les muestro mi amor por mil generaciones.' },
+    { n: 7, t: '»No pronuncies el nombre del SEÑOR tu Dios a la ligera. Yo, el SEÑOR, no tendré por inocente a quien se atreva a pronunciar mi nombre a la ligera.' },
+    { n: 8, t: '»Acuérdate del sábado, para consagrarlo.' },
+    { n: 9, t: 'Trabaja seis días, y haz en ellos todo lo que tengas que hacer,' },
+    { n: 10, t: 'pero el día séptimo será un día de reposo para honrar al SEÑOR tu Dios. No hagas en ese día ningún trabajo, ni tampoco tu hijo, ni tu hija, ni tu esclavo, ni tu esclava, ni tus animales, ni tampoco los extranjeros que vivan en tus ciudades.' },
+    { n: 11, t: 'Acuérdate de que en seis días hizo el SEÑOR los cielos y la tierra, el mar y todo lo que hay en ellos, y que descansó el séptimo día. Por eso el SEÑOR bendijo y consagró el día de reposo.' },
+    { n: 12, t: '»Honra a tu padre y a tu madre, para que disfrutes de una larga vida en la tierra que te da el SEÑOR tu Dios.' },
+    { n: 13, t: '»No mates.' },
+    { n: 14, t: '»No cometas adulterio.' },
+    { n: 15, t: '»No robes.' },
+    { n: 16, t: '»No des falso testimonio en contra de tu prójimo.' },
+    { n: 17, t: '»No codicies la casa de tu prójimo: No codicies su esposa, ni su esclavo, ni su esclava, ni su buey, ni su burro, ni nada que le pertenezca.»' },
+  ],
+  'Éxodo 24:7-8': [
+    { n: 7, t: 'Después tomó el libro del pacto y lo leyó ante el pueblo, y ellos respondieron: —Haremos todo lo que el SEÑOR ha dicho, y le obedeceremos.' },
+    { n: 8, t: 'Moisés tomó la sangre, roció al pueblo con ella y dijo: —Ésta es la sangre del pacto que, con base en estas palabras, el SEÑOR ha hecho con ustedes.' },
+  ],
+  'Éxodo 32:4-5': [
+    { n: 4, t: 'quien los recibió y los fundió; luego cinceló el oro fundido e hizo un ídolo en forma de becerro. Entonces exclamó el pueblo: «Israel, ¡aquí tienes a tu dios que te sacó de Egipto!»' },
+    { n: 5, t: 'Cuando Aarón vio esto, construyó un altar enfrente del becerro y anunció: —Mañana haremos fiesta en honor del SEÑOR.' },
+  ],
+  'Éxodo 33:4-6': [
+    { n: 4, t: 'Cuando los israelitas oyeron estas palabras tan demoledoras, comenzaron a llorar y nadie volvió a ponerse sus joyas,' },
+    { n: 5, t: 'pues el SEÑOR le había dicho a Moisés: «Diles a los israelitas que son un pueblo terco. Si aun por un momento tuviera que acompañarlos, podría destruirlos. Diles que se quiten esas joyas, que ya decidiré qué hacer con ellos.»' },
+    { n: 6, t: 'Por eso, a partir del monte Horeb los israelitas no volvieron a ponerse joyas.' },
+  ],
+  'Éxodo 34:6-7': [
+    { n: 6, t: 'pasando delante de él, proclamó: —El SEÑOR, el SEÑOR, Dios clemente y compasivo, lento para la ira y grande en amor y fidelidad,' },
+    { n: 7, t: 'que mantiene su amor hasta mil generaciones después, y que perdona la iniquidad, la rebelión y el pecado; pero que no deja sin castigo al culpable, sino que castiga la maldad de los padres en los hijos y en los nietos, hasta la tercera y la cuarta generación.' },
   ],
 };
 
