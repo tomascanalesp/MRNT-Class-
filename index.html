@@ -1881,7 +1881,7 @@ function RepasoChatScreen({
       }, m.name)), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12,
-          color: 'white',
+          color: '#0a0e2e',
           lineHeight: 1.45,
           fontStyle: m.tag === 'Reflexión' || m.tag === 'Oración' ? 'italic' : 'normal',
           paddingLeft: 2
@@ -1919,11 +1919,12 @@ function RepasoChatScreen({
       }
     }) : /*#__PURE__*/React.createElement("span", null, m.avatar || '👤')), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'rgba(7,9,31,.93)',
+        background: 'rgba(248,245,239,.95)',
         padding: '6px 12px',
         borderRadius: '4px 12px 12px 12px',
         border: `1px solid ${c}33`,
         backdropFilter: 'blur(4px)',
+        boxShadow: '0 6px 18px rgba(10,14,46,.12)',
         maxWidth: '85%'
       }
     }, /*#__PURE__*/React.createElement("span", {
@@ -1945,7 +1946,7 @@ function RepasoChatScreen({
     }) : /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 13,
-        color: 'white'
+        color: '#0a0e2e'
       }
     }, m.text)));
   }));
@@ -1997,8 +1998,8 @@ function TagMessageModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.7)',
-      backdropFilter: 'blur(6px)',
+      background: 'rgba(10,14,46,.45)',
+      backdropFilter: 'blur(4px)',
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center'
@@ -2008,9 +2009,10 @@ function TagMessageModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: `1px solid ${t.color}44`,
       borderRadius: '20px 20px 0 0',
+      boxShadow: '0 -16px 50px rgba(10,14,46,.22)',
       padding: '20px 18px 32px',
       animation: 'modalIn .25s ease'
     }
@@ -2065,9 +2067,9 @@ function TagMessageModal({
       width: '100%',
       padding: '12px 14px',
       borderRadius: 12,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: `1px solid ${t.color}44`,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif',
       resize: 'none',
@@ -2087,7 +2089,7 @@ function TagMessageModal({
       padding: '11px',
       borderRadius: 12,
       border: 'none',
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       color: 'var(--muted)',
       fontSize: 13,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -2110,7 +2112,7 @@ function TagMessageModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: text.trim() ? `0 0 20px ${t.color}44` : undefined
+      boxShadow: text.trim() ? `0 10px 26px ${t.color}33` : undefined
     }
   }, sending ? 'Enviando...' : 'Enviar →'))));
 }
@@ -2177,11 +2179,11 @@ function RepasoChat({
       zIndex: 155,
       display: 'flex',
       flexDirection: 'column',
-      background: 'var(--navy)'
+      background: '#f8f5ef'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg,#0d1035,#0a1950)',
+      background: '#f8f5ef',
       borderBottom: '1px solid rgba(59,130,246,.2)',
       padding: '10px 14px',
       flexShrink: 0,
@@ -2261,8 +2263,8 @@ function RepasoChat({
   }) : /*#__PURE__*/React.createElement("span", null, u.avatar || '👤')))), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -2391,7 +2393,7 @@ function RepasoChat({
       }, m.time)), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 14,
-          color: 'var(--white)',
+          color: '#0a0e2e',
           lineHeight: 1.55,
           fontStyle: m.tag === 'Reflexión' || m.tag === 'Oración' ? 'italic' : 'normal',
           paddingLeft: 4
@@ -2416,8 +2418,8 @@ function RepasoChat({
             padding: '3px 7px',
             borderRadius: 20,
             border: 'none',
-            background: active ? `${tc}33` : 'rgba(255,255,255,.06)',
-            outline: active ? `1px solid ${tc}77` : '1px solid rgba(255,255,255,.1)',
+            background: active ? `${tc}33` : 'rgba(10,14,46,.06)',
+            outline: active ? `1px solid ${tc}77` : '1px solid rgba(10,14,46,.12)',
             cursor: 'pointer',
             fontSize: 13,
             transition: 'all .15s'
@@ -2489,12 +2491,12 @@ function RepasoChat({
       }
     }, m.time)), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: isMe ? `${c}18` : 'rgba(255,255,255,.05)',
-        border: `1px solid ${isMe ? c + '44' : 'rgba(255,255,255,.08)'}`,
+        background: isMe ? `${c}18` : 'rgba(10,14,46,.04)',
+        border: `1px solid ${isMe ? c + '44' : 'rgba(10,14,46,.1)'}`,
         padding: m.type === 'image' ? 6 : '8px 12px',
         borderRadius: isMe ? '12px 4px 12px 12px' : '4px 12px 12px 12px',
         fontSize: 13,
-        color: 'var(--white)',
+        color: '#0a0e2e',
         lineHeight: 1.5,
         wordBreak: 'break-word'
       }
@@ -2518,7 +2520,7 @@ function RepasoChat({
       position: 'fixed',
       inset: 0,
       zIndex: 300,
-      background: 'rgba(0,0,0,.92)',
+      background: 'rgba(10,14,46,.85)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -2556,7 +2558,7 @@ function RepasoChat({
     style: {
       padding: '8px 14px',
       borderTop: '1px solid rgba(59,130,246,.1)',
-      background: 'rgba(7,9,31,.98)',
+      background: '#f8f5ef',
       flexShrink: 0,
       display: 'flex',
       flexWrap: 'wrap',
@@ -2577,7 +2579,7 @@ function RepasoChat({
     style: {
       padding: '10px 12px 14px',
       borderTop: '1px solid rgba(59,130,246,.12)',
-      background: 'rgba(7,9,31,.98)',
+      background: '#f8f5ef',
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -2667,9 +2669,9 @@ function RepasoChat({
       flex: 1,
       padding: '10px 14px',
       borderRadius: 22,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.04)',
       border: '1px solid rgba(59,130,246,.2)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       outline: 'none',
       fontFamily: 'Barlow,sans-serif'
@@ -2682,7 +2684,7 @@ function RepasoChat({
       height: 38,
       flexShrink: 0,
       borderRadius: '50%',
-      background: text.trim() ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(255,255,255,.05)',
+      background: text.trim() ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(10,14,46,.06)',
       border: 'none',
       color: 'white',
       fontSize: 17,
@@ -2690,7 +2692,7 @@ function RepasoChat({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: text.trim() ? '0 0 14px rgba(59,130,246,.4)' : undefined
+      boxShadow: text.trim() ? '0 10px 22px rgba(59,130,246,.33)' : undefined
     }
   }, "↑"))), tagModal && /*#__PURE__*/React.createElement(TagMessageModal, {
     tagType: tagModal,
@@ -6705,7 +6707,7 @@ function DraggableQR({
         position: 'fixed',
         inset: 0,
         zIndex: 210,
-        background: 'rgba(10,14,46,.92)',
+        background: 'rgba(10,14,46,.45)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -6723,7 +6725,7 @@ function DraggableQR({
         flexDirection: 'column',
         alignItems: 'center',
         gap: 16,
-        boxShadow: '0 24px 60px rgba(0,0,0,.5)',
+        boxShadow: '0 24px 60px rgba(10,14,46,.3)',
         maxWidth: '92vmin'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -7122,11 +7124,11 @@ function WordCloudActivity({
       zIndex: 180,
       display: 'flex',
       flexDirection: 'column',
-      background: 'var(--navy)'
+      background: '#f8f5ef'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(7,9,31,.98)',
+      background: '#f8f5ef',
       borderBottom: '1px solid rgba(59,130,246,.2)',
       padding: '10px 14px',
       flexShrink: 0,
@@ -7168,8 +7170,8 @@ function WordCloudActivity({
   }, isAdmin && rawWords.length > 0 && /*#__PURE__*/React.createElement("button", {
     onClick: handleClear,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 8,
       padding: '5px 9px',
       color: 'var(--muted)',
@@ -7194,8 +7196,8 @@ function WordCloudActivity({
   }, "⏹ Terminar"), !isAdmin && /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -7208,9 +7210,9 @@ function WordCloudActivity({
   }, "✕"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       borderRadius: 0,
-      borderBottom: '1px solid rgba(255,255,255,.06)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       flexShrink: 0
     }
   }, [{
@@ -7275,7 +7277,7 @@ function WordCloudActivity({
   }, "📖 Pregunta del repaso"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 15,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.6,
       fontWeight: 500
     }
@@ -7331,9 +7333,9 @@ function WordCloudActivity({
       flex: 1,
       padding: '12px 16px',
       borderRadius: 24,
-      background: 'rgba(255,255,255,.06)',
+      background: 'rgba(10,14,46,.06)',
       border: '1px solid rgba(59,130,246,.25)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       outline: 'none',
       fontFamily: 'Barlow,sans-serif'
@@ -7347,13 +7349,13 @@ function WordCloudActivity({
       flexShrink: 0,
       borderRadius: '50%',
       border: 'none',
-      background: input.trim() && !sending ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(255,255,255,.06)',
+      background: input.trim() && !sending ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(10,14,46,.06)',
       color: input.trim() && !sending ? 'white' : 'var(--muted)',
       fontSize: 20,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: input.trim() && !sending ? '0 0 16px rgba(59,130,246,.4)' : undefined
+      boxShadow: input.trim() && !sending ? '0 10px 24px rgba(59,130,246,.33)' : undefined
     }
   }, sending ? /*#__PURE__*/React.createElement(Spinner, {
     size: 18,
@@ -7403,7 +7405,7 @@ function WordCloudActivity({
       fontFamily: 'Barlow Condensed,sans-serif',
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: '0 4px 16px rgba(59,130,246,.4)'
+      boxShadow: '0 8px 22px rgba(59,130,246,.33)'
     }
   }, "☁️ Ver Nube →")), justSent && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7428,7 +7430,7 @@ function WordCloudActivity({
       padding: '24px 18px',
       gap: '2px 14px',
       overflowY: 'auto',
-      background: 'radial-gradient(ellipse at 50% 40%,#0a0e2a,#07091f)'
+      background: 'radial-gradient(ellipse at 50% 40%,#ffffff,#f8f5ef)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7445,7 +7447,7 @@ function WordCloudActivity({
       width: wordHash('w' + i) % 2 + 1,
       height: wordHash('w' + i) % 2 + 1,
       borderRadius: '50%',
-      background: 'rgba(255,255,255,.12)'
+      background: 'rgba(10,14,46,.08)'
     }
   }))), sorted.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7463,7 +7465,7 @@ function WordCloudActivity({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 15,
-      color: 'white',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.1em',
       marginTop: 8
@@ -7485,7 +7487,7 @@ function WordCloudActivity({
         fontWeight: data.count >= 3 ? 900 : data.count >= 2 ? 800 : 600,
         color: c,
         transform: `translate(${jx}px,${jy}px) rotate(${rot}deg)`,
-        textShadow: sz > 34 ? `0 0 ${sz * .55}px ${c}55` : undefined,
+        textShadow: 'none',
         letterSpacing: '-.01em',
         lineHeight: .95,
         padding: '0 4px',
@@ -7569,13 +7571,13 @@ function MisionActivity({
       zIndex: 170,
       display: 'flex',
       flexDirection: 'column',
-      background: 'linear-gradient(170deg,#070920,#0a1240 55%,#0d1450)'
+      background: 'linear-gradient(170deg,#f8f5ef,#efeae0)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '10px 14px',
       borderBottom: '1px solid rgba(59,130,246,.22)',
-      background: 'rgba(7,9,31,.65)',
+      background: 'rgba(248,245,239,.85)',
       backdropFilter: 'blur(10px)',
       display: 'flex',
       alignItems: 'center',
@@ -7621,8 +7623,8 @@ function MisionActivity({
   }, isOver ? 'Tiempo extra' : 'Tiempo: ' + formatTime(remaining)))), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -7651,7 +7653,7 @@ function MisionActivity({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
-      color: 'rgba(147,197,253,.95)',
+      color: '#1d4ed8',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       textTransform: 'uppercase',
@@ -7666,11 +7668,11 @@ function MisionActivity({
     maxLength: 240,
     style: {
       width: '100%',
-      background: 'rgba(255,255,255,.04)',
-      border: '1px solid rgba(255,255,255,.12)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 10,
       padding: '10px 12px',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       resize: 'none',
@@ -7736,15 +7738,15 @@ function MisionActivity({
   }, "Tu compromiso"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 14,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.4,
       wordBreak: 'break-word'
     }
   }, myCommitment.text)), /*#__PURE__*/React.createElement("button", {
     onClick: removeCommitment,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 6,
       padding: '4px 8px',
       color: 'var(--muted)',
@@ -7792,7 +7794,7 @@ function MisionActivity({
   }, commitmentList.map(([uid, c]) => /*#__PURE__*/React.createElement("div", {
     key: uid,
     style: {
-      background: 'rgba(255,255,255,.04)',
+      background: 'rgba(10,14,46,.04)',
       border: `1px solid ${c.color || '#3b82f6'}33`,
       borderRadius: 10,
       padding: '10px 12px',
@@ -7820,7 +7822,7 @@ function MisionActivity({
   }, c.name, uid === myId ? ' · tú' : ''), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.4,
       wordBreak: 'break-word'
     }
@@ -7842,7 +7844,7 @@ function MisionActivity({
       key: p.id,
       onClick: () => togglePrayer(p.id),
       style: {
-        background: iPray ? `linear-gradient(160deg,${p.color}33,${p.color}1a)` : 'rgba(255,255,255,.04)',
+        background: iPray ? `linear-gradient(160deg,${p.color}33,${p.color}1a)` : 'rgba(10,14,46,.04)',
         border: `2px solid ${iPray ? p.color : p.color + '33'}`,
         borderRadius: 14,
         padding: '14px 10px',
@@ -7884,7 +7886,7 @@ function MisionActivity({
     }, p.desc), /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 2,
-        background: iPray ? p.color : 'rgba(255,255,255,.06)',
+        background: iPray ? p.color : 'rgba(10,14,46,.06)',
         color: iPray ? '#fff' : 'var(--muted)',
         padding: '5px 12px',
         borderRadius: 20,
@@ -7988,7 +7990,7 @@ function JoinActivityPrompt({
       position: 'fixed',
       inset: 0,
       zIndex: 230,
-      background: 'rgba(7,9,31,.78)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -7999,12 +8001,12 @@ function JoinActivityPrompt({
     style: {
       width: '100%',
       maxWidth: 340,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: `2px solid ${color}55`,
       borderRadius: 20,
       padding: '24px 22px',
       textAlign: 'center',
-      boxShadow: `0 0 40px ${color}33`,
+      boxShadow: `0 18px 44px ${color}33`,
       animation: 'modalIn .3s ease'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -8027,7 +8029,7 @@ function JoinActivityPrompt({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 22,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       lineHeight: 1.2,
       marginBottom: 18
     }
@@ -8042,9 +8044,9 @@ function JoinActivityPrompt({
       flex: 1,
       padding: 12,
       borderRadius: 12,
-      border: '1px solid rgba(255,255,255,.18)',
-      background: 'rgba(255,255,255,.06)',
-      color: 'var(--white)',
+      border: '1px solid rgba(10,14,46,.16)',
+      background: 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 14,
@@ -8060,14 +8062,14 @@ function JoinActivityPrompt({
       borderRadius: 12,
       border: 'none',
       background: `linear-gradient(135deg,${color},${z.colorDark || color})`,
-      color: '#07091f',
+      color: '#f8f5ef',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 14,
       letterSpacing: '.05em',
       textTransform: 'uppercase',
       cursor: 'pointer',
-      boxShadow: `0 0 24px ${color}55`
+      boxShadow: `0 10px 26px ${color}55`
     }
   }, "Sí, unirme"))));
 }
@@ -8095,7 +8097,7 @@ function SurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8105,7 +8107,7 @@ function SurveyModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(16,185,129,.3)',
       borderRadius: '20px 20px 0 0',
       padding: '28px 22px 32px',
@@ -8195,7 +8197,7 @@ function SurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.85)',
+      background: '#f8f5ef',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
@@ -8225,7 +8227,7 @@ function SurveyModal({
       position: 'fixed',
       inset: 0,
       zIndex: 220,
-      background: 'rgba(0,0,0,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'flex-end',
@@ -8235,7 +8237,7 @@ function SurveyModal({
     style: {
       width: '100%',
       maxWidth: 480,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.25)',
       borderRadius: '20px 20px 0 0',
       padding: '20px 18px 36px',
@@ -8268,7 +8270,7 @@ function SurveyModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.05em',
       textAlign: 'center',
@@ -8281,9 +8283,9 @@ function SurveyModal({
       width: 32,
       height: 32,
       borderRadius: 8,
-      border: '1px solid rgba(255,255,255,.12)',
-      background: 'rgba(255,255,255,.06)',
-      color: 'var(--white)',
+      border: '1px solid rgba(10,14,46,.12)',
+      background: 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontSize: 18,
       lineHeight: 1,
       cursor: 'pointer',
@@ -8296,7 +8298,7 @@ function SurveyModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       marginBottom: 10
@@ -8315,8 +8317,8 @@ function SurveyModal({
       height: 40,
       borderRadius: 10,
       border: 'none',
-      background: days === d ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(255,255,255,.08)',
-      color: days === d ? '#07091f' : 'var(--white)',
+      background: days === d ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.08)',
+      color: days === d ? '#f8f5ef' : '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 16,
@@ -8329,7 +8331,7 @@ function SurveyModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       marginBottom: 10
@@ -8353,7 +8355,7 @@ function SurveyModal({
       padding: '10px',
       borderRadius: 12,
       border: 'none',
-      background: bible === opt.v ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(255,255,255,.06)',
+      background: bible === opt.v ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'rgba(10,14,46,.06)',
       color: bible === opt.v ? 'white' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
@@ -8369,7 +8371,7 @@ function SurveyModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 600,
       marginBottom: 10
@@ -8393,7 +8395,7 @@ function SurveyModal({
       padding: '10px',
       borderRadius: 12,
       border: 'none',
-      background: mission === opt.v ? 'linear-gradient(135deg,#8b5cf6,#6d28d9)' : 'rgba(255,255,255,.06)',
+      background: mission === opt.v ? 'linear-gradient(135deg,#8b5cf6,#6d28d9)' : 'rgba(10,14,46,.06)',
       color: mission === opt.v ? 'white' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
@@ -8409,7 +8411,7 @@ function SurveyModal({
       borderRadius: 10,
       background: 'rgba(239,68,68,.12)',
       border: '1px solid rgba(239,68,68,.35)',
-      color: '#fca5a5',
+      color: '#b91c1c',
       fontSize: 13,
       fontFamily: 'Barlow,sans-serif',
       textAlign: 'center'
@@ -8423,13 +8425,13 @@ function SurveyModal({
       borderRadius: 12,
       border: 'none',
       background: bible !== null && mission !== null && !sending ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'var(--muted2)',
-      color: bible !== null && mission !== null && !sending ? '#07091f' : 'var(--muted)',
+      color: bible !== null && mission !== null && !sending ? '#f8f5ef' : 'var(--muted)',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 15,
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: bible !== null && mission !== null && !sending ? '0 0 24px rgba(255,208,0,.4)' : undefined,
+      boxShadow: bible !== null && mission !== null && !sending ? '0 10px 26px rgba(255,208,0,.33)' : undefined,
       cursor: bible !== null && mission !== null && !sending ? 'pointer' : 'default'
     }
   }, sending ? 'Enviando…' : 'Enviar respuestas →')));
