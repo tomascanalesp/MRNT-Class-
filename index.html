@@ -2755,6 +2755,130 @@ const MRNT_T = {
    (síncrono), y los componentes auxiliares lo toman por defecto. */
 let __ST = SLIDE_T;
 
+/* ════════════════════════ BIBLIA LOCAL (RV1909 · dominio público) ════════════════════════ */
+/*
+ * Texto de los versículos guardado DENTRO del repositorio para que se lea
+ * sin conexión a internet. Versión: Reina-Valera 1909 (dominio público).
+ *
+ * ¿Por qué RV1909 y no RVR1960/NVI? Esas versiones tienen derechos de autor y
+ * no pueden copiarse libremente a un repositorio público. La RV1909 es de
+ * dominio público y lee casi idéntica en estos pasajes clásicos.
+ *
+ * Para reemplazar el texto: edita cada entrada manteniendo la misma clave (debe
+ * coincidir EXACTAMENTE con la referencia escrita en el array `verses` de la
+ * slide) y, si quieres, cambia BIBLE_VERSION al nombre de tu versión.
+ *
+ * Estructura: clave = referencia tal como aparece en la slide → array de
+ * versículos { n: número, t: texto }.
+ */
+const BIBLE_VERSION = 'RV1909';
+const BIBLE_VERSES = {
+  'Mateo 28:19': [
+    { n: 19, t: 'Por tanto, id, y haced discípulos á todas las naciones, bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo;' },
+  ],
+  'Apocalipsis 14:6-12': [
+    { n: 6, t: 'Y vi otro ángel volar por en medio del cielo, que tenía el evangelio eterno para predicarlo á los que moran en la tierra, y á toda nación y tribu y lengua y pueblo,' },
+    { n: 7, t: 'Diciendo en alta voz: Temed á Dios, y dadle honra; porque la hora de su juicio es venida; y adorad á aquel que ha hecho el cielo y la tierra y el mar y las fuentes de las aguas.' },
+    { n: 8, t: 'Y otro ángel le siguió, diciendo: Ha caído, ha caído Babilonia, aquella grande ciudad, porque ella ha dado á beber á todas las naciones del vino del furor de su fornicación.' },
+    { n: 9, t: 'Y el tercer ángel los siguió, diciendo en alta voz: Si alguno adora á la bestia y á su imagen, y toma la señal en su frente, ó en su mano,' },
+    { n: 10, t: 'Este también beberá del vino de la ira de Dios, el cual está echado puro en el cáliz de su ira; y será atormentado con fuego y azufre delante de los santos ángeles, y delante del Cordero:' },
+    { n: 11, t: 'Y el humo del tormento de ellos sube para siempre jamás. Y los que adoran á la bestia y á su imagen, no tienen reposo día ni noche, ni cualquiera que tomare la señal de su nombre.' },
+    { n: 12, t: 'Aquí está la paciencia de los santos; aquí están los que guardan los mandamientos de Dios, y la fe de Jesús.' },
+  ],
+  'Hechos 4:13': [
+    { n: 13, t: 'Entonces viendo la constancia de Pedro y de Juan, sabido que eran hombres sin letras é ignorantes, se maravillaban; y les conocían que habían estado con Jesús.' },
+  ],
+  'Hechos 1:8': [
+    { n: 8, t: 'Mas recibiréis la virtud del Espíritu Santo que vendrá sobre vosotros; y me seréis testigos en Jerusalem, en toda Judea, y Samaria, y hasta lo último de la tierra.' },
+  ],
+  'Hechos 4:9': [
+    { n: 9, t: 'Pues que somos hoy demandados acerca del beneficio hecho á un hombre enfermo, de qué manera éste haya sido sanado,' },
+  ],
+  'Hechos 4:20': [
+    { n: 20, t: 'Porque no podemos dejar de decir lo que hemos visto y oído.' },
+  ],
+  'Hechos 4:29, 31': [
+    { n: 29, t: 'Y ahora, Señor, mira sus amenazas, y da á tus siervos que con toda confianza hablen tu palabra;' },
+    { n: 31, t: 'Y como hubieron orado, el lugar en que estaban congregados tembló; y todos fueron llenos del Espíritu Santo, y hablaron la palabra de Dios con confianza.' },
+  ],
+  'Isaías 50:4': [
+    { n: 4, t: 'El Señor Jehová me dió lengua de sabios, para saber hablar en sazón palabra al cansado; despertará de mañana, despertaráme de mañana oído, para que oiga como los sabios.' },
+  ],
+  '1 Pedro 3:15': [
+    { n: 15, t: 'Sino santificad al Señor Dios en vuestros corazones, y estad siempre aparejados para responder con mansedumbre y reverencia á cada uno que os demande razón de la esperanza que hay en vosotros:' },
+  ],
+  '1 Juan 4:7-11': [
+    { n: 7, t: 'Carísimos, amémonos unos á otros; porque el amor es de Dios. Cualquiera que ama, es nacido de Dios, y conoce á Dios.' },
+    { n: 8, t: 'El que no ama, no conoce á Dios; porque Dios es amor.' },
+    { n: 9, t: 'En esto se mostró el amor de Dios para con nosotros, en que Dios envió á su Hijo unigénito al mundo, para que vivamos por él.' },
+    { n: 10, t: 'En esto consiste el amor: no que nosotros hayamos amado á Dios, sino que él nos amó á nosotros, y ha enviado á su Hijo en propiciación por nuestros pecados.' },
+    { n: 11, t: 'Amados, si Dios así nos ha amado, debemos también nosotros amarnos unos á otros.' },
+  ],
+  'Romanos 5:8': [
+    { n: 8, t: 'Mas Dios encarece su caridad para con nosotros, porque siendo aún pecadores, Cristo murió por nosotros.' },
+  ],
+  'Juan 3:16': [
+    { n: 16, t: 'Porque de tal manera amó Dios al mundo, que ha dado á su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.' },
+  ],
+  'Juan 15:9-10': [
+    { n: 9, t: 'Como el Padre me amó, también yo os he amado: estad en mi amor.' },
+    { n: 10, t: 'Si guardareis mis mandamientos, estaréis en mi amor; como yo también he guardado los mandamientos de mi Padre, y estoy en su amor.' },
+  ],
+  'Romanos 8:38-39': [
+    { n: 38, t: 'Por lo cual estoy cierto que ni la muerte, ni la vida, ni ángeles, ni principados, ni potestades, ni lo presente, ni lo por venir,' },
+    { n: 39, t: 'Ni lo alto, ni lo bajo, ni ninguna criatura nos podrá apartar del amor de Dios, que es en Cristo Jesús Señor nuestro.' },
+  ],
+  'Efesios 3:17-19': [
+    { n: 17, t: 'Que habite Cristo por la fe en vuestros corazones; para que, arraigados y fundados en amor,' },
+    { n: 18, t: 'Podáis bien comprender con todos los santos cuál sea la anchura y la longura y la profundidad y la altura,' },
+    { n: 19, t: 'Y conocer el amor de Cristo, que excede á todo conocimiento, para que seáis llenos de toda la plenitud de Dios.' },
+  ],
+  '1 Corintios 13:1-3': [
+    { n: 1, t: 'Si yo hablase lenguas humanas y angélicas, y no tengo caridad, vengo á ser como metal que resuena, ó címbalo que retiñe.' },
+    { n: 2, t: 'Y si tuviese profecía, y entendiese todos los misterios y toda ciencia; y si tuviese toda la fe, de tal manera que traspasase los montes, y no tengo caridad, nada soy.' },
+    { n: 3, t: 'Y si repartiese toda mi hacienda para dar de comer á pobres, y si entregase mi cuerpo para ser quemado, y no tengo caridad, de nada me sirve.' },
+  ],
+  'Juan 13:35': [
+    { n: 35, t: 'En esto conocerán todos que sois mis discípulos, si tuviereis amor los unos con los otros.' },
+  ],
+  '1 Juan 4:20-21': [
+    { n: 20, t: 'Si alguno dice, Yo amo á Dios, y aborrece á su hermano, es mentiroso. Porque el que no ama á su hermano al cual ha visto, ¿cómo puede amar á Dios á quien no ha visto?' },
+    { n: 21, t: 'Y nosotros tenemos este mandamiento de él: Que el que ama á Dios, ame también á su hermano.' },
+  ],
+  'Mateo 9:36': [
+    { n: 36, t: 'Y viendo las gentes, tuvo compasión de ellas; porque estaban derramadas y esparcidas como ovejas que no tienen pastor.' },
+  ],
+  '2 Corintios 5:14': [
+    { n: 14, t: 'Porque el amor de Cristo nos constriñe, pensando esto: Que si uno murió por todos, luego todos son muertos;' },
+  ],
+  'Jeremías 20:9': [
+    { n: 9, t: 'Y dije: No me acordaré más de él, ni hablaré más en su nombre: empero fué en mi corazón como un fuego ardiente metido en mis huesos; trabajé por sufrirlo, y no pude.' },
+  ],
+  'Génesis 2:16-17': [
+    { n: 16, t: 'Y mandó Jehová Dios al hombre, diciendo: De todo árbol del huerto comerás;' },
+    { n: 17, t: 'Mas del árbol de ciencia del bien y del mal no comerás de él; porque el día que de él comieres, morirás.' },
+  ],
+  'Génesis 7:1': [
+    { n: 1, t: 'Y Jehová dijo á Noé: Entra tú y toda tu casa en el arca porque á ti he visto justo delante de mí en esta generación.' },
+  ],
+  'Deuteronomio 4:29-31': [
+    { n: 29, t: 'Mas si desde allí buscares á Jehová tu Dios, lo hallarás, si lo buscares de todo tu corazón y de toda tu alma.' },
+    { n: 30, t: 'Cuando estuvieres en angustia, y te alcanzaren todas estas cosas, si en los postreros días te volvieres á Jehová tu Dios, y oyeres su voz;' },
+    { n: 31, t: 'Porque Dios misericordioso es Jehová tu Dios; no te dejará, ni te destruirá, ni se olvidará del pacto de tus padres que les juró.' },
+  ],
+  'Mateo 4:23-25': [
+    { n: 23, t: 'Y rodeó Jesús toda Galilea, enseñando en las sinagogas de ellos, y predicando el evangelio del reino, y sanando toda enfermedad y toda dolencia en el pueblo.' },
+    { n: 24, t: 'Y corría su fama por toda la Siria; y le trajeron todos los que tenían mal: los tomados de diversas enfermedades y tormentos, y los endemoniados, y lunáticos, y paralíticos, y los sanó.' },
+    { n: 25, t: 'Y le siguieron muchas gentes de Galilea y de Decápolis y de Jerusalem y de Judea y de la otra parte del Jordán.' },
+  ],
+  'Mateo 23:37': [
+    { n: 37, t: '¡Jerusalem, Jerusalem, que matas á los profetas, y apedreas á los que son enviados á ti! ¡cuántas veces quise juntar tus hijos, como la gallina junta sus pollos debajo de las alas, y no quisiste!' },
+  ],
+  'Apocalipsis 12:11': [
+    { n: 11, t: 'Y ellos le han vencido por la sangre del Cordero, y por la palabra de su testimonio; y no han amado sus vidas hasta la muerte.' },
+  ],
+};
+
 /* Una slide por cada día del repaso de la semana — Mateo 5–7. */
 /* Presentaciones disponibles para el repaso. Cada una se etiqueta con su
    semana y el título de la lección. El admin elige cuál proyectar desde el
@@ -3504,8 +3628,12 @@ function DayBadge({
 }
 
 /* Caja de versículos (REF. BÍBLICA). */
+/* Caja de versículos (REF. BÍBLICA). Cada referencia es clicable: abre el
+   texto guardado localmente (ver BIBLE_VERSES). `onVerseClick(ref)` decide si
+   se transmite a todos (admin) o se ve solo en mi dispositivo (invitado). */
 function VersesBox({
   verses,
+  onVerseClick,
   T = __ST
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -3539,16 +3667,35 @@ function VersesBox({
       textTransform: 'uppercase',
       marginBottom: 2
     }
-  }, "Ref. bíblica"), verses.map((v, i) => /*#__PURE__*/React.createElement("span", {
-    key: i,
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 700,
-      fontSize: 'clamp(8px,1vw,12px)',
-      color: T.accentDark,
-      letterSpacing: '.03em'
-    }
-  }, "• ", v))));
+  }, "Ref. bíblica"), verses.map((v, i) => {
+    const hasText = !!BIBLE_VERSES[v];
+    const clickable = hasText && !!onVerseClick;
+    return /*#__PURE__*/React.createElement(clickable ? "button" : "span", {
+      key: i,
+      onClick: clickable ? () => onVerseClick(v) : undefined,
+      title: clickable ? 'Abrir versículo' : undefined,
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 3,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 'clamp(8px,1vw,12px)',
+        color: T.accentDark,
+        letterSpacing: '.03em',
+        textAlign: 'left',
+        background: clickable ? 'rgba(60,81,29,.08)' : 'transparent',
+        border: clickable ? `1px solid ${T.accent}` : 'none',
+        borderRadius: clickable ? 7 : 0,
+        padding: clickable ? '1px 7px' : 0,
+        margin: clickable ? '1px 0' : 0,
+        cursor: clickable ? 'pointer' : 'default',
+        textDecoration: clickable ? 'underline' : 'none',
+        textDecorationStyle: 'dotted',
+        textUnderlineOffset: 2
+      }
+    }, "• ", v, clickable ? ' 📖' : '');
+  })));
 }
 
 /* Marco común de cada slide: logo arriba + contenido + pie de progreso. */
@@ -3637,7 +3784,8 @@ function SlideView({
   index,
   total,
   footer,
-  T = SLIDE_T
+  T = SLIDE_T,
+  onVerseClick
 }) {
   __ST = T; // fija el tema activo para los componentes auxiliares de esta slide
   // ── Portada ──
@@ -4263,8 +4411,131 @@ function SlideView({
       }
     }, c.rest));
   })), slide.verses && slide.verses.length > 0 && /*#__PURE__*/React.createElement(VersesBox, {
-    verses: slide.verses
+    verses: slide.verses,
+    onVerseClick: onVerseClick
   })));
+}
+
+/* Overlay que muestra el texto de un versículo leído desde el repo (offline).
+   - `refStr`: referencia a mostrar (clave de BIBLE_VERSES) o null para no mostrar.
+   - `broadcast`: true si lo está transmitiendo el admin a todos.
+   - `canClose`: si el usuario actual puede cerrarlo.
+   Se ve bien en celular: texto grande, scrolleable, ocupa toda la pantalla. */
+function VerseOverlay({
+  refStr,
+  broadcast,
+  canClose,
+  onClose
+}) {
+  if (!refStr) return null;
+  const passage = BIBLE_VERSES[refStr];
+  return /*#__PURE__*/React.createElement("div", {
+    onClick: e => {
+      if (e.target === e.currentTarget && canClose) onClose();
+    },
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 200,
+      background: 'rgba(4,6,18,.86)',
+      backdropFilter: 'blur(7px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+      animation: 'modalIn .2s ease'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 560,
+      maxHeight: '90vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'linear-gradient(160deg,#fbf9f3,#f3efe3)',
+      border: '1px solid rgba(60,81,29,.25)',
+      borderRadius: 20,
+      boxShadow: '0 22px 60px rgba(0,0,0,.6)',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '16px 18px 12px',
+      borderBottom: '1px solid rgba(60,81,29,.14)'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: { fontSize: 24 }
+  }, "📖"), /*#__PURE__*/React.createElement("div", {
+    style: { flex: 1, minWidth: 0 }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 22,
+      color: SLIDE_T.accentDark,
+      letterSpacing: '.02em',
+      lineHeight: 1.05
+    }
+  }, refStr), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: SLIDE_T.inkSoft,
+      letterSpacing: '.14em',
+      textTransform: 'uppercase'
+    }
+  }, BIBLE_VERSION, broadcast ? ' · 🔴 En vivo' : '')), canClose && /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    style: {
+      width: 38,
+      height: 38,
+      flexShrink: 0,
+      borderRadius: 11,
+      border: '1px solid rgba(60,81,29,.2)',
+      background: 'rgba(60,81,29,.07)',
+      color: SLIDE_T.accentDark,
+      fontSize: 18,
+      cursor: 'pointer'
+    }
+  }, "✕")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '16px 20px 20px',
+      overflowY: 'auto'
+    }
+  }, passage ? passage.map((v, i) => /*#__PURE__*/React.createElement("p", {
+    key: i,
+    style: {
+      margin: '0 0 12px',
+      fontSize: 'clamp(17px,2.4vw,21px)',
+      lineHeight: 1.6,
+      color: SLIDE_T.ink
+    }
+  }, /*#__PURE__*/React.createElement("sup", {
+    style: {
+      fontWeight: 900,
+      color: SLIDE_T.accentDark,
+      marginRight: 5,
+      fontSize: '.7em'
+    }
+  }, v.n), v.t)) : /*#__PURE__*/React.createElement("p", {
+    style: { fontSize: 16, color: SLIDE_T.inkSoft }
+  }, "Texto no disponible en el repositorio.")), broadcast && !canClose && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '10px 18px',
+      borderTop: '1px solid rgba(60,81,29,.14)',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 12,
+      color: SLIDE_T.inkSoft,
+      letterSpacing: '.1em',
+      textTransform: 'uppercase',
+      textAlign: 'center'
+    }
+  }, "El anfitrión está mostrando este versículo")));
 }
 
 /* Overlay de presentación sincronizada: todos ven la slide; el admin avanza. */
@@ -4276,7 +4547,8 @@ function PresentationOverlay({
   onEnd,
   onToggleWordCloud,
   onToggleQR,
-  qrOn
+  qrOn,
+  onVerseClick
 }) {
   const pres = session?.presentation;
   const wcActive = !!session?.wordcloud?.active;
@@ -4322,7 +4594,8 @@ function PresentationOverlay({
     index: idx,
     total: total,
     footer: footer,
-    T: deck.id === 'semana12' ? MRNT_T : SLIDE_T
+    T: deck.id === 'semana12' ? MRNT_T : SLIDE_T,
+    onVerseClick: onVerseClick
   }), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -11338,6 +11611,9 @@ function App() {
   const [qrPos, setQrPos] = useState(null); // {x,y} en px desde top-left | null
   // Visibilidad del QR (el admin puede ocultarlo/mostrarlo, p. ej. durante la presentación)
   const [qrVisible, setQrVisible] = useState(true);
+  // Versículo abierto SOLO en mi dispositivo (invitado). El admin transmite a
+  // todos vía session.presentation.verse; el invitado lo ve solo para sí aquí.
+  const [localVerse, setLocalVerse] = useState(null); // ref string | null
   // Toast cuando todos respondieron la encuesta (solo admin)
   const [surveyAllNotify, setSurveyAllNotify] = useState(null); // {done,total} | null
   const surveyAllNotifyShownRef = useRef(false);
@@ -11987,7 +12263,29 @@ function App() {
     if (next !== cur.slide) await db.ref(`sessions/${SID.current}/presentation/slide`).set(next);
   };
   const endPresentation = async () => {
+    await db.ref(`sessions/${SID.current}/presentation/verse`).remove();
     await db.ref(`sessions/${SID.current}/presentation/active`).set(false);
+  };
+
+  /* ── Versículo clicable (lectura local, sin internet) ──
+     Admin: transmite el texto a TODOS (se guarda en la sesión).
+     Invitado: lo abre SOLO en su dispositivo (estado local). */
+  const openVerse = ref => {
+    if (!BIBLE_VERSES[ref]) return;
+    if (isAdmin) {
+      db.ref(`sessions/${SID.current}/presentation/verse`).set({
+        ref,
+        at: Date.now()
+      });
+    } else {
+      setLocalVerse(ref);
+    }
+  };
+  const closeVerse = () => {
+    if (isAdmin && sessionRef.current?.presentation?.verse) {
+      db.ref(`sessions/${SID.current}/presentation/verse`).remove();
+    }
+    setLocalVerse(null);
   };
 
   /* ── Video de YouTube sincronizado (admin controla; invitados siguen) ── */
@@ -13027,7 +13325,13 @@ function App() {
     onEnd: endPresentation,
     onToggleWordCloud: (question = '') => toggleWordCloud(question),
     onToggleQR: () => setQrVisible(v => !v),
-    qrOn: qrVisible
+    qrOn: qrVisible,
+    onVerseClick: openVerse
+  }), /*#__PURE__*/React.createElement(VerseOverlay, {
+    refStr: session?.presentation?.verse?.ref || localVerse,
+    broadcast: !!session?.presentation?.verse?.ref,
+    canClose: isAdmin || !session?.presentation?.verse?.ref,
+    onClose: closeVerse
   }), repasoChatOpen && phase === 'repaso' && (users[UID.current]?.zone === 'repaso' || isAdmin) && /*#__PURE__*/React.createElement(RepasoChat, {
     msgs: msgs,
     session: session,
