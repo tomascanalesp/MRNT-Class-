@@ -4,6 +4,9 @@
 > **Versículo eje:** *"He aquí, yo hago nuevas todas las cosas."* (Apocalipsis 21:5)
 > Los **dos últimos capítulos de la Biblia**: el desenlace de toda la historia de la salvación.
 
+Slides listas para publicar, estilo Maranata/MRNT (formato 4:5):
+`assets/apocalipsis21-22/apocalipsis-1-bosquejo.png` · `…-2-mapa.png` · `…-3-texto.png` · `…-4-claves.png`
+
 ---
 
 ## 🗺️ Bosquejo de los capítulos
@@ -84,3 +87,4 @@ dolor       cimientos    libro de vida    rostro        Señor Jesús"
 ---
 
 *Integrado como **Presentación · Semana 13 — "Hacia la eternidad" (Apocalipsis 21–22)** en `index.html` (`PRESENTATIONS[id='semana13']`).*
+*Slides generadas con `tools/make_apocalipsis_slides.py` (tipografía Barlow Condensed, paleta MRNT), mismo estilo que la presentación 12 (Hechos 4).*
