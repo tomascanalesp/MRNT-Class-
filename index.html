@@ -6891,71 +6891,146 @@ function ActivityEndBanner({
   phase,
   onDismiss
 }) {
+  // Mensajes de cierre de cada fase del Plan MRNT. La estética (color, letra,
+  // ícono) se hereda de ZONES para mantener coherencia con la sala.
   const msgs = {
     confra: {
       title: '¡Confraternización completada!',
-      msg: 'Muevan su ícono a la sala de Repaso Bíblico 📖',
-      color: '#f59e0b'
+      msg: 'Muevan su ícono a la sala de Repaso Bíblico 📖'
     },
     repaso: {
       title: '¡Repaso finalizado!',
-      msg: 'Muevan su ícono a la sala de Juegos 🎮',
-      color: '#3b82f6'
+      msg: 'Muevan su ícono a la sala de Juegos 🎮'
+    },
+    juegos: {
+      title: '¡Juegos finalizados!',
+      msg: 'Muevan su ícono a la sala de Misión ✈️'
+    },
+    mision: {
+      title: '¡Misión completada!',
+      msg: 'Muevan su ícono al Templo ⛪'
+    },
+    templo: {
+      title: '¡Templo finalizado!',
+      msg: 'Gracias por acompañarnos hoy. ¡Nos vemos la próxima! 🙏'
     }
   };
   const info = msgs[phase];
   if (!info) return null;
+  const zone = ZONES[phase] || {};
+  const accent = zone.color || '#0a0e2e';
+  // Texto legible sobre el acento: tinta sobre amarillo (confra), blanco en el resto.
+  const onAccent = phase === 'confra' ? '#0a0e2e' : '#fff';
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
       inset: 0,
       zIndex: 160,
-      background: 'rgba(7,9,31,.9)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(10,14,46,.45)',
+      backdropFilter: 'blur(3px)',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 14,
       padding: 24,
-      textAlign: 'center'
+      animation: 'fadeUp .25s ease-out'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 60,
-      animation: 'bounce 1s infinite'
+      position: 'relative',
+      width: '100%',
+      maxWidth: 360,
+      background: '#f8f5ef',
+      borderRadius: 22,
+      border: '1px solid rgba(10,14,46,.08)',
+      boxShadow: '0 24px 70px rgba(10,14,46,.28)',
+      padding: '38px 30px 30px',
+      textAlign: 'center',
+      overflow: 'hidden',
+      animation: 'modalIn .3s ease-out'
     }
-  }, "🎉"), /*#__PURE__*/React.createElement("h2", {
+  },
+  // Franja de acento superior con el color de la zona
+  /*#__PURE__*/React.createElement("div", {
     style: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 6,
+      background: accent
+    }
+  }),
+  // Insignia MRNT (letra de la zona, o ícono si no tiene letra)
+  /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 60,
+      height: 60,
+      margin: '0 auto',
+      borderRadius: 16,
+      background: accent,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: onAccent,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: zone.letter ? 30 : 28,
+      boxShadow: `0 10px 24px ${accent}40`
+    }
+  }, zone.letter || zone.icon || '🎉'),
+  // Sub-rótulo MRNT
+  zone.mrnt && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 16,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      letterSpacing: '.2em',
+      textTransform: 'uppercase',
+      color: accent
+    }
+  }, zone.mrnt),
+  // Título
+  /*#__PURE__*/React.createElement("h2", {
+    style: {
+      marginTop: 6,
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: info.color,
+      lineHeight: 1.05,
+      color: '#0a0e2e',
       textTransform: 'uppercase',
-      letterSpacing: '.04em'
+      letterSpacing: '.02em'
     }
-  }, info.title), /*#__PURE__*/React.createElement("p", {
+  }, info.title),
+  // Mensaje
+  /*#__PURE__*/React.createElement("p", {
     style: {
-      color: 'var(--white)',
-      fontSize: 16,
+      margin: '12px auto 0',
       maxWidth: 280,
+      color: '#3b3f5a',
+      fontSize: 15,
       lineHeight: 1.6
     }
-  }, info.msg), /*#__PURE__*/React.createElement("button", {
+  }, info.msg),
+  // Botón
+  /*#__PURE__*/React.createElement("button", {
     onClick: onDismiss,
     style: {
-      background: `linear-gradient(135deg,${info.color},${info.color}cc)`,
+      marginTop: 24,
+      background: accent,
       border: 'none',
       borderRadius: 12,
-      padding: '12px 28px',
-      color: '#07091f',
-      fontWeight: 800,
-      fontSize: 14,
+      padding: '13px 30px',
+      color: onAccent,
       fontFamily: 'Barlow Condensed,sans-serif',
-      letterSpacing: '.04em',
-      marginTop: 8
+      fontWeight: 800,
+      fontSize: 15,
+      textTransform: 'uppercase',
+      letterSpacing: '.06em',
+      boxShadow: `0 8px 20px ${accent}40`
     }
-  }, "Entendido ✓"));
+  }, "Entendido ✓")));
 }
 
 /* ════════════════════════ NUBE DE PALABRAS ════════════════════════ */
@@ -12593,10 +12668,12 @@ function App() {
     }
   };
   const endJuegos = async () => {
+    setEndBanner('juegos'); // local inmediato para el admin
     await db.ref(`sessions/${SID.current}`).update({
       phase: 'waiting',
       'juegos/active': false
     });
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('juegos');
   };
   const startMision = async (_misionUsers = [], mode = 'commitments') => {
     try {
@@ -12615,10 +12692,12 @@ function App() {
   };
   const endMision = async () => {
     setMisionOpen(false);
+    setEndBanner('mision'); // local inmediato para el admin
     await db.ref(`sessions/${SID.current}`).update({
       phase: 'waiting',
       'mision/active': false
     });
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('mision');
   };
   const startTemplo = async () => {
     try {
@@ -12647,11 +12726,13 @@ function App() {
     }
   };
   const endTemplo = async () => {
+    setEndBanner('templo'); // local inmediato para el admin
     await db.ref(`sessions/${SID.current}`).update({
       phase: 'waiting',
       'templo/active': false,
       'survey/active': false
     });
+    await db.ref(`sessions/${SID.current}/lastBanner`).set('templo');
   };
   const resetSession = async () => {
     setConfraOpen(false);
@@ -12943,15 +13024,15 @@ function App() {
 
   /* ════ ROOM ════ */
   const iconBtn = {
-    background: 'rgba(247,243,235,.04)',
-    border: '1px solid rgba(247,243,235,.1)',
+    background: 'rgba(10,14,46,.05)',
+    border: '1px solid rgba(10,14,46,.12)',
     borderRadius: 50,
     width: 36,
     height: 36,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#f7f3eb',
+    color: '#0a0e2e',
     cursor: 'pointer',
     transition: 'all .15s'
   };
@@ -12961,14 +13042,14 @@ function App() {
       inset: 0,
       display: 'flex',
       flexDirection: 'column',
-      background: '#0a0e2e',
+      background: '#f8f5ef',
       fontFamily: 'var(--sans)'
     }
   }, /*#__PURE__*/React.createElement("header", {
     style: {
-      background: 'rgba(8,11,34,.92)',
+      background: 'rgba(248,245,239,.92)',
       backdropFilter: 'blur(14px)',
-      borderBottom: '1px solid rgba(247,243,235,.08)',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       padding: isMobile ? '8px 10px' : '10px 12px',
       display: 'flex',
       alignItems: 'center',
@@ -13021,7 +13102,7 @@ function App() {
       fontFamily: 'var(--display)',
       fontWeight: 900,
       fontSize: 15,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       letterSpacing: '.04em'
     }
   }, "MARANATA"), /*#__PURE__*/React.createElement("div", {
@@ -13029,7 +13110,7 @@ function App() {
       fontFamily: 'var(--display)',
       fontWeight: 600,
       fontSize: 9,
-      color: 'rgba(247,243,235,.45)',
+      color: 'rgba(10,14,46,.5)',
       letterSpacing: '.22em',
       marginTop: 2
     }
@@ -13041,9 +13122,9 @@ function App() {
       height: isMobile ? 26 : 28,
       flexShrink: 0,
       borderRadius: '50%',
-      border: '1px solid rgba(255,208,0,.35)',
-      background: 'rgba(255,208,0,.1)',
-      color: '#ffd000',
+      border: '1.5px solid rgba(10,14,46,.25)',
+      background: 'transparent',
+      color: '#0a0e2e',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: isMobile ? 14 : 15,
@@ -13056,7 +13137,7 @@ function App() {
     style: {
       height: isMobile ? 28 : 32,
       width: 1,
-      background: 'rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.12)',
       flexShrink: 0
     }
   }), /*#__PURE__*/React.createElement("div", {
@@ -13073,7 +13154,7 @@ function App() {
   }, !isMobile && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: 'rgba(247,243,235,.4)',
+      color: 'rgba(10,14,46,.5)',
       textTransform: 'uppercase',
       letterSpacing: '.16em',
       fontWeight: 600,
@@ -13090,14 +13171,14 @@ function App() {
       fontFamily: 'var(--serif)',
       fontSize: isMobile ? 20 : 22,
       fontWeight: 500,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       lineHeight: 1,
       letterSpacing: '-.01em'
     }
   }, usersArr.length), isMobile && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
-      color: 'rgba(247,243,235,.45)',
+      color: 'rgba(10,14,46,.5)',
       textTransform: 'uppercase',
       letterSpacing: '.14em',
       fontWeight: 600
@@ -13106,7 +13187,7 @@ function App() {
     style: {
       height: isMobile ? 28 : 32,
       width: 1,
-      background: 'rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.12)',
       flexShrink: 0
     }
   }), /*#__PURE__*/React.createElement("div", {
@@ -13140,7 +13221,7 @@ function App() {
   }, !isMobile && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
-      color: 'rgba(247,243,235,.4)',
+      color: 'rgba(10,14,46,.5)',
       textTransform: 'uppercase',
       letterSpacing: '.16em',
       fontWeight: 600,
@@ -13152,7 +13233,7 @@ function App() {
       fontStyle: 'italic',
       fontSize: isMobile ? 14 : 18,
       fontWeight: 500,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       letterSpacing: '-.01em',
       whiteSpace: 'nowrap',
       overflow: 'hidden',
@@ -13173,11 +13254,11 @@ function App() {
       display: 'flex',
       alignItems: 'center',
       gap: isMobile ? 0 : 8,
-      background: 'rgba(247,243,235,.04)',
-      border: '1px solid rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: 50,
       padding: isMobile ? 3 : '5px 14px 5px 5px',
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       transition: 'all .15s',
       cursor: 'pointer'
     }
@@ -13258,7 +13339,7 @@ function App() {
     style: {
       width: 1,
       height: 24,
-      background: 'rgba(247,243,235,.1)',
+      background: 'rgba(10,14,46,.12)',
       margin: '0 4px'
     }
   }), /*#__PURE__*/React.createElement("button", {
@@ -13268,7 +13349,7 @@ function App() {
       ...iconBtn,
       width: isMobile ? 32 : 36,
       height: isMobile ? 32 : 36,
-      color: 'rgba(247,243,235,.5)'
+      color: 'rgba(10,14,46,.5)'
     }
   }, /*#__PURE__*/React.createElement("svg", {
     width: "16",
@@ -13305,19 +13386,19 @@ function App() {
       fontWeight: 700,
       letterSpacing: '.22em',
       textTransform: 'uppercase',
-      color: '#ffd000',
+      color: '#a16207',
       flexShrink: 0,
-      background: 'rgba(255,208,0,.1)',
+      background: 'rgba(255,208,0,.16)',
       padding: '4px 10px',
       borderRadius: 50,
-      border: '1px solid rgba(255,208,0,.25)'
+      border: '1px solid rgba(161,98,7,.3)'
     }
   }, "● En espera"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'var(--serif)',
       fontStyle: 'italic',
       fontSize: isMobile ? 13 : 15,
-      color: 'rgba(247,243,235,.7)',
+      color: 'rgba(10,14,46,.65)',
       letterSpacing: '-.01em',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
