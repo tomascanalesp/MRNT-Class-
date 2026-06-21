@@ -4555,6 +4555,8 @@ function PresentationOverlay({
   const [moreOpen, setMoreOpen] = useState(false);
   const [wcPrompt, setWcPrompt] = useState(false); // pedir la pregunta antes de abrir la nube
   const [wcQuestion, setWcQuestion] = useState('');
+  const overlayRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const deck = findPresentation(pres?.id);
   const slides = deck.slides;
   const idx = Math.min(Math.max(pres?.slide || 0, 0), slides.length - 1);
@@ -4573,10 +4575,30 @@ function PresentationOverlay({
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [isAdmin, onNext, onPrev]);
+  useEffect(() => {
+    const sync = () => setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+    return () => {
+      document.removeEventListener('fullscreenchange', sync);
+      document.removeEventListener('webkitfullscreenchange', sync);
+    };
+  }, []);
+  const toggleFullscreen = () => {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl) {
+      (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+    } else {
+      const el = overlayRef.current;
+      if (!el) return;
+      (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+    }
+  };
   if (!pres?.active) return null;
   const slide = slides[idx];
   const footer = `${deck.week} · ${deck.subtitle}`;
   return /*#__PURE__*/React.createElement("div", {
+    ref: overlayRef,
     style: {
       position: 'fixed',
       inset: 0,
@@ -4586,8 +4608,8 @@ function PresentationOverlay({
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '14px 12px',
-      gap: 12
+      padding: '14px 12px 78px',
+      gap: 0
     }
   }, /*#__PURE__*/React.createElement(SlideView, {
     slide: slide,
@@ -4598,14 +4620,33 @@ function PresentationOverlay({
     onVerseClick: onVerseClick
   }), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
+      position: 'fixed',
+      left: 0,
+      right: 0,
+      bottom: 'max(14px, env(safe-area-inset-bottom))',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      flexWrap: 'wrap',
+      padding: '0 12px',
+      zIndex: 160,
+      pointerEvents: 'none'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
+      flexWrap: 'wrap',
+      justifyContent: 'center',
       background: 'rgba(7,9,31,.88)',
       border: '1px solid rgba(255,255,255,.12)',
       borderRadius: 16,
       padding: '8px 10px',
-      boxShadow: '0 10px 30px rgba(0,0,0,.5)'
+      boxShadow: '0 10px 30px rgba(0,0,0,.5)',
+      pointerEvents: 'auto',
+      maxWidth: '100%'
     }
   }, /*#__PURE__*/React.createElement("button", {
     onClick: onPrev,
@@ -4754,6 +4795,20 @@ function PresentationOverlay({
       textTransform: 'uppercase'
     }
   }, qrOn ? '📲 Ocultar QR' : '📲 QR'), /*#__PURE__*/React.createElement("button", {
+    onClick: toggleFullscreen,
+    title: isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa',
+    style: {
+      marginLeft: 4,
+      width: 42,
+      height: 42,
+      borderRadius: 12,
+      cursor: 'pointer',
+      border: '1px solid rgba(255,255,255,.18)',
+      background: 'rgba(255,255,255,.08)',
+      color: '#fff',
+      fontSize: 16
+    }
+  }, isFullscreen ? '🗗' : '⛶'), /*#__PURE__*/React.createElement("button", {
     onClick: onEnd,
     style: {
       marginLeft: 4,
@@ -4770,17 +4825,36 @@ function PresentationOverlay({
       textTransform: 'uppercase',
       cursor: 'pointer'
     }
-  }, "⏹ Finalizar")) : /*#__PURE__*/React.createElement("div", {
+  }, "⏹ Finalizar"))) : /*#__PURE__*/React.createElement("div", {
     style: {
+      position: 'fixed',
+      left: 0,
+      right: 0,
+      bottom: 'max(14px, env(safe-area-inset-bottom))',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      padding: '0 12px',
+      zIndex: 160,
+      pointerEvents: 'none'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      pointerEvents: 'auto',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 700,
       fontSize: 12,
-      color: 'rgba(255,255,255,.5)',
+      color: 'rgba(255,255,255,.6)',
       letterSpacing: '.12em',
       textTransform: 'uppercase',
       display: 'flex',
       alignItems: 'center',
-      gap: 7
+      gap: 7,
+      background: 'rgba(7,9,31,.7)',
+      border: '1px solid rgba(255,255,255,.1)',
+      borderRadius: 14,
+      padding: '8px 12px'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4790,7 +4864,21 @@ function PresentationOverlay({
       background: '#6f8f3c',
       animation: 'pulse 1.5s infinite'
     }
-  }), "El anfitrión controla la presentación"), wcPrompt && /*#__PURE__*/React.createElement("div", {
+  }), "El anfitrión controla la presentación"), /*#__PURE__*/React.createElement("button", {
+    onClick: toggleFullscreen,
+    title: isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa',
+    style: {
+      pointerEvents: 'auto',
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      cursor: 'pointer',
+      border: '1px solid rgba(255,255,255,.15)',
+      background: 'rgba(7,9,31,.7)',
+      color: '#fff',
+      fontSize: 15
+    }
+  }, isFullscreen ? '🗗' : '⛶')), wcPrompt && /*#__PURE__*/React.createElement("div", {
     onClick: e => e.target === e.currentTarget && setWcPrompt(false),
     style: {
       position: 'fixed',
