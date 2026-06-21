@@ -4611,7 +4611,7 @@ function VerseOverlay({
       position: 'fixed',
       inset: 0,
       zIndex: 200,
-      background: 'rgba(4,6,18,.86)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(7px)',
       display: 'flex',
       alignItems: 'center',
@@ -4629,7 +4629,7 @@ function VerseOverlay({
       background: 'linear-gradient(160deg,#fbf9f3,#f3efe3)',
       border: '1px solid rgba(60,81,29,.25)',
       borderRadius: 20,
-      boxShadow: '0 22px 60px rgba(0,0,0,.6)',
+      boxShadow: '0 22px 60px rgba(10,14,46,.3)',
       overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -5058,7 +5058,7 @@ function PresentationOverlay({
       position: 'fixed',
       inset: 0,
       zIndex: 175,
-      background: 'rgba(4,6,18,.8)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -5070,11 +5070,11 @@ function PresentationOverlay({
     style: {
       width: '100%',
       maxWidth: 420,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(59,130,246,.35)',
       borderRadius: 18,
       padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(0,0,0,.6)'
+      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5092,14 +5092,14 @@ function PresentationOverlay({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#60a5fa',
+      color: '#1d4ed8',
       textTransform: 'uppercase',
       letterSpacing: '.04em'
     }
   }, "Nube de palabras")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12.5,
-      color: 'rgba(247,243,235,.7)',
+      color: 'rgba(10,14,46,.6)',
       marginBottom: 12,
       lineHeight: 1.5
     }
@@ -5118,9 +5118,9 @@ function PresentationOverlay({
       width: '100%',
       padding: '11px 14px',
       borderRadius: 10,
-      background: 'rgba(255,255,255,.05)',
+      background: 'rgba(10,14,46,.05)',
       border: '1px solid rgba(59,130,246,.3)',
-      color: 'var(--white)',
+      color: '#0a0e2e',
       fontSize: 14,
       fontFamily: 'Barlow,sans-serif',
       outline: 'none'
@@ -5137,8 +5137,8 @@ function PresentationOverlay({
       flex: 1,
       padding: '11px',
       borderRadius: 10,
-      border: '1px solid rgba(255,255,255,.12)',
-      background: 'rgba(255,255,255,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
+      background: 'rgba(10,14,46,.05)',
       color: 'var(--muted)',
       cursor: 'pointer',
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -5165,7 +5165,7 @@ function PresentationOverlay({
       fontSize: 13,
       letterSpacing: '.05em',
       textTransform: 'uppercase',
-      boxShadow: '0 6px 18px rgba(59,130,246,.4)'
+      boxShadow: '0 8px 22px rgba(59,130,246,.33)'
     }
   }, "☁️ Abrir nube")))));
 }
@@ -5181,7 +5181,7 @@ function PresentationMenu({
       position: 'fixed',
       inset: 0,
       zIndex: 170,
-      background: 'rgba(7,9,31,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -5193,11 +5193,11 @@ function PresentationMenu({
     style: {
       width: '100%',
       maxWidth: 460,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(111,143,60,.35)',
       borderRadius: 18,
       padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(0,0,0,.6)'
+      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5211,15 +5211,15 @@ function PresentationMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 17,
-      color: '#a3c46a',
+      color: '#4d6a27',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
   }, "▶️ Elegir presentación"), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -5261,7 +5261,7 @@ function PresentationMenu({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 13,
-      color: '#a3c46a',
+      color: '#4d6a27',
       textTransform: 'uppercase',
       letterSpacing: '.06em'
     }
@@ -5270,14 +5270,14 @@ function PresentationMenu({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 700,
       fontSize: 15,
-      color: '#fff',
+      color: '#0a0e2e',
       marginTop: 1
     }
   }, p.title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 12,
-      color: 'rgba(255,255,255,.55)',
+      color: 'rgba(10,14,46,.55)',
       marginTop: 2
     }
   }, p.subtitle, " · ", p.slides.length, " slides")), /*#__PURE__*/React.createElement("span", {
@@ -5300,7 +5300,7 @@ function VideoMenu({
       position: 'fixed',
       inset: 0,
       zIndex: 170,
-      background: 'rgba(7,9,31,.82)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
@@ -5312,11 +5312,11 @@ function VideoMenu({
     style: {
       width: '100%',
       maxWidth: 460,
-      background: 'linear-gradient(160deg,#0d1035,#0a0c28)',
+      background: '#f8f5ef',
       border: '1px solid rgba(220,38,38,.35)',
       borderRadius: 18,
       padding: '20px 18px',
-      boxShadow: '0 18px 50px rgba(0,0,0,.6)'
+      boxShadow: '0 18px 50px rgba(10,14,46,.22)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5337,8 +5337,8 @@ function VideoMenu({
   }, "🎬 Elegir video"), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
-      background: 'rgba(255,255,255,.06)',
-      border: '1px solid rgba(255,255,255,.1)',
+      background: 'rgba(10,14,46,.06)',
+      border: '1px solid rgba(10,14,46,.12)',
       borderRadius: '50%',
       width: 30,
       height: 30,
@@ -5389,13 +5389,13 @@ function VideoMenu({
       fontFamily: 'Barlow,sans-serif',
       fontWeight: 700,
       fontSize: 15,
-      color: '#fff'
+      color: '#0a0e2e'
     }
   }, v.title), v.subtitle && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 12,
-      color: 'rgba(255,255,255,.55)',
+      color: 'rgba(10,14,46,.55)',
       marginTop: 2
     }
   }, v.subtitle)), /*#__PURE__*/React.createElement("span", {
@@ -5747,14 +5747,14 @@ function GuideShot({
       maxWidth: 360,
       borderRadius: 18,
       overflow: 'hidden',
-      background: '#0a0e2e',
-      border: '1px solid rgba(247,243,235,.12)',
-      boxShadow: '0 12px 34px rgba(0,0,0,.45)'
+      background: '#f8f5ef',
+      border: '1px solid rgba(10,14,46,.12)',
+      boxShadow: '0 12px 34px rgba(10,14,46,.18)'
     }
   }, children), caption && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
-      color: 'rgba(247,243,235,.55)',
+      color: 'rgba(10,14,46,.55)',
       fontStyle: 'italic',
       textAlign: 'center',
       maxWidth: 340,
@@ -5788,7 +5788,7 @@ function GuideAvatar({
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: size * .5,
-      boxShadow: `0 0 10px ${color}55`
+      boxShadow: `0 6px 16px ${color}33`
     }
   }, emoji), label && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5808,8 +5808,8 @@ function GuideTopbarShot({
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(8,11,34,.96)',
-      borderBottom: '1px solid rgba(247,243,235,.08)',
+      background: '#f8f5ef',
+      borderBottom: '1px solid rgba(10,14,46,.08)',
       padding: '8px 10px',
       display: 'flex',
       alignItems: 'center',
@@ -5846,9 +5846,9 @@ function GuideTopbarShot({
       width: 24,
       height: 24,
       borderRadius: '50%',
-      border: highlightGuide ? '2px solid #ffd000' : '1px solid rgba(247,243,235,.25)',
-      background: highlightGuide ? 'rgba(255,208,0,.18)' : 'rgba(247,243,235,.04)',
-      color: highlightGuide ? '#ffd000' : 'rgba(247,243,235,.6)',
+      border: highlightGuide ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.25)',
+      background: highlightGuide ? 'rgba(255,208,0,.18)' : 'rgba(10,14,46,.04)',
+      color: highlightGuide ? '#ffd000' : 'rgba(10,14,46,.6)',
       fontSize: 13,
       fontWeight: 800,
       display: 'flex',
@@ -5860,7 +5860,7 @@ function GuideTopbarShot({
     style: {
       height: 24,
       width: 1,
-      background: 'rgba(247,243,235,.12)'
+      background: 'rgba(10,14,46,.12)'
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5872,12 +5872,12 @@ function GuideTopbarShot({
     style: {
       fontFamily: 'var(--serif)',
       fontSize: 18,
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, "8"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 8,
-      color: 'rgba(247,243,235,.45)',
+      color: 'rgba(10,14,46,.45)',
       textTransform: 'uppercase',
       letterSpacing: '.14em',
       fontWeight: 600
@@ -5886,14 +5886,14 @@ function GuideTopbarShot({
     style: {
       height: 24,
       width: 1,
-      background: 'rgba(247,243,235,.12)'
+      background: 'rgba(10,14,46,.12)'
     }
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: 'var(--serif)',
       fontStyle: 'italic',
       fontSize: 13,
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, phaseLabel))), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5940,7 +5940,7 @@ function GuideModal({
   onClose,
   isAdmin
 }) {
-  const G = '#ffd000'; // dorado MRNT
+  const G = '#a16207'; // dorado MRNT
   const sectionStyle = {
     marginBottom: 26
   };
@@ -5979,7 +5979,7 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 16,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.03em',
       marginBottom: 5
@@ -5987,7 +5987,7 @@ function GuideModal({
   }, title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6
     }
   }, children)));
@@ -6033,7 +6033,7 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.02em',
       lineHeight: 1
@@ -6045,7 +6045,7 @@ function GuideModal({
       position: 'fixed',
       inset: 0,
       zIndex: 240,
-      background: 'rgba(4,6,18,.86)',
+      background: 'rgba(10,14,46,.45)',
       backdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'flex-start',
@@ -6057,10 +6057,10 @@ function GuideModal({
     style: {
       width: '100%',
       maxWidth: 560,
-      background: 'linear-gradient(170deg,#0d1035,#080b22 60%)',
+      background: '#f8f5ef',
       border: '1px solid rgba(255,208,0,.22)',
       borderRadius: 22,
-      boxShadow: '0 24px 70px rgba(0,0,0,.7)',
+      boxShadow: '0 24px 70px rgba(10,14,46,.22)',
       animation: 'modalIn .3s ease',
       overflow: 'hidden',
       marginBottom: '4vh'
@@ -6081,9 +6081,9 @@ function GuideModal({
       width: 32,
       height: 32,
       borderRadius: '50%',
-      border: '1px solid rgba(247,243,235,.14)',
-      background: 'rgba(247,243,235,.06)',
-      color: '#f7f3eb',
+      border: '1px solid rgba(10,14,46,.14)',
+      background: 'rgba(10,14,46,.06)',
+      color: '#0a0e2e',
       fontSize: 15,
       display: 'flex',
       alignItems: 'center',
@@ -6106,7 +6106,7 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 26,
-      color: '#f7f3eb',
+      color: '#0a0e2e',
       textTransform: 'uppercase',
       letterSpacing: '.03em',
       lineHeight: 1
@@ -6114,7 +6114,7 @@ function GuideModal({
   }, "Cómo usar Maranata Class"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: 'rgba(255,208,0,.85)',
+      color: 'rgba(161,98,7,.95)',
       fontWeight: 600,
       letterSpacing: '.06em',
       marginTop: 4
@@ -6122,13 +6122,13 @@ function GuideModal({
   }, "Guía de la sala virtual · IASD Las Condes"))), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 13,
-      color: 'rgba(247,243,235,.7)',
+      color: 'rgba(10,14,46,.7)',
       lineHeight: 1.6,
       marginTop: 14
     }
   }, "Maranata Class es nuestra sala virtual: tu avatar se mueve entre las zonas del", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, " Plan MRNT"), " (Misión, Relación, Nutrición y Templo) y participas en cada actividad. Aquí tienes todo lo que necesitas saber. 👇")), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6137,7 +6137,7 @@ function GuideModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: sectionStyle
   }, /*#__PURE__*/React.createElement(SectionTitle, {
-    color: "#ffd000",
+    color: "#a16207",
     icon: "🚪",
     kicker: "Para empezar",
     title: "Tus primeros pasos"
@@ -6196,7 +6196,7 @@ function GuideModal({
     title: "Arrastra tu avatar"
   }, "Mantén presionado tu ícono y ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "arrástralo"), " hacia la zona donde quieras estar. Cada zona es una parte del Plan MRNT."), /*#__PURE__*/React.createElement(GuideShot, {
     caption: "Las 6 zonas del Plan MRNT. Arrastra tu avatar a la que corresponda."
@@ -6280,13 +6280,13 @@ function GuideModal({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6,
       marginBottom: 14
     }
   }, "Es el momento de ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#eab308'
+      color: '#a16207'
     }
   }, "compartir y conocernos"), ". El anfitrión da la palabra a cada persona por turnos. Puedes reaccionar con emojis mientras alguien habla. 🙌"), /*#__PURE__*/React.createElement(SectionTitle, {
     color: "#fb923c",
@@ -6298,7 +6298,7 @@ function GuideModal({
     title: "Sigue la presentación"
   }, "Cuando el anfitrión inicia la ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "presentación"), ", a todos les aparece la misma diapositiva. Él la va avanzando y tú solo miras."), /*#__PURE__*/React.createElement(GuideShot, {
     caption: "Todos ven la misma diapositiva del repaso, sincronizada en vivo."
@@ -6377,7 +6377,7 @@ function GuideModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px',
-      background: '#07091f',
+      background: '#f8f5ef',
       display: 'flex',
       flexDirection: 'column',
       gap: 10
@@ -6394,8 +6394,8 @@ function GuideModal({
     size: 28
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(255,255,255,.05)',
-      border: '1px solid rgba(255,255,255,.08)',
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.1)',
       borderRadius: '4px 12px 12px 12px',
       padding: '7px 11px',
       maxWidth: '78%'
@@ -6404,14 +6404,14 @@ function GuideModal({
     style: {
       fontSize: 10,
       fontWeight: 700,
-      color: '#ffd000',
+      color: '#a16207',
       fontFamily: 'Barlow Condensed,sans-serif',
       marginRight: 6
     }
   }, "Sofía"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 12,
-      color: '#f0f2ff'
+      color: '#0a0e2e'
     }
   }, "¡Qué bueno este punto! 🙌"))), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6453,7 +6453,7 @@ function GuideModal({
   }, "Isidora")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: '#f0f2ff',
+      color: '#0a0e2e',
       fontStyle: 'italic'
     }
   }, "Oremos por sabiduría para vivir lo aprendido.")))), /*#__PURE__*/React.createElement(Step, {
@@ -6473,7 +6473,7 @@ function GuideModal({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6,
       marginBottom: 12
     }
@@ -6515,18 +6515,18 @@ function GuideModal({
     style: {
       fontWeight: 800,
       fontSize: 13,
-      color: '#f7f3eb'
+      color: '#0a0e2e'
     }
   }, g.n), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11.5,
-      color: 'rgba(247,243,235,.65)'
+      color: 'rgba(10,14,46,.65)'
     }
   }, g.d))))), /*#__PURE__*/React.createElement(GuideShot, {
     caption: "En el Kahoot eliges una de las 4 opciones de color. ¡Rápido suma más puntos!"
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: '#07091f',
+      background: '#f8f5ef',
       padding: '14px'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -6542,7 +6542,7 @@ function GuideModal({
   }, "Pregunta 3 / 10"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: '#f0f2ff',
+      color: '#0a0e2e',
       fontWeight: 600,
       marginBottom: 12,
       lineHeight: 1.4
@@ -6592,12 +6592,12 @@ function GuideModal({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.78)',
+      color: 'rgba(10,14,46,.78)',
       lineHeight: 1.6
     }
   }, "Al final, el momento del Templo invita a la reflexión. Suele abrirse una", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#a78bfa'
+      color: '#7c3aed'
     }
   }, " encuesta semanal"), " corta para conocer tu experiencia. Respóndela: ¡tu opinión ayuda a mejorar cada clase! 💜")), isAdmin && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6608,14 +6608,14 @@ function GuideModal({
       padding: 16
     }
   }, /*#__PURE__*/React.createElement(SectionTitle, {
-    color: "#ffd000",
+    color: "#a16207",
     icon: "⚙️",
     kicker: "Solo anfitrión",
     title: "Panel de administración"
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
-      color: 'rgba(247,243,235,.8)',
+      color: 'rgba(10,14,46,.8)',
       lineHeight: 1.7
     }
   }, "Como anfitrión, usa el botón ", /*#__PURE__*/React.createElement("strong", {
@@ -6632,11 +6632,11 @@ function GuideModal({
     }
   }, /*#__PURE__*/React.createElement("li", null, "Inicia y finaliza cada actividad: Confra, Repaso, Juegos, Misión y Templo."), /*#__PURE__*/React.createElement("li", null, "En Repaso: ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "Iniciar presentación"), " (elige cuál proyectar), avanza con ◀ ▶ o las flechas del teclado, y abre la ", /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: '#fb923c'
+      color: '#c2410c'
     }
   }, "nube de palabras ☁️"), " cuando quieras."), /*#__PURE__*/React.createElement("li", null, "Comparte el ", /*#__PURE__*/React.createElement("strong", {
     style: {
@@ -6652,14 +6652,14 @@ function GuideModal({
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 18,
-      color: '#ffd000',
+      color: '#a16207',
       textTransform: 'uppercase',
       letterSpacing: '.04em'
     }
   }, "¡Listo! Ya puedes participar 🎉"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: 'rgba(247,243,235,.55)',
+      color: 'rgba(10,14,46,.55)',
       marginTop: 6,
       marginBottom: 16
     }
@@ -6676,7 +6676,7 @@ function GuideModal({
       fontSize: 15,
       letterSpacing: '.06em',
       textTransform: 'uppercase',
-      boxShadow: '0 8px 24px rgba(255,208,0,.4)'
+      boxShadow: '0 8px 24px rgba(255,208,0,.33)'
     }
   }, "Entendido")))));
 }
