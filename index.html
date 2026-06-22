@@ -1102,26 +1102,193 @@ function TimerDisplay({
   }, over ? '-' : '', formatTime(abs)))));
 }
 
-/* ════════════════════════ ROOM CANVAS ════════════════════════ */
-function RoomCanvas({
-  users,
-  myId,
-  session,
-  onDragMove,
-  roomRef,
-  full,
-  reactions
-}) {
+/* ════════════════════════ ROOM CANVAS — 3D ISO (Roblox-style) ════════════════════════ */
+/* Cada zona se renderiza como una mini-sala isométrica con paredes, baldosas y muebles
+   tematizados, y los avatares usan un cuerpo 3D estilo Roblox (portado del diseño
+   "Sala Maranata 3D"). Se conserva el layout plano de ZONES y la firma de props
+   para no romper drag-entre-zonas, modo proyección ni ninguna actividad existente. */
+
+const FURNITURE_BY_ZONE = {
+  mision: [
+    { t: 'tv',    x: .5,  y: .12 },
+    { t: 'sofa',  x: .32, y: .58, dir: 0 },
+    { t: 'plant', x: .85, y: .42 },
+    { t: 'lamp',  x: .18, y: .85 }
+  ],
+  confra: [
+    { t: 'sofa',  x: .28, y: .35, dir: 0 },
+    { t: 'sofa',  x: .72, y: .35, dir: 2 },
+    { t: 'table', x: .5,  y: .55 },
+    { t: 'rug',   x: .5,  y: .78 },
+    { t: 'plant', x: .12, y: .12 }
+  ],
+  repaso: [
+    { t: 'screen',x: .5,  y: .12 },
+    { t: 'chair', x: .3,  y: .5,  dir: 0 },
+    { t: 'chair', x: .5,  y: .5,  dir: 0 },
+    { t: 'chair', x: .7,  y: .5,  dir: 0 },
+    { t: 'table', x: .5,  y: .8 }
+  ],
+  juegos: [
+    { t: 'tv',    x: .5,  y: .15 },
+    { t: 'chair', x: .35, y: .55, dir: 0 },
+    { t: 'chair', x: .65, y: .55, dir: 0 },
+    { t: 'table', x: .5,  y: .8 }
+  ],
+  templo: [
+    { t: 'pulpit',x: .5,  y: .18 },
+    { t: 'chair', x: .32, y: .55, dir: 3 },
+    { t: 'chair', x: .68, y: .55, dir: 1 },
+    { t: 'rug',   x: .5,  y: .7 },
+    { t: 'plant', x: .12, y: .85 },
+    { t: 'plant', x: .88, y: .85 }
+  ]
+};
+
+// Prisma rectangular: bloque base con el que se arman los muebles isométricos.
+const Box3D = ({ w, d, hh, topC, frontC, sideC, radius = 6 }) => {
+  const h = React.createElement;
+  return h('div', { style: { position: 'relative', width: w, height: d + hh } },
+    h('div', { style: { position: 'absolute', top: d - radius, left: 0, width: w, height: hh + radius, borderRadius: `0 0 ${radius}px ${radius}px`, background: sideC, boxShadow: 'inset 0 -3px 5px rgba(0,0,0,.28)' } }),
+    h('div', { style: { position: 'absolute', top: 0, left: 0, width: w, height: d, borderRadius: radius, background: `linear-gradient(150deg, ${topC}, ${frontC})`, boxShadow: 'inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.12)', border: '1.5px solid rgba(10,14,46,.18)' } })
+  );
+};
+
+// Sprites isométricos de muebles. `dir` ∈ 0..3 rota el frente del mueble.
+const Furn3D = ({ type, dir = 0, scale = 1 }) => {
+  const h = React.createElement;
+  const flipX = (dir === 1 || dir === 2);
+  const away = (dir === 2 || dir === 3);
+  const wrap = (children, w, ht) => h('div', { style: { transform: `scale(${scale})${flipX ? ' scaleX(-1)' : ''}`, transformOrigin: 'bottom center', width: w, height: ht, position: 'relative' } }, children);
+  if (type === 'tv') return wrap(h('div', null,
+    h(Box3D, { w: 74, d: 44, hh: 9, topC: '#1a1e44', frontC: '#0d1035', sideC: '#070a22', radius: 6 }),
+    h('div', { style: { position: 'absolute', top: 6, left: 7, width: 60, height: 34, borderRadius: 4, background: 'radial-gradient(circle at 40% 35%, #2a3578, #0d1035)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+      h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 13, color: '#ffd000', letterSpacing: '.06em' } }, 'MRNT')),
+    h('div', { style: { width: 10, height: 16, background: '#23284a', margin: '0 auto', borderRadius: '0 0 3px 3px' } })
+  ), 74, 70);
+  if (type === 'screen') return wrap(h('div', null,
+    h('div', { style: { width: 80, height: 54, borderRadius: 5, background: 'linear-gradient(160deg,#ffffff,#f1ece2)', border: '4px solid #fb923c', boxShadow: '0 8px 28px rgba(10,14,46,.18)', padding: 8, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 5 } },
+      h('div', { style: { height: 5, width: '70%', borderRadius: 3, background: '#fb923c' } }),
+      h('div', { style: { height: 4, width: '92%', borderRadius: 3, background: 'rgba(10,14,46,.18)' } }),
+      h('div', { style: { height: 4, width: '80%', borderRadius: 3, background: 'rgba(10,14,46,.18)' } }),
+      h('div', { style: { height: 4, width: '60%', borderRadius: 3, background: 'rgba(10,14,46,.18)' } })
+    ),
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', width: 58, margin: '2px auto 0' } },
+      h('div', { style: { width: 5, height: 18, background: '#c2410c', transform: 'rotate(12deg)' } }),
+      h('div', { style: { width: 5, height: 18, background: '#c2410c', transform: 'rotate(-12deg)' } })
+    )
+  ), 80, 78);
+  if (type === 'pulpit') return wrap(h('div', { style: { position: 'relative', width: 46, height: 60 } },
+    h('div', { style: { position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', width: 22, height: 40 } }, h(Box3D, { w: 22, d: 36, hh: 8, topC: '#9b7ce0', frontC: '#7c3aed', sideC: '#4c1d95', radius: 4 })),
+    h('div', { style: { position: 'absolute', top: 0, left: 0, width: 46, height: 16 } }, h(Box3D, { w: 46, d: 12, hh: 5, topC: '#a78bda', frontC: '#7c3aed', sideC: '#5b21b6', radius: 4 })),
+    h('div', { style: { position: 'absolute', top: 3, left: 10, width: 26, height: 8, borderRadius: 2, background: '#f7f3eb' } }),
+    h('div', { style: { position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)', fontWeight: 900, fontSize: 12, color: '#ffd000' } }, '✝')
+  ), 46, 60);
+  if (type === 'table') return wrap(h('div', { style: { position: 'relative', width: 64, height: 40 } },
+    h(Box3D, { w: 64, d: 26, hh: 6, topC: '#e2bd8e', frontC: '#c89456', sideC: '#8a6238', radius: 7 }),
+    h('div', { style: { position: 'absolute', top: 24, left: 6, width: 6, height: 14, background: '#7a5630', borderRadius: '0 0 3px 3px' } }),
+    h('div', { style: { position: 'absolute', top: 24, right: 6, width: 6, height: 14, background: '#5e421f', borderRadius: '0 0 3px 3px' } })
+  ), 64, 40);
+  if (type === 'sofa') return wrap(h('div', { style: { position: 'relative', width: 66, height: 50 } },
+    h('div', { style: { position: 'absolute', left: 3, width: 60, height: 16, top: away ? 30 : 0 } }, h(Box3D, { w: 60, d: 12, hh: 6, topC: '#5b9bf6', frontC: '#3b82f6', sideC: '#1e40af', radius: 8 })),
+    h('div', { style: { position: 'absolute', top: 13, left: 0, width: 66, height: 20 } }, h(Box3D, { w: 66, d: 14, hh: 8, topC: '#6aa6f8', frontC: '#3b82f6', sideC: '#1d4ed8', radius: 9 })),
+    h('div', { style: { position: 'absolute', top: 30, left: 6, width: 6, height: 9, background: '#1e40af' } }),
+    h('div', { style: { position: 'absolute', top: 30, right: 6, width: 6, height: 9, background: '#1e40af' } })
+  ), 66, 50);
+  if (type === 'chair') return wrap(h('div', { style: { position: 'relative', width: 32, height: 50 } },
+    h('div', { style: { position: 'absolute', left: 3, width: 26, height: 15, top: away ? 30 : 0, background: 'linear-gradient(150deg,#ffd86b,#e6a800)', border: '2px solid #b9820a', borderRadius: away ? '0 0 6px 6px' : '6px 6px 0 0' } }),
+    h('div', { style: { position: 'absolute', top: 16, left: 1, width: 30, height: 14 } }, h(Box3D, { w: 30, d: 9, hh: 6, topC: '#ffe08a', frontC: '#ffd000', sideC: '#b9820a', radius: 5 })),
+    h('div', { style: { position: 'absolute', top: 28, left: 4, width: 5, height: 12, background: '#b9820a' } }),
+    h('div', { style: { position: 'absolute', top: 28, right: 4, width: 5, height: 12, background: '#8a6207' } })
+  ), 32, 50);
+  if (type === 'plant') return wrap(h('div', { style: { position: 'relative', width: 36, height: 46, textAlign: 'center', fontSize: 30, lineHeight: 1 } }, '🪴'), 36, 46);
+  if (type === 'lamp') return wrap(h('div', { style: { position: 'relative', width: 28, height: 56 } },
+    h('div', { style: { position: 'absolute', top: 0, left: 2, width: 24, height: 16, borderRadius: '12px 12px 3px 3px', background: 'linear-gradient(160deg,#ffe9a8,#ffd000)', border: '2px solid #e6a800', boxShadow: '0 0 18px rgba(255,208,0,.6)' } }),
+    h('div', { style: { position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', width: 4, height: 32, background: '#23284a' } }),
+    h('div', { style: { position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 20, height: 7, borderRadius: '50%', background: '#141744' } })
+  ), 28, 56);
+  if (type === 'rug') {
+    const horiz = (dir === 1 || dir === 3);
+    const grad = horiz
+      ? 'repeating-linear-gradient(0deg,#7c3aed,#7c3aed 10px,#8b5cf6 10px,#8b5cf6 20px)'
+      : 'repeating-linear-gradient(90deg,#7c3aed,#7c3aed 10px,#8b5cf6 10px,#8b5cf6 20px)';
+    return wrap(h('div', { style: { width: horiz ? 60 : 90, height: horiz ? 70 : 44, background: grad, border: '3px solid #5b21b6', borderRadius: 8, opacity: .9, boxShadow: 'inset 0 0 0 3px rgba(255,255,255,.22)' } }), horiz ? 60 : 90, horiz ? 70 : 44);
+  }
+  return null;
+};
+
+// Decorado isométrico de fondo para una sala: paredes, baldosas y muebles.
+const RoomScene3D = ({ zoneKey, color, colorDark, full }) => {
+  const h = React.createElement;
+  const W = 360, H = 220;
+  const COLS = 9, ROWS = 6;
+  const TW = 36, TH = 18;
+  const OX = W / 2, OY = 42;
+  const WALLH = 56;
+  const iso = (x, y) => ({ left: OX + (x - y) * TW / 2, top: OY + (x + y) * TH / 2 });
+  const tiles = [];
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+    const p0 = iso(x, y), p1 = iso(x + 1, y), p2 = iso(x + 1, y + 1), p3 = iso(x, y + 1);
+    const fill = (x + y) % 2 === 0 ? `${color}24` : `${color}14`;
+    tiles.push(h('polygon', { key: `${x}-${y}`, points: `${p0.left},${p0.top} ${p1.left},${p1.top} ${p2.left},${p2.top} ${p3.left},${p3.top}`, fill, stroke: 'rgba(10,14,46,.06)', strokeWidth: .8 }));
+  }
+  const a = iso(0, 0), lb = iso(0, ROWS), rb = iso(COLS, 0);
+  const walls = h('g', null,
+    h('polygon', { points: `${a.left},${a.top} ${lb.left},${lb.top} ${lb.left},${lb.top - WALLH} ${a.left},${a.top - WALLH}`, fill: '#efeae0', stroke: 'rgba(10,14,46,.08)', strokeWidth: .8 }),
+    h('polygon', { points: `${a.left},${a.top} ${rb.left},${rb.top} ${rb.left},${rb.top - WALLH} ${a.left},${a.top - WALLH}`, fill: `${color}30`, stroke: 'rgba(10,14,46,.08)', strokeWidth: .8 }),
+    h('polygon', { points: `${a.left},${a.top} ${rb.left},${rb.top} ${rb.left},${rb.top - 5} ${a.left},${a.top - 5}`, fill: colorDark, opacity: .28 })
+  );
+  const furn = (FURNITURE_BY_ZONE[zoneKey] || []).map((f, i) => {
+    const fx = f.x * COLS, fy = f.y * ROWS;
+    const p = iso(fx, fy);
+    return h('div', { key: i, style: { position: 'absolute', left: p.left, top: p.top, transform: 'translate(-50%,-78%)', pointerEvents: 'none', zIndex: 1 } },
+      h(Furn3D, { type: f.t, dir: f.dir || 0, scale: full ? 0.85 : 0.55 }));
+  });
+  return h('div', { style: { position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', opacity: .9 } },
+    h('div', { style: { position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: W, height: H } },
+      h('svg', { width: W, height: H, style: { position: 'absolute', left: 0, top: 0, overflow: 'visible' } }, walls, tiles),
+      furn
+    )
+  );
+};
+
+// Cuerpo de avatar 3D estilo Roblox (cabeza con foto/emoji, torso, brazos, piernas).
+const IsoChar = ({ profile, isMe = false, glow = false, scale = 1 }) => {
+  const h = React.createElement;
+  const col = profile?.color || '#ffd000';
+  const dark = `color-mix(in srgb, ${col} 62%, #000)`;
+  const mid  = `color-mix(in srgb, ${col} 84%, #000)`;
+  const headInner = profile?.photo
+    ? h('img', { src: profile.photo, style: { width: '100%', height: '100%', objectFit: 'cover' }, alt: '' })
+    : h('span', { style: { fontSize: 15 } }, profile?.avatar || '👤');
+  return h('div', { style: { position: 'relative', width: 44, height: 60, transform: `scale(${scale})`, transformOrigin: 'bottom center', filter: (isMe || glow) ? 'drop-shadow(0 0 7px rgba(255,208,0,.65))' : 'none' } },
+    h('div', { style: { position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 30, height: 28, borderRadius: '9px 9px 8px 8px', zIndex: 3, background: 'linear-gradient(135deg,#ffe9cc 0%,#fbd6a6 55%,#e8b277 100%)', border: '1.5px solid rgba(10,14,46,.22)', boxShadow: 'inset -4px -3px 6px rgba(150,90,40,.35), inset 3px 3px 5px rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' } }, headInner),
+    h('div', { style: { position: 'absolute', top: 25, left: '50%', transform: 'translateX(-50%)', width: 34, height: 26, zIndex: 2 } },
+      h('div', { style: { position: 'absolute', right: -1, top: 2, width: 9, height: 24, borderRadius: '0 7px 6px 0', background: dark, transform: 'skewY(20deg)' } }),
+      h('div', { style: { position: 'absolute', left: 0, top: 0, width: 28, height: 26, borderRadius: '10px 10px 6px 6px', background: `linear-gradient(135deg, ${col} 0%, ${mid} 100%)`, border: '1.5px solid rgba(10,14,46,.22)', boxShadow: 'inset 0 4px 6px rgba(255,255,255,.28), inset -3px -3px 6px rgba(0,0,0,.18)' } }),
+      h('div', { style: { position: 'absolute', left: -5, top: 3, width: 7, height: 18, borderRadius: 5, background: `linear-gradient(135deg, ${mid}, ${dark})`, border: '1px solid rgba(10,14,46,.2)' } }),
+      h('div', { style: { position: 'absolute', right: -6, top: 4, width: 7, height: 18, borderRadius: 5, background: dark, border: '1px solid rgba(10,14,46,.2)' } })
+    ),
+    h('div', { style: { position: 'absolute', top: 49, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4, zIndex: 1 } },
+      h('div', { style: { width: 10, height: 12, borderRadius: '3px 3px 4px 4px', background: 'linear-gradient(135deg,#3a4067,#23284a)' } }),
+      h('div', { style: { width: 10, height: 12, borderRadius: '3px 3px 4px 4px', background: 'linear-gradient(135deg,#2a2f52,#1a1e3a)' } })
+    )
+  );
+};
+
+function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions }) {
+  const h = React.createElement;
   const entries = Object.entries(users);
   const phase = session?.phase || 'waiting';
   const isDrag = useRef(false);
   const lastT = useRef(0);
-  const handleDragStart = useCallback(e => {
+
+  const handleDragStart = useCallback((e) => {
     if (full) return;
     e.preventDefault();
     isDrag.current = true;
   }, [full]);
-  const handleDragMove = useCallback(e => {
+  const handleDragMove = useCallback((e) => {
     if (!isDrag.current || full) return;
     const now = Date.now();
     if (now - lastT.current < 50) return;
@@ -1130,365 +1297,160 @@ function RoomCanvas({
     if (!rect) return;
     const cx = e.touches?.[0]?.clientX ?? e.clientX;
     const cy = e.touches?.[0]?.clientY ?? e.clientY;
-    const x = Math.max(3, Math.min(97, (cx - rect.left) / rect.width * 100));
-    const y = Math.max(3, Math.min(97, (cy - rect.top) / rect.height * 100));
+    const x = Math.max(3, Math.min(97, ((cx - rect.left) / rect.width) * 100));
+    const y = Math.max(3, Math.min(97, ((cy - rect.top) / rect.height) * 100));
     onDragMove(x, y);
   }, [full, onDragMove, roomRef]);
-  const handleDragEnd = useCallback(() => {
-    isDrag.current = false;
-  }, []);
-  const zoneCardStyle = key => {
+  const handleDragEnd = useCallback(() => { isDrag.current = false; }, []);
+
+  const zoneCardStyle = (key) => {
     const z = ZONES[key];
     const isActive = phase === key;
     const isEntrada = key === 'entrada';
     const isRepaso = key === 'repaso';
     const isJuegos = key === 'juegos';
-    // Entrada mantiene fondo claro; columnas MRNT usan color sólido
-    const tint = isEntrada ? isActive ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.85)' : z.color;
+    const tint = isEntrada
+      ? (isActive ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.85)')
+      : `linear-gradient(180deg, ${z.color}26, ${z.color}10)`;
     const borderW = isActive ? 3 : 2;
     const borderColor = isEntrada ? '#0a0e2e' : z.color;
-    // Repaso y Juegos comparten una columna unificada con un divisor naranja leve
     const borderRadius = isRepaso ? '14px 14px 0 0' : isJuegos ? '0 0 14px 14px' : 14;
     return {
       position: 'absolute',
-      left: `${z.cardX}%`,
-      top: `${z.cardY}%`,
-      width: `${z.cardW}%`,
-      height: `${z.cardH}%`,
+      left: `${z.cardX}%`, top: `${z.cardY}%`, width: `${z.cardW}%`, height: `${z.cardH}%`,
       background: tint,
-      borderTop: isJuegos ? '1px solid rgba(255,255,255,.45)' : `${borderW}px solid ${borderColor}`,
+      borderTop:    isJuegos ? '1px solid rgba(255,255,255,.45)' : `${borderW}px solid ${borderColor}`,
       borderBottom: isRepaso ? '1px solid rgba(255,255,255,.45)' : `${borderW}px solid ${borderColor}`,
-      borderLeft: `${borderW}px solid ${borderColor}`,
+      borderLeft:  `${borderW}px solid ${borderColor}`,
       borderRight: `${borderW}px solid ${borderColor}`,
-      borderRadius,
-      overflow: 'hidden',
-      transition: 'all .3s',
-      boxShadow: isActive ? `0 8px 22px ${isEntrada ? 'rgba(10,14,46,.18)' : z.color + '55'}, 0 0 0 4px ${isEntrada ? 'rgba(10,14,46,.08)' : z.color + '22'}` : `0 3px 10px ${isEntrada ? 'rgba(10,14,46,.08)' : z.color + '22'}`,
+      borderRadius, overflow: 'hidden', transition: 'all .3s',
+      boxShadow: isActive
+        ? `0 8px 22px ${isEntrada ? 'rgba(10,14,46,.18)' : z.color + '55'}, 0 0 0 4px ${isEntrada ? 'rgba(10,14,46,.08)' : z.color + '22'}`
+        : `0 3px 10px ${isEntrada ? 'rgba(10,14,46,.08)' : z.color + '22'}`,
       pointerEvents: 'none',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: isEntrada ? full ? '10px 14px' : '6px 10px' : full ? '14px 8px' : '8px 4px',
-      backdropFilter: 'blur(2px)'
+      display: 'flex', flexDirection: 'column',
+      padding: isEntrada ? (full ? '10px 14px' : '6px 10px') : (full ? '14px 8px' : '8px 4px')
     };
   };
-  return /*#__PURE__*/React.createElement("div", {
+
+  const renderEntrada = () => {
+    const z = ZONES.entrada;
+    const count = entries.filter(([, u]) => effectiveZone(u) === 'entrada').length;
+    const rooms = ['mision', 'confra', 'repaso', 'juegos', 'templo'];
+    return h('div', { key: 'entrada', style: zoneCardStyle('entrada') },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: full ? 14 : 8, width: '100%', height: '100%' } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 } },
+          h('div', { style: { fontSize: full ? 22 : 18 } }, '🚪'),
+          h('div', { style: { lineHeight: 1.05 } },
+            h('div', { style: { fontSize: 9, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: '#3b3f5a', textTransform: 'uppercase', letterSpacing: '.22em' } }, 'Llegada'),
+            h('div', { style: { fontSize: full ? 17 : 14, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, color: '#0a0e2e', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2 } }, 'Entrada')
+          )
+        ),
+        h('div', { style: { flex: 1, display: 'flex', gap: full ? 14 : 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
+          rooms.map((rk) => {
+            const r = ZONES[rk], rActive = phase === rk;
+            return h('div', { key: rk, style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, flexShrink: 0 } },
+              rActive ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 8, letterSpacing: '.1em', textTransform: 'uppercase', color: r.colorDark, background: '#fff', border: `1px solid ${r.color}`, borderRadius: 20, padding: '1px 6px', boxShadow: `0 2px 8px ${r.color}44`, whiteSpace: 'nowrap' } }, '● En vivo') : null,
+              h('div', { style: { position: 'relative', width: full ? 50 : 34, height: full ? 44 : 30, borderRadius: '11px 11px 4px 4px', padding: 3, boxSizing: 'border-box', background: rActive ? `linear-gradient(180deg, ${r.color}, ${r.colorDark})` : 'linear-gradient(180deg, #c7c2b6, #b3aea1)', border: `2px solid ${rActive ? r.color : 'rgba(10,14,46,.14)'}`, boxShadow: rActive ? `0 0 18px ${r.color}66` : 'none' } },
+                rActive
+                  ? h('div', { style: { position: 'relative', width: '100%', height: '100%', borderRadius: '8px 8px 2px 2px', overflow: 'hidden', background: `radial-gradient(ellipse at 50% 120%, ${r.color}cc, #0a0c28 80%)`, boxShadow: 'inset 0 3px 6px rgba(0,0,0,.6)' } },
+                      h('span', { style: { position: 'absolute', right: 5, bottom: 3, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 13 : 11, color: '#fff', opacity: .9 } }, r.letter)
+                    )
+                  : h('div', { style: { width: '100%', height: '100%', borderRadius: '8px 8px 2px 2px', background: 'linear-gradient(180deg,#d8d3c8,#c2bdb1)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+                      h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 18 : 14, color: 'rgba(10,14,46,.32)' } }, r.letter))
+              )
+            );
+          })
+        ),
+        count > 0 && h('div', { style: { fontSize: full ? 13 : 12, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, color: '#0a0e2e', background: '#ffd000', padding: '2px 9px', borderRadius: 20, marginLeft: 6, flexShrink: 0 } }, count)
+      )
+    );
+  };
+
+  const renderRoom = (key) => {
+    const z = ZONES[key];
+    const count = entries.filter(([, u]) => effectiveZone(u) === key).length;
+    const isActive = phase === key;
+    const letterSize = full ? 88 : 66;
+    return h('div', { key, style: zoneCardStyle(key) },
+      h(RoomScene3D, { zoneKey: key, color: z.color, colorDark: z.colorDark, full }),
+      key !== 'juegos' && h('div', { style: { position: 'relative', zIndex: 2, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: letterSize, lineHeight: 1, color: '#fff', textAlign: 'center', textShadow: '0 2px 10px rgba(0,0,0,.3)', marginTop: full ? 4 : 2 } }, z.letter),
+      key !== 'juegos' && h('div', { style: { position: 'relative', zIndex: 2, fontSize: full ? 10 : 9, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '.18em', textAlign: 'center', marginTop: full ? 6 : 4, textShadow: '0 1px 3px rgba(0,0,0,.4)' } }, z.mrnt),
+      h('div', { style: { position: 'relative', zIndex: 2, fontSize: full ? 14 : 12, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, color: '#fff', textTransform: 'uppercase', letterSpacing: '.04em', textAlign: 'center', marginTop: full ? 3 : 2, padding: '0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 3px rgba(0,0,0,.4)' } }, full ? z.label : z.label.split(' ')[0]),
+      h('div', { style: { flex: 1 } }),
+      count > 0 && h('div', { style: { position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: full ? 6 : 4, marginBottom: full ? 4 : 3, fontSize: 11, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: '#fff', letterSpacing: '.06em', textTransform: 'uppercase', textShadow: '0 1px 3px rgba(0,0,0,.5)' } },
+        h('div', { style: { width: full ? 6 : 5, height: full ? 6 : 5, borderRadius: '50%', background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,.7)' } }),
+        h('span', null, count)
+      ),
+      isActive && h('div', { style: { position: 'absolute', top: full ? 8 : 4, right: full ? 8 : 4, background: '#fff', color: z.colorDark, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 9 : 8, letterSpacing: '.12em', textTransform: 'uppercase', padding: full ? '3px 7px' : '2px 6px', borderRadius: 20, boxShadow: '0 2px 6px rgba(0,0,0,.18)', zIndex: 3 } }, '● En vivo')
+    );
+  };
+
+  return h('div', {
     ref: roomRef,
-    onMouseMove: handleDragMove,
-    onMouseUp: handleDragEnd,
-    onMouseLeave: handleDragEnd,
-    onTouchMove: handleDragMove,
-    onTouchEnd: handleDragEnd,
+    onMouseMove: handleDragMove, onMouseUp: handleDragEnd, onMouseLeave: handleDragEnd,
+    onTouchMove: handleDragMove, onTouchEnd: handleDragEnd,
     style: {
-      width: '100%',
-      height: '100%',
-      position: 'relative',
-      overflow: 'hidden',
+      width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
       background: '#f8f5ef',
       backgroundImage: `
         radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.6),transparent 70%),
         radial-gradient(circle at 12% 88%,rgba(59,130,246,.05),transparent 50%),
         radial-gradient(circle at 88% 12%,rgba(234,179,8,.06),transparent 50%)
       `,
-      touchAction: 'none',
-      userSelect: 'none'
+      touchAction: 'none', userSelect: 'none'
     }
-  }, ['entrada', 'mision', 'confra', 'repaso', 'juegos', 'templo'].map(key => {
-    const z = ZONES[key];
-    const count = entries.filter(([, u]) => effectiveZone(u) === key).length;
-    const isActive = phase === key;
-    const isEntrada = key === 'entrada';
-    // Todas las letras MRNT del mismo tamaño para alinearse visualmente
-    const letterSize = full ? 88 : 66;
-    return /*#__PURE__*/React.createElement("div", {
-      key: key,
-      style: zoneCardStyle(key)
-    }, isEntrada ? /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: full ? 10 : 8,
-        height: '100%'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: full ? 22 : 18
-      }
-    }, "🚪"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        lineHeight: 1.05
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: full ? 9 : 9,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 700,
-        color: '#3b3f5a',
-        textTransform: 'uppercase',
-        letterSpacing: '.22em'
-      }
-    }, "Llegada"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: full ? 17 : 14,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 900,
-        color: '#0a0e2e',
-        textTransform: 'uppercase',
-        letterSpacing: '.04em',
-        marginTop: 2
-      }
-    }, "Entrada")), count > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: full ? 13 : 12,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 900,
-        color: '#0a0e2e',
-        background: '#ffd000',
-        padding: full ? '2px 9px' : '2px 9px',
-        borderRadius: 20,
-        marginLeft: full ? 8 : 6
-      }
-    }, count)) : /*#__PURE__*/React.createElement(React.Fragment, null, key !== 'juegos' && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 900,
-        fontSize: letterSize,
-        lineHeight: 1,
-        color: '#fff',
-        textAlign: 'center',
-        textShadow: '0 2px 10px rgba(0,0,0,.18)',
-        marginTop: full ? 4 : 2
-      }
-    }, z.letter), key !== 'juegos' && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: full ? 10 : 9,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 700,
-        color: '#fff',
-        textTransform: 'uppercase',
-        letterSpacing: '.18em',
-        textAlign: 'center',
-        marginTop: full ? 6 : 4
-      }
-    }, z.mrnt), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: full ? 14 : 12,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 900,
-        color: '#fff',
-        textTransform: 'uppercase',
-        letterSpacing: '.04em',
-        textAlign: 'center',
-        marginTop: full ? 3 : 2,
-        padding: '0 2px',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    }, full ? z.label : z.label.split(' ')[0]), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }), count > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: full ? 6 : 4,
-        marginBottom: full ? 4 : 3,
-        fontSize: full ? 11 : 11,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 700,
-        color: '#fff',
-        letterSpacing: '.06em',
-        textTransform: 'uppercase'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: full ? 6 : 5,
-        height: full ? 6 : 5,
-        borderRadius: '50%',
-        background: '#fff',
-        boxShadow: '0 0 6px rgba(255,255,255,.7)'
-      }
-    }), /*#__PURE__*/React.createElement("span", null, count))), isActive && !isEntrada && /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        top: full ? 8 : 4,
-        right: full ? 8 : 4,
-        background: '#fff',
-        color: z.colorDark,
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 900,
-        fontSize: full ? 9 : 8,
-        letterSpacing: '.12em',
-        textTransform: 'uppercase',
-        padding: full ? '3px 7px' : '2px 6px',
-        borderRadius: 20,
-        boxShadow: '0 2px 6px rgba(0,0,0,.18)'
-      }
-    }, "● En vivo"));
-  }), !full && /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: 'absolute',
-      bottom: 2,
-      left: 0,
-      right: 0,
-      textAlign: 'center',
-      fontSize: 8,
-      color: '#3b3f5a',
-      pointerEvents: 'none',
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 600,
-      letterSpacing: '.18em',
-      textTransform: 'uppercase',
-      opacity: .55
-    }
-  }, "Arrastra tu avatar a una zona"), full && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: 'absolute',
-      top: 18,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      background: '#fff',
-      border: '1px solid rgba(10,14,46,.08)',
-      borderRadius: 14,
-      padding: '10px 26px',
-      textAlign: 'center',
-      boxShadow: '0 6px 22px rgba(10,14,46,.08)',
-      zIndex: 20
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 900,
-      fontSize: 22,
-      color: '#0a0e2e',
-      letterSpacing: '.06em',
-      textTransform: 'uppercase'
-    }
-  }, "MARANATA CLASS"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: '#3b3f5a',
-      letterSpacing: '.06em',
-      marginTop: 2,
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 600,
-      textTransform: 'uppercase'
-    }
-  }, new Date().toLocaleDateString('es-CL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long'
-  }))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: 'absolute',
-      bottom: 20,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      background: '#0a0e2e',
-      color: '#ffd000',
-      borderRadius: 20,
-      padding: '7px 20px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      zIndex: 20,
-      boxShadow: '0 6px 22px rgba(10,14,46,.18)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 8,
-      height: 8,
-      borderRadius: '50%',
-      background: '#ffd000',
-      animation: 'pulse 1.5s infinite'
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 13,
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 800,
-      letterSpacing: '.14em',
-      textTransform: 'uppercase'
-    }
-  }, entries.length, " jóvenes en sala"))), entries.map(([uid, u]) => {
-    const myReactionsOnUser = reactions?.[uid] || {};
-    const reactionCounts = REACTIONS.map(r => ({
-      ...r,
-      count: Object.values(myReactionsOnUser).filter(v => v && typeof v === 'object' ? v[r.id] : v === r.id).length
-    })).filter(r => r.count > 0);
-    const isMine = uid === myId;
-    return /*#__PURE__*/React.createElement("div", {
-      key: uid,
-      onMouseDown: isMine && !full ? handleDragStart : undefined,
-      onTouchStart: isMine && !full ? handleDragStart : undefined,
-      style: {
-        position: 'absolute',
-        left: `${u.x ?? 50}%`,
-        top: `${u.y ?? 50}%`,
-        transform: 'translate(-50%,-50%)',
-        transition: isDrag.current && isMine ? 'none' : 'left .45s cubic-bezier(0.23,1,0.32,1), top .45s cubic-bezier(0.23,1,0.32,1)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        cursor: isMine && !full ? 'grab' : 'default',
-        zIndex: isMine ? 10 : 5,
-        animation: uid === myId ? 'pop .45s ease' : 'none',
-        pointerEvents: full ? 'none' : 'auto'
-      }
-    }, reactionCounts.length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 2,
-        marginBottom: 2
-      }
-    }, reactionCounts.map(r => /*#__PURE__*/React.createElement("div", {
-      key: r.id,
-      style: {
-        background: '#fff',
-        borderRadius: 20,
-        padding: '2px 6px',
-        fontSize: full ? 13 : 9,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        border: '1px solid rgba(10,14,46,.08)',
-        boxShadow: '0 2px 6px rgba(10,14,46,.06)'
-      }
-    }, /*#__PURE__*/React.createElement("span", null, r.e), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: full ? 10 : 7,
-        color: '#0a0e2e',
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 800
-      }
-    }, r.count > 1 ? r.count : '')))), /*#__PURE__*/React.createElement(AvatarBubble, {
-      profile: u,
-      size: full ? 58 : 42,
-      glow: uid === myId,
-      isMe: uid === myId
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: -2,
-        fontSize: full ? 11 : 8,
-        color: '#0a0e2e',
-        background: '#fff',
-        padding: '2px 9px',
-        borderRadius: 20,
-        maxWidth: full ? 90 : 64,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 700,
-        letterSpacing: '.04em',
-        border: `1.5px solid ${u.color || '#ffd000'}`,
-        boxShadow: '0 2px 6px rgba(10,14,46,.08)'
-      }
-    }, uid === myId ? '★ ' + u.name : u.name));
-  }));
+  },
+    renderEntrada(),
+    ['mision', 'confra', 'repaso', 'juegos', 'templo'].map(renderRoom),
+
+    !full && h('div', { style: { position: 'absolute', bottom: 2, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#3b3f5a', pointerEvents: 'none', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', opacity: .55 } }, 'Arrastra tu avatar a una zona'),
+
+    full && h(React.Fragment, null,
+      h('div', { style: { position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(10,14,46,.08)', borderRadius: 14, padding: '10px 26px', textAlign: 'center', boxShadow: '0 6px 22px rgba(10,14,46,.08)', zIndex: 20 } },
+        h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: '#0a0e2e', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'MARANATA CLASS'),
+        h('div', { style: { fontSize: 11, color: '#3b3f5a', letterSpacing: '.06em', marginTop: 2, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 600, textTransform: 'uppercase' } }, new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' }))
+      ),
+      h('div', { style: { position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: '#0a0e2e', color: '#ffd000', borderRadius: 20, padding: '7px 20px', display: 'flex', alignItems: 'center', gap: 8, zIndex: 20, boxShadow: '0 6px 22px rgba(10,14,46,.18)' } },
+        h('div', { style: { width: 8, height: 8, borderRadius: '50%', background: '#ffd000', animation: 'pulse 1.5s infinite' } }),
+        h('span', { style: { fontSize: 13, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase' } }, entries.length + ' jóvenes en sala')
+      )
+    ),
+
+    entries.map(([uid, u]) => {
+      const myReactionsOnUser = reactions?.[uid] || {};
+      const reactionCounts = REACTIONS.map(r => ({
+        ...r,
+        count: Object.values(myReactionsOnUser).filter(v => v && typeof v === 'object' ? v[r.id] : v === r.id).length
+      })).filter(r => r.count > 0);
+      const isMine = uid === myId;
+      return h('div', {
+        key: uid,
+        onMouseDown: isMine && !full ? handleDragStart : undefined,
+        onTouchStart: isMine && !full ? handleDragStart : undefined,
+        style: {
+          position: 'absolute', left: `${u.x ?? 50}%`, top: `${u.y ?? 50}%`,
+          transform: 'translate(-50%,-88%)',
+          transition: isDrag.current && isMine ? 'none' : 'left .45s cubic-bezier(0.23,1,0.32,1), top .45s cubic-bezier(0.23,1,0.32,1)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          cursor: isMine && !full ? 'grab' : 'default',
+          zIndex: isMine ? 10 : 5,
+          animation: isMine ? 'pop .45s ease' : 'none',
+          pointerEvents: full ? 'none' : 'auto'
+        }
+      },
+        reactionCounts.length > 0 && h('div', { style: { display: 'flex', gap: 2, marginBottom: 2 } },
+          reactionCounts.map(r => h('div', { key: r.id, style: { background: '#fff', borderRadius: 20, padding: '2px 6px', fontSize: full ? 13 : 9, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid rgba(10,14,46,.08)', boxShadow: '0 2px 6px rgba(10,14,46,.06)' } },
+            h('span', null, r.e),
+            h('span', { style: { fontSize: full ? 10 : 7, color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800 } }, r.count > 1 ? r.count : '')
+          ))
+        ),
+        h('div', { style: { marginBottom: 3, fontSize: full ? 11 : 8, color: '#0a0e2e', background: '#fff', padding: '2px 9px', borderRadius: 20, maxWidth: full ? 90 : 64, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, letterSpacing: '.04em', border: `1.5px solid ${u.color || '#ffd000'}`, boxShadow: '0 2px 6px rgba(10,14,46,.08)' } }, isMine ? '★ ' + u.name : u.name),
+        h(IsoChar, { profile: u, isMe: isMine, glow: isMine, scale: full ? 1.0 : 0.7 }),
+        h('div', { style: { width: 30, height: 8, borderRadius: '50%', background: 'rgba(10,14,46,.18)', marginTop: -4, filter: 'blur(2px)' } })
+      );
+    })
+  );
 }
 
 /* ════════════════════════ CONFRA: SPEAKER PANEL ════════════════════════ */
