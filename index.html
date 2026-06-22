@@ -98,6 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
+const APP_VERSION = '2026-06-22-sala3d-v1';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -186,9 +187,22 @@ function avatarParts(c, isMe) {
     h('div', { style: { width: 12, height: 14, borderRadius: '3px 3px 5px 5px', background: lDark } }),
   );
 
+  // Badge de clase (Gteen 🌱 verde / JA 🔥 rojo) — chip pequeño junto al nombre.
+  const klass = c.klass || c.class;
+  const klassBadge = klass ? h('span', {
+    style: {
+      display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 5,
+      background: klass === 'ja' ? 'linear-gradient(135deg,#ef4444,#b91c1c)' : 'linear-gradient(135deg,#10b981,#047857)',
+      color: '#fff', borderRadius: 8, padding: '1px 5px',
+      fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 8, letterSpacing: '.1em',
+      textTransform: 'uppercase', verticalAlign: 'middle'
+    }
+  }, klass === 'ja' ? '🔥 JA' : '🌱 GT') : null;
+
   return [
     h('div', { key: 'tag', style: { fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 11, letterSpacing: '.03em', color: 'var(--ink)', background: '#fff', padding: '2px 9px', borderRadius: 'var(--r-pill)', border: `1.5px solid ${body}`, boxShadow: 'var(--shadow-chip)', whiteSpace: 'nowrap', marginBottom: 5, position: 'relative' } },
       isMe ? `★ ${c.name}` : c.name,
+      klassBadge,
       c.status ? h('span', { style: { position: 'absolute', top: -3, right: -3, width: 9, height: 9, borderRadius: '50%', background: 'var(--success)', border: '1.5px solid #fff' } }) : null,
     ),
     h('div', { key: 'body', style: { position: 'relative', width: 54, height: 84, filter: isMe ? 'drop-shadow(0 0 7px rgba(255,208,0,.65))' : 'none' } }, head, accEl, torso, legs),
@@ -222,6 +236,7 @@ function AvatarEditor({ char, onSave, onClose }) {
   const [leg, setLeg]     = useState(char.legColor  || '#2a2f52');
   const [acc, setAcc]     = useState(char.accessory || 'none');
   const [photo, setPhoto] = useState(char.photo || null);
+  const [klass, setKlass] = useState(char.klass || char.class || 'gteen');
 
   const onFile = (e) => {
     const f = e.target.files && e.target.files[0];
@@ -260,9 +275,14 @@ function AvatarEditor({ char, onSave, onClose }) {
         ACCESSORIES.map((a) => h('button', { key: a.key, onClick: () => setAcc(a.key), style: { display: 'flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 'var(--r-pill)', border: `2px solid ${acc === a.key ? 'var(--yellow)' : 'var(--border-on-light)'}`, background: acc === a.key ? 'rgba(255,208,0,.15)' : '#fff', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: '.03em', textTransform: 'uppercase', color: 'var(--ink)' } },
           a.halo ? '✨' : (a.emoji || '🚫'), a.label)),
       ),
+      rowLabel('Tu grupo'),
+      h('div', { style: { display: 'flex', gap: 8 } },
+        h('button', { onClick: () => setKlass('gteen'), style: { flex: 1, padding: 11, borderRadius: 'var(--r-pill)', border: klass === 'gteen' ? '2px solid #10b981' : '2px solid var(--border-on-light)', background: klass === 'gteen' ? 'rgba(16,185,129,.12)' : '#fff', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, letterSpacing: '.05em', textTransform: 'uppercase', color: klass === 'gteen' ? '#047857' : 'var(--ink-soft)' } }, '🌱 Gteen'),
+        h('button', { onClick: () => setKlass('ja'),    style: { flex: 1, padding: 11, borderRadius: 'var(--r-pill)', border: klass === 'ja'    ? '2px solid #ef4444' : '2px solid var(--border-on-light)', background: klass === 'ja'    ? 'rgba(239,68,68,.12)'  : '#fff', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, letterSpacing: '.05em', textTransform: 'uppercase', color: klass === 'ja'    ? '#b91c1c' : 'var(--ink-soft)' } }, '🔥 JA')
+      ),
       h('div', { style: { display: 'flex', gap: 10, marginTop: 20 } },
         h('button', { onClick: onClose, style: { flex: 1, padding: '11px', borderRadius: 'var(--r-pill)', border: '1px solid var(--border-on-light)', background: '#fff', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, 'Cancelar'),
-        h('button', { onClick: () => onSave({ bodyColor: body, armColor: arm, legColor: leg, accessory: acc, photo }), style: { flex: 1, padding: '11px', borderRadius: 'var(--r-pill)', border: 'none', background: 'var(--action-accent)', color: 'var(--navy-900)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, letterSpacing: '.04em', textTransform: 'uppercase', boxShadow: 'var(--glow-yellow)' } }, 'Guardar'),
+        h('button', { onClick: () => onSave({ bodyColor: body, armColor: arm, legColor: leg, accessory: acc, photo, klass }), style: { flex: 1, padding: '11px', borderRadius: 'var(--r-pill)', border: 'none', background: 'var(--action-accent)', color: 'var(--navy-900)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, letterSpacing: '.04em', textTransform: 'uppercase', boxShadow: 'var(--glow-yellow)' } }, 'Guardar'),
       ),
     ),
   );
@@ -11199,10 +11219,4419 @@ function KahootController({
 
 /* ═══ TABÚ BÍBLICO ═══ */
 
+/* ════════════════════════════════════════════════════════════════════════
+   BACKEND LEGACY P2 — Juegos restantes (Tabu/QuienSoy/Dibuja) + QR + utils.
+   Extraído verbatim del commit ad19c23.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── TABU_CARDS  (13947-14239) ── */
+const TABU_CARDS = [{
+  tipo: 'Personaje',
+  nombre: 'Adán',
+  prohibidas: ['Eva', 'jardín', 'costilla', 'manzana', 'primer hombre', 'Edén']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Eva',
+  prohibidas: ['Adán', 'serpiente', 'fruto', 'costilla', 'primera mujer', 'Edén']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Noé',
+  prohibidas: ['arca', 'diluvio', 'animales', 'paloma', 'arcoíris', 'lluvia']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Abraham',
+  prohibidas: ['Isaac', 'sacrificio', 'padre', 'fe', 'Sara', 'descendencia']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Sara',
+  prohibidas: ['Abraham', 'Isaac', 'vieja', 'risa', 'estéril', 'anciana']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Isaac',
+  prohibidas: ['Abraham', 'sacrificio', 'altar', 'Rebeca', 'Jacob', 'monte']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Jacob',
+  prohibidas: ['Esaú', 'escalera', 'ángel', 'lentejas', '12 tribus', 'Israel']
+}, {
+  tipo: 'Personaje',
+  nombre: 'José',
+  prohibidas: ['túnica', 'sueños', 'Egipto', 'hermanos', 'pozo', 'faraón']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Moisés',
+  prohibidas: ['Egipto', 'Mar Rojo', 'mandamientos', 'vara', 'zarza', 'faraón']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Aarón',
+  prohibidas: ['Moisés', 'sumo sacerdote', 'vara', 'becerro', 'hermano', 'Sinaí']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Josué',
+  prohibidas: ['Jericó', 'muralla', 'trompetas', 'tierra prometida', 'Moisés', 'sol']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Sansón',
+  prohibidas: ['fuerza', 'cabello', 'Dalila', 'filisteos', 'columnas', 'león']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Dalila',
+  prohibidas: ['Sansón', 'cabello', 'traición', 'filisteos', 'tijeras', 'dormido']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Rut',
+  prohibidas: ['Noemí', 'Booz', 'moabita', 'espigas', 'viuda', 'suegra']
+}, {
+  tipo: 'Personaje',
+  nombre: 'David',
+  prohibidas: ['Goliat', 'rey', 'Saúl', 'arpa', 'salmos', 'honda']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Goliat',
+  prohibidas: ['David', 'gigante', 'filisteo', 'piedra', 'honda', 'Israel']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Salomón',
+  prohibidas: ['sabiduría', 'templo', 'rey', 'David', 'Proverbios', 'reina']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Elías',
+  prohibidas: ['carro de fuego', 'Baal', 'altar', 'profeta', 'cuervos', 'Jezabel']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Eliseo',
+  prohibidas: ['Elías', 'manto', 'milagros', 'profeta', 'Naamán', 'osos']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Daniel',
+  prohibidas: ['leones', 'foso', 'Babilonia', 'sueños', 'Nabucodonosor', 'oración']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Jonás',
+  prohibidas: ['ballena', 'pez', 'Nínive', 'tormenta', 'barco', 'huida']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Job',
+  prohibidas: ['paciencia', 'sufrimiento', 'pruebas', 'llagas', 'riqueza', 'Satanás']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Ester',
+  prohibidas: ['reina', 'Asuero', 'Mardoqueo', 'judíos', 'Persia', 'banquete']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Caín',
+  prohibidas: ['Abel', 'hermano', 'asesinato', 'primer', 'ofrenda', 'tierra']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Abel',
+  prohibidas: ['Caín', 'hermano', 'muerto', 'pastor', 'ofrenda', 'sangre']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Rebeca',
+  prohibidas: ['Isaac', 'pozo', 'camellos', 'Jacob', 'Esaú', 'agua']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Débora',
+  prohibidas: ['jueza', 'profetisa', 'Barac', 'palmera', 'canción', 'batalla']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Juan el Bautista',
+  prohibidas: ['bautismo', 'Jordán', 'desierto', 'langostas', 'miel', 'Jesús']
+}, {
+  tipo: 'Personaje',
+  nombre: 'María (madre de Jesús)',
+  prohibidas: ['Jesús', 'Nazaret', 'virgen', 'ángel', 'pesebre', 'José']
+}, {
+  tipo: 'Personaje',
+  nombre: 'José (esposo de María)',
+  prohibidas: ['María', 'Jesús', 'carpintero', 'Belén', 'sueño', 'Nazaret']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Pedro',
+  prohibidas: ['pescador', 'negar', 'gallo', 'llaves', 'Roca', 'Jesús']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Pablo',
+  prohibidas: ['Damasco', 'cartas', 'apóstol', 'Saulo', 'gentiles', 'conversión']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Judas Iscariote',
+  prohibidas: ['traición', '30 monedas', 'beso', 'suicidio', 'plata', 'discípulo']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Tomás',
+  prohibidas: ['dudar', 'heridas', 'dedos', 'resurrección', 'creer', 'discípulo']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Mateo',
+  prohibidas: ['cobrador', 'impuestos', 'evangelio', 'publicano', 'discípulo', 'dinero']
+}, {
+  tipo: 'Personaje',
+  nombre: 'María Magdalena',
+  prohibidas: ['demonios', 'tumba', 'resurrección', 'jardinero', 'llorar', 'Jesús']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Lázaro',
+  prohibidas: ['resucitado', 'muerto', 'tumba', 'Marta', 'María', 'cuatro días']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Zaqueo',
+  prohibidas: ['árbol', 'bajito', 'publicano', 'Jericó', 'sicómoro', 'impuestos']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Nicodemo',
+  prohibidas: ['noche', 'nacer de nuevo', 'fariseo', 'Jesús', 'espíritu', 'viento']
+}, {
+  tipo: 'Personaje',
+  nombre: 'Esteban',
+  prohibidas: ['mártir', 'apedreado', 'primer', 'diácono', 'cielo', 'perdón']
+}, {
+  tipo: 'Historia',
+  nombre: 'El Arca de Noé',
+  prohibidas: ['diluvio', 'animales', 'lluvia', 'paloma', 'barco', 'arcoíris']
+}, {
+  tipo: 'Historia',
+  nombre: 'La Torre de Babel',
+  prohibidas: ['idiomas', 'confusión', 'torre', 'cielo', 'lenguas', 'construcción']
+}, {
+  tipo: 'Historia',
+  nombre: 'Sodoma y Gomorra',
+  prohibidas: ['Lot', 'sal', 'fuego', 'destrucción', 'ángeles', 'esposa']
+}, {
+  tipo: 'Historia',
+  nombre: 'El Sacrificio de Isaac',
+  prohibidas: ['Abraham', 'altar', 'cuchillo', 'carnero', 'monte', 'obediencia']
+}, {
+  tipo: 'Historia',
+  nombre: 'La Zarza Ardiente',
+  prohibidas: ['Moisés', 'fuego', 'arbusto', 'sandalias', 'Dios', 'santo']
+}, {
+  tipo: 'Historia',
+  nombre: 'Las Diez Plagas',
+  prohibidas: ['Egipto', 'Moisés', 'faraón', 'primogénitos', 'sangre', 'ranas']
+}, {
+  tipo: 'Historia',
+  nombre: 'Cruce del Mar Rojo',
+  prohibidas: ['Moisés', 'Egipto', 'agua', 'Israel', 'vara', 'seco']
+}, {
+  tipo: 'Historia',
+  nombre: 'Los Diez Mandamientos',
+  prohibidas: ['Moisés', 'Sinaí', 'tablas', 'piedra', 'ley', 'Dios']
+}, {
+  tipo: 'Historia',
+  nombre: 'La Caída de Jericó',
+  prohibidas: ['muralla', 'Josué', 'trompetas', 'siete días', 'vueltas', 'Rahab']
+}, {
+  tipo: 'Historia',
+  nombre: 'David y Goliat',
+  prohibidas: ['gigante', 'honda', 'piedra', 'filisteo', 'pastor', 'frente']
+}, {
+  tipo: 'Historia',
+  nombre: 'Daniel en el Foso',
+  prohibidas: ['leones', 'Daniel', 'rey', 'oración', 'Babilonia', 'noche']
+}, {
+  tipo: 'Historia',
+  nombre: 'Jonás y el Gran Pez',
+  prohibidas: ['ballena', 'pez', 'Nínive', 'tormenta', 'tres días', 'huida']
+}, {
+  tipo: 'Historia',
+  nombre: 'El Nacimiento de Jesús',
+  prohibidas: ['Belén', 'pesebre', 'María', 'establo', 'estrella', 'pastores']
+}, {
+  tipo: 'Historia',
+  nombre: 'Las Bodas de Caná',
+  prohibidas: ['agua', 'vino', 'milagro', 'María', 'tinajas', 'boda']
+}, {
+  tipo: 'Historia',
+  nombre: 'La Multiplicación de los Panes',
+  prohibidas: ['cinco mil', 'panes', 'peces', 'niño', 'cestas', 'Jesús']
+}, {
+  tipo: 'Historia',
+  nombre: 'Jesús camina sobre el agua',
+  prohibidas: ['Pedro', 'mar', 'tormenta', 'barca', 'hundir', 'fe']
+}, {
+  tipo: 'Historia',
+  nombre: 'La Última Cena',
+  prohibidas: ['pan', 'vino', 'discípulos', 'traición', 'Pascua', 'cuerpo']
+}, {
+  tipo: 'Historia',
+  nombre: 'La Crucifixión',
+  prohibidas: ['cruz', 'clavos', 'Calvario', 'Gólgota', 'espinas', 'muerte']
+}, {
+  tipo: 'Historia',
+  nombre: 'La Resurrección',
+  prohibidas: ['tumba', 'tercer día', 'piedra', 'ángeles', 'vacía', 'María']
+}, {
+  tipo: 'Historia',
+  nombre: 'Pentecostés',
+  prohibidas: ['Espíritu Santo', 'lenguas', 'fuego', 'apóstoles', 'viento', 'Pedro']
+}, {
+  tipo: 'Historia',
+  nombre: 'Camino a Emaús',
+  prohibidas: ['discípulos', 'Jesús', 'pan', 'reconocer', 'camino', 'resurrección']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Jardín del Edén',
+  prohibidas: ['Adán', 'Eva', 'árbol', 'serpiente', 'paraíso', 'manzana']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Belén',
+  prohibidas: ['Jesús', 'pesebre', 'nacimiento', 'David', 'estrella', 'establo']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Nazaret',
+  prohibidas: ['Jesús', 'María', 'infancia', 'carpintero', 'Galilea', 'niño']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Jerusalén',
+  prohibidas: ['templo', 'David', 'capital', 'santa', 'muro', 'Israel']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Monte Sinaí',
+  prohibidas: ['Moisés', 'tablas', 'mandamientos', 'Dios', 'nube', 'ley']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Río Jordán',
+  prohibidas: ['bautismo', 'Juan', 'Jesús', 'agua', 'cruzar', 'Israel']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Mar de Galilea',
+  prohibidas: ['Jesús', 'pesca', 'Pedro', 'tormenta', 'discípulos', 'agua']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Getsemaní',
+  prohibidas: ['huerto', 'oración', 'Judas', 'traición', 'olivos', 'Jesús']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Gólgota',
+  prohibidas: ['cruz', 'crucifixión', 'calavera', 'Jesús', 'muerte', 'clavos']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Babilonia',
+  prohibidas: ['Daniel', 'Nabucodonosor', 'exilio', 'torre', 'cautiverio', 'rey']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Egipto',
+  prohibidas: ['faraón', 'Moisés', 'plagas', 'pirámides', 'esclavos', 'Nilo']
+}, {
+  tipo: 'Lugar',
+  nombre: 'Nínive',
+  prohibidas: ['Jonás', 'arrepentimiento', 'asiria', 'ciudad', '40 días', 'pez']
+}];
+
+/* ── QUIEN_SOY_PERSONAJES  (14240-14608) ── */
+const QUIEN_SOY_PERSONAJES = [{
+  nombre: 'Adán',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['primer hombre', 'Edén', 'esposo de Eva', 'formado del polvo', 'le pusieron nombre a los animales']
+}, {
+  nombre: 'Eva',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['primera mujer', 'Edén', 'esposa de Adán', 'formada de costilla', 'tentada por la serpiente']
+}, {
+  nombre: 'Caín',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['hijo de Adán', 'agricultor', 'mató a su hermano', 'marca en la frente', 'primer asesino']
+}, {
+  nombre: 'Abel',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['hijo de Adán', 'pastor', 'asesinado por su hermano', 'ofrenda agradable a Dios', 'primer mártir']
+}, {
+  nombre: 'Noé',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['construyó el arca', 'sobrevivió al diluvio', 'justo en su generación', 'familia de 8', 'arcoíris como pacto']
+}, {
+  nombre: 'Abraham',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['padre de la fe', 'dejó Ur', 'padre de Isaac', 'prometido descendencia como las estrellas', 'amigo de Dios']
+}, {
+  nombre: 'Sara',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['esposa de Abraham', 'tuvo hijo en su vejez', 'rió al oír la promesa', 'madre de Isaac', 'de gran belleza']
+}, {
+  nombre: 'Isaac',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['hijo de Abraham', 'casi sacrificado', 'esposo de Rebeca', 'padre de Jacob y Esaú', 'su nombre significa risa']
+}, {
+  nombre: 'Rebeca',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['esposa de Isaac', 'dio agua a los camellos', 'madre de gemelos', 'favoreció a Jacob', 'la encontró un siervo']
+}, {
+  nombre: 'Jacob',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['gemelo de Esaú', 'vio una escalera al cielo', 'luchó con un ángel', 'padre de 12 hijos', 'Dios le cambió el nombre a Israel']
+}, {
+  nombre: 'Esaú',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['gemelo de Jacob', 'peludo', 'vendió la primogenitura', 'cazador', 'padre de los edomitas']
+}, {
+  nombre: 'José (hijo de Jacob)',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['túnica de colores', 'interpretó sueños', 'vendido por hermanos', 'gobernador de Egipto', 'perdonó a sus hermanos']
+}, {
+  nombre: 'Moisés',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['salvado en el Nilo', 'vio la zarza ardiente', 'sacó al pueblo de Egipto', 'recibió los 10 mandamientos', 'tartamudeaba']
+}, {
+  nombre: 'Aarón',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['hermano de Moisés', 'primer sumo sacerdote', 'su vara floreció', 'hizo el becerro de oro', 'vocero de Moisés']
+}, {
+  nombre: 'María (hermana de Moisés)',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['profetisa', 'cuidó a su hermano en el río', 'dirigió un canto de victoria', 'castigada con lepra', 'tocó pandero']
+}, {
+  nombre: 'Josué',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['sucesor de Moisés', 'conquistó Jericó', 'el sol se detuvo', 'espía valiente', 'dijo: yo y mi casa serviremos al Señor']
+}, {
+  nombre: 'Caleb',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['uno de los 12 espías', 'fiel a Dios', 'recibió Hebrón', 'tribu de Judá', 'entró a la tierra prometida']
+}, {
+  nombre: 'Rahab',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['mujer de Jericó', 'escondió a los espías', 'cordón rojo', 'antepasada de Jesús', 'prostituta convertida']
+}, {
+  nombre: 'Débora',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['jueza', 'profetisa', 'juzgaba bajo una palmera', 'cantó una victoria', 'ayudó a Barac']
+}, {
+  nombre: 'Gedeón',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['juez', 'venció con 300 hombres', 'vellón de lana', 'antorchas y trompetas', 'derrotó a Madián']
+}, {
+  nombre: 'Sansón',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['nazareo', 'fuerza en el cabello', 'mató un león', 'traicionado por Dalila', 'derribó un templo']
+}, {
+  nombre: 'Dalila',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['mujer filistea', 'traicionó a su amado', 'recibió plata', 'cortó el cabello', 'vivió en Sorec']
+}, {
+  nombre: 'Rut',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['moabita', 'viuda fiel a su suegra', 'espigaba en los campos', 'antepasada de David', 'se casó con Booz']
+}, {
+  nombre: 'Booz',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['rico de Belén', 'pariente cercano', 'pariente redentor', 'se casó con una moabita', 'antepasado de David']
+}, {
+  nombre: 'Samuel',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['último juez', 'dedicado a Dios desde niño', 'ungió a Saúl y a David', 'oyó la voz de Dios en el templo', 'hijo de Ana']
+}, {
+  nombre: 'Ana (madre de Samuel)',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['oró silenciosamente', 'consideraron borracha', 'dedicó su hijo a Dios', 'estéril por años', 'cantó un cántico']
+}, {
+  nombre: 'Saúl',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['primer rey de Israel', 'de la tribu de Benjamín', 'muy alto', 'perseguía a David', 'consultó una bruja']
+}, {
+  nombre: 'David',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['pastor', 'venció a un gigante', 'tocaba arpa', 'escribió Salmos', 'rey conforme al corazón de Dios']
+}, {
+  nombre: 'Jonatán',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['hijo de Saúl', 'mejor amigo de David', 'arquero', 'le dio su manto a David', 'murió en batalla']
+}, {
+  nombre: 'Salomón',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['hijo de David', 'el más sabio', 'construyó el templo', 'escribió Proverbios', 'tuvo muchas esposas']
+}, {
+  nombre: 'Elías',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['profeta', 'alimentado por cuervos', 'desafió a los profetas de Baal', 'subió en un carro de fuego', 'huyó de Jezabel']
+}, {
+  nombre: 'Eliseo',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['discípulo de Elías', 'recibió doble porción', 'sanó a un leproso', 'multiplicó aceite', 'su manto']
+}, {
+  nombre: 'Jezabel',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['reina malvada', 'adoraba a Baal', 'esposa de Acab', 'perseguía a los profetas', 'murió devorada por perros']
+}, {
+  nombre: 'Acab',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['rey malvado de Israel', 'esposo de Jezabel', 'adoró a Baal', 'quitó la viña de Nabot', 'murió en batalla']
+}, {
+  nombre: 'Daniel',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['cautivo en Babilonia', 'interpretó sueños', 'foso de los leones', 'no comió del banquete del rey', 'vio visiones del fin']
+}, {
+  nombre: 'Sadrac, Mesac y Abed-nego',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['amigos de Daniel', 'horno de fuego', 'no se inclinaron a la estatua', 'un cuarto en el horno', 'salieron sin oler a humo']
+}, {
+  nombre: 'Nabucodonosor',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['rey de Babilonia', 'soñó una estatua', 'vivió como animal', 'construyó una imagen de oro', 'reconoció al Dios verdadero']
+}, {
+  nombre: 'Ester',
+  testamento: 'AT',
+  genero: 'F',
+  pistas: ['reina judía', 'esposa del rey persa', 'arriesgó su vida', 'salvó a su pueblo', 'su nombre significa estrella']
+}, {
+  nombre: 'Mardoqueo',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['primo de Ester', 'no se inclinó ante Amán', 'salvó al rey', 'desfiló en el caballo real', 'sentado a la puerta del rey']
+}, {
+  nombre: 'Nehemías',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['copero del rey', 'reconstruyó los muros', 'de Jerusalén', 'oró antes de hablar', 'volvió del exilio']
+}, {
+  nombre: 'Esdras',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['sacerdote escriba', 'enseñó la ley', 'volvió del exilio', 'leyó la ley al pueblo', 'reformador espiritual']
+}, {
+  nombre: 'Job',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['perdió todo', 'llagas en el cuerpo', 'tres amigos', 'restaurado al doble', 'famoso por su paciencia']
+}, {
+  nombre: 'Jonás',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['profeta', 'huyó de Dios', 'tragado por un gran pez', 'predicó en Nínive', 'se enojó por la calabacera']
+}, {
+  nombre: 'Isaías',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['profeta', 'vio al Señor en su trono', 'profetizó al Mesías', 'carbón encendido', 'siervo sufriente']
+}, {
+  nombre: 'Jeremías',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['profeta llorón', 'llamado desde joven', 'escribió Lamentaciones', 'encarcelado en una cisterna', 'anunció la caída de Jerusalén']
+}, {
+  nombre: 'Ezequiel',
+  testamento: 'AT',
+  genero: 'M',
+  pistas: ['profeta del exilio', 'vio ruedas', 'valle de huesos secos', 'visión del templo', 'sacerdote']
+}, {
+  nombre: 'María (madre de Jesús)',
+  testamento: 'NT',
+  genero: 'F',
+  pistas: ['virgen', 'visitada por un ángel', 'prima de Elisabet', 'dio a luz en un establo', 'estuvo al pie de la cruz']
+}, {
+  nombre: 'José (esposo de María)',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['carpintero', 'de la casa de David', 'padre adoptivo de Jesús', 'huyó a Egipto', 'recibió mensajes en sueños']
+}, {
+  nombre: 'Juan el Bautista',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['vestía piel de camello', 'comía langostas y miel', 'primo de Jesús', 'bautizaba en el Jordán', 'degollado por Herodes']
+}, {
+  nombre: 'Jesús',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['nacido en Belén', 'hizo milagros', 'murió en una cruz', 'resucitó al tercer día', 'Hijo de Dios']
+}, {
+  nombre: 'Pedro',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['pescador', 'negó a Jesús tres veces', 'caminó sobre el agua', 'recibió las llaves', 'antes se llamaba Simón']
+}, {
+  nombre: 'Andrés',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['hermano de Pedro', 'pescador', 'primer discípulo', 'llevó a Pedro a Jesús', 'presentó al niño con los panes']
+}, {
+  nombre: 'Santiago (hijo de Zebedeo)',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['hermano de Juan', 'hijo del trueno', 'pescador', 'primer apóstol martirizado', 'vio la transfiguración']
+}, {
+  nombre: 'Juan (apóstol)',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['discípulo amado', 'escribió un evangelio', 'recibió a María', 'vio el Apocalipsis', 'exiliado en Patmos']
+}, {
+  nombre: 'Mateo',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['cobrador de impuestos', 'dejó todo al ser llamado', 'escribió un evangelio', 'también llamado Leví', 'hizo un banquete a Jesús']
+}, {
+  nombre: 'Tomás',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['también llamado Dídimo', 'dudó de la resurrección', 'quiso ver las heridas', 'dijo Señor mío y Dios mío', 'tradicionalmente predicó en India']
+}, {
+  nombre: 'Judas Iscariote',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['traidor', 'tesorero del grupo', '30 piezas de plata', 'beso en Getsemaní', 'se ahorcó']
+}, {
+  nombre: 'María Magdalena',
+  testamento: 'NT',
+  genero: 'F',
+  pistas: ['liberada de siete demonios', 'siguió a Jesús', 'primera en ver al resucitado', 'en el sepulcro', 'de Magdala']
+}, {
+  nombre: 'Marta',
+  testamento: 'NT',
+  genero: 'F',
+  pistas: ['hermana de Lázaro', 'afanada con el servicio', 'de Betania', 'recibió a Jesús', 'confesó a Jesús como Cristo']
+}, {
+  nombre: 'María de Betania',
+  testamento: 'NT',
+  genero: 'F',
+  pistas: ['hermana de Marta', 'ungió los pies de Jesús', 'con perfume costoso', 'escuchaba a sus pies', 'lloró por Lázaro']
+}, {
+  nombre: 'Lázaro',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['hermano de Marta', 'resucitado', 'muerto cuatro días', 'de Betania', 'Jesús lloró por él']
+}, {
+  nombre: 'Zaqueo',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['de baja estatura', 'rico', 'jefe de publicanos', 'subió a un sicómoro', 'devolvió cuatro veces lo robado']
+}, {
+  nombre: 'Nicodemo',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['fariseo', 'principal de los judíos', 'vino de noche', 'le dijeron debes nacer de nuevo', 'ayudó a sepultar a Jesús']
+}, {
+  nombre: 'Pilato',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['gobernador romano', 'se lavó las manos', 'interrogó a Jesús', 'escribió INRI', 'su esposa tuvo un sueño']
+}, {
+  nombre: 'Herodes el Grande',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['rey cuando nació Jesús', 'recibió a los magos', 'mató a los niños de Belén', 'ambicioso', 'construyó el templo']
+}, {
+  nombre: 'Pablo',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['antes perseguía cristianos', 'cayó camino a Damasco', 'escribió cartas', 'ciudadano romano', 'apóstol a los gentiles']
+}, {
+  nombre: 'Bernabé',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['hijo de consolación', 'vendió un campo', 'compañero de Pablo', 'primo de Marcos', 'animaba a la iglesia']
+}, {
+  nombre: 'Lucas',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['médico', 'escribió un evangelio', 'escribió Hechos', 'compañero de Pablo', 'gentil']
+}, {
+  nombre: 'Esteban',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['primer mártir cristiano', 'diácono', 'vio el cielo abierto', 'apedreado', 'perdonó a sus asesinos']
+}, {
+  nombre: 'Felipe (evangelista)',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['diácono', 'evangelizó Samaria', 'bautizó al etíope', 'arrebatado por el Espíritu', 'tenía cuatro hijas profetisas']
+}, {
+  nombre: 'Cornelio',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['centurión romano', 'temeroso de Dios', 'tuvo una visión', 'mandó llamar a Pedro', 'primer gentil convertido']
+}, {
+  nombre: 'Lidia',
+  testamento: 'NT',
+  genero: 'F',
+  pistas: ['vendedora de púrpura', 'de Tiatira', 'primera convertida en Europa', 'hospedó a Pablo', 'adoraba a Dios']
+}, {
+  nombre: 'Timoteo',
+  testamento: 'NT',
+  genero: 'M',
+  pistas: ['hijo espiritual de Pablo', 'madre judía y padre griego', 'pastor en Éfeso', 'recibió dos cartas', 'enseñado por su abuela Loida']
+}];
+
+/* ═══ DIBUJANDO LA BIBLIA (tipo Pictionary bíblico) ═══ */
+// 4 categorías con sus colores (estilo Pictionary).
+
+/* ── DIBUJA_CATS  (14609-14634) ── */
+const DIBUJA_CATS = {
+  animal: {
+    label: 'Animal',
+    color: '#2ecc71',
+    dark: '#1e8e4f',
+    icon: '🐾'
+  },
+  verbo: {
+    label: 'Acción bíblica',
+    color: '#3498db',
+    dark: '#21618c',
+    icon: '🏃'
+  },
+  personaje: {
+    label: 'Personaje bíblico',
+    color: '#e74c3c',
+    dark: '#a93226',
+    icon: '🧑'
+  },
+  lugar: {
+    label: 'Lugar bíblico',
+    color: '#f39c12',
+    dark: '#b9770e',
+    icon: '📍'
+  }
+};
+
+/* ── DIBUJA_CAT_ORDER  (14635-14636) ── */
+const DIBUJA_CAT_ORDER = ['animal', 'verbo', 'personaje', 'lugar'];
+// Palabras por categoría.
+
+/* ── DIBUJA_WORDS  (14637-14642) ── */
+const DIBUJA_WORDS = {
+  animal: ['Cordero', 'León', 'Paloma', 'Serpiente', 'Ballena', 'Burro', 'Camello', 'Pez', 'Cuervo', 'Oveja', 'Becerro de oro', 'Caballo', 'Langosta', 'Águila', 'Rana', 'Pelícano', 'Buey', 'Leviatán'],
+  verbo: ['Orar', 'Bautizar', 'Predicar', 'Sembrar', 'Caminar sobre el agua', 'Sanar', 'Resucitar', 'Adorar', 'Ayunar', 'Diezmar', 'Perdonar', 'Pescar', 'Edificar', 'Cosechar', 'Ungir', 'Arrepentirse', 'Bendecir', 'Servir'],
+  personaje: ['Moisés', 'David', 'Goliat', 'Noé', 'Jonás', 'María', 'José', 'Pedro', 'Pablo', 'Daniel', 'Sansón', 'Ester', 'Abraham', 'Elías', 'Juan el Bautista', 'Zaqueo', 'Rut', 'Adán y Eva'],
+  lugar: ['Arca de Noé', 'Jardín del Edén', 'Mar Rojo', 'Belén', 'Jericó', 'Monte Sinaí', 'Getsemaní', 'Babilonia', 'Nínive', 'Río Jordán', 'Templo de Jerusalén', 'Torre de Babel', 'Egipto', 'Calvario', 'Foso de los leones', 'Pesebre', 'Galilea', 'Aposento alto']
+};
+
+/* ── DIBUJA_BOARD  (14659-14668) ── */
+const DIBUJA_BOARD = (() => {
+  const seq = ['start'];
+  const pattern = ['animal', 'verbo', 'all', 'personaje', 'lugar', 'animal', 'all', 'verbo', 'personaje', 'all', 'lugar', 'animal', 'verbo', 'all', 'personaje', 'lugar', 'all', 'animal', 'verbo', 'personaje', 'all', 'lugar', 'animal', 'all', 'verbo', 'personaje', 'lugar', 'all'];
+  pattern.forEach(t => seq.push(t));
+  seq.push('finish');
+  return seq.map((type, i) => ({
+    i,
+    type
+  }));
+})();
+
+/* ── DIBUJA_GOAL  (14669-14670) ── */
+const DIBUJA_GOAL = DIBUJA_BOARD.length - 1;
+// Avatares disponibles para los grupos.
+
+/* ── DIBUJA_TEAM_AVATARS  (14671-14671) ── */
+const DIBUJA_TEAM_AVATARS = ['🦁', '🐺', '🦊', '🐻', '🐼', '🦅', '🐬', '🦄', '🐉', '🦋', '🐯', '🐸'];
+
+/* ── DIBUJA_TEAM_COLORS  (14672-14674) ── */
+const DIBUJA_TEAM_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#8b5cf6', '#ec4899', '#22d3ee', '#fb923c'];
+
+/* ════════════════════════ KAHOOT: COLORES / TIMER / BIBLIOTECA ════════════════════════ */
+
+/* ── TabuController  (16472-17177) ── */
+function TabuController({
+  session,
+  users,
+  myId,
+  isAdmin,
+  SID,
+  onClose
+}) {
+  const game = session?.tabu;
+  const gState = game?.gameState;
+  const [timeLeft, setTimeLeft] = useState(180);
+  const [showCard, setShowCard] = useState(false);
+  const timerRef = useRef(null);
+  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => u.zone === 'juegos').map(([uid, u]) => ({
+    uid,
+    ...u
+  }));
+  const currentSpeakerId = game?.currentSpeaker;
+  const currentSpeaker = currentSpeakerId ? users[currentSpeakerId] : null;
+  const isSpeaker = currentSpeakerId === myId;
+  const currentCard = game?.currentCard;
+  const scores = game?.scores || {};
+  useEffect(() => {
+    if (gState !== 'playing' || !game?.roundStartTime) {
+      setTimeLeft(180);
+      return;
+    }
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - game.roundStartTime) / 1000);
+      const left = Math.max(0, 180 - elapsed);
+      setTimeLeft(left);
+      if (left === 0 && isAdmin) {
+        db.ref(`sessions/${SID}/tabu`).update({
+          gameState: 'idle',
+          currentSpeaker: null,
+          currentCard: null,
+          roundStartTime: null
+        });
+      }
+    };
+    tick();
+    timerRef.current = setInterval(tick, 500);
+    return () => clearInterval(timerRef.current);
+  }, [gState, game?.roundStartTime, isAdmin, SID]);
+  useEffect(() => {
+    setShowCard(false);
+  }, [currentSpeakerId]);
+  const seleccionarRandom = async () => {
+    if (juegosUsers.length === 0) return;
+    const random = juegosUsers[Math.floor(Math.random() * juegosUsers.length)];
+    const card = TABU_CARDS[Math.floor(Math.random() * TABU_CARDS.length)];
+    await db.ref(`sessions/${SID}/tabu`).update({
+      active: true,
+      gameState: 'playing',
+      currentSpeaker: random.uid,
+      currentCard: card,
+      roundStartTime: Date.now()
+    });
+  };
+  const seleccionarManual = async uid => {
+    const card = TABU_CARDS[Math.floor(Math.random() * TABU_CARDS.length)];
+    await db.ref(`sessions/${SID}/tabu`).update({
+      active: true,
+      gameState: 'playing',
+      currentSpeaker: uid,
+      currentCard: card,
+      roundStartTime: Date.now()
+    });
+  };
+  const otraCarta = async () => {
+    const card = TABU_CARDS[Math.floor(Math.random() * TABU_CARDS.length)];
+    await db.ref(`sessions/${SID}/tabu`).update({
+      currentCard: card,
+      roundStartTime: Date.now()
+    });
+  };
+  const adivinador = async uid => {
+    const newScores = {
+      ...scores
+    };
+    newScores[uid] = (newScores[uid] || 0) + 10;
+    if (currentSpeakerId) newScores[currentSpeakerId] = (newScores[currentSpeakerId] || 0) + 5;
+    await db.ref(`sessions/${SID}/tabu`).update({
+      scores: newScores,
+      gameState: 'idle',
+      currentSpeaker: null,
+      currentCard: null,
+      roundStartTime: null
+    });
+  };
+  const skipTurn = async () => {
+    await db.ref(`sessions/${SID}/tabu`).update({
+      gameState: 'idle',
+      currentSpeaker: null,
+      currentCard: null,
+      roundStartTime: null
+    });
+  };
+  const finalizar = async () => {
+    await db.ref(`sessions/${SID}/tabu`).update({
+      gameState: 'finished'
+    });
+  };
+  const cerrar = async () => {
+    await db.ref(`sessions/${SID}/tabu`).remove();
+    await db.ref(`sessions/${SID}`).update({
+      phase: 'waiting'
+    });
+    if (onClose) onClose();
+  };
+  const myZone = users[myId]?.zone;
+  if (myZone !== 'juegos' && !isAdmin) return null;
+  if (gState === 'finished') {
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({
+      uid,
+      pts,
+      user: users[uid]
+    })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 250,
+        background: '#f8f5ef',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        gap: 14,
+        overflowY: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement(Confetti, null), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 54
+      }
+    }, "🏆"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 30,
+        color: '#a16207',
+        textTransform: 'uppercase',
+        letterSpacing: '.06em',
+        margin: 0,
+        textAlign: 'center'
+      }
+    }, "¡Tabú Bíblico — Resultados!"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 420,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        marginTop: 8
+      }
+    }, ranking.map((r, i) => /*#__PURE__*/React.createElement("div", {
+      key: r.uid,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 16px',
+        borderRadius: 14,
+        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)',
+        border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.1)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 24,
+        color: i === 0 ? '#a16207' : '#0a0e2e',
+        width: 36,
+        textAlign: 'center'
+      }
+    }, i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`), /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: r.user,
+      size: 40
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 18,
+        color: '#0a0e2e'
+      }
+    }, r.user.name), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 22,
+        color: '#a16207'
+      }
+    }, r.pts, " pts")))), isAdmin && /*#__PURE__*/React.createElement("button", {
+      onClick: cerrar,
+      style: {
+        marginTop: 14,
+        background: '#ffd000',
+        border: 'none',
+        borderRadius: 14,
+        padding: '14px 32px',
+        color: '#f8f5ef',
+        fontWeight: 900,
+        fontSize: 14,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.05em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "Cerrar juego"));
+  }
+  if (gState === 'playing' && currentCard && currentSpeaker) {
+    const timeColor = timeLeft < 30 ? '#ef4444' : timeLeft < 60 ? '#c2410c' : '#a16207';
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 250,
+        background: '#f8f5ef',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '20px 16px',
+        gap: 14,
+        overflowY: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 54,
+        color: timeColor,
+        lineHeight: 1
+      }
+    }, Math.floor(timeLeft / 60), ":", String(timeLeft % 60).padStart(2, '0'))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        background: 'rgba(10,14,46,.06)',
+        padding: '10px 16px',
+        borderRadius: 30,
+        border: '1px solid rgba(255,208,0,.2)'
+      }
+    }, /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: currentSpeaker,
+      size: 36
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--muted)',
+        textTransform: 'uppercase',
+        letterSpacing: '.1em'
+      }
+    }, "Describe"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 800,
+        fontSize: 18,
+        color: '#0a0e2e'
+      }
+    }, currentSpeaker.name))), isSpeaker || isAdmin ? showCard || isSpeaker ? /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        background: 'linear-gradient(135deg,#fff,#f8f5ef)',
+        borderRadius: 24,
+        padding: '20px 22px',
+        boxShadow: '0 20px 50px rgba(10,14,46,.22)',
+        border: '4px solid #ffd000'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 11,
+        color: '#a16207',
+        textTransform: 'uppercase',
+        letterSpacing: '.18em',
+        marginBottom: 6
+      }
+    }, currentCard.tipo), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 32,
+        color: '#f8f5ef',
+        textTransform: 'uppercase',
+        letterSpacing: '.02em',
+        lineHeight: 1.05,
+        marginBottom: 14
+      }
+    }, currentCard.nombre), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 2,
+        background: '#ef4444',
+        marginBottom: 12,
+        borderRadius: 1
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 11,
+        color: '#ef4444',
+        textTransform: 'uppercase',
+        letterSpacing: '.15em',
+        marginBottom: 10
+      }
+    }, "⛔ No puedes decir"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6
+      }
+    }, currentCard.prohibidas.map((p, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        background: 'rgba(239,68,68,.08)',
+        border: '1px solid rgba(239,68,68,.25)',
+        borderRadius: 8,
+        padding: '8px 12px',
+        fontFamily: 'Barlow,sans-serif',
+        fontWeight: 600,
+        fontSize: 16,
+        color: '#7f1d1d'
+      }
+    }, p)))) : /*#__PURE__*/React.createElement("button", {
+      onClick: () => setShowCard(true),
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        padding: '40px 20px',
+        background: 'rgba(255,208,0,.1)',
+        border: '2px dashed #ffd000',
+        borderRadius: 24,
+        color: '#a16207',
+        fontSize: 16,
+        fontWeight: 800,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.05em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "👁 Mostrar carta (admin)") : /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        padding: '40px 24px',
+        background: 'rgba(10,14,46,.04)',
+        border: '1px solid rgba(10,14,46,.12)',
+        borderRadius: 24,
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 54,
+        marginBottom: 14
+      }
+    }, "🤐"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 22,
+        color: '#0a0e2e',
+        textTransform: 'uppercase',
+        letterSpacing: '.05em',
+        marginBottom: 8
+      }
+    }, "¡A adivinar!"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow,sans-serif',
+        fontSize: 14,
+        color: 'var(--muted)',
+        lineHeight: 1.5
+      }
+    }, "Escucha la descripción y grita lo que crees que es. El admin marcará al ganador.")), isAdmin && /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 11,
+        color: 'var(--muted)',
+        textTransform: 'uppercase',
+        letterSpacing: '.15em',
+        marginBottom: 4
+      }
+    }, "¿Quién adivinó?"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 6
+      }
+    }, juegosUsers.filter(u => u.uid !== currentSpeakerId).map(u => /*#__PURE__*/React.createElement("button", {
+      key: u.uid,
+      onClick: () => adivinador(u.uid),
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        background: 'rgba(34,197,94,.12)',
+        border: '1px solid rgba(34,197,94,.3)',
+        borderRadius: 10,
+        padding: '8px 10px',
+        cursor: 'pointer',
+        color: '#0a0e2e',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 14,
+        textAlign: 'left'
+      }
+    }, /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: u,
+      size: 26
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, u.name)))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        marginTop: 6
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: otraCarta,
+      style: {
+        flex: 1,
+        background: 'rgba(139,92,246,.18)',
+        border: '1px solid rgba(139,92,246,.4)',
+        borderRadius: 10,
+        padding: '10px',
+        color: '#7c3aed',
+        fontWeight: 800,
+        fontSize: 12,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.04em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "🔄 Otra carta"), /*#__PURE__*/React.createElement("button", {
+      onClick: skipTurn,
+      style: {
+        flex: 1,
+        background: 'rgba(239,68,68,.15)',
+        border: '1px solid rgba(239,68,68,.35)',
+        borderRadius: 10,
+        padding: '10px',
+        color: '#dc2626',
+        fontWeight: 800,
+        fontSize: 12,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.04em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "⏭ Saltar turno"))));
+  }
+  const ranking = Object.entries(scores).map(([uid, pts]) => ({
+    uid,
+    pts,
+    user: users[uid]
+  })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 250,
+      background: '#f8f5ef',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '20px 16px',
+      gap: 14,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 42,
+      marginBottom: 6
+    }
+  }, "🤐"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 26,
+      color: '#a16207',
+      textTransform: 'uppercase',
+      letterSpacing: '.06em',
+      margin: 0
+    }
+  }, "Tabú Bíblico"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)',
+      fontSize: 13,
+      marginTop: 6,
+      maxWidth: 340
+    }
+  }, "Describe el personaje, lugar o historia ", /*#__PURE__*/React.createElement("strong", null, "sin usar"), " las palabras prohibidas. Tienes 3 minutos.")), ranking.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 380,
+      background: 'rgba(255,208,0,.06)',
+      border: '1px solid rgba(255,208,0,.2)',
+      borderRadius: 14,
+      padding: '10px 14px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: '#a16207',
+      textTransform: 'uppercase',
+      letterSpacing: '.15em',
+      marginBottom: 8
+    }
+  }, "📊 Puntaje actual"), ranking.slice(0, 5).map((r, i) => /*#__PURE__*/React.createElement("div", {
+    key: r.uid,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '4px 0',
+      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(10,14,46,.08)' : 'none'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 13,
+      color: 'var(--muted)'
+    }
+  }, "#", i + 1), /*#__PURE__*/React.createElement(AvatarBubble, {
+    profile: r.user,
+    size: 24
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 14,
+      color: '#0a0e2e'
+    }
+  }, r.user.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 14,
+      color: '#a16207'
+    }
+  }, r.pts)))), isAdmin ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 380,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: seleccionarRandom,
+    disabled: juegosUsers.length === 0,
+    style: {
+      padding: '14px 20px',
+      background: juegosUsers.length === 0 ? 'rgba(255,208,0,.2)' : '#ffd000',
+      border: 'none',
+      borderRadius: 14,
+      color: '#f8f5ef',
+      fontWeight: 900,
+      fontSize: 14,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.05em',
+      textTransform: 'uppercase',
+      cursor: juegosUsers.length === 0 ? 'not-allowed' : 'pointer',
+      opacity: juegosUsers.length === 0 ? .5 : 1
+    }
+  }, "🎲 Elegir al azar"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.15em',
+      marginTop: 4
+    }
+  }, "O elige tú a quien describe:"), juegosUsers.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      color: 'var(--muted)',
+      fontSize: 13,
+      padding: 14
+    }
+  }, "Nadie en sala de juegos aún.") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 6
+    }
+  }, juegosUsers.map(u => /*#__PURE__*/React.createElement("button", {
+    key: u.uid,
+    onClick: () => seleccionarManual(u.uid),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
+      borderRadius: 10,
+      padding: '8px 10px',
+      cursor: 'pointer',
+      color: '#0a0e2e',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 14,
+      textAlign: 'left'
+    }
+  }, /*#__PURE__*/React.createElement(AvatarBubble, {
+    profile: u,
+    size: 26
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, u.name)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 10
+    }
+  }, ranking.length > 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: finalizar,
+    style: {
+      flex: 1,
+      background: 'rgba(34,197,94,.18)',
+      border: '1px solid rgba(34,197,94,.4)',
+      borderRadius: 14,
+      padding: '12px',
+      color: '#15803d',
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "🏆 Finalizar y ver resultados"), /*#__PURE__*/React.createElement("button", {
+    onClick: cerrar,
+    style: {
+      flex: 1,
+      background: 'rgba(239,68,68,.15)',
+      border: '1px solid rgba(239,68,68,.35)',
+      borderRadius: 14,
+      padding: '12px',
+      color: '#dc2626',
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "✕ Cerrar"))) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      color: 'var(--muted)',
+      fontSize: 14,
+      maxWidth: 300
+    }
+  }, "Esperando que el admin elija al próximo describidor...", /*#__PURE__*/React.createElement(Spinner, {
+    size: 22
+  })));
+}
+
+/* ═══ ¿QUIÉN SOY? ═══ */
+
+/* ── QuienSoyController  (17178-17962) ── */
+function QuienSoyController({
+  session,
+  users,
+  myId,
+  isAdmin,
+  SID,
+  onClose
+}) {
+  const game = session?.quiensoy;
+  const gState = game?.gameState;
+  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => u.zone === 'juegos').map(([uid, u]) => ({
+    uid,
+    ...u
+  }));
+  const currentPlayerId = game?.currentPlayer;
+  const currentPlayer = currentPlayerId ? users[currentPlayerId] : null;
+  const isPlayer = currentPlayerId === myId;
+  const character = game?.currentCharacter;
+  const scores = game?.scores || {};
+  // Admin: ocultar respuesta por defecto, revelar al hacer click. Se resetea
+  // cuando cambia el personaje (nueva ronda u "otro personaje").
+  const [adminRevealed, setAdminRevealed] = useState(false);
+  useEffect(() => {
+    setAdminRevealed(false);
+  }, [character?.nombre]);
+  const seleccionarRandom = async () => {
+    if (juegosUsers.length === 0) return;
+    const random = juegosUsers[Math.floor(Math.random() * juegosUsers.length)];
+    const character = QUIEN_SOY_PERSONAJES[Math.floor(Math.random() * QUIEN_SOY_PERSONAJES.length)];
+    await db.ref(`sessions/${SID}/quiensoy`).update({
+      active: true,
+      gameState: 'playing',
+      currentPlayer: random.uid,
+      currentCharacter: character,
+      roundStartTime: Date.now()
+    });
+  };
+  const seleccionarManual = async uid => {
+    const character = QUIEN_SOY_PERSONAJES[Math.floor(Math.random() * QUIEN_SOY_PERSONAJES.length)];
+    await db.ref(`sessions/${SID}/quiensoy`).update({
+      active: true,
+      gameState: 'playing',
+      currentPlayer: uid,
+      currentCharacter: character,
+      roundStartTime: Date.now()
+    });
+  };
+  const otroPersonaje = async () => {
+    const character = QUIEN_SOY_PERSONAJES[Math.floor(Math.random() * QUIEN_SOY_PERSONAJES.length)];
+    await db.ref(`sessions/${SID}/quiensoy/currentCharacter`).set(character);
+  };
+  const adivinador = async uid => {
+    const newScores = {
+      ...scores
+    };
+    newScores[uid] = (newScores[uid] || 0) + 10;
+    if (currentPlayerId) newScores[currentPlayerId] = (newScores[currentPlayerId] || 0) + 3;
+    await db.ref(`sessions/${SID}/quiensoy`).update({
+      scores: newScores,
+      gameState: 'idle',
+      currentPlayer: null,
+      currentCharacter: null,
+      roundStartTime: null
+    });
+  };
+  const skipTurn = async () => {
+    await db.ref(`sessions/${SID}/quiensoy`).update({
+      gameState: 'idle',
+      currentPlayer: null,
+      currentCharacter: null,
+      roundStartTime: null
+    });
+  };
+  const finalizar = async () => {
+    await db.ref(`sessions/${SID}/quiensoy`).update({
+      gameState: 'finished'
+    });
+  };
+  const cerrar = async () => {
+    await db.ref(`sessions/${SID}/quiensoy`).remove();
+    await db.ref(`sessions/${SID}`).update({
+      phase: 'waiting'
+    });
+    if (onClose) onClose();
+  };
+  const myZone = users[myId]?.zone;
+  if (myZone !== 'juegos' && !isAdmin) return null;
+  if (gState === 'finished') {
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({
+      uid,
+      pts,
+      user: users[uid]
+    })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 250,
+        background: '#f8f5ef',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        gap: 14,
+        overflowY: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement(Confetti, null), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 54
+      }
+    }, "🏆"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 30,
+        color: '#0891b2',
+        textTransform: 'uppercase',
+        letterSpacing: '.06em',
+        margin: 0,
+        textAlign: 'center'
+      }
+    }, "¿Quién Soy? — Resultados"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 420,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        marginTop: 8
+      }
+    }, ranking.map((r, i) => /*#__PURE__*/React.createElement("div", {
+      key: r.uid,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 16px',
+        borderRadius: 14,
+        background: i === 0 ? 'linear-gradient(135deg,rgba(34,211,238,.22),rgba(34,211,238,.06))' : 'rgba(10,14,46,.04)',
+        border: i === 0 ? '2px solid #22d3ee' : '1px solid rgba(10,14,46,.1)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 24,
+        color: i === 0 ? '#0891b2' : '#0a0e2e',
+        width: 36,
+        textAlign: 'center'
+      }
+    }, i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`), /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: r.user,
+      size: 40
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 18,
+        color: '#0a0e2e'
+      }
+    }, r.user.name), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 22,
+        color: '#0891b2'
+      }
+    }, r.pts, " pts")))), isAdmin && /*#__PURE__*/React.createElement("button", {
+      onClick: cerrar,
+      style: {
+        marginTop: 14,
+        background: '#22d3ee',
+        border: 'none',
+        borderRadius: 14,
+        padding: '14px 32px',
+        color: '#07091f',
+        fontWeight: 900,
+        fontSize: 14,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.05em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "Cerrar juego"));
+  }
+  if (gState === 'playing' && character && currentPlayer) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 250,
+        background: '#f8f5ef',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '20px 16px',
+        gap: 14,
+        overflowY: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 8,
+        background: 'rgba(10,14,46,.06)',
+        padding: '10px 16px',
+        borderRadius: 30,
+        border: '1px solid rgba(34,211,238,.3)'
+      }
+    }, /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: currentPlayer,
+      size: 36
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--muted)',
+        textTransform: 'uppercase',
+        letterSpacing: '.1em'
+      }
+    }, "Le toca a"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 800,
+        fontSize: 18,
+        color: '#0a0e2e'
+      }
+    }, currentPlayer.name))), isPlayer || isAdmin && adminRevealed ? /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        background: 'linear-gradient(135deg,#0e7490,#22d3ee)',
+        borderRadius: 24,
+        padding: '24px 22px',
+        boxShadow: '0 20px 50px rgba(14,116,144,.3)',
+        border: '4px solid #22d3ee',
+        color: '#fff'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 11,
+        color: 'rgba(255,255,255,.75)',
+        textTransform: 'uppercase',
+        letterSpacing: '.18em',
+        marginBottom: 8,
+        textAlign: 'center'
+      }
+    }, isPlayer ? 'Tú eres' : 'Personaje (admin)'), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 36,
+        color: '#fff',
+        textTransform: 'uppercase',
+        letterSpacing: '.02em',
+        lineHeight: 1.05,
+        marginBottom: 14,
+        textAlign: 'center',
+        textShadow: 'none'
+      }
+    }, character.nombre), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 1,
+        background: 'rgba(255,255,255,.3)',
+        marginBottom: 14
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 11,
+        color: 'rgba(255,255,255,.85)',
+        textTransform: 'uppercase',
+        letterSpacing: '.15em',
+        marginBottom: 10,
+        textAlign: 'center'
+      }
+    }, "💡 Pistas para responder"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6
+      }
+    }, character.pistas.map((p, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        background: 'rgba(255,255,255,.15)',
+        border: '1px solid rgba(255,255,255,.25)',
+        borderRadius: 8,
+        padding: '8px 12px',
+        fontFamily: 'Barlow,sans-serif',
+        fontWeight: 600,
+        fontSize: 14,
+        color: '#fff'
+      }
+    }, "• ", p))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 14,
+        display: 'flex',
+        gap: 8,
+        flexWrap: 'wrap',
+        justifyContent: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        background: 'rgba(255,255,255,.2)',
+        padding: '4px 10px',
+        borderRadius: 20,
+        fontSize: 11,
+        fontWeight: 700,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.08em',
+        textTransform: 'uppercase'
+      }
+    }, character.testamento === 'AT' ? 'Antiguo Testamento' : 'Nuevo Testamento'), /*#__PURE__*/React.createElement("span", {
+      style: {
+        background: 'rgba(255,255,255,.2)',
+        padding: '4px 10px',
+        borderRadius: 20,
+        fontSize: 11,
+        fontWeight: 700,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.08em',
+        textTransform: 'uppercase'
+      }
+    }, character.genero === 'F' ? 'Mujer' : 'Hombre')), isAdmin && !isPlayer && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setAdminRevealed(false),
+      style: {
+        marginTop: 14,
+        width: '100%',
+        background: 'rgba(0,0,0,.25)',
+        border: '1px solid rgba(255,255,255,.3)',
+        borderRadius: 10,
+        padding: '9px',
+        color: '#fff',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 800,
+        fontSize: 12,
+        letterSpacing: '.06em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "🙈 Ocultar respuesta")) : isAdmin ? /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        padding: '30px 24px',
+        background: 'rgba(34,211,238,.06)',
+        border: '2px dashed rgba(34,211,238,.4)',
+        borderRadius: 24,
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 48,
+        marginBottom: 10
+      }
+    }, "🙈"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 22,
+        color: '#0a0e2e',
+        textTransform: 'uppercase',
+        letterSpacing: '.05em',
+        marginBottom: 8
+      }
+    }, "Personaje oculto"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow,sans-serif',
+        fontSize: 13,
+        color: 'var(--muted)',
+        lineHeight: 1.5,
+        marginBottom: 16,
+        maxWidth: 280,
+        marginLeft: 'auto',
+        marginRight: 'auto'
+      }
+    }, "Juega junto al grupo y adivina junto a ellos. Si necesitas verlo para facilitar, muestra la respuesta."), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setAdminRevealed(true),
+      style: {
+        background: 'rgba(34,211,238,.18)',
+        border: '1px solid rgba(34,211,238,.45)',
+        borderRadius: 12,
+        padding: '10px 20px',
+        color: '#0891b2',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 800,
+        fontSize: 13,
+        letterSpacing: '.06em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "👁 Mostrar respuesta")) : /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        padding: '30px 24px',
+        background: 'rgba(10,14,46,.04)',
+        border: '1px solid rgba(10,14,46,.12)',
+        borderRadius: 24,
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 54,
+        marginBottom: 14
+      }
+    }, "❓"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 22,
+        color: '#0a0e2e',
+        textTransform: 'uppercase',
+        letterSpacing: '.05em',
+        marginBottom: 8
+      }
+    }, "¡A preguntar!"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow,sans-serif',
+        fontSize: 14,
+        color: 'var(--muted)',
+        lineHeight: 1.5,
+        marginBottom: 14
+      }
+    }, "Hagan preguntas de ", /*#__PURE__*/React.createElement("strong", null, "SÍ o NO"), " a ", currentPlayer.name, " para descubrir qué personaje bíblico es."), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        textAlign: 'left',
+        marginTop: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 12px',
+        background: 'rgba(34,211,238,.08)',
+        borderRadius: 8,
+        fontSize: 13,
+        color: '#0e7490'
+      }
+    }, "✓ \"¿Eres del Nuevo Testamento?\""), /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 12px',
+        background: 'rgba(34,211,238,.08)',
+        borderRadius: 8,
+        fontSize: 13,
+        color: '#0e7490'
+      }
+    }, "✓ \"¿Eres hombre?\""), /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 12px',
+        background: 'rgba(34,211,238,.08)',
+        borderRadius: 8,
+        fontSize: 13,
+        color: '#0e7490'
+      }
+    }, "✓ \"¿Hiciste milagros?\""))), isAdmin && /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 380,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 11,
+        color: 'var(--muted)',
+        textTransform: 'uppercase',
+        letterSpacing: '.15em',
+        marginBottom: 4
+      }
+    }, "¿Quién adivinó?"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 6
+      }
+    }, juegosUsers.filter(u => u.uid !== currentPlayerId).map(u => /*#__PURE__*/React.createElement("button", {
+      key: u.uid,
+      onClick: () => adivinador(u.uid),
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        background: 'rgba(34,197,94,.12)',
+        border: '1px solid rgba(34,197,94,.3)',
+        borderRadius: 10,
+        padding: '8px 10px',
+        cursor: 'pointer',
+        color: '#0a0e2e',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 14,
+        textAlign: 'left'
+      }
+    }, /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: u,
+      size: 26
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, u.name)))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        marginTop: 6
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: otroPersonaje,
+      style: {
+        flex: 1,
+        background: 'rgba(139,92,246,.18)',
+        border: '1px solid rgba(139,92,246,.4)',
+        borderRadius: 10,
+        padding: '10px',
+        color: '#7c3aed',
+        fontWeight: 800,
+        fontSize: 12,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.04em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "🔄 Otro personaje"), /*#__PURE__*/React.createElement("button", {
+      onClick: skipTurn,
+      style: {
+        flex: 1,
+        background: 'rgba(239,68,68,.15)',
+        border: '1px solid rgba(239,68,68,.35)',
+        borderRadius: 10,
+        padding: '10px',
+        color: '#dc2626',
+        fontWeight: 800,
+        fontSize: 12,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.04em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "⏭ Saltar turno"))));
+  }
+  const ranking = Object.entries(scores).map(([uid, pts]) => ({
+    uid,
+    pts,
+    user: users[uid]
+  })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 250,
+      background: '#f8f5ef',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '20px 16px',
+      gap: 14,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 42,
+      marginBottom: 6
+    }
+  }, "❓"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 26,
+      color: '#0891b2',
+      textTransform: 'uppercase',
+      letterSpacing: '.06em',
+      margin: 0
+    }
+  }, "¿Quién soy?"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)',
+      fontSize: 13,
+      marginTop: 6,
+      maxWidth: 340
+    }
+  }, "A un jugador le sale un personaje bíblico. El resto pregunta ", /*#__PURE__*/React.createElement("strong", null, "sí/no"), " hasta adivinar.")), ranking.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 380,
+      background: 'rgba(34,211,238,.06)',
+      border: '1px solid rgba(34,211,238,.2)',
+      borderRadius: 14,
+      padding: '10px 14px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: '#0891b2',
+      textTransform: 'uppercase',
+      letterSpacing: '.15em',
+      marginBottom: 8
+    }
+  }, "📊 Puntaje actual"), ranking.slice(0, 5).map((r, i) => /*#__PURE__*/React.createElement("div", {
+    key: r.uid,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '4px 0',
+      borderBottom: i < Math.min(4, ranking.length - 1) ? '1px solid rgba(10,14,46,.08)' : 'none'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 13,
+      color: 'var(--muted)'
+    }
+  }, "#", i + 1), /*#__PURE__*/React.createElement(AvatarBubble, {
+    profile: r.user,
+    size: 24
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 14,
+      color: '#0a0e2e'
+    }
+  }, r.user.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 14,
+      color: '#0891b2'
+    }
+  }, r.pts)))), isAdmin ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 380,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: seleccionarRandom,
+    disabled: juegosUsers.length === 0,
+    style: {
+      padding: '14px 20px',
+      background: juegosUsers.length === 0 ? 'rgba(34,211,238,.2)' : '#22d3ee',
+      border: 'none',
+      borderRadius: 14,
+      color: '#07091f',
+      fontWeight: 900,
+      fontSize: 14,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.05em',
+      textTransform: 'uppercase',
+      cursor: juegosUsers.length === 0 ? 'not-allowed' : 'pointer',
+      opacity: juegosUsers.length === 0 ? .5 : 1
+    }
+  }, "🎲 Elegir al azar"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.15em',
+      marginTop: 4
+    }
+  }, "O elige tú a quien le sale el personaje:"), juegosUsers.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      color: 'var(--muted)',
+      fontSize: 13,
+      padding: 14
+    }
+  }, "Nadie en sala de juegos aún.") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 6
+    }
+  }, juegosUsers.map(u => /*#__PURE__*/React.createElement("button", {
+    key: u.uid,
+    onClick: () => seleccionarManual(u.uid),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      background: 'rgba(10,14,46,.05)',
+      border: '1px solid rgba(10,14,46,.12)',
+      borderRadius: 10,
+      padding: '8px 10px',
+      cursor: 'pointer',
+      color: '#0a0e2e',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 14,
+      textAlign: 'left'
+    }
+  }, /*#__PURE__*/React.createElement(AvatarBubble, {
+    profile: u,
+    size: 26
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, u.name)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 10
+    }
+  }, ranking.length > 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: finalizar,
+    style: {
+      flex: 1,
+      background: 'rgba(34,197,94,.18)',
+      border: '1px solid rgba(34,197,94,.4)',
+      borderRadius: 14,
+      padding: '12px',
+      color: '#15803d',
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "🏆 Finalizar y ver resultados"), /*#__PURE__*/React.createElement("button", {
+    onClick: cerrar,
+    style: {
+      flex: 1,
+      background: 'rgba(239,68,68,.15)',
+      border: '1px solid rgba(239,68,68,.35)',
+      borderRadius: 14,
+      padding: '12px',
+      color: '#dc2626',
+      fontWeight: 800,
+      fontSize: 13,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "✕ Cerrar"))) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      color: 'var(--muted)',
+      fontSize: 14,
+      maxWidth: 300
+    }
+  }, "Esperando que el admin elija al próximo jugador...", /*#__PURE__*/React.createElement(Spinner, {
+    size: 22
+  })));
+}
+
+/* ═══ DIBUJANDO LA BIBLIA — lienzo de dibujo en vivo ═══ */
+// El dibujante escribe trazos en Firebase (normalizados 0..1); todos los miran.
+
+/* ── DibujaCanvas  (17963-18085) ── */
+function DibujaCanvas({
+  SID,
+  canDraw,
+  color = '#0a0e2e',
+  strokes,
+  live,
+  height = 300
+}) {
+  const wrapRef = useRef(null);
+  const curRef = useRef(null); // trazo en curso (array de puntos)
+  const lastWriteRef = useRef(0);
+  const drawingRef = useRef(false);
+  const getPt = e => {
+    const r = wrapRef.current.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return {
+      x: (p.clientX - r.left) / r.width,
+      y: (p.clientY - r.top) / r.height
+    };
+  };
+  const writeLive = () => {
+    db.ref(`sessions/${SID}/dibuja/live`).set({
+      color,
+      points: curRef.current
+    });
+  };
+  const start = e => {
+    if (!canDraw) return;
+    if (e.cancelable) e.preventDefault();
+    drawingRef.current = true;
+    curRef.current = [getPt(e)];
+    writeLive();
+  };
+  const move = e => {
+    if (!canDraw || !drawingRef.current) return;
+    if (e.cancelable) e.preventDefault();
+    curRef.current.push(getPt(e));
+    const now = Date.now();
+    if (now - lastWriteRef.current > 70) {
+      lastWriteRef.current = now;
+      writeLive();
+    }
+  };
+  const end = () => {
+    if (!canDraw || !drawingRef.current) return;
+    drawingRef.current = false;
+    if (curRef.current && curRef.current.length > 1) {
+      db.ref(`sessions/${SID}/dibuja/strokes`).push({
+        color,
+        points: curRef.current
+      });
+    }
+    curRef.current = null;
+    db.ref(`sessions/${SID}/dibuja/live`).remove();
+  };
+  const strokeArr = strokes ? Object.values(strokes) : [];
+  const liveStroke = live && live.points ? live : null;
+  const toPath = pts => pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${(p.x * 100).toFixed(2)} ${(p.y * 100).toFixed(2)}`).join(' ');
+  return /*#__PURE__*/React.createElement("div", {
+    ref: wrapRef,
+    onMouseDown: start,
+    onMouseMove: move,
+    onMouseUp: end,
+    onMouseLeave: end,
+    onTouchStart: start,
+    onTouchMove: move,
+    onTouchEnd: end,
+    style: {
+      width: '100%',
+      height,
+      background: '#fff',
+      borderRadius: 14,
+      border: '3px solid #ffd000',
+      overflow: 'hidden',
+      position: 'relative',
+      touchAction: 'none',
+      cursor: canDraw ? 'crosshair' : 'default',
+      boxShadow: '0 12px 30px rgba(10,14,46,.18)'
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "100%",
+    height: "100%",
+    viewBox: "0 0 100 100",
+    preserveAspectRatio: "none",
+    style: {
+      display: 'block'
+    }
+  }, strokeArr.map((s, i) => /*#__PURE__*/React.createElement("path", {
+    key: i,
+    d: toPath(s.points || []),
+    stroke: s.color || '#0a0e2e',
+    strokeWidth: "0.9",
+    fill: "none",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    vectorEffect: "non-scaling-stroke"
+  })), liveStroke && /*#__PURE__*/React.createElement("path", {
+    d: toPath(liveStroke.points),
+    stroke: liveStroke.color || '#0a0e2e',
+    strokeWidth: "0.9",
+    fill: "none",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    vectorEffect: "non-scaling-stroke"
+  })), strokeArr.length === 0 && !liveStroke && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#c9c4b8',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 15,
+      letterSpacing: '.06em',
+      textTransform: 'uppercase',
+      pointerEvents: 'none'
+    }
+  }, canDraw ? '✏️ Dibuja aquí' : 'Esperando el dibujo...'));
+}
+
+/* Dado visual con animación; todos ven el mismo resultado por su timestamp. */
+
+/* ── DibujaDie  (18086-18120) ── */
+function DibujaDie({
+  roll,
+  faces,
+  size = 64
+}) {
+  const [anim, setAnim] = useState(false);
+  useEffect(() => {
+    if (roll?.ts) {
+      setAnim(true);
+      const t = setTimeout(() => setAnim(false), 650);
+      return () => clearTimeout(t);
+    }
+  }, [roll?.ts]);
+  const face = roll ? faces ? faces[roll.value] : roll.value : '?';
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: size,
+      height: size,
+      borderRadius: 14,
+      background: '#fff',
+      border: '2px solid #ffd000',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: size * .5,
+      color: '#0a0e2e',
+      boxShadow: '0 6px 18px rgba(10,14,46,.18)',
+      animation: anim ? 'diceRoll .6s ease' : undefined
+    }
+  }, face);
+}
+
+/* Tablero serpenteante con las fichas de los equipos. */
+
+/* ── DibujaBoard  (18121-18263) ── */
+function DibujaBoard({
+  teams,
+  order
+}) {
+  const cols = 6;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'linear-gradient(160deg,#ffd000,#f97316)',
+      borderRadius: 16,
+      padding: 12,
+      boxShadow: '0 12px 30px rgba(10,14,46,.22)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 20,
+      color: '#0a4d8c',
+      letterSpacing: '.04em',
+      textShadow: '0 1px 0 rgba(255,255,255,.5)'
+    }
+  }, "DIBUJANDO LA BIBLIA"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, "✏️")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: `repeat(${cols},1fr)`,
+      gap: 5
+    }
+  }, DIBUJA_BOARD.map((sq, idx) => {
+    const cat = DIBUJA_CATS[sq.type];
+    let bg = '#fff',
+      border = '#fff',
+      label = '';
+    if (sq.type === 'start') {
+      bg = '#fff';
+      label = '🚪';
+    } else if (sq.type === 'finish') {
+      bg = '#fff';
+      label = '⭐';
+    } else if (sq.type === 'all') {
+      bg = '#fff';
+      border = '#e74c3c';
+      label = '👥';
+    } else if (cat) {
+      bg = cat.color;
+      border = cat.dark;
+    }
+    // fichas en esta casilla
+    const here = (order || []).map(tid => teams[tid]).filter(t => t && (t.pos || 0) === idx);
+    return /*#__PURE__*/React.createElement("div", {
+      key: idx,
+      style: {
+        aspectRatio: '1',
+        borderRadius: 8,
+        background: bg,
+        border: `2px solid ${border}`,
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 14
+      }
+    }, sq.type === 'all' ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: '#e74c3c',
+        fontSize: 13
+      }
+    }, "👥") : /*#__PURE__*/React.createElement("span", null, label), here.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1
+      }
+    }, here.map((t, i) => /*#__PURE__*/React.createElement("span", {
+      key: i,
+      style: {
+        fontSize: here.length > 1 ? 12 : 18,
+        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.5))'
+      }
+    }, t.avatar))));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 8,
+      justifyContent: 'center'
+    }
+  }, DIBUJA_CAT_ORDER.map(k => /*#__PURE__*/React.createElement("span", {
+    key: k,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4,
+      background: 'rgba(255,255,255,.85)',
+      borderRadius: 20,
+      padding: '2px 8px',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 9,
+      color: '#0a0e2e'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 9,
+      height: 9,
+      borderRadius: 3,
+      background: DIBUJA_CATS[k].color
+    }
+  }), DIBUJA_CATS[k].label)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4,
+      background: 'rgba(255,255,255,.85)',
+      borderRadius: 20,
+      padding: '2px 8px',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 9,
+      color: '#0a0e2e'
+    }
+  }, "👥 Todos participan")));
+}
+
+/* Pantalla de armado de equipos (solo admin). */
+/* Setup de equipos (admin) — escribe DIRECTO en Firebase para que todos lo
+   vean en vivo y la división sea determinista. */
+
+/* ── DibujaSetup  (18264-18620) ── */
+function DibujaSetup({
+  game,
+  SID,
+  juegosUsers,
+  onCancel,
+  onContinue
+}) {
+  const ref = () => db.ref(`sessions/${SID}/dibuja`);
+  const order = game?.order || [];
+  const teams = game?.teams || {};
+  const numTeams = order.length || 2;
+  const maxTeams = Math.max(2, Math.min(6, juegosUsers.length || 2));
+
+  // Crear esqueleto de N equipos (conserva avatares previos si existen).
+  const buildSkeleton = async n => {
+    const t = {},
+      ord = [];
+    for (let i = 0; i < n; i++) {
+      const tid = 't' + i;
+      ord.push(tid);
+      t[tid] = {
+        name: 'Equipo ' + (i + 1),
+        avatar: teams['t' + i]?.avatar || DIBUJA_TEAM_AVATARS[i],
+        color: DIBUJA_TEAM_COLORS[i % DIBUJA_TEAM_COLORS.length],
+        members: {},
+        captain: null,
+        pos: 0,
+        drawerIdx: 0
+      };
+    }
+    await ref().update({
+      teams: t,
+      order: ord
+    });
+  };
+  // Inicializa con 2 equipos si aún no hay.
+  useEffect(() => {
+    if (order.length === 0) buildSkeleton(2);
+  }, [order.length]);
+
+  // Mueve un usuario al equipo t (lo quita de los demás).
+  const assignUser = async (uid, t) => {
+    const updates = {};
+    order.forEach((tid, j) => {
+      updates[`teams/${tid}/members/${uid}`] = j === t ? true : null;
+    });
+    await ref().update(updates);
+  };
+  const repartirAzar = async () => {
+    const shuffled = [...juegosUsers].sort(() => Math.random() - 0.5);
+    const updates = {};
+    shuffled.forEach((u, i) => {
+      const t = i % order.length;
+      order.forEach((tid, j) => {
+        updates[`teams/${tid}/members/${u.uid}`] = j === t ? true : null;
+      });
+    });
+    await ref().update(updates);
+  };
+  const setAvatar = (t, av) => ref().child(`teams/${order[t]}/avatar`).set(av);
+  const teamOf = uid => order.findIndex(tid => teams[tid]?.members?.[uid]);
+  const allAssigned = juegosUsers.length > 0 && juegosUsers.every(u => teamOf(u.uid) >= 0);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 250,
+      background: '#f8f5ef',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '20px 16px',
+      gap: 14,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 40
+    }
+  }, "🎨"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 26,
+      color: '#a16207',
+      textTransform: 'uppercase',
+      letterSpacing: '.05em',
+      margin: 0
+    }
+  }, "Dibujando la Biblia"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)',
+      fontSize: 13,
+      marginTop: 4
+    }
+  }, "Arma los equipos · ", juegosUsers.length, " en sala")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 420,
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.1)',
+      borderRadius: 14,
+      padding: '12px 14px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.12em',
+      marginBottom: 8
+    }
+  }, "Cantidad de equipos"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6
+    }
+  }, Array.from({
+    length: maxTeams - 1
+  }, (_, i) => i + 2).map(n => /*#__PURE__*/React.createElement("button", {
+    key: n,
+    onClick: () => buildSkeleton(n),
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: 10,
+      cursor: 'pointer',
+      border: numTeams === n ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.12)',
+      background: numTeams === n ? 'rgba(255,208,0,.18)' : 'rgba(10,14,46,.04)',
+      color: numTeams === n ? '#a16207' : '#0a0e2e',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 18
+    }
+  }, n)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 420,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
+    }
+  }, order.map((tid, t) => {
+    const team = teams[tid] || {};
+    const members = Object.keys(team.members || {});
+    return /*#__PURE__*/React.createElement("div", {
+      key: tid,
+      style: {
+        background: `${DIBUJA_TEAM_COLORS[t % DIBUJA_TEAM_COLORS.length]}1a`,
+        border: `1px solid ${DIBUJA_TEAM_COLORS[t % DIBUJA_TEAM_COLORS.length]}55`,
+        borderRadius: 12,
+        padding: '8px 10px'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 14,
+        color: DIBUJA_TEAM_COLORS[t % DIBUJA_TEAM_COLORS.length],
+        width: 70,
+        flexShrink: 0
+      }
+    }, "Equipo ", t + 1), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 4,
+        flexWrap: 'wrap',
+        flex: 1
+      }
+    }, DIBUJA_TEAM_AVATARS.slice(0, 8).map(av => /*#__PURE__*/React.createElement("button", {
+      key: av,
+      onClick: () => setAvatar(t, av),
+      style: {
+        width: 28,
+        height: 28,
+        borderRadius: 8,
+        fontSize: 15,
+        cursor: 'pointer',
+        border: team.avatar === av ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.15)',
+        background: team.avatar === av ? 'rgba(255,208,0,.2)' : 'rgba(10,14,46,.05)'
+      }
+    }, av)))), members.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 4,
+        marginTop: 6
+      }
+    }, members.map(uid => users_safe(juegosUsers, uid)).filter(Boolean).map(u => /*#__PURE__*/React.createElement("span", {
+      key: u.uid,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        background: 'rgba(10,14,46,.08)',
+        borderRadius: 20,
+        padding: '2px 8px 2px 4px',
+        fontSize: 11,
+        color: '#0a0e2e',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700
+      }
+    }, /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: u,
+      size: 18
+    }), u.name))));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 420
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: repartirAzar,
+    disabled: juegosUsers.length === 0,
+    style: {
+      width: '100%',
+      padding: '12px',
+      borderRadius: 12,
+      border: 'none',
+      cursor: 'pointer',
+      background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+      color: '#fff',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 14,
+      letterSpacing: '.05em',
+      textTransform: 'uppercase',
+      opacity: juegosUsers.length ? 1 : .5
+    }
+  }, "🎲 Repartir al azar")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 420,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.12em'
+    }
+  }, "O asigna manualmente:"), juegosUsers.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: 'var(--muted)',
+      fontSize: 13,
+      textAlign: 'center',
+      padding: 10
+    }
+  }, "Nadie en sala de juegos aún."), juegosUsers.map(u => {
+    const myT = teamOf(u.uid);
+    return /*#__PURE__*/React.createElement("div", {
+      key: u.uid,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        background: 'rgba(10,14,46,.04)',
+        borderRadius: 10,
+        padding: '6px 8px'
+      }
+    }, /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: u,
+      size: 28
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 14,
+        color: '#0a0e2e',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, u.name), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 4
+      }
+    }, order.map((tid, t) => /*#__PURE__*/React.createElement("button", {
+      key: t,
+      onClick: () => assignUser(u.uid, t),
+      style: {
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        cursor: 'pointer',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 13,
+        border: myT === t ? `2px solid ${DIBUJA_TEAM_COLORS[t]}` : '1px solid rgba(10,14,46,.12)',
+        background: myT === t ? `${DIBUJA_TEAM_COLORS[t]}33` : 'rgba(10,14,46,.04)',
+        color: myT === t ? DIBUJA_TEAM_COLORS[t] : '#0a0e2e'
+      }
+    }, t + 1))));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 420,
+      display: 'flex',
+      gap: 8,
+      marginTop: 4
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onCancel,
+    style: {
+      flex: 1,
+      padding: '13px',
+      borderRadius: 12,
+      border: '1px solid rgba(10,14,46,.12)',
+      background: 'rgba(10,14,46,.05)',
+      color: 'var(--muted)',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 13,
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "Cancelar"), /*#__PURE__*/React.createElement("button", {
+    onClick: onContinue,
+    disabled: !allAssigned,
+    style: {
+      flex: 2,
+      padding: '13px',
+      borderRadius: 12,
+      border: 'none',
+      cursor: allAssigned ? 'pointer' : 'not-allowed',
+      background: allAssigned ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)',
+      color: allAssigned ? '#0a0e2e' : 'var(--muted)',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 14,
+      letterSpacing: '.05em',
+      textTransform: 'uppercase'
+    }
+  }, allAssigned ? '👑 Elegir capitanes →' : 'Asigna a todos')));
+}
+// Helper: encuentra un usuario en la lista por uid.
+
+/* ── DibujaTeamsWatch  (18626-18745) ── */
+function DibujaTeamsWatch({
+  teams,
+  order,
+  users,
+  title,
+  subtitle
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 250,
+      background: '#f8f5ef',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '20px 16px',
+      gap: 14,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 40
+    }
+  }, "🎨"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 24,
+      color: '#a16207',
+      textTransform: 'uppercase',
+      letterSpacing: '.05em',
+      margin: 0
+    }
+  }, title), subtitle && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)',
+      fontSize: 13,
+      marginTop: 4
+    }
+  }, subtitle)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 420,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
+    }
+  }, (order || []).map((tid, t) => {
+    const team = teams[tid] || {};
+    const members = Object.keys(team.members || {});
+    return /*#__PURE__*/React.createElement("div", {
+      key: tid,
+      style: {
+        background: `${team.color || DIBUJA_TEAM_COLORS[t]}1a`,
+        border: `1px solid ${team.color || DIBUJA_TEAM_COLORS[t]}55`,
+        borderRadius: 12,
+        padding: '10px 12px'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: members.length ? 6 : 0
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 22
+      }
+    }, team.avatar), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 15,
+        color: team.color || DIBUJA_TEAM_COLORS[t]
+      }
+    }, team.name || 'Equipo ' + (t + 1))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 4
+      }
+    }, members.map(uid => users[uid]).filter(Boolean).map((u, i) => /*#__PURE__*/React.createElement("span", {
+      key: i,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        background: 'rgba(10,14,46,.08)',
+        borderRadius: 20,
+        padding: '2px 8px 2px 4px',
+        fontSize: 11,
+        color: '#0a0e2e',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700
+      }
+    }, /*#__PURE__*/React.createElement(AvatarBubble, {
+      profile: u,
+      size: 18
+    }), u.name, team.captain === Object.keys(team.members || {})[members.indexOf(uid)] && ''))));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: 'var(--muted)',
+      fontSize: 13,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement(Spinner, {
+    size: 18
+  }), " El anfitrión está organizando el juego…"));
+}
+
+/* Controlador principal de Dibujando la Biblia. */
+
+/* ── DibujaController  (18746-19837) ── */
+function DibujaController({
+  session,
+  users,
+  myId,
+  isAdmin,
+  SID,
+  onClose
+}) {
+  const game = session?.dibuja;
+  const gState = game?.gameState;
+  const teams = game?.teams || {};
+  const order = game?.order || [];
+  const turnIdx = game?.turnIdx || 0;
+  const turnTeamId = order[turnIdx];
+  const turnTeam = teams[turnTeamId];
+  const phase = game?.phase || 'idle';
+  const card = game?.card;
+  const mode = game?.mode;
+  const allPlay = !!game?.allPlay;
+  const TURN_SECONDS = 90;
+  const [timeLeft, setTimeLeft] = useState(TURN_SECONDS);
+  const timerRef = useRef(null);
+  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => u.zone === 'juegos').map(([uid, u]) => ({
+    uid,
+    ...u
+  }));
+  const myTeamId = order.find(tid => teams[tid]?.members?.[myId]);
+  const isMyTurn = myTeamId === turnTeamId;
+  const drawerId = game?.currentDrawer;
+  const isDrawer = drawerId === myId;
+  // ¿Puedo ver la palabra? Solo el dibujante (y el admin). El equipo adivina.
+  const canSeeWord = isDrawer || isAdmin;
+  // ¿Puedo dibujar? El dibujante actual, solo si el modo es dibujo.
+  const canDraw = isDrawer && mode === 'dibujo' && phase === 'draw';
+
+  // Timer de la ronda
+  useEffect(() => {
+    if (phase !== 'draw' || !game?.roundStartTime) {
+      setTimeLeft(TURN_SECONDS);
+      return;
+    }
+    const tick = () => {
+      const left = Math.max(0, TURN_SECONDS - Math.floor((Date.now() - game.roundStartTime) / 1000));
+      setTimeLeft(left);
+    };
+    tick();
+    timerRef.current = setInterval(tick, 500);
+    return () => clearInterval(timerRef.current);
+  }, [phase, game?.roundStartTime]);
+  const ref = () => db.ref(`sessions/${SID}/dibuja`);
+  const clearDrawing = () => {
+    ref().child('strokes').remove();
+    ref().child('live').remove();
+  };
+
+  // ── Acciones admin ──
+  const teamDrawer = team => {
+    const m = Object.keys(team?.members || {});
+    if (m.length === 0) return null;
+    return m[(team.drawerIdx || 0) % m.length];
+  };
+  const sacarCarta = async () => {
+    const sq = DIBUJA_BOARD[turnTeam?.pos || 0];
+    const isAll = sq?.type === 'all';
+    const cat = sq && DIBUJA_CATS[sq.type] ? sq.type : null;
+    const newCard = cat ? dibujaRandomCardForCat(cat) : dibujaRandomCard();
+    clearDrawing();
+    await ref().update({
+      card: newCard,
+      allPlay: isAll,
+      currentDrawer: teamDrawer(turnTeam),
+      phase: 'mode',
+      mode: null,
+      modeRoll: null,
+      moveRoll: null
+    });
+  };
+  const tirarModo = async () => {
+    const val = Math.random() < 0.5 ? 'mimica' : 'dibujo';
+    await ref().update({
+      mode: val,
+      modeRoll: {
+        value: val,
+        ts: Date.now()
+      }
+    });
+    setTimeout(() => {
+      ref().update({
+        phase: 'draw',
+        roundStartTime: Date.now()
+      });
+    }, 750);
+  };
+  const otraCarta = async () => {
+    const sq = DIBUJA_BOARD[turnTeam?.pos || 0];
+    const cat = sq && DIBUJA_CATS[sq.type] ? sq.type : null;
+    clearDrawing();
+    await ref().update({
+      card: cat ? dibujaRandomCardForCat(cat) : dibujaRandomCard(),
+      roundStartTime: Date.now()
+    });
+  };
+  // Adivinaron: el equipo que adivinó (winnerTeamId) tira el dado y avanza.
+  const adivinaron = async winnerTeamId => {
+    const move = 1 + Math.floor(Math.random() * 6);
+    await ref().update({
+      moveRoll: {
+        value: move,
+        ts: Date.now()
+      },
+      phase: 'moved',
+      lastWinner: winnerTeamId
+    });
+    setTimeout(async () => {
+      const wTeam = teams[winnerTeamId];
+      const newPos = Math.min(DIBUJA_GOAL, (wTeam.pos || 0) + move);
+      const updates = {};
+      updates[`teams/${winnerTeamId}/pos`] = newPos;
+      // rota el dibujante de ese equipo para la próxima
+      const memCount = Object.keys(wTeam.members || {}).length || 1;
+      updates[`teams/${winnerTeamId}/drawerIdx`] = ((wTeam.drawerIdx || 0) + 1) % memCount;
+      if (newPos >= DIBUJA_GOAL) {
+        updates['gameState'] = 'finished';
+        updates['winner'] = winnerTeamId;
+      } else {
+        // el turno pasa al equipo que adivinó (gana el dado y el turno)
+        updates['turnIdx'] = order.indexOf(winnerTeamId);
+        updates['phase'] = 'idle';
+        updates['card'] = null;
+        updates['mode'] = null;
+        updates['modeRoll'] = null;
+        updates['moveRoll'] = null;
+        updates['allPlay'] = false;
+      }
+      await ref().update(updates);
+      clearDrawing();
+    }, 1400);
+  };
+  const seAcaboTiempo = async () => {
+    clearDrawing();
+    await ref().update({
+      turnIdx: (turnIdx + 1) % order.length,
+      phase: 'idle',
+      card: null,
+      mode: null,
+      modeRoll: null,
+      moveRoll: null,
+      allPlay: false
+    });
+  };
+  const finalizar = async () => {
+    await ref().update({
+      gameState: 'finished'
+    });
+  };
+  const cerrar = async () => {
+    await ref().remove();
+    await db.ref(`sessions/${SID}`).update({
+      phase: 'waiting'
+    });
+    if (onClose) onClose();
+  };
+  // Pasar de armado de equipos a votación de capitanes.
+  const irACapitanes = async () => {
+    await ref().update({
+      gameState: 'captains',
+      votes: null
+    });
+  };
+  // Cada jugador vota por el capitán de SU equipo.
+  const votarCapitan = async targetUid => {
+    if (!myTeamId) return;
+    await ref().child(`votes/${myTeamId}/${myId}`).set(targetUid);
+  };
+  // Cerrar votación: define capitán de cada equipo (más votos; desempate aleatorio).
+  const cerrarVotacion = async () => {
+    const votes = game?.votes || {};
+    const updates = {};
+    order.forEach(tid => {
+      const members = Object.keys(teams[tid]?.members || {});
+      if (members.length === 0) return;
+      const tally = {};
+      members.forEach(m => tally[m] = 0);
+      Object.values(votes[tid] || {}).forEach(v => {
+        if (tally[v] !== undefined) tally[v]++;
+      });
+      let best = members[0],
+        bestN = -1;
+      members.forEach(m => {
+        if (tally[m] > bestN) {
+          bestN = tally[m];
+          best = m;
+        }
+      });
+      updates[`teams/${tid}/captain`] = best;
+    });
+    updates['gameState'] = 'rolloff';
+    updates['startRolls'] = null;
+    await ref().update(updates);
+  };
+  // Tiro para definir quién comienza: cada equipo tira; mayor empieza.
+  const tirarInicio = async tid => {
+    const val = 1 + Math.floor(Math.random() * 6);
+    await ref().child(`startRolls/${tid}`).set({
+      value: val,
+      ts: Date.now()
+    });
+  };
+  const comenzarPartida = async () => {
+    const rolls = game?.startRolls || {};
+    let bestTid = order[0],
+      bestN = -1;
+    order.forEach(tid => {
+      const v = rolls[tid]?.value || 0;
+      if (v > bestN) {
+        bestN = v;
+        bestTid = tid;
+      }
+    });
+    await ref().update({
+      gameState: 'playing',
+      turnIdx: order.indexOf(bestTid),
+      phase: 'idle',
+      card: null,
+      mode: null,
+      modeRoll: null,
+      moveRoll: null,
+      allPlay: false,
+      currentDrawer: null,
+      strokes: null,
+      live: null
+    });
+  };
+  const myZone = users[myId]?.zone;
+  if (myZone !== 'juegos' && !isAdmin) return null;
+
+  // ── SETUP (armado de equipos) ──
+  if (gState === 'setup') {
+    if (isAdmin) return /*#__PURE__*/React.createElement(DibujaSetup, {
+      game: game,
+      SID: SID,
+      juegosUsers: juegosUsers,
+      onCancel: cerrar,
+      onContinue: irACapitanes
+    });
+    return /*#__PURE__*/React.createElement(DibujaTeamsWatch, {
+      teams: teams,
+      order: order,
+      users: users,
+      title: "Dibujando la Biblia",
+      subtitle: "El anfitrión está armando los equipos"
+    });
+  }
+
+  // ── CAPITANES (cada equipo vota por separado) ──
+  if (gState === 'captains') {
+    const votes = game?.votes || {};
+    // Vista para jugadores: votan dentro de su equipo.
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 250,
+        background: '#f8f5ef',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '20px 16px',
+        gap: 14,
+        overflowY: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 40
+      }
+    }, "👑"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 24,
+        color: '#a16207',
+        textTransform: 'uppercase',
+        letterSpacing: '.05em',
+        margin: 0
+      }
+    }, "Elijan a su capitán"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: 'var(--muted)',
+        fontSize: 13,
+        marginTop: 4
+      }
+    }, "Cada equipo vota por separado")), myTeamId && (() => {
+      const team = teams[myTeamId];
+      const members = Object.keys(team?.members || {});
+      const myVote = votes[myTeamId]?.[myId];
+      const tally = {};
+      members.forEach(m => tally[m] = 0);
+      Object.values(votes[myTeamId] || {}).forEach(v => {
+        if (tally[v] !== undefined) tally[v]++;
+      });
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: '100%',
+          maxWidth: 420,
+          background: `${team.color}1a`,
+          border: `1px solid ${team.color}55`,
+          borderRadius: 14,
+          padding: '12px 14px'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 10
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 22
+        }
+      }, team.avatar), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontFamily: 'Barlow Condensed,sans-serif',
+          fontWeight: 900,
+          fontSize: 16,
+          color: team.color
+        }
+      }, team.name, " · tu voto")), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6
+        }
+      }, members.map(uid => users[uid]).filter(Boolean).map(u => /*#__PURE__*/React.createElement("button", {
+        key: u.uid,
+        onClick: () => votarCapitan(u.uid),
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: myVote === u.uid ? `${team.color}33` : 'rgba(10,14,46,.05)',
+          border: myVote === u.uid ? `2px solid ${team.color}` : '1px solid rgba(10,14,46,.12)',
+          borderRadius: 10,
+          padding: '8px 10px',
+          cursor: 'pointer',
+          color: '#0a0e2e',
+          fontFamily: 'Barlow Condensed,sans-serif',
+          fontWeight: 700,
+          fontSize: 14,
+          textAlign: 'left'
+        }
+      }, /*#__PURE__*/React.createElement(AvatarBubble, {
+        profile: u,
+        size: 26
+      }), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flex: 1
+        }
+      }, u.name, u.uid === myId ? ' (tú)' : ''), /*#__PURE__*/React.createElement("span", {
+        style: {
+          background: 'rgba(10,14,46,.08)',
+          borderRadius: 20,
+          padding: '1px 9px',
+          fontSize: 13,
+          fontWeight: 900
+        }
+      }, tally[u.uid] || 0)))));
+    })(), !myTeamId && !isAdmin && /*#__PURE__*/React.createElement("div", {
+      style: {
+        color: 'var(--muted)',
+        fontSize: 13
+      }
+    }, "No estás en ningún equipo."), isAdmin && /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 420,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 11,
+        color: 'var(--muted)',
+        textTransform: 'uppercase',
+        letterSpacing: '.12em'
+      }
+    }, "Progreso de votación"), order.map(tid => {
+      const team = teams[tid];
+      const memN = Object.keys(team?.members || {}).length;
+      const votedN = Object.keys(votes[tid] || {}).length;
+      return /*#__PURE__*/React.createElement("div", {
+        key: tid,
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: 'rgba(10,14,46,.04)',
+          borderRadius: 10,
+          padding: '8px 10px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 18
+        }
+      }, team?.avatar), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flex: 1,
+          fontFamily: 'Barlow Condensed,sans-serif',
+          fontWeight: 700,
+          fontSize: 14,
+          color: '#0a0e2e'
+        }
+      }, team?.name), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 12,
+          color: votedN >= memN && memN > 0 ? '#10b981' : 'var(--muted)',
+          fontWeight: 700
+        }
+      }, votedN, "/", memN, " votaron"));
+    }), /*#__PURE__*/React.createElement("button", {
+      onClick: cerrarVotacion,
+      style: {
+        padding: '13px',
+        borderRadius: 12,
+        border: 'none',
+        background: 'linear-gradient(135deg,#ffd000,#e6a800)',
+        color: '#0a0e2e',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 14,
+        letterSpacing: '.05em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "✅ Cerrar votación y continuar")));
+  }
+
+  // ── ROLLOFF (quién comienza: mayor dado) ──
+  if (gState === 'rolloff') {
+    const rolls = game?.startRolls || {};
+    const allRolled = order.every(tid => rolls[tid]);
+    let leader = null,
+      leadN = -1;
+    order.forEach(tid => {
+      const v = rolls[tid]?.value || 0;
+      if (v > leadN) {
+        leadN = v;
+        leader = tid;
+      }
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 250,
+        background: '#f8f5ef',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '20px 16px',
+        gap: 14,
+        overflowY: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 40
+      }
+    }, "🎲"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 24,
+        color: '#a16207',
+        textTransform: 'uppercase',
+        letterSpacing: '.05em',
+        margin: 0
+      }
+    }, "¿Quién comienza?"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: 'var(--muted)',
+        fontSize: 13,
+        marginTop: 4
+      }
+    }, "Cada equipo tira un dado · el mayor empieza")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 420,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8
+      }
+    }, order.map(tid => {
+      const team = teams[tid];
+      const roll = rolls[tid];
+      const isLeader = allRolled && tid === leader;
+      const captainUid = team?.captain;
+      const iAmCaptain = captainUid === myId;
+      return /*#__PURE__*/React.createElement("div", {
+        key: tid,
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: isLeader ? 'rgba(255,208,0,.16)' : `${team?.color}1a`,
+          border: isLeader ? '2px solid #ffd000' : `1px solid ${team?.color}55`,
+          borderRadius: 12,
+          padding: '10px 12px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 22
+        }
+      }, team?.avatar), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontFamily: 'Barlow Condensed,sans-serif',
+          fontWeight: 900,
+          fontSize: 15,
+          color: '#0a0e2e'
+        }
+      }, team?.name), captainUid && users[captainUid] && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: 'var(--muted)'
+        }
+      }, "👑 Capitán: ", users[captainUid].name)), roll ? /*#__PURE__*/React.createElement(DibujaDie, {
+        roll: roll,
+        size: 44
+      }) : iAmCaptain || isAdmin ? /*#__PURE__*/React.createElement("button", {
+        onClick: () => tirarInicio(tid),
+        style: {
+          padding: '8px 14px',
+          borderRadius: 10,
+          border: 'none',
+          background: team?.color || '#ffd000',
+          color: '#0a0e2e',
+          fontFamily: 'Barlow Condensed,sans-serif',
+          fontWeight: 900,
+          fontSize: 13,
+          letterSpacing: '.04em',
+          textTransform: 'uppercase',
+          cursor: 'pointer'
+        }
+      }, "🎲 Tirar") : /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 12,
+          color: 'var(--muted)'
+        }
+      }, "esperando…"));
+    })), isAdmin && /*#__PURE__*/React.createElement("button", {
+      onClick: comenzarPartida,
+      disabled: !allRolled,
+      style: {
+        width: '100%',
+        maxWidth: 420,
+        padding: '13px',
+        borderRadius: 12,
+        border: 'none',
+        cursor: allRolled ? 'pointer' : 'not-allowed',
+        background: allRolled ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)',
+        color: allRolled ? '#0a0e2e' : 'var(--muted)',
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 14,
+        letterSpacing: '.05em',
+        textTransform: 'uppercase'
+      }
+    }, allRolled ? `🎨 Comienza ${teams[leader]?.name}` : 'Faltan equipos por tirar'));
+  }
+
+  // ── FINISHED ──
+  if (gState === 'finished') {
+    const ranking = order.map(tid => teams[tid]).filter(Boolean).sort((a, b) => (b.pos || 0) - (a.pos || 0));
+    const winner = game?.winner ? teams[game.winner] : ranking[0];
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 250,
+        background: '#f8f5ef',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        gap: 14,
+        overflowY: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement(Confetti, null), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 56
+      }
+    }, "🏆"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 28,
+        color: '#a16207',
+        textTransform: 'uppercase',
+        letterSpacing: '.05em',
+        margin: 0,
+        textAlign: 'center'
+      }
+    }, "¡", winner?.name || 'Equipo', " ganó! ", winner?.avatar), /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        maxWidth: 420,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        marginTop: 8
+      }
+    }, ranking.map((t, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 16px',
+        borderRadius: 14,
+        background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)',
+        border: i === 0 ? '2px solid #ffd000' : `1px solid ${t.color}55`
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 26
+      }
+    }, t.avatar), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 800,
+        fontSize: 18,
+        color: '#0a0e2e'
+      }
+    }, t.name), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 16,
+        color: '#a16207'
+      }
+    }, Math.round((t.pos || 0) / DIBUJA_GOAL * 100), "%")))), isAdmin && /*#__PURE__*/React.createElement("button", {
+      onClick: cerrar,
+      style: {
+        marginTop: 14,
+        background: '#ffd000',
+        border: 'none',
+        borderRadius: 14,
+        padding: '14px 32px',
+        color: '#07091f',
+        fontWeight: 900,
+        fontSize: 14,
+        fontFamily: 'Barlow Condensed,sans-serif',
+        letterSpacing: '.05em',
+        textTransform: 'uppercase',
+        cursor: 'pointer'
+      }
+    }, "Cerrar juego"));
+  }
+
+  // ── PLAYING ──
+  const cat = card ? DIBUJA_CATS[card.category] : null;
+  const timeColor = timeLeft < 15 ? '#ef4444' : timeLeft < 35 ? '#c2410c' : '#a16207';
+  const drawer = drawerId ? users[drawerId] : null;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 250,
+      background: '#f8f5ef',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '16px 14px',
+      gap: 12,
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      flexWrap: 'wrap',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      background: `${turnTeam?.color || '#ffd000'}22`,
+      border: `1px solid ${turnTeam?.color || '#ffd000'}66`,
+      borderRadius: 30,
+      padding: '6px 14px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22
+    }
+  }, turnTeam?.avatar), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.1em'
+    }
+  }, "Turno de"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 15,
+      color: '#0a0e2e'
+    }
+  }, allPlay ? '¡TODOS PARTICIPAN!' : turnTeam?.name))), phase === 'draw' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 30,
+      color: timeColor
+    }
+  }, Math.floor(timeLeft / 60), ":", String(timeLeft % 60).padStart(2, '0'))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 440
+    }
+  }, /*#__PURE__*/React.createElement(DibujaBoard, {
+    teams: teams,
+    order: order
+  })), (phase === 'mode' || phase === 'moved') && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 16
+    }
+  }, game?.modeRoll && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement(DibujaDie, {
+    roll: game.modeRoll,
+    faces: {
+      mimica: '🎭',
+      dibujo: '✏️'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 10,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.08em',
+      marginTop: 4
+    }
+  }, game.modeRoll.value === 'mimica' ? 'Mímica' : 'Dibujo')), game?.moveRoll && phase === 'moved' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement(DibujaDie, {
+    roll: game.moveRoll
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 10,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.08em',
+      marginTop: 4
+    }
+  }, "Avanza ", game.moveRoll.value))), phase === 'draw' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 440,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, mode === 'mimica' ? '🎭' : '✏️'), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 16,
+      color: '#0a0e2e',
+      textTransform: 'uppercase',
+      letterSpacing: '.05em'
+    }
+  }, mode === 'mimica' ? 'Haz mímica' : 'Dibuja')), canSeeWord && cat && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'linear-gradient(135deg,#fff,#f8f5ef)',
+      borderRadius: 16,
+      padding: '14px 18px',
+      border: `4px solid ${cat.color}`,
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: cat.dark,
+      textTransform: 'uppercase',
+      letterSpacing: '.16em'
+    }
+  }, cat.icon, " ", cat.label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 28,
+      color: '#0a0e2e',
+      textTransform: 'uppercase',
+      lineHeight: 1.05,
+      marginTop: 4
+    }
+  }, card.word), isDrawer && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: '#a16207',
+      marginTop: 6
+    }
+  }, mode === 'mimica' ? 'Actúa esta palabra ¡sin hablar!' : 'Dibújala ¡sin letras ni números!')), !canSeeWord && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'rgba(10,14,46,.04)',
+      border: '1px solid rgba(10,14,46,.12)',
+      borderRadius: 16,
+      padding: '12px',
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 16,
+      color: cat ? cat.color : '#ffd000',
+      textTransform: 'uppercase',
+      letterSpacing: '.05em'
+    }
+  }, cat ? cat.label : 'Adivina', " ", cat ? cat.icon : '🤔'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--muted)',
+      marginTop: 4
+    }
+  }, allPlay ? '¡Todos pueden adivinar! Grita tu respuesta.' : isMyTurn ? '¡Tu equipo adivina! Grita tu respuesta.' : 'Observa: adivina el equipo en turno.')), mode === 'dibujo' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DibujaCanvas, {
+    SID: SID,
+    canDraw: canDraw,
+    color: turnTeam?.color || '#0a0e2e',
+    strokes: game?.strokes,
+    live: game?.live
+  }), canDraw && /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      ref().child('strokes').remove();
+      ref().child('live').remove();
+    },
+    style: {
+      alignSelf: 'center',
+      background: 'rgba(239,68,68,.15)',
+      border: '1px solid rgba(239,68,68,.35)',
+      borderRadius: 10,
+      padding: '8px 16px',
+      color: '#dc2626',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "🧽 Borrar")), mode === 'mimica' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      padding: '18px',
+      background: 'rgba(10,14,46,.04)',
+      borderRadius: 14,
+      border: '1px dashed rgba(10,14,46,.15)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 38
+    }
+  }, "🎭"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--muted)',
+      marginTop: 6
+    }
+  }, isDrawer ? '¡Actúa la palabra en vivo para tu equipo!' : 'El dibujante está actuando — ¡adivina!'))), isAdmin && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '100%',
+      maxWidth: 440,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+      marginTop: 4
+    }
+  }, phase === 'idle' && /*#__PURE__*/React.createElement("button", {
+    onClick: sacarCarta,
+    style: {
+      padding: '14px',
+      borderRadius: 12,
+      border: 'none',
+      background: '#ffd000',
+      color: '#0a0e2e',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 15,
+      letterSpacing: '.05em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "🃏 Sacar carta ", turnTeam ? `· ${turnTeam.name}` : ''), phase === 'mode' && /*#__PURE__*/React.createElement("button", {
+    onClick: tirarModo,
+    disabled: !!game?.modeRoll,
+    style: {
+      padding: '14px',
+      borderRadius: 12,
+      border: 'none',
+      background: game?.modeRoll ? 'rgba(10,14,46,.1)' : 'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+      color: game?.modeRoll ? '#0a0e2e' : '#fff',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 15,
+      letterSpacing: '.05em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "🎲 Tirar dado: 🎭 mímica / ✏️ dibujo"), phase === 'draw' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.12em'
+    }
+  }, allPlay ? '¿Qué equipo adivinó primero?' : 'Si adivinaron, confirma:'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: allPlay ? '1fr 1fr' : '1fr',
+      gap: 6
+    }
+  }, (allPlay ? order : [turnTeamId]).map(tid => /*#__PURE__*/React.createElement("button", {
+    key: tid,
+    onClick: () => adivinaron(tid),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      background: 'rgba(34,197,94,.14)',
+      border: '1px solid rgba(34,197,94,.35)',
+      borderRadius: 10,
+      padding: '10px 12px',
+      cursor: 'pointer',
+      color: '#0a0e2e',
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 800,
+      fontSize: 14
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, teams[tid]?.avatar), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      textAlign: 'left'
+    }
+  }, "✅ ", teams[tid]?.name)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: otraCarta,
+    style: {
+      flex: 1,
+      background: 'rgba(139,92,246,.18)',
+      border: '1px solid rgba(139,92,246,.4)',
+      borderRadius: 10,
+      padding: '10px',
+      color: '#7c3aed',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "🔄 Otra carta"), /*#__PURE__*/React.createElement("button", {
+    onClick: seAcaboTiempo,
+    style: {
+      flex: 1,
+      background: 'rgba(239,68,68,.15)',
+      border: '1px solid rgba(239,68,68,.35)',
+      borderRadius: 10,
+      padding: '10px',
+      color: '#dc2626',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "⏭ Se acabó el tiempo"))), phase === 'moved' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      color: 'var(--muted)',
+      fontSize: 13,
+      padding: '8px'
+    }
+  }, teams[game?.lastWinner]?.name, " avanza… ", /*#__PURE__*/React.createElement(Spinner, {
+    size: 18
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 6
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: finalizar,
+    style: {
+      flex: 1,
+      background: 'rgba(34,197,94,.15)',
+      border: '1px solid rgba(34,197,94,.35)',
+      borderRadius: 12,
+      padding: '11px',
+      color: '#15803d',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "🏆 Finalizar"), /*#__PURE__*/React.createElement("button", {
+    onClick: cerrar,
+    style: {
+      flex: 1,
+      background: 'rgba(239,68,68,.15)',
+      border: '1px solid rgba(239,68,68,.35)',
+      borderRadius: 12,
+      padding: '11px',
+      color: '#dc2626',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, "✕ Cerrar"))), !isAdmin && phase === 'idle' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      color: 'var(--muted)',
+      fontSize: 14,
+      maxWidth: 300
+    }
+  }, "Esperando que el anfitrión saque la carta… ", /*#__PURE__*/React.createElement(Spinner, {
+    size: 20
+  })));
+}
+
+/* ── CountdownTimer  (19838-19871) ── */
+function CountdownTimer({
+  from,
+  onDone
+}) {
+  const [n, setN] = useState(from);
+  useEffect(() => {
+    if (n <= 0) {
+      onDone();
+      return;
+    }
+    const t = setTimeout(() => setN(n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [n]);
+  if (n <= 0) return null;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 110,
+      color: '#a16207',
+      lineHeight: 1,
+      animation: 'countdownPop .7s ease'
+    },
+    key: n
+  }, n), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontSize: 18,
+      color: 'var(--muted)',
+      letterSpacing: '.1em',
+      textTransform: 'uppercase'
+    }
+  }, "Prepárate"));
+}
+
+/* ── DraggableQR  (6931-7136) ── */
+function DraggableQR({
+  qrSize,
+  setQrSize,
+  qrPos,
+  setQrPos
+}) {
+  const url = window.location.origin + window.location.pathname;
+  const dragRef = useRef({
+    dragging: false,
+    moved: false,
+    offX: 0,
+    offY: 0
+  });
+
+  // Vista grande: overlay centrado (no arrastrable)
+  if (qrSize === 'large') {
+    return /*#__PURE__*/React.createElement("div", {
+      onClick: () => setQrSize('small'),
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 210,
+        background: 'rgba(10,14,46,.45)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        animation: 'modalIn .25s ease',
+        padding: 24
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: '#fff',
+        borderRadius: 24,
+        padding: '28px 28px 22px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 16,
+        boxShadow: '0 24px 60px rgba(10,14,46,.3)',
+        maxWidth: '92vmin'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 900,
+        fontSize: 24,
+        color: '#0a0e2e',
+        textTransform: 'uppercase',
+        letterSpacing: '.12em',
+        lineHeight: 1
+      }
+    }, "📲 ¡Únete a la clase!"), /*#__PURE__*/React.createElement("img", {
+      src: `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=0&data=${encodeURIComponent(url)}`,
+      alt: "QR para unirse a la sala",
+      style: {
+        width: 'min(72vmin,640px)',
+        height: 'auto',
+        display: 'block',
+        borderRadius: 12
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Barlow Condensed,sans-serif',
+        fontWeight: 700,
+        fontSize: 13,
+        color: 'rgba(10,14,46,.6)',
+        letterSpacing: '.1em',
+        textTransform: 'uppercase',
+        lineHeight: 1
+      }
+    }, "Toca para reducir")));
+  }
+  const isMed = qrSize === 'medium';
+  const W = isMed ? 180 : 80;
+  // Posición: si el admin lo arrastró usamos qrPos; si no, anclado arriba a la derecha.
+  const defaultRight = isMed ? 14 : 10,
+    defaultTop = isMed ? 72 : 64;
+  const onDown = e => {
+    const pt = e.touches ? e.touches[0] : e;
+    const rect = e.currentTarget.getBoundingClientRect();
+    dragRef.current = {
+      dragging: true,
+      moved: false,
+      offX: pt.clientX - rect.left,
+      offY: pt.clientY - rect.top
+    };
+    const move = ev => {
+      const p = ev.touches ? ev.touches[0] : ev;
+      const d = dragRef.current;
+      if (!d.dragging) return;
+      d.moved = true;
+      if (ev.cancelable) ev.preventDefault();
+      const margin = 6;
+      const maxX = window.innerWidth - rect.width - margin;
+      const maxY = window.innerHeight - rect.height - margin;
+      const x = Math.max(margin, Math.min(maxX, p.clientX - d.offX));
+      const y = Math.max(margin, Math.min(maxY, p.clientY - d.offY));
+      setQrPos({
+        x,
+        y
+      });
+    };
+    const up = () => {
+      dragRef.current.dragging = false;
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+      window.removeEventListener('touchmove', move);
+      window.removeEventListener('touchend', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+    window.addEventListener('touchmove', move, {
+      passive: false
+    });
+    window.addEventListener('touchend', up);
+  };
+  const onClick = () => {
+    // Si hubo arrastre, no cambiar de tamaño (evita el "click fantasma").
+    if (dragRef.current.moved) {
+      dragRef.current.moved = false;
+      return;
+    }
+    setQrSize(s => s === 'small' ? 'medium' : 'large');
+  };
+  const posStyle = qrPos ? {
+    left: qrPos.x,
+    top: qrPos.y
+  } : {
+    right: defaultRight,
+    top: defaultTop
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    onMouseDown: onDown,
+    onTouchStart: onDown,
+    onClick: onClick,
+    title: "Arrastra para mover · toca para agrandar",
+    style: {
+      position: 'fixed',
+      ...posStyle,
+      zIndex: 205,
+      background: '#fff',
+      borderRadius: 14,
+      padding: isMed ? '10px 12px 8px' : '5px 5px 3px',
+      boxShadow: '0 10px 28px rgba(10,14,46,.28), 0 0 0 2px rgba(255,208,0,.55)',
+      border: 'none',
+      cursor: 'grab',
+      touchAction: 'none',
+      userSelect: 'none',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: isMed ? 5 : 3
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      width: '100%',
+      justifyContent: 'center'
+    }
+  }, isMed && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'rgba(10,14,46,.35)'
+    }
+  }, "⠿"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: isMed ? 13 : 8.5,
+      color: '#0a0e2e',
+      textTransform: 'uppercase',
+      letterSpacing: isMed ? '.12em' : '0',
+      lineHeight: 1.05,
+      textAlign: 'center',
+      whiteSpace: isMed ? 'nowrap' : 'normal'
+    }
+  }, "📲 ¡Únete a la clase!")), /*#__PURE__*/React.createElement("img", {
+    src: `https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=0&data=${encodeURIComponent(url)}`,
+    alt: "QR para unirse a la sala",
+    width: W,
+    height: W,
+    draggable: false,
+    style: {
+      display: 'block',
+      borderRadius: 6,
+      background: '#fff',
+      pointerEvents: 'none'
+    }
+  }), isMed && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 700,
+      fontSize: 9,
+      color: 'rgba(10,14,46,.55)',
+      letterSpacing: '.1em',
+      textTransform: 'uppercase',
+      lineHeight: 1
+    }
+  }, "Arrastra para mover"));
+}
+
+/* ════════════════════════ FIN DE ACTIVIDAD ════════════════════════ */
+
+/* ── ChatFab  (5925-5974) ── */
+function ChatFab({
+  onClick,
+  count
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: onClick,
+    title: "Abrir chat",
+    style: {
+      position: 'fixed',
+      left: 16,
+      bottom: 18,
+      zIndex: 152,
+      width: 56,
+      height: 56,
+      borderRadius: '50%',
+      border: 'none',
+      cursor: 'pointer',
+      background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+      color: '#fff',
+      fontSize: 24,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 10px 26px rgba(29,78,216,.5)'
+    }
+  }, "💬", count > 0 && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      minWidth: 20,
+      height: 20,
+      padding: '0 5px',
+      borderRadius: 10,
+      background: '#ef4444',
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: 800,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: '2px solid #070a1f'
+    }
+  }, count > 99 ? '99+' : count));
+}
+
+/* ════════════════════════ GUÍA DE USO ════════════════════════ */
+// Mini-maqueta reutilizable: simula una "captura" de la app con marco de
+// teléfono para ilustrar cada paso de la guía. Usa los colores MRNT.
+
 function LoginScreen({ onSignedIn }) {
   const [mode, setMode] = React.useState('signin');
   const [email, setEmail] = React.useState('');
   const [pwd, setPwd] = React.useState('');
+  const [klass, setKlass] = React.useState('gteen');
   const [err, setErr] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const submit = async (e) => {
@@ -11210,7 +15639,12 @@ function LoginScreen({ onSignedIn }) {
     setErr(''); setBusy(true);
     try {
       if (mode === 'signin') await window.auth.signInWithEmailAndPassword(email.trim(), pwd);
-      else                    await window.auth.createUserWithEmailAndPassword(email.trim(), pwd);
+      else {
+        const cred = await window.auth.createUserWithEmailAndPassword(email.trim(), pwd);
+        if (cred?.user?.uid) {
+          try { await window.db.ref(`profiles/${cred.user.uid}`).update({ class: klass, email: email.trim() }); } catch (_) {}
+        }
+      }
       onSignedIn && onSignedIn();
     } catch (e) {
       setErr(getErr(e.code || ''));
@@ -11227,7 +15661,14 @@ function LoginScreen({ onSignedIn }) {
         )
       ),
       h('div', { style: { fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--ink)', marginBottom: 4 } }, mode === 'signin' ? 'Inicia sesión' : 'Crea tu cuenta'),
-      h('div', { style: { fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 } }, mode === 'signin' ? 'Entra a la sala 3D con tu correo y contraseña.' : 'Una sola cuenta para todas las clases.'),
+      h('div', { style: { fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 } }, mode === 'signin' ? 'Entra a la sala 3D con tu correo y contraseña.' : 'Una sola cuenta para todas las clases. Elige tu grupo abajo.'),
+      mode === 'signup' ? h('div', { style: { marginBottom: 14 } },
+        h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Tu grupo'),
+        h('div', { style: { display: 'flex', gap: 8 } },
+          h('button', { type: 'button', onClick: () => setKlass('gteen'), style: { flex: 1, padding: 10, borderRadius: 'var(--r-sm)', border: klass === 'gteen' ? '2px solid var(--yellow)' : '1px solid rgba(10,14,46,.12)', background: klass === 'gteen' ? 'rgba(255,208,0,.12)' : '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', color: 'var(--ink)' } }, '🌱 Gteen'),
+          h('button', { type: 'button', onClick: () => setKlass('ja'), style: { flex: 1, padding: 10, borderRadius: 'var(--r-sm)', border: klass === 'ja' ? '2px solid var(--yellow)' : '1px solid rgba(10,14,46,.12)', background: klass === 'ja' ? 'rgba(255,208,0,.12)' : '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', color: 'var(--ink)' } }, '🔥 JA')
+        )
+      ) : null,
       h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Correo'),
       h('input', { type: 'email', value: email, required: true, autoComplete: 'email', onChange: (e) => setEmail(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 12, boxSizing: 'border-box' } }),
       h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Contraseña'),
@@ -11243,7 +15684,15 @@ function AppRoot() {
   const [authState, setAuthState] = React.useState({ loading: true, user: null });
   React.useEffect(() => {
     const off = window.auth.onAuthStateChanged((u) => setAuthState({ loading: false, user: u }));
-    return () => off && off();
+    // Auto-actualización: si cambia /config/appVersion, recargar.
+    const verRef = window.db && window.db.ref('config/appVersion');
+    let firstVer = true;
+    if (verRef) verRef.on('value', (snap) => {
+      const v = snap.val();
+      if (firstVer) { firstVer = false; if (v && v !== APP_VERSION) window.location.reload(); return; }
+      if (v && v !== APP_VERSION) window.location.reload();
+    });
+    return () => { off && off(); if (verRef) verRef.off(); };
   }, []);
   if (authState.loading) return h('div', { style: { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cream-50)', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', fontSize: 12 } }, 'Cargando…');
   if (!authState.user) return h(LoginScreen, { onSignedIn: () => { /* listener picks it up */ } });
@@ -11310,6 +15759,7 @@ class Component extends React.Component {
         legColor: p.legColor || myMe.legColor || '#2a2f52',
         accessory: p.accessory || 'none',
         photo: p.photo || null,
+        klass: p.class || 'gteen',
         x: myMe.x ?? 8, y: myMe.y ?? 6.5,
         status: p.status || '', mood: p.mood || '',
         room: null
@@ -11321,6 +15771,12 @@ class Component extends React.Component {
       // Registra al usuario en la sesión y limpia al desconectar.
       meRef.set({ ...merged, joinedAt: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
       meRef.onDisconnect().remove();
+      // Marca asistencia del día (visible en AttendanceModal).
+      window.db.ref(`attendance/${this.uid}/${this.SID}`).set({
+        ts: firebase.database.ServerValue.TIMESTAMP,
+        name: merged.name,
+        email: user.email || ''
+      }).catch(() => {});
     });
     // Listener: usuarios en la sesión → state.chars (mantiene a 'me' como id local).
     this._usersRef = window.db.ref(`users/${this.SID}`);
@@ -11336,6 +15792,7 @@ class Component extends React.Component {
           legColor: u.legColor || '#2a2f52',
           accessory: u.accessory || 'none',
           photo: u.photo || null,
+          klass: u.klass || u.class || 'gteen',
           x: u.x ?? 8, y: u.y ?? 6.5,
           status: u.status || '', mood: u.mood || '',
           room: u.room || null
@@ -11587,10 +16044,11 @@ class Component extends React.Component {
     this._saveProfile({ status, mood });
     this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, status, mood } : c), editing: false }));
   };
-  saveAvatar = ({ bodyColor, armColor, legColor, accessory, photo, name, emoji }) => {
+  saveAvatar = ({ bodyColor, armColor, legColor, accessory, photo, name, emoji, klass }) => {
     const patch = { bodyColor, armColor, legColor, accessory, photo, color: bodyColor };
     if (name)  patch.name = name;
     if (emoji) patch.emoji = emoji;
+    if (klass) { patch.klass = klass; patch.class = klass; }
     this._saveMe(patch);
     this._saveProfile(patch);
     this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, ...patch } : c), avatarEditing: false }));
@@ -11810,10 +16268,17 @@ class Component extends React.Component {
     if (k === 'repaso')   return h(RepasoChat, Object.assign({}, cp, {
       onEndRepaso: () => this._endRoomActivity('repaso')
     }));
-    if (k === 'juegos')   return h(KahootController, Object.assign({}, cp, {
-      gameHistory: this.state.gameHistory || {},
-      onEndJuegos: () => this._endRoomActivity('juegos')
-    }));
+    if (k === 'juegos') {
+      // Si hay un juego específico activo, despacharlo directamente.
+      const sess = this.state.session || {};
+      if (sess.tabu?.active)     return h(TabuController, Object.assign({}, cp, { onEndTabu: () => db.ref(`sessions/${this.SID}/tabu`).remove() }));
+      if (sess.quienSoy?.active) return h(QuienSoyController, Object.assign({}, cp, { onEndQuienSoy: () => db.ref(`sessions/${this.SID}/quienSoy`).remove() }));
+      if (sess.dibuja?.active)   return h(DibujaController, Object.assign({}, cp, { onEndDibuja: () => db.ref(`sessions/${this.SID}/dibuja`).remove() }));
+      return h(KahootController, Object.assign({}, cp, {
+        gameHistory: this.state.gameHistory || {},
+        onEndJuegos: () => this._endRoomActivity('juegos')
+      }));
+    }
     if (k === 'mision')   return h(MisionActivity, Object.assign({}, cp, {
       onEndMision: () => this._endRoomActivity('mision')
     }));
@@ -11977,6 +16442,8 @@ class Component extends React.Component {
           'Avatar'),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: 'var(--navy-900)', color: 'var(--yellow)', borderRadius: 'var(--r-pill)', padding: '6px 14px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
           h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: 'var(--yellow)' } }), `${v.count} en línea`),
+        h('button', { onClick: () => this.setState({ activity: 'asistencia' }), title: 'Mi asistencia', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📅'),
+        this.isAdmin ? h('button', { onClick: () => this.setState((s) => ({ showQR: !s.showQR })), title: 'Mostrar QR', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📲') : null,
         h('button', { onClick: () => window.auth && window.auth.signOut(), title: 'Cerrar sesión', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, 'Salir'),
       ),
     );
@@ -12059,7 +16526,13 @@ class Component extends React.Component {
       st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, active: true, playing: true, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
       st.activity === 'download' ? h(DataDownloadModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
       st.activity === 'survey-results' ? h(AdminSurveyModal, Object.assign({}, this._commonProps(), { responses: st.surveyResponses || {}, onClose: this.closeActivity })) : null,
-      st.activity === 'admin-stats' ? h(AdminStatsModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null
+      st.activity === 'admin-stats' ? h(AdminStatsModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
+      // Asistencia (modal disponible siempre, abierto desde el header).
+      st.activity === 'asistencia' ? h(AttendanceModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
+      // QR de acceso (admin) — útil para proyección.
+      this.isAdmin && st.showQR ? h(DraggableQR, { qrSize: st.qrSize || 220, setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || { x: 24, y: 80 }, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
+      // Toast de bienvenida cuando alguien se une.
+      h(AttNotifyToast, null)
     );
   }
 }
