@@ -69,9 +69,28 @@ html,body{margin:0;height:100%}
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 <div id="root"></div>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVxSunkMPoNtma8Zkc4WQMudl0m2di-5o",
+    authDomain: "mrnt-class.firebaseapp.com",
+    databaseURL: "https://mrnt-class-default-rtdb.firebaseio.com",
+    projectId: "mrnt-class",
+    storageBucket: "mrnt-class.firebasestorage.app",
+    messagingSenderId: "1050908552799",
+    appId: "1:1050908552799:web:f81c53ccea104ad91d75ea"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.auth = firebase.auth();
+  window.db   = firebase.database();
+  window.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+</script>
 <script>
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -496,6 +515,73 @@ function renderActivityModal(key, me, onClose) {
   if (key === 'encuesta') return h(EncuestaActivity, props);
   return h(MisionActivity, props);
 }
+
+/* ════════════════════════ Firebase utils + Auth ════════════════════════ */
+const ADMIN_EMAILS = ['sromeromolina10@gmail.com'];
+const isAdminEmail = (email) => ADMIN_EMAILS.includes((email || '').trim().toLowerCase());
+const getSID = () => new Date().toISOString().slice(0, 10);   // sesión = día
+const AUTH_ERRORS = {
+  'auth/user-not-found': 'No existe una cuenta con ese correo',
+  'auth/wrong-password': 'Contraseña incorrecta',
+  'auth/invalid-credential': 'Correo o contraseña incorrectos',
+  'auth/email-already-in-use': 'Ese correo ya tiene una cuenta',
+  'auth/invalid-email': 'El correo no es válido',
+  'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
+  'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos'
+};
+const getAuthErr = (code) => AUTH_ERRORS[code] || `Error: ${code}`;
+
+function LoginScreen({ onSignedIn }) {
+  const [mode, setMode] = React.useState('signin');
+  const [email, setEmail] = React.useState('');
+  const [pwd, setPwd] = React.useState('');
+  const [err, setErr] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const submit = async (e) => {
+    e.preventDefault();
+    setErr(''); setBusy(true);
+    try {
+      if (mode === 'signin') await window.auth.signInWithEmailAndPassword(email.trim(), pwd);
+      else                    await window.auth.createUserWithEmailAndPassword(email.trim(), pwd);
+      onSignedIn && onSignedIn();
+    } catch (e) {
+      setErr(getAuthErr(e.code || ''));
+      setBusy(false);
+    }
+  };
+  return h('div', { style: { position: 'fixed', inset: 0, background: 'var(--cream-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'var(--font-sans)' } },
+    h('form', { onSubmit: submit, style: { width: '100%', maxWidth: 380, background: '#fff', borderRadius: 'var(--r-xl)', padding: '28px 26px', boxShadow: 'var(--shadow-float)' } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 } },
+        h('span', { style: { width: 40, height: 40, borderRadius: 11, background: 'linear-gradient(150deg,#fbbf6b,#fb923c)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 22, boxShadow: '0 4px 14px rgba(251,146,60,.45)' } }, 'M'),
+        h('div', null,
+          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 20, color: 'var(--ink)' } }, 'MARANATA CLASS'),
+          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 9, letterSpacing: '.2em', color: 'var(--ink-soft)' } }, 'IGLESIA ADVENTISTA · LAS CONDES')
+        )
+      ),
+      h('div', { style: { fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--ink)', marginBottom: 4 } }, mode === 'signin' ? 'Inicia sesión' : 'Crea tu cuenta'),
+      h('div', { style: { fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 } }, mode === 'signin' ? 'Entra a la sala 3D con tu correo y contraseña.' : 'Una sola cuenta para todas las clases.'),
+      h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Correo'),
+      h('input', { type: 'email', value: email, required: true, autoComplete: 'email', onChange: (e) => setEmail(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 12, boxSizing: 'border-box' } }),
+      h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Contraseña'),
+      h('input', { type: 'password', value: pwd, required: true, autoComplete: mode === 'signin' ? 'current-password' : 'new-password', onChange: (e) => setPwd(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 14, boxSizing: 'border-box' } }),
+      err ? h('div', { style: { background: 'rgba(239,68,68,.1)', color: '#dc2626', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 } }, '⚠️ ' + err) : null,
+      h('button', { type: 'submit', disabled: busy, style: { width: '100%', padding: 13, borderRadius: 'var(--r-pill)', border: 'none', background: busy ? 'var(--cream-300)' : 'var(--yellow)', color: 'var(--navy-900)', cursor: busy ? 'default' : 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '.06em', textTransform: 'uppercase', boxShadow: busy ? 'none' : '0 0 24px rgba(255,208,0,.35)' } }, busy ? 'Un momento…' : (mode === 'signin' ? 'Entrar →' : 'Crear cuenta →')),
+      h('button', { type: 'button', onClick: () => { setMode(mode === 'signin' ? 'signup' : 'signin'); setErr(''); }, style: { width: '100%', marginTop: 10, padding: 9, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: '.04em', textTransform: 'uppercase' } }, mode === 'signin' ? 'No tengo cuenta · Crear una' : 'Ya tengo cuenta · Entrar')
+    )
+  );
+}
+
+function AppRoot() {
+  const [authState, setAuthState] = React.useState({ loading: true, user: null });
+  React.useEffect(() => {
+    const off = window.auth.onAuthStateChanged((u) => setAuthState({ loading: false, user: u }));
+    return () => off && off();
+  }, []);
+  if (authState.loading) return h('div', { style: { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cream-50)', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', fontSize: 12 } }, 'Cargando…');
+  if (!authState.user) return h(LoginScreen, { onSignedIn: () => { /* listener picks it up */ } });
+  return h(Component, { autoWander: false, user: authState.user });
+}
+
 class Component extends React.Component {
   COLS = 16; ROWS = 12; TW = 62; TH = 31; OX = 438; OY = 102; LW = 1000; LH = 560; WALLH = 94;
   iso = (x, y) => ({ left: this.OX + (x - y) * this.TW / 2, top: this.OY + (x + y) * this.TH / 2 });
@@ -507,15 +593,10 @@ class Component extends React.Component {
   state = {
     view: 'lobby', currentRoom: null,
     roomNames: { mision: 'Misión Joven', confra: 'Confraternización', repaso: 'Repaso · Hechos 4', templo: 'Templo · Adoración' },
-    started: { mision: false, confra: true, repaso: true, templo: false },
+    started: { mision: false, confra: false, repaso: false, templo: false },
     avatarEditing: false,
     chars: [
-      { id: 'me', name: 'Tú', emoji: '🌟', color: '#ffd000', bodyColor: '#ffd000', armColor: '#ffd000', legColor: '#2a2f52', accessory: 'none', photo: null, x: 8, y: 6.5, status: 'Recién llegando!', mood: '🔥', room: null },
-      { id: 'u2', name: 'Sofía', emoji: '🦊', color: '#ec4899', x: 5, y: 5, status: 'Pidiendo oración por mi familia 🙏', mood: '🙏', room: 'confra' },
-      { id: 'u3', name: 'Mateo', emoji: '🦁', color: '#22d3ee', x: 7, y: 6, status: '', mood: '', room: 'repaso' },
-      { id: 'u4', name: 'Belén', emoji: '🦋', color: '#8b5cf6', x: 8, y: 7, status: 'Lista para adorar ⛪', mood: '📖', room: 'templo' },
-      { id: 'u5', name: 'Javi', emoji: '🐺', color: '#10b981', x: 10, y: 6, status: '', mood: '', room: 'repaso' },
-      { id: 'u6', name: 'Tomás', emoji: '🐬', color: '#6366f1', x: 10, y: 5, status: '¡Buen sábado! 🎉', mood: '🎉', room: 'confra' },
+      { id: 'me', name: 'Tú', emoji: '🌟', color: '#ffd000', bodyColor: '#ffd000', armColor: '#ffd000', legColor: '#2a2f52', accessory: 'none', photo: null, x: 8, y: 6.5, status: '', mood: '', room: null }
     ],
     furniture: {
       mision: [{ id: 'm1', type: 'tv', x: 12, y: 2, dir: 0 }, { id: 'm2', type: 'sofa', x: 4, y: 4, dir: 0 }, { id: 'm3', type: 'plant', x: 1, y: 1, dir: 0 }, { id: 'm4', type: 'table', x: 8, y: 9, dir: 0 }, { id: 'm5', type: 'lamp', x: 14, y: 6, dir: 0 }],
@@ -526,54 +607,110 @@ class Component extends React.Component {
     selectedId: null, editing: false, placeMode: null, selFurn: null, dragging: false,
     activity: null, reacts: [], scale: 1, lobbyDragging: false,
     lobby: {
-      me: { lx: 0.12, depth: 0.62 },
-      others: [
-        { id: 'u2', name: 'Sofía', emoji: '🦊', color: '#ec4899', lx: 0.30, depth: 0.55, tlx: 0.6, tdepth: 0.4 },
-        { id: 'u3', name: 'Mateo', emoji: '🦁', color: '#22d3ee', lx: 0.62, depth: 0.72, tlx: 0.7, tdepth: 0.3 },
-        { id: 'u4', name: 'Belén', emoji: '🦋', color: '#8b5cf6', lx: 0.86, depth: 0.5, tlx: 0.8, tdepth: 0.6 },
-        { id: 'u5', name: 'Javi', emoji: '🐺', color: '#10b981', lx: 0.45, depth: 0.82, tlx: 0.4, tdepth: 0.5 },
-        { id: 'u6', name: 'Tomás', emoji: '🐬', color: '#6366f1', lx: 0.55, depth: 0.35, tlx: 0.5, tdepth: 0.7 },
-      ],
-      prompt: null, dismissed: null, lastSeg: 0,
+      me: { lx: 0.5, depth: 0.62 },
+      others: [],
+      prompt: null, dismissed: null, lastSeg: 0
     },
   };
 
   componentDidMount() {
     this._onResize = () => this._measure();
     window.addEventListener('resize', this._onResize);
-    this._wander = setInterval(() => {
-      if (!(this.props.autoWander ?? true)) return;
-      this.setState((s) => ({
-        chars: s.chars.map((c) => {
-          if (c.id === 'me' || Math.random() > 0.4) return c;
-          return { ...c, x: this.clamp(Math.round(c.x) + (Math.random() < .5 ? -1 : 1), 1, this.COLS - 2) + 0.5, y: this.clamp(Math.round(c.y) + (Math.random() < .5 ? -1 : 1), 1, this.ROWS - 2) + 0.5 };
-        }),
-      }));
-    }, 2600);
-    this._lobbyTick = setInterval(() => {
-      if (this.state.view !== 'lobby') return;
-      const now = Date.now();
-      this.setState((s) => ({ lobby: { ...s.lobby, others: s.lobby.others.map((o) => {
-        if (o.hidden) { return now > o.hideUntil ? { ...o, hidden: false, lx: 0.05 + Math.random() * 0.9, depth: 1, tlx: 0.1 + Math.random() * 0.8, tdepth: 0.4 + Math.random() * 0.5, goingDoor: false } : o; }
-        const dx = (o.tlx ?? o.lx) - o.lx, dd = (o.tdepth ?? o.depth) - o.depth;
-        const lx = o.lx + Math.sign(dx) * Math.min(0.045, Math.abs(dx));
-        const depth = o.depth + Math.sign(dd) * Math.min(0.06, Math.abs(dd));
-        let no = { ...o, lx, depth };
-        if (Math.abs(lx - (o.tlx ?? lx)) < 0.02 && Math.abs(depth - (o.tdepth ?? depth)) < 0.03) {
-          if (o.goingDoor) { no.hidden = true; no.hideUntil = now + 3500 + Math.random() * 4000; no.goingDoor = false; }
-          else if (Math.random() < 0.35) { const idx = Math.floor(Math.random() * 4); no.tlx = (idx + 0.5) / 4; no.tdepth = 0.06; no.goingDoor = true; }
-          else { no.tlx = 0.06 + Math.random() * 0.88; no.tdepth = 0.32 + Math.random() * 0.55; }
-        }
-        return no;
-      }) } }));
-    }, 650);
+    this._initFirebase();
   }
+
+  // Inicializa la suscripción a Firebase y registra al usuario actual en la sesión.
+  _initFirebase() {
+    const user = this.props.user;
+    if (!user || !window.db) return;
+    this.uid = user.uid;
+    this.SID = getSID();
+    this.isAdmin = isAdminEmail(user.email);
+    const meRef = window.db.ref(`users/${this.SID}/${this.uid}`);
+    const profileRef = window.db.ref(`profiles/${this.uid}`);
+    // Lee el perfil persistente (nombre, color, accesorios) y entra en la sesión.
+    profileRef.get().then((snap) => {
+      const p = snap.val() || {};
+      const myMe = this.state.chars.find((c) => c.id === 'me') || {};
+      const merged = {
+        id: this.uid,
+        name: p.name || user.email?.split('@')[0] || 'Anon',
+        emoji: p.emoji || myMe.emoji || '🌟',
+        color: p.color || myMe.color || '#ffd000',
+        bodyColor: p.bodyColor || p.color || myMe.bodyColor || '#ffd000',
+        armColor: p.armColor || p.color || myMe.armColor || '#ffd000',
+        legColor: p.legColor || myMe.legColor || '#2a2f52',
+        accessory: p.accessory || 'none',
+        photo: p.photo || null,
+        x: myMe.x ?? 8, y: myMe.y ?? 6.5,
+        status: p.status || '', mood: p.mood || '',
+        room: null
+      };
+      // Actualiza al "me" local con datos del perfil.
+      this.setState((s) => ({
+        chars: s.chars.map((c) => c.id === 'me' ? { ...c, ...merged, id: 'me' } : c)
+      }));
+      // Registra al usuario en la sesión y limpia al desconectar.
+      meRef.set({ ...merged, joinedAt: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
+      meRef.onDisconnect().remove();
+    });
+    // Listener: usuarios en la sesión → state.chars (mantiene a 'me' como id local).
+    this._usersRef = window.db.ref(`users/${this.SID}`);
+    this._usersRef.on('value', (snap) => {
+      const data = snap.val() || {};
+      const others = Object.entries(data)
+        .filter(([uid]) => uid !== this.uid)
+        .map(([uid, u]) => ({
+          id: uid, name: u.name || 'Anon', emoji: u.emoji || '👤',
+          color: u.color || '#ffd000',
+          bodyColor: u.bodyColor || u.color || '#ffd000',
+          armColor: u.armColor || u.color || '#ffd000',
+          legColor: u.legColor || '#2a2f52',
+          accessory: u.accessory || 'none',
+          photo: u.photo || null,
+          x: u.x ?? 8, y: u.y ?? 6.5,
+          status: u.status || '', mood: u.mood || '',
+          room: u.room || null
+        }));
+      this.setState((s) => {
+        const me = s.chars.find((c) => c.id === 'me');
+        return { chars: me ? [me, ...others] : others };
+      });
+    });
+    // Listener: estado de salas abiertas y nombres.
+    this._openRoomsRef = window.db.ref(`sessions/${this.SID}/openRooms`);
+    this._openRoomsRef.on('value', (snap) => {
+      const v = snap.val() || {};
+      this.setState({ started: { mision: !!v.mision, confra: !!v.confra, repaso: !!v.repaso, templo: !!v.templo } });
+    });
+    this._roomNamesRef = window.db.ref(`sessions/${this.SID}/roomNames`);
+    this._roomNamesRef.on('value', (snap) => {
+      const v = snap.val();
+      if (v) this.setState((s) => ({ roomNames: { ...s.roomNames, ...v } }));
+    });
+  }
+
   componentWillUnmount() {
     window.removeEventListener('resize', this._onResize);
-    clearInterval(this._wander); clearInterval(this._lobbyTick);
     if (this._raf) cancelAnimationFrame(this._raf);
     if (this._lraf) cancelAnimationFrame(this._lraf);
+    if (this._usersRef)     this._usersRef.off();
+    if (this._openRoomsRef) this._openRoomsRef.off();
+    if (this._roomNamesRef) this._roomNamesRef.off();
+    if (this.uid && this.SID && window.db) {
+      window.db.ref(`users/${this.SID}/${this.uid}`).remove().catch(() => {});
+    }
   }
+
+  // Persiste cualquier campo del usuario actual en Firebase (con throttle suave).
+  _saveMe = (patch) => {
+    if (!this.uid || !this.SID || !window.db) return;
+    window.db.ref(`users/${this.SID}/${this.uid}`).update(patch).catch(() => {});
+  };
+  _saveProfile = (patch) => {
+    if (!this.uid || !window.db) return;
+    window.db.ref(`profiles/${this.uid}`).update(patch).catch(() => {});
+  };
   _measure = () => {
     const el = this.stageEl; if (!el) return;
     const sw = el.clientWidth, sh = el.clientHeight;
@@ -583,16 +720,26 @@ class Component extends React.Component {
   setStage = (el) => { this.stageEl = el; if (el) requestAnimationFrame(this._measure); };
 
   /* ---- navigation ---- */
-  enterRoom = (key) => this.setState((s) => ({ view: 'room', currentRoom: key, selectedId: null, selFurn: null, placeMode: null, activity: null, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: key, x: 8, y: 7 } : c) }));
-  exitRoom = () => this.setState((s) => ({ view: 'lobby', currentRoom: null, selectedId: null, selFurn: null, placeMode: null, activity: null, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: null } : c) }));
-  // Admin can open/close any room remotely; multiple rooms can be live at once.
-  toggleStart = (key) => this.setState((s) => {
-    const turningOn = !s.started[key];
-    const seg = Math.max(0, Math.min(3, Math.floor(s.lobby.me.lx * 4)));
+  enterRoom = (key) => {
+    this._saveMe({ room: key, x: 8, y: 7 });
+    this.setState((s) => ({ view: 'room', currentRoom: key, selectedId: null, selFurn: null, placeMode: null, activity: null, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: key, x: 8, y: 7 } : c) }));
+  };
+  exitRoom = () => {
+    this._saveMe({ room: null });
+    this.setState((s) => ({ view: 'lobby', currentRoom: null, selectedId: null, selFurn: null, placeMode: null, activity: null, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: null } : c) }));
+  };
+  // Admin abre/cierra cualquier sala remotamente; varias pueden estar en vivo a la vez.
+  toggleStart = (key) => {
+    if (!this.isAdmin) return;
+    const cur = !!this.state.started[key];
+    if (window.db && this.SID) {
+      window.db.ref(`sessions/${this.SID}/openRooms/${key}`).set(!cur).catch(() => {});
+    }
+    // Si estoy en el lobby parado frente a la puerta, autoentro tras un instante.
+    const seg = Math.max(0, Math.min(3, Math.floor(this.state.lobby.me.lx * 4)));
     const here = this.ROOMS[seg].key;
-    if (turningOn && s.view === 'lobby' && here === key) setTimeout(() => this.enterRoom(key), 400);
-    return { started: { ...s.started, [key]: !s.started[key] } };
-  });
+    if (!cur && this.state.view === 'lobby' && here === key) setTimeout(() => this.enterRoom(key), 400);
+  };
 
   /* ---- lobby walking + prompts ---- */
   _lobbyPos = (e) => { const r = this.groundEl.getBoundingClientRect(); const xf = (e.clientX - r.left) / r.width, yf = (e.clientY - r.top) / r.height; return { lx: this.clamp(xf, 0.04, 0.96), depth: this.clamp((yf - 0.22) / 0.56, 0, 1) }; };
@@ -654,7 +801,13 @@ class Component extends React.Component {
     const me = this.state.chars.find((c) => c.id === 'me') || {};
     // "me" carries the customized avatar appearance into the lobby
     const meAppear = { id: 'me', name: 'Tú', emoji: me.emoji || '🌟', color: me.color || '#ffd000', bodyColor: me.bodyColor, armColor: me.armColor, legColor: me.legColor, accessory: me.accessory, photo: me.photo, lx: L.me.lx, depth: L.me.depth, status: me.status };
-    const people = [meAppear, ...L.others];
+    // Otros usuarios reales en lobby (sin sala asignada). Posición derivada
+    // de un hash del uid para que sea estable y no salte entre renders.
+    const hash01 = (s) => { let h = 0; for (let i = 0; i < (s || '').length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return Math.abs(h % 1000) / 1000; };
+    const realOthers = this.state.chars
+      .filter((c) => c.id !== 'me' && !c.room)
+      .map((c) => ({ id: c.id, name: c.name, emoji: c.emoji, color: c.color, bodyColor: c.bodyColor, armColor: c.armColor, legColor: c.legColor, accessory: c.accessory, photo: c.photo, status: c.status, lx: 0.08 + hash01(c.id) * 0.84, depth: 0.35 + hash01('d' + c.id) * 0.55 }));
+    const people = [meAppear, ...realOthers];
     const avatars = people.map((p) => this.renderLobbyAvatar(p, geom));
     const pr = L.prompt ? this.ROOMS.find((r) => r.key === L.prompt) : null;
     const mCol = Math.max(0, Math.min(3, Math.floor(L.me.lx * 4))), mCenter = (mCol + 0.5) / 4;
@@ -675,7 +828,14 @@ class Component extends React.Component {
     return h('div', { key: 'ground', ref: (el) => { this.groundEl = el; }, onPointerDown: this.onLobbyDown, onPointerMove: this.onLobbyMove, onPointerUp: this.onLobbyUp, onPointerCancel: this.onLobbyUp, style: { flex: 1, position: 'relative', overflow: 'hidden', touchAction: 'none', cursor: 'pointer' } },
       floor, backWall, dividers, pads, avatars, popup, hint);
   }
-  renameRoom = (key) => { const n = window.prompt('Nombre de la sala (lo verás en la pared):', this.state.roomNames[key]); if (n && n.trim()) this.setState((s) => ({ roomNames: { ...s.roomNames, [key]: n.trim() } })); };
+  renameRoom = (key) => {
+    if (!this.isAdmin) return;
+    const n = window.prompt('Nombre de la sala (lo verás en la pared):', this.state.roomNames[key]);
+    if (n && n.trim()) {
+      if (window.db && this.SID) window.db.ref(`sessions/${this.SID}/roomNames/${key}`).set(n.trim()).catch(() => {});
+      this.setState((s) => ({ roomNames: { ...s.roomNames, [key]: n.trim() } }));
+    }
+  };
 
   /* ---- furniture (per room) ---- */
   setFurn = (fn) => this.setState((s) => ({ furniture: { ...s.furniture, [s.currentRoom]: fn(s.furniture[s.currentRoom] || []) } }));
@@ -690,7 +850,16 @@ class Component extends React.Component {
     let { x, y } = this._evToTile(e);
     x = this.clamp(x, 0.4, this.COLS - 0.4); y = this.clamp(y, 0.4, this.ROWS - 0.4);
     this._pending = { x, y };
-    if (!this._raf) this._raf = requestAnimationFrame(() => { this._raf = null; this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, x: this._pending.x, y: this._pending.y } : c) })); });
+    if (!this._raf) this._raf = requestAnimationFrame(() => {
+      this._raf = null;
+      this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, x: this._pending.x, y: this._pending.y } : c) }));
+      // Throttle FB writes a ~120ms.
+      const now = Date.now();
+      if (!this._lastFbWrite || now - this._lastFbWrite > 120) {
+        this._lastFbWrite = now;
+        this._saveMe({ x: this._pending.x, y: this._pending.y, room: this.state.currentRoom });
+      }
+    });
   };
   onLayerDown = (e) => {
     if (this.state.placeMode) return;
@@ -718,8 +887,19 @@ class Component extends React.Component {
     if (id === 'me' && this._dragEnd && Date.now() - this._dragEnd < 300) return;
     this.setState((s) => ({ selFurn: null, selectedId: s.selectedId === id ? null : id }));
   };
-  saveStatus = (status, mood) => this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, status, mood } : c), editing: false }));
-  saveAvatar = ({ bodyColor, armColor, legColor, accessory, photo }) => this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, bodyColor, armColor, legColor, accessory, photo, color: bodyColor } : c), avatarEditing: false }));
+  saveStatus = (status, mood) => {
+    this._saveMe({ status, mood });
+    this._saveProfile({ status, mood });
+    this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, status, mood } : c), editing: false }));
+  };
+  saveAvatar = ({ bodyColor, armColor, legColor, accessory, photo, name, emoji }) => {
+    const patch = { bodyColor, armColor, legColor, accessory, photo, color: bodyColor };
+    if (name)  patch.name = name;
+    if (emoji) patch.emoji = emoji;
+    this._saveMe(patch);
+    this._saveProfile(patch);
+    this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, ...patch } : c), avatarEditing: false }));
+  };
 
   openActivity = (key) => this.setState({ activity: key, placeMode: null, selectedId: null, selFurn: null });
   closeActivity = () => this.setState({ activity: null });
@@ -959,7 +1139,7 @@ class Component extends React.Component {
       inRoom, inLobby: !inRoom,
       title: inRoom ? st.roomNames[room.key] : 'Salas MRNT',
       subtitle: inRoom ? `${room.mrnt} · ${st.started[room.key] ? 'EN VIVO' : 'SALA ABIERTA'}` : 'ELIGE UNA SALA PARA ENTRAR',
-      count: inRoom ? st.chars.filter((c) => c.room === st.currentRoom).length : st.lobby.others.filter((o) => !o.hidden).length + 1,
+      count: inRoom ? st.chars.filter((c) => c.room === st.currentRoom).length : st.chars.length,
       onBack: this.exitRoom,
       onMyStatus: () => this.setState({ selectedId: 'me', editing: true }),
       furnitureItems: inRoom ? this.FURN.map((f) => ({ icon: f.icon, label: f.label, style: btn(st.placeMode === f.type), onClick: () => this.togglePlace(f.type) })) : [],
@@ -986,6 +1166,7 @@ class Component extends React.Component {
           'Avatar'),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: 'var(--navy-900)', color: 'var(--yellow)', borderRadius: 'var(--r-pill)', padding: '6px 14px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
           h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: 'var(--yellow)' } }), `${v.count} en línea`),
+        h('button', { onClick: () => window.auth && window.auth.signOut(), title: 'Cerrar sesión', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, 'Salir'),
       ),
     );
   }
@@ -1002,10 +1183,10 @@ class Component extends React.Component {
         h('div', { style: r.nameStyle }, r.name),
         h('div', { style: r.statusStyle }, r.statusText),
         h('button', { onClick: r.onEnter, style: r.enterStyle }, 'Entrar →'),
-        h('div', { style: { display: 'flex', gap: 8 } },
+        this.isAdmin ? h('div', { style: { display: 'flex', gap: 8 } },
           h('button', { onClick: r.onToggleStart, style: r.startStyle }, r.startLabel),
           h('button', { onClick: r.onRename, style: r.renameStyle }, '✎'),
-        ),
+        ) : null,
       ),
     );
   }
@@ -1038,7 +1219,7 @@ class Component extends React.Component {
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(h(Component, { autoWander: true }));
+root.render(h(AppRoot));
 </script>
 </body>
 </html>
