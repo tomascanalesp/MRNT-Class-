@@ -1280,6 +1280,14 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
   const h = React.createElement;
   const entries = Object.entries(users);
   const phase = session?.phase || 'waiting';
+  const me = users[myId] || {};
+  const myZone = effectiveZone(me);
+  // En modo proyección siempre se muestra el lobby (overview de la sala). Si no,
+  // se muestra el lobby cuando el usuario está en entrada y la sala 3D cuando
+  // entró a una sala específica.
+  const inRoom = !full && myZone !== 'entrada' && ZONES[myZone] && myZone !== 'entrada';
+  const viewKey = inRoom ? myZone : 'lobby';
+
   const isDrag = useRef(false);
   const lastT = useRef(0);
 
@@ -1297,160 +1305,266 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
     if (!rect) return;
     const cx = e.touches?.[0]?.clientX ?? e.clientX;
     const cy = e.touches?.[0]?.clientY ?? e.clientY;
-    const x = Math.max(3, Math.min(97, ((cx - rect.left) / rect.width) * 100));
-    const y = Math.max(3, Math.min(97, ((cy - rect.top) / rect.height) * 100));
-    onDragMove(x, y);
-  }, [full, onDragMove, roomRef]);
+    const xp = ((cx - rect.left) / rect.width) * 100;
+    const yp = ((cy - rect.top) / rect.height) * 100;
+    if (viewKey === 'lobby') {
+      // En el lobby el avatar camina por el corredor (mitad inferior).
+      // Mantenemos al usuario dentro de la zona "entrada" (y ∈ [0,14]).
+      const corridorTop = 45;
+      const corridorY = Math.max(0, Math.min(1, (yp - corridorTop) / (100 - corridorTop)));
+      const x = Math.max(5, Math.min(95, xp));
+      const y = 3 + corridorY * 10;
+      onDragMove(x, y);
+    } else {
+      // Dentro de una sala, mantener al usuario en su bounding box.
+      const z = ZONES[viewKey];
+      const x = Math.max(z.x1 + 1, Math.min(z.x2 - 1, xp));
+      const y = Math.max(z.y1 + 1, Math.min(z.y2 - 1, yp));
+      onDragMove(x, y);
+    }
+  }, [full, onDragMove, roomRef, viewKey]);
   const handleDragEnd = useCallback(() => { isDrag.current = false; }, []);
 
-  const zoneCardStyle = (key) => {
+  const enterRoom = (key) => {
     const z = ZONES[key];
-    const isActive = phase === key;
-    const isEntrada = key === 'entrada';
-    const isRepaso = key === 'repaso';
-    const isJuegos = key === 'juegos';
-    const tint = isEntrada
-      ? (isActive ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.85)')
-      : `linear-gradient(180deg, ${z.color}26, ${z.color}10)`;
-    const borderW = isActive ? 3 : 2;
-    const borderColor = isEntrada ? '#0a0e2e' : z.color;
-    const borderRadius = isRepaso ? '14px 14px 0 0' : isJuegos ? '0 0 14px 14px' : 14;
-    return {
-      position: 'absolute',
-      left: `${z.cardX}%`, top: `${z.cardY}%`, width: `${z.cardW}%`, height: `${z.cardH}%`,
-      background: tint,
-      borderTop:    isJuegos ? '1px solid rgba(255,255,255,.45)' : `${borderW}px solid ${borderColor}`,
-      borderBottom: isRepaso ? '1px solid rgba(255,255,255,.45)' : `${borderW}px solid ${borderColor}`,
-      borderLeft:  `${borderW}px solid ${borderColor}`,
-      borderRight: `${borderW}px solid ${borderColor}`,
-      borderRadius, overflow: 'hidden', transition: 'all .3s',
-      boxShadow: isActive
-        ? `0 8px 22px ${isEntrada ? 'rgba(10,14,46,.18)' : z.color + '55'}, 0 0 0 4px ${isEntrada ? 'rgba(10,14,46,.08)' : z.color + '22'}`
-        : `0 3px 10px ${isEntrada ? 'rgba(10,14,46,.08)' : z.color + '22'}`,
-      pointerEvents: 'none',
-      display: 'flex', flexDirection: 'column',
-      padding: isEntrada ? (full ? '10px 14px' : '6px 10px') : (full ? '14px 8px' : '8px 4px')
-    };
+    if (!z || full) return;
+    onDragMove((z.x1 + z.x2) / 2, (z.y1 + z.y2) / 2);
+  };
+  const backToLobby = () => {
+    if (full) return;
+    onDragMove(50, 8);
   };
 
-  const renderEntrada = () => {
-    const z = ZONES.entrada;
-    const count = entries.filter(([, u]) => effectiveZone(u) === 'entrada').length;
-    const rooms = ['mision', 'confra', 'repaso', 'juegos', 'templo'];
-    return h('div', { key: 'entrada', style: zoneCardStyle('entrada') },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: full ? 14 : 8, width: '100%', height: '100%' } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 } },
-          h('div', { style: { fontSize: full ? 22 : 18 } }, '🚪'),
-          h('div', { style: { lineHeight: 1.05 } },
-            h('div', { style: { fontSize: 9, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: '#3b3f5a', textTransform: 'uppercase', letterSpacing: '.22em' } }, 'Llegada'),
-            h('div', { style: { fontSize: full ? 17 : 14, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, color: '#0a0e2e', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2 } }, 'Entrada')
-          )
-        ),
-        h('div', { style: { flex: 1, display: 'flex', gap: full ? 14 : 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap', minWidth: 0 } },
-          rooms.map((rk) => {
-            const r = ZONES[rk], rActive = phase === rk;
-            return h('div', { key: rk, style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, flexShrink: 0 } },
-              rActive ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 8, letterSpacing: '.1em', textTransform: 'uppercase', color: r.colorDark, background: '#fff', border: `1px solid ${r.color}`, borderRadius: 20, padding: '1px 6px', boxShadow: `0 2px 8px ${r.color}44`, whiteSpace: 'nowrap' } }, '● En vivo') : null,
-              h('div', { style: { position: 'relative', width: full ? 50 : 34, height: full ? 44 : 30, borderRadius: '11px 11px 4px 4px', padding: 3, boxSizing: 'border-box', background: rActive ? `linear-gradient(180deg, ${r.color}, ${r.colorDark})` : 'linear-gradient(180deg, #c7c2b6, #b3aea1)', border: `2px solid ${rActive ? r.color : 'rgba(10,14,46,.14)'}`, boxShadow: rActive ? `0 0 18px ${r.color}66` : 'none' } },
-                rActive
-                  ? h('div', { style: { position: 'relative', width: '100%', height: '100%', borderRadius: '8px 8px 2px 2px', overflow: 'hidden', background: `radial-gradient(ellipse at 50% 120%, ${r.color}cc, #0a0c28 80%)`, boxShadow: 'inset 0 3px 6px rgba(0,0,0,.6)' } },
-                      h('span', { style: { position: 'absolute', right: 5, bottom: 3, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 13 : 11, color: '#fff', opacity: .9 } }, r.letter)
-                    )
-                  : h('div', { style: { width: '100%', height: '100%', borderRadius: '8px 8px 2px 2px', background: 'linear-gradient(180deg,#d8d3c8,#c2bdb1)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
-                      h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 18 : 14, color: 'rgba(10,14,46,.32)' } }, r.letter))
+  // ────────────────── LOBBY ──────────────────
+  const renderLobby = () => {
+    // 4 cards (M, R, N, T). La card N combina Repaso + Juegos (misma letra Nutrición):
+    // muestra el nombre/estado del que esté en vivo, y suma los conteos.
+    const cardKeys = ['mision', 'confra', 'repaso', 'templo'];
+    const cards = cardKeys.map((key) => {
+      const z = ZONES[key];
+      let displayKey = key, displayLabel = z.label, includeJuegos = false;
+      if (key === 'repaso') {
+        includeJuegos = true;
+        if (phase === 'juegos') { displayKey = 'juegos'; displayLabel = ZONES.juegos.label; }
+        else                     { displayLabel = 'Repaso Bíblico'; }
+      }
+      const members = entries.filter(([, u]) => {
+        const zk = effectiveZone(u);
+        return zk === key || (includeJuegos && zk === 'juegos');
+      });
+      const isActive = phase === key || (includeJuegos && phase === 'juegos');
+      return { key, displayKey, displayLabel, z, isActive, members, count: members.length };
+    });
+
+    // Geometría del corredor en perspectiva.
+    const NARROW = 0.62;
+    const backTopPct = 30, depthSpanPct = 50;
+
+    const lanes = cardKeys.map((key, i) => {
+      const z = ZONES[key];
+      const isActive = phase === key || (key === 'repaso' && phase === 'juegos');
+      const cx = (i + 0.5) / 4, halfW = 1 / 8;
+      const fL = (cx - halfW) * 100, fR = (cx + halfW) * 100;
+      const bL = (cx - halfW * NARROW) * 100, bR = (cx + halfW * NARROW) * 100;
+      const tintFront = isActive ? `${z.color}30` : 'rgba(120,120,128,.12)';
+      const tintBack  = isActive ? `${z.color}10` : 'rgba(120,120,128,.05)';
+      return h('div', { key: 'lane' + key, style: { position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, filter: isActive ? 'none' : 'saturate(.25)' } },
+        h('div', { style: { position: 'absolute', left: `${bL}%`, width: `${bR - bL}%`, top: 0, height: `${backTopPct}%`, background: isActive ? `linear-gradient(180deg, ${z.color}26, ${z.color}14)` : 'linear-gradient(180deg, rgba(120,120,128,.1), rgba(120,120,128,.05))', borderLeft: '1px solid rgba(10,14,46,.06)', borderRight: '1px solid rgba(10,14,46,.06)' } }),
+        h('div', { style: { position: 'absolute', left: 0, right: 0, top: `${backTopPct}%`, bottom: 0, background: `linear-gradient(180deg, ${tintBack}, ${tintFront})`, clipPath: `polygon(${bL}% 0%, ${bR}% 0%, ${fR}% 100%, ${fL}% 100%)` } }),
+        h('div', { style: { position: 'absolute', left: 0, right: 0, top: `${backTopPct}%`, bottom: 0, background: 'rgba(10,14,46,.10)', clipPath: `polygon(${fL}% 100%, ${bL}% 0%, ${bL + 1.2}% 0%, ${fL + 2.2}% 100%)` } }),
+        h('div', { style: { position: 'absolute', left: 0, right: 0, top: `${backTopPct}%`, bottom: 0, background: 'rgba(255,255,255,.34)', clipPath: `polygon(${fR - 2.2}% 100%, ${bR - 1.2}% 0%, ${bR}% 0%, ${fR}% 100%)` } })
+      );
+    });
+
+    const dividers = [1, 2, 3].map((i) => h('div', { key: 'div' + i, style: { position: 'absolute', left: `${i / 4 * 100}%`, top: 0, bottom: 0, width: 1, background: 'rgba(10,14,46,.07)', zIndex: 2 } }));
+
+    const doors = cardKeys.map((key, i) => {
+      const z = ZONES[key];
+      const isActive = phase === key || (key === 'repaso' && phase === 'juegos');
+      const lx = (i + 0.5) / 4;
+      return h('div', { key: 'pad' + key, style: { position: 'absolute', left: `${lx * 100}%`, top: '34px', transform: 'translateX(-50%)', pointerEvents: 'none', zIndex: 5 } },
+        isActive ? h('div', { style: { position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 8, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: z.colorDark, background: '#fff', border: `1px solid ${z.color}`, borderRadius: 50, padding: '2px 9px', boxShadow: `0 2px 8px ${z.color}44`, whiteSpace: 'nowrap' } }, '● En vivo') : null,
+        h('div', { style: { position: 'relative', width: full ? 96 : 72, height: full ? 80 : 60, borderRadius: '15px 15px 5px 5px', padding: 5, boxSizing: 'border-box', background: isActive ? `linear-gradient(180deg, ${z.color}, ${z.colorDark})` : 'linear-gradient(180deg, #c7c2b6, #b3aea1)', border: `2px solid ${isActive ? z.color : 'rgba(10,14,46,.14)'}`, boxShadow: isActive ? `0 0 28px ${z.color}66` : 'none' } },
+          isActive
+            ? h('div', { style: { position: 'relative', width: '100%', height: '100%', borderRadius: '11px 11px 3px 3px', overflow: 'hidden', background: `radial-gradient(ellipse at 50% 120%, ${z.color}cc, #0a0c28 80%)`, boxShadow: 'inset 0 3px 8px rgba(0,0,0,.6)' } },
+                h('div', { style: { position: 'absolute', top: 0, bottom: 0, left: 0, width: '34%', background: `linear-gradient(90deg, ${z.colorDark}, ${z.color})`, borderRight: '1px solid rgba(0,0,0,.3)', transform: 'perspective(60px) rotateY(38deg)', transformOrigin: 'left center', boxShadow: '2px 0 6px rgba(0,0,0,.4)' } },
+                  h('div', { style: { position: 'absolute', right: 4, top: '50%', width: 3, height: 3, borderRadius: '50%', background: '#ffd000' } })),
+                h('span', { style: { position: 'absolute', right: 8, bottom: 5, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 13, color: '#fff', opacity: .9 } }, z.letter)
               )
-            );
-          })
-        ),
-        count > 0 && h('div', { style: { fontSize: full ? 13 : 12, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, color: '#0a0e2e', background: '#ffd000', padding: '2px 9px', borderRadius: 20, marginLeft: 6, flexShrink: 0 } }, count)
-      )
-    );
-  };
+            : h('div', { style: { width: '100%', height: '100%', borderRadius: '11px 11px 3px 3px', background: 'linear-gradient(180deg, #d8d3c8, #c2bdb1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 3px rgba(255,255,255,.5)' } },
+                h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: 'rgba(10,14,46,.28)' } }, z.letter))
+        )
+      );
+    });
 
-  const renderRoom = (key) => {
-    const z = ZONES[key];
-    const count = entries.filter(([, u]) => effectiveZone(u) === key).length;
-    const isActive = phase === key;
-    const letterSize = full ? 88 : 66;
-    return h('div', { key, style: zoneCardStyle(key) },
-      h(RoomScene3D, { zoneKey: key, color: z.color, colorDark: z.colorDark, full }),
-      key !== 'juegos' && h('div', { style: { position: 'relative', zIndex: 2, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: letterSize, lineHeight: 1, color: '#fff', textAlign: 'center', textShadow: '0 2px 10px rgba(0,0,0,.3)', marginTop: full ? 4 : 2 } }, z.letter),
-      key !== 'juegos' && h('div', { style: { position: 'relative', zIndex: 2, fontSize: full ? 10 : 9, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '.18em', textAlign: 'center', marginTop: full ? 6 : 4, textShadow: '0 1px 3px rgba(0,0,0,.4)' } }, z.mrnt),
-      h('div', { style: { position: 'relative', zIndex: 2, fontSize: full ? 14 : 12, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, color: '#fff', textTransform: 'uppercase', letterSpacing: '.04em', textAlign: 'center', marginTop: full ? 3 : 2, padding: '0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 3px rgba(0,0,0,.4)' } }, full ? z.label : z.label.split(' ')[0]),
-      h('div', { style: { flex: 1 } }),
-      count > 0 && h('div', { style: { position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: full ? 6 : 4, marginBottom: full ? 4 : 3, fontSize: 11, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: '#fff', letterSpacing: '.06em', textTransform: 'uppercase', textShadow: '0 1px 3px rgba(0,0,0,.5)' } },
-        h('div', { style: { width: full ? 6 : 5, height: full ? 6 : 5, borderRadius: '50%', background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,.7)' } }),
-        h('span', null, count)
-      ),
-      isActive && h('div', { style: { position: 'absolute', top: full ? 8 : 4, right: full ? 8 : 4, background: '#fff', color: z.colorDark, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 9 : 8, letterSpacing: '.12em', textTransform: 'uppercase', padding: full ? '3px 7px' : '2px 6px', borderRadius: 20, boxShadow: '0 2px 6px rgba(0,0,0,.18)', zIndex: 3 } }, '● En vivo')
-    );
-  };
-
-  return h('div', {
-    ref: roomRef,
-    onMouseMove: handleDragMove, onMouseUp: handleDragEnd, onMouseLeave: handleDragEnd,
-    onTouchMove: handleDragMove, onTouchEnd: handleDragEnd,
-    style: {
-      width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
-      background: '#f8f5ef',
-      backgroundImage: `
-        radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.6),transparent 70%),
-        radial-gradient(circle at 12% 88%,rgba(59,130,246,.05),transparent 50%),
-        radial-gradient(circle at 88% 12%,rgba(234,179,8,.06),transparent 50%)
-      `,
-      touchAction: 'none', userSelect: 'none'
-    }
-  },
-    renderEntrada(),
-    ['mision', 'confra', 'repaso', 'juegos', 'templo'].map(renderRoom),
-
-    !full && h('div', { style: { position: 'absolute', bottom: 2, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#3b3f5a', pointerEvents: 'none', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', opacity: .55 } }, 'Arrastra tu avatar a una zona'),
-
-    full && h(React.Fragment, null,
-      h('div', { style: { position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(10,14,46,.08)', borderRadius: 14, padding: '10px 26px', textAlign: 'center', boxShadow: '0 6px 22px rgba(10,14,46,.08)', zIndex: 20 } },
-        h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: '#0a0e2e', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'MARANATA CLASS'),
-        h('div', { style: { fontSize: 11, color: '#3b3f5a', letterSpacing: '.06em', marginTop: 2, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 600, textTransform: 'uppercase' } }, new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' }))
-      ),
-      h('div', { style: { position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: '#0a0e2e', color: '#ffd000', borderRadius: 20, padding: '7px 20px', display: 'flex', alignItems: 'center', gap: 8, zIndex: 20, boxShadow: '0 6px 22px rgba(10,14,46,.18)' } },
-        h('div', { style: { width: 8, height: 8, borderRadius: '50%', background: '#ffd000', animation: 'pulse 1.5s infinite' } }),
-        h('span', { style: { fontSize: 13, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase' } }, entries.length + ' jóvenes en sala')
-      )
-    ),
-
-    entries.map(([uid, u]) => {
-      const myReactionsOnUser = reactions?.[uid] || {};
-      const reactionCounts = REACTIONS.map(r => ({
-        ...r,
-        count: Object.values(myReactionsOnUser).filter(v => v && typeof v === 'object' ? v[r.id] : v === r.id).length
-      })).filter(r => r.count > 0);
+    // Avatares en el corredor: en proyección mostramos a todos, en lobby normal
+    // solo a los que están en entrada.
+    const corridorPeople = entries.filter(([uid, u]) => {
       const isMine = uid === myId;
+      const zk = effectiveZone(u);
+      if (full) return true;
+      return isMine || zk === 'entrada';
+    });
+    const cTop = 45; // % alto del canvas donde empieza el corredor
+    const avatars = corridorPeople.map(([uid, u]) => {
+      const isMine = uid === myId;
+      const zk = effectiveZone(u);
+      // Posición visual: x = u.x, y = mapeado al corredor en perspectiva.
+      const lobbyDepth = Math.max(0, Math.min(1, (u.y ?? 8) / 14)); // 0=cerca del fondo, 1=adelante
+      let visualXp = u.x ?? 50;
+      let visualYp;
+      if (zk === 'entrada') {
+        visualYp = cTop + lobbyDepth * (100 - cTop);
+      } else {
+        // En modo proyección, los usuarios que están en una sala se muestran en
+        // el corredor frente a su puerta (depth=0.15) para indicar dónde están.
+        visualYp = cTop + 0.18 * (100 - cTop);
+      }
+      const sc = (0.5 + ((visualYp - cTop) / (100 - cTop)) * 0.55) * (full ? 1.05 : 0.78);
+      const myReactionsOnUser = reactions?.[uid] || {};
+      const reactionCounts = REACTIONS.map(r => ({ ...r, count: Object.values(myReactionsOnUser).filter(v => v && typeof v === 'object' ? v[r.id] : v === r.id).length })).filter(r => r.count > 0);
       return h('div', {
         key: uid,
         onMouseDown: isMine && !full ? handleDragStart : undefined,
         onTouchStart: isMine && !full ? handleDragStart : undefined,
         style: {
-          position: 'absolute', left: `${u.x ?? 50}%`, top: `${u.y ?? 50}%`,
-          transform: 'translate(-50%,-88%)',
-          transition: isDrag.current && isMine ? 'none' : 'left .45s cubic-bezier(0.23,1,0.32,1), top .45s cubic-bezier(0.23,1,0.32,1)',
+          position: 'absolute',
+          left: `${visualXp}%`, top: `${visualYp}%`,
+          transform: `translate(-50%,-92%)`,
+          transformOrigin: 'bottom center',
+          transition: isDrag.current && isMine ? 'none' : 'left .45s cubic-bezier(.23,1,.32,1), top .45s cubic-bezier(.23,1,.32,1)',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           cursor: isMine && !full ? 'grab' : 'default',
-          zIndex: isMine ? 10 : 5,
-          animation: isMine ? 'pop .45s ease' : 'none',
+          zIndex: Math.round(120 + ((visualYp - cTop) / (100 - cTop)) * 120) + (isMine ? 200 : 0),
           pointerEvents: full ? 'none' : 'auto'
         }
       },
         reactionCounts.length > 0 && h('div', { style: { display: 'flex', gap: 2, marginBottom: 2 } },
-          reactionCounts.map(r => h('div', { key: r.id, style: { background: '#fff', borderRadius: 20, padding: '2px 6px', fontSize: full ? 13 : 9, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid rgba(10,14,46,.08)', boxShadow: '0 2px 6px rgba(10,14,46,.06)' } },
-            h('span', null, r.e),
-            h('span', { style: { fontSize: full ? 10 : 7, color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800 } }, r.count > 1 ? r.count : '')
-          ))
+          reactionCounts.map(r => h('div', { key: r.id, style: { background: '#fff', borderRadius: 20, padding: '2px 6px', fontSize: 10, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid rgba(10,14,46,.08)' } }, h('span', null, r.e), r.count > 1 ? h('span', { style: { fontSize: 8, color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800 } }, r.count) : null))
         ),
-        h('div', { style: { marginBottom: 3, fontSize: full ? 11 : 8, color: '#0a0e2e', background: '#fff', padding: '2px 9px', borderRadius: 20, maxWidth: full ? 90 : 64, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, letterSpacing: '.04em', border: `1.5px solid ${u.color || '#ffd000'}`, boxShadow: '0 2px 6px rgba(10,14,46,.08)' } }, isMine ? '★ ' + u.name : u.name),
-        h(IsoChar, { profile: u, isMe: isMine, glow: isMine, scale: full ? 1.0 : 0.7 }),
-        h('div', { style: { width: 30, height: 8, borderRadius: '50%', background: 'rgba(10,14,46,.18)', marginTop: -4, filter: 'blur(2px)' } })
+        h('div', { style: { marginBottom: 3, fontSize: 10, color: '#0a0e2e', background: '#fff', padding: '2px 8px', borderRadius: 20, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, letterSpacing: '.04em', border: `1.5px solid ${u.color || '#ffd000'}`, boxShadow: '0 2px 6px rgba(10,14,46,.08)' } }, isMine ? '★ ' + (u.name || 'Tú') : (u.name || 'Anon')),
+        h('div', { style: { transform: `scale(${sc})`, transformOrigin: 'bottom center' } }, h(IsoChar, { profile: u, isMe: isMine, glow: isMine, scale: 1 })),
+        h('div', { style: { width: 38, height: 10, borderRadius: '50%', background: 'rgba(10,14,46,.18)', marginTop: -2, filter: 'blur(1.5px)' } })
       );
-    })
-  );
+    });
+
+    const hintStr = full
+      ? 'Vista de proyección — los jóvenes eligen una sala en su pantalla'
+      : 'Arrastra tu personaje hasta una sala en vivo para entrar';
+
+    return h('div', {
+      ref: roomRef,
+      onMouseMove: handleDragMove, onMouseUp: handleDragEnd, onMouseLeave: handleDragEnd,
+      onTouchMove: handleDragMove, onTouchEnd: handleDragEnd,
+      style: { width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#f8f5ef', backgroundImage: 'radial-gradient(ellipse at 50% 0%, #fffdf8, #f8f5ef 70%)', touchAction: 'none', userSelect: 'none', display: 'flex', flexDirection: 'column' }
+    },
+      // Cards row (mitad superior aprox).
+      h('div', { style: { display: 'flex', gap: full ? 16 : 10, padding: full ? '18px 24px 8px' : '10px 12px 6px', flexShrink: 0 } },
+        cards.map((card) => {
+          const z = card.z;
+          const textC = card.key === 'confra' ? '#0a0e2e' : '#fff';
+          return h('div', { key: card.key, style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 18, border: `2px solid ${z.color}`, boxShadow: `0 12px 30px ${z.color}26`, overflow: 'hidden' } },
+            h('div', { style: { position: 'relative', height: full ? 96 : 64, background: `linear-gradient(150deg, ${z.color}, ${z.colorDark})`, padding: full ? 14 : 9, display: 'flex', alignItems: 'flex-end', overflow: 'hidden' } },
+              h('span', { style: { position: 'absolute', top: -16, right: 4, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 110 : 76, color: 'rgba(255,255,255,.22)', lineHeight: 1, zIndex: 1, pointerEvents: 'none' } }, z.letter),
+              h('div', { style: { display: 'flex', gap: 6, position: 'relative', zIndex: 2, flexWrap: 'wrap' } },
+                card.members.slice(0, 5).map(([uid, u]) => h('span', { key: uid, style: { width: full ? 32 : 24, height: full ? 32 : 24, borderRadius: '50%', background: '#fff', border: `2px solid ${u.color || '#ffd000'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: full ? 16 : 12, boxShadow: '0 2px 6px rgba(10,14,46,.18)' } }, u.avatar || '👤'))
+              )
+            ),
+            h('div', { style: { padding: full ? '12px 14px 14px' : '8px 10px 10px', display: 'flex', flexDirection: 'column', gap: full ? 6 : 4 } },
+              h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: full ? 11 : 9, letterSpacing: '.14em', textTransform: 'uppercase', color: z.colorDark } }, z.mrnt),
+              h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 22 : 15, color: '#0a0e2e', lineHeight: 1.1 } }, card.displayLabel),
+              h('div', { style: { fontFamily: 'Inter,sans-serif', fontWeight: 700, fontSize: full ? 13 : 10, color: card.isActive ? '#10b981' : '#3b3f5a' } }, `${card.isActive ? '● En vivo' : '○ Sala abierta'} · ${card.count === 1 ? '1 persona' : card.count + ' personas'}`),
+              !full && h('button', { onClick: () => enterRoom(card.displayKey), style: { padding: full ? 12 : 9, borderRadius: 50, border: 'none', background: `linear-gradient(135deg, ${z.color}, ${z.colorDark})`, color: textC, cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: full ? 15 : 12, letterSpacing: '.05em', textTransform: 'uppercase' } }, 'Entrar →')
+            )
+          );
+        })
+      ),
+      // Corredor (mitad inferior).
+      h('div', { style: { flex: 1, position: 'relative', overflow: 'hidden' } },
+        h('div', { style: { position: 'absolute', inset: 0, background: '#ddd4c2' } }),
+        h('div', { style: { position: 'absolute', left: 0, right: 0, top: 0, height: `${backTopPct}%`, background: 'linear-gradient(180deg,#f7f3ec,#ece5da)', borderBottom: '2px solid rgba(10,14,46,.08)', zIndex: 0 } }),
+        lanes,
+        dividers,
+        doors,
+        // Avatares: posicionados sobre el conjunto canvas (top% absoluto),
+        // re-renderizados aquí dentro del corredor para usar coordenadas locales.
+        // Mejor renderizarlos como hijos del canvas raíz; los movemos al final.
+        h('div', { style: { position: 'absolute', bottom: 10, left: 0, right: 0, textAlign: 'center', pointerEvents: 'none', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: full ? 13 : 11, letterSpacing: '.12em', textTransform: 'uppercase', color: '#3b3f5a', opacity: .7 } }, hintStr)
+      ),
+      // Avatares: posicionados al nivel del root para que su top% sea relativo
+      // al canvas completo (no solo al sub-contenedor del corredor).
+      h('div', { style: { position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 6 } },
+        h('div', { style: { position: 'absolute', inset: 0, pointerEvents: 'auto' } }, avatars)
+      ),
+      full && h('div', { style: { position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: '#0a0e2e', color: '#ffd000', borderRadius: 50, padding: '7px 20px', display: 'flex', alignItems: 'center', gap: 8, zIndex: 20, boxShadow: '0 6px 22px rgba(10,14,46,.18)' } },
+        h('div', { style: { width: 8, height: 8, borderRadius: '50%', background: '#ffd000', animation: 'pulse 1.5s infinite' } }),
+        h('span', { style: { fontSize: 13, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase' } }, entries.length + ' jóvenes en sala')
+      )
+    );
+  };
+
+  // ────────────────── ROOM (3D iso) ──────────────────
+  const renderRoom = (key) => {
+    const z = ZONES[key];
+    const inZone = entries.filter(([, u]) => effectiveZone(u) === key);
+    const isActive = phase === key;
+    return h('div', {
+      ref: roomRef,
+      onMouseMove: handleDragMove, onMouseUp: handleDragEnd, onMouseLeave: handleDragEnd,
+      onTouchMove: handleDragMove, onTouchEnd: handleDragEnd,
+      style: { width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: `radial-gradient(ellipse at 50% 26%, #fffdf8, ${z.color}0c 75%, #f8f5ef)`, touchAction: 'none', userSelect: 'none' }
+    },
+      h(RoomScene3D, { zoneKey: key, color: z.color, colorDark: z.colorDark, full: true }),
+      // Header de sala con botón ← Salas y título.
+      h('div', { style: { position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', alignItems: 'center', gap: 10, zIndex: 30 } },
+        h('button', { onClick: backToLobby, style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', color: '#0a0e2e', border: '1px solid rgba(10,14,46,.12)', borderRadius: 50, padding: '7px 14px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase' } }, '← Salas'),
+        h('div', { style: { flex: 1 } }),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: '#0a0e2e', color: '#ffd000', borderRadius: 50, padding: '6px 14px', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
+          h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: '#ffd000' } }), inZone.length, ' en sala'
+        )
+      ),
+      // Título grande de la sala.
+      h('div', { style: { position: 'absolute', top: 56, left: 0, right: 0, textAlign: 'center', pointerEvents: 'none', zIndex: 2 } },
+        h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', color: z.colorDark } }, z.mrnt),
+        h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 28, letterSpacing: '.02em', color: '#0a0e2e', lineHeight: 1.1, marginTop: 2 } }, z.label),
+        isActive && h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, background: '#fff', color: z.colorDark, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: 50, boxShadow: `0 2px 8px ${z.color}44`, border: `1px solid ${z.color}` } }, '● En vivo')
+      ),
+      // Avatares de la sala.
+      inZone.map(([uid, u]) => {
+        const isMine = uid === myId;
+        const myReactionsOnUser = reactions?.[uid] || {};
+        const reactionCounts = REACTIONS.map(r => ({ ...r, count: Object.values(myReactionsOnUser).filter(v => v && typeof v === 'object' ? v[r.id] : v === r.id).length })).filter(r => r.count > 0);
+        // Mapear u.x/y (que están en el bounding box de la sala) a posición visual
+        // dentro del canvas. Usamos directamente u.x/u.y como % del canvas para
+        // que el avatar se mueva por la habitación.
+        return h('div', {
+          key: uid,
+          onMouseDown: isMine ? handleDragStart : undefined,
+          onTouchStart: isMine ? handleDragStart : undefined,
+          style: {
+            position: 'absolute', left: `${u.x ?? 50}%`, top: `${u.y ?? 50}%`,
+            transform: 'translate(-50%,-88%)',
+            transition: isDrag.current && isMine ? 'none' : 'left .45s cubic-bezier(.23,1,.32,1), top .45s cubic-bezier(.23,1,.32,1)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            cursor: isMine ? 'grab' : 'default',
+            zIndex: isMine ? 50 : 30,
+            animation: isMine ? 'pop .45s ease' : 'none'
+          }
+        },
+          reactionCounts.length > 0 && h('div', { style: { display: 'flex', gap: 2, marginBottom: 2 } },
+            reactionCounts.map(r => h('div', { key: r.id, style: { background: '#fff', borderRadius: 20, padding: '2px 6px', fontSize: 10, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid rgba(10,14,46,.08)' } }, h('span', null, r.e), r.count > 1 ? h('span', { style: { fontSize: 8, color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800 } }, r.count) : null))
+          ),
+          h('div', { style: { marginBottom: 3, fontSize: 10, color: '#0a0e2e', background: '#fff', padding: '2px 8px', borderRadius: 20, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, letterSpacing: '.04em', border: `1.5px solid ${u.color || '#ffd000'}`, boxShadow: '0 2px 6px rgba(10,14,46,.08)' } }, isMine ? '★ ' + (u.name || 'Tú') : (u.name || 'Anon')),
+          h(IsoChar, { profile: u, isMe: isMine, glow: isMine, scale: 0.82 }),
+          h('div', { style: { width: 30, height: 8, borderRadius: '50%', background: 'rgba(10,14,46,.18)', marginTop: -4, filter: 'blur(2px)' } })
+        );
+      }),
+      // Hint inferior.
+      h('div', { style: { position: 'absolute', bottom: 8, left: 0, right: 0, textAlign: 'center', pointerEvents: 'none', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: '#3b3f5a', opacity: .65 } }, 'Arrastra tu personaje para moverlo · ← Salas para volver al lobby')
+    );
+  };
+
+  return viewKey === 'lobby' ? renderLobby() : renderRoom(viewKey);
 }
 
 /* ════════════════════════ CONFRA: SPEAKER PANEL ════════════════════════ */
