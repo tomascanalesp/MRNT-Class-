@@ -1252,34 +1252,94 @@ const RoomScene3D = ({ zoneKey, color, colorDark, full }) => {
   );
 };
 
-// Cuerpo de avatar 3D estilo Roblox (cabeza con foto/emoji, torso, brazos, piernas).
+// Accesorios disponibles para el avatar — overlays sobre la cabeza.
+const AVATAR_ACCESSORIES = [
+  { id: 'none',       label: 'Sin accesorio', icon: '∅' },
+  { id: 'cap',        label: 'Gorra',         icon: '🧢' },
+  { id: 'glasses',    label: 'Lentes',        icon: '🕶' },
+  { id: 'halo',       label: 'Aureola',       icon: '😇' },
+  { id: 'crown',      label: 'Corona',        icon: '👑' },
+  { id: 'headphones', label: 'Audífonos',     icon: '🎧' },
+  { id: 'bow',        label: 'Moño',          icon: '🎀' },
+  { id: 'flower',     label: 'Flor',          icon: '🌸' }
+];
+
+// Renderiza el accesorio sobre la cabeza.
+const AccessoryOverlay = ({ id, headW, headH }) => {
+  const h = React.createElement;
+  if (!id || id === 'none') return null;
+  if (id === 'cap') return h('div', { style: { position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)', width: headW + 4, height: 12, zIndex: 6, pointerEvents: 'none' } },
+    h('div', { style: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 3, borderRadius: '12px 12px 4px 4px', background: 'linear-gradient(135deg,#ef4444,#b91c1c)', border: '1.5px solid rgba(10,14,46,.3)' } }),
+    h('div', { style: { position: 'absolute', bottom: -2, left: '52%', width: '40%', height: 6, borderRadius: '0 0 6px 6px', background: '#b91c1c' } })
+  );
+  if (id === 'glasses') return h('div', { style: { position: 'absolute', top: headH * 0.4, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 2, zIndex: 6, pointerEvents: 'none' } },
+    h('div', { style: { width: 12, height: 11, borderRadius: 4, background: 'rgba(10,14,46,.85)', border: '1.5px solid #0a0e2e' } }),
+    h('div', { style: { width: 12, height: 11, borderRadius: 4, background: 'rgba(10,14,46,.85)', border: '1.5px solid #0a0e2e' } })
+  );
+  if (id === 'halo') return h('div', { style: { position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', width: headW + 8, height: 7, borderRadius: '50%', border: '3px solid #ffd000', background: 'transparent', boxShadow: '0 0 14px rgba(255,208,0,.8)', zIndex: 6, pointerEvents: 'none' } });
+  if (id === 'crown') return h('div', { style: { position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', zIndex: 6, pointerEvents: 'none', fontSize: 18, lineHeight: 1 } }, '👑');
+  if (id === 'headphones') return h('div', { style: { position: 'absolute', top: -3, left: '50%', transform: 'translateX(-50%)', width: headW + 6, height: headH * 0.5, borderRadius: '50% 50% 0 0', border: '3px solid #0a0e2e', borderBottom: 'none', zIndex: 6, pointerEvents: 'none' } },
+    h('div', { style: { position: 'absolute', left: -4, bottom: 0, width: 6, height: 9, borderRadius: 3, background: '#0a0e2e' } }),
+    h('div', { style: { position: 'absolute', right: -4, bottom: 0, width: 6, height: 9, borderRadius: 3, background: '#0a0e2e' } })
+  );
+  if (id === 'bow') return h('div', { style: { position: 'absolute', top: -8, right: 0, zIndex: 6, pointerEvents: 'none', fontSize: 14, lineHeight: 1 } }, '🎀');
+  if (id === 'flower') return h('div', { style: { position: 'absolute', top: -6, right: 0, zIndex: 6, pointerEvents: 'none', fontSize: 13, lineHeight: 1 } }, '🌸');
+  return null;
+};
+
+// Cuerpo de avatar 3D estilo Roblox: cabeza grande/cabezón con foto prominente,
+// torso, brazos y piernas con colores personalizables; accesorio opcional sobre
+// la cabeza. Las dimensiones se escalan con `scale`.
 const IsoChar = ({ profile, isMe = false, glow = false, scale = 1 }) => {
   const h = React.createElement;
-  const col = profile?.color || '#ffd000';
-  const dark = `color-mix(in srgb, ${col} 62%, #000)`;
-  const mid  = `color-mix(in srgb, ${col} 84%, #000)`;
+  const body = profile?.bodyColor || profile?.color || '#ffd000';
+  const arms = profile?.armsColor || profile?.color || '#ffd000';
+  const legs = profile?.legsColor || '#23284a';
+  const acc  = profile?.accessory;
+  const mix = (c, p) => `color-mix(in srgb, ${c} ${p}%, #000)`;
+  const bodyDark = mix(body, 62), bodyMid = mix(body, 84);
+  const armsDark = mix(arms, 60), armsMid = mix(arms, 82);
+  const legsDark = mix(legs, 60);
+  // Dimensiones del avatar (más grande y más cabezón vs versión previa).
+  const W = 64, H = 92;
+  const HEAD_W = 50, HEAD_H = 46;        // cabeza prominente para resaltar foto
+  const TORSO_W = 40, TORSO_H = 30;
   const headInner = profile?.photo
     ? h('img', { src: profile.photo, style: { width: '100%', height: '100%', objectFit: 'cover' }, alt: '' })
-    : h('span', { style: { fontSize: 15 } }, profile?.avatar || '👤');
-  return h('div', { style: { position: 'relative', width: 44, height: 60, transform: `scale(${scale})`, transformOrigin: 'bottom center', filter: (isMe || glow) ? 'drop-shadow(0 0 7px rgba(255,208,0,.65))' : 'none' } },
-    h('div', { style: { position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 30, height: 28, borderRadius: '9px 9px 8px 8px', zIndex: 3, background: 'linear-gradient(135deg,#ffe9cc 0%,#fbd6a6 55%,#e8b277 100%)', border: '1.5px solid rgba(10,14,46,.22)', boxShadow: 'inset -4px -3px 6px rgba(150,90,40,.35), inset 3px 3px 5px rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' } }, headInner),
-    h('div', { style: { position: 'absolute', top: 25, left: '50%', transform: 'translateX(-50%)', width: 34, height: 26, zIndex: 2 } },
-      h('div', { style: { position: 'absolute', right: -1, top: 2, width: 9, height: 24, borderRadius: '0 7px 6px 0', background: dark, transform: 'skewY(20deg)' } }),
-      h('div', { style: { position: 'absolute', left: 0, top: 0, width: 28, height: 26, borderRadius: '10px 10px 6px 6px', background: `linear-gradient(135deg, ${col} 0%, ${mid} 100%)`, border: '1.5px solid rgba(10,14,46,.22)', boxShadow: 'inset 0 4px 6px rgba(255,255,255,.28), inset -3px -3px 6px rgba(0,0,0,.18)' } }),
-      h('div', { style: { position: 'absolute', left: -5, top: 3, width: 7, height: 18, borderRadius: 5, background: `linear-gradient(135deg, ${mid}, ${dark})`, border: '1px solid rgba(10,14,46,.2)' } }),
-      h('div', { style: { position: 'absolute', right: -6, top: 4, width: 7, height: 18, borderRadius: 5, background: dark, border: '1px solid rgba(10,14,46,.2)' } })
+    : h('span', { style: { fontSize: 28, lineHeight: 1 } }, profile?.avatar || '👤');
+  return h('div', { style: { position: 'relative', width: W, height: H, transform: `scale(${scale})`, transformOrigin: 'bottom center', filter: (isMe || glow) ? 'drop-shadow(0 0 10px rgba(255,208,0,.7))' : 'drop-shadow(0 4px 8px rgba(10,14,46,.18))' } },
+    // Cabeza
+    h('div', { style: { position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: HEAD_W, height: HEAD_H, borderRadius: '14px 14px 12px 12px', zIndex: 4, background: profile?.photo ? '#fff' : 'linear-gradient(135deg,#ffe9cc 0%,#fbd6a6 55%,#e8b277 100%)', border: '2px solid rgba(10,14,46,.28)', boxShadow: profile?.photo ? 'inset 0 0 0 2px #fff, 0 3px 6px rgba(10,14,46,.18)' : 'inset -5px -4px 8px rgba(150,90,40,.35), inset 4px 4px 6px rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' } }, headInner),
+    // Accesorio sobre la cabeza
+    acc ? h('div', { style: { position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: HEAD_W, height: HEAD_H, zIndex: 5, pointerEvents: 'none' } },
+      h(AccessoryOverlay, { id: acc, headW: HEAD_W, headH: HEAD_H })
+    ) : null,
+    // Torso + brazos
+    h('div', { style: { position: 'absolute', top: HEAD_H - 2, left: '50%', transform: 'translateX(-50%)', width: TORSO_W + 12, height: TORSO_H, zIndex: 2 } },
+      // brazo derecho oscuro (atrás)
+      h('div', { style: { position: 'absolute', right: -2, top: 4, width: 10, height: 26, borderRadius: '0 8px 7px 0', background: armsDark, transform: 'skewY(20deg)', border: '1.5px solid rgba(10,14,46,.22)' } }),
+      // torso
+      h('div', { style: { position: 'absolute', left: 6, top: 0, width: TORSO_W, height: TORSO_H, borderRadius: '12px 12px 7px 7px', background: `linear-gradient(135deg, ${body} 0%, ${bodyMid} 100%)`, border: '2px solid rgba(10,14,46,.28)', boxShadow: 'inset 0 5px 7px rgba(255,255,255,.28), inset -4px -4px 7px rgba(0,0,0,.18)' } }),
+      // brazo izquierdo
+      h('div', { style: { position: 'absolute', left: -3, top: 4, width: 9, height: 22, borderRadius: 6, background: `linear-gradient(135deg, ${armsMid}, ${armsDark})`, border: '1.5px solid rgba(10,14,46,.22)' } }),
+      // brazo derecho frente
+      h('div', { style: { position: 'absolute', right: -4, top: 5, width: 9, height: 22, borderRadius: 6, background: armsDark, border: '1.5px solid rgba(10,14,46,.22)' } })
     ),
-    h('div', { style: { position: 'absolute', top: 49, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4, zIndex: 1 } },
-      h('div', { style: { width: 10, height: 12, borderRadius: '3px 3px 4px 4px', background: 'linear-gradient(135deg,#3a4067,#23284a)' } }),
-      h('div', { style: { width: 10, height: 12, borderRadius: '3px 3px 4px 4px', background: 'linear-gradient(135deg,#2a2f52,#1a1e3a)' } })
+    // Piernas
+    h('div', { style: { position: 'absolute', top: HEAD_H + TORSO_H - 4, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4, zIndex: 1 } },
+      h('div', { style: { width: 13, height: 16, borderRadius: '4px 4px 5px 5px', background: `linear-gradient(135deg,${legs},${legsDark})`, border: '1.5px solid rgba(10,14,46,.22)' } }),
+      h('div', { style: { width: 13, height: 16, borderRadius: '4px 4px 5px 5px', background: `linear-gradient(135deg,${legsDark},${mix(legs, 45)})`, border: '1.5px solid rgba(10,14,46,.22)' } })
     )
   );
 };
 
-function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions }) {
+function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions, isAdmin, onToggleRoomOpen, onRenameRoom, onStartRoomActivity, onEndRoomActivity }) {
   const h = React.createElement;
   const entries = Object.entries(users);
   const phase = session?.phase || 'waiting';
+  const openRooms = session?.openRooms || {};
+  const roomNames = session?.roomNames || {};
+  const isRoomOpen = (k) => !!openRooms[k] || phase === k || (k === 'repaso' && phase === 'juegos');
   const me = users[myId] || {};
   const myZone = effectiveZone(me);
   // En modo proyección siempre se muestra el lobby (overview de la sala). Si no,
@@ -1342,17 +1402,17 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
     const cardKeys = ['mision', 'confra', 'repaso', 'templo'];
     const cards = cardKeys.map((key) => {
       const z = ZONES[key];
-      let displayKey = key, displayLabel = z.label, includeJuegos = false;
+      let displayKey = key, displayLabel = roomNames[key] || z.label, includeJuegos = false;
       if (key === 'repaso') {
         includeJuegos = true;
-        if (phase === 'juegos') { displayKey = 'juegos'; displayLabel = ZONES.juegos.label; }
-        else                     { displayLabel = 'Repaso Bíblico'; }
+        if (phase === 'juegos') { displayKey = 'juegos'; displayLabel = roomNames.juegos || ZONES.juegos.label; }
+        else                     { displayLabel = roomNames.repaso || 'Repaso Bíblico'; }
       }
       const members = entries.filter(([, u]) => {
         const zk = effectiveZone(u);
         return zk === key || (includeJuegos && zk === 'juegos');
       });
-      const isActive = phase === key || (includeJuegos && phase === 'juegos');
+      const isActive = isRoomOpen(key) || (includeJuegos && isRoomOpen('juegos'));
       return { key, displayKey, displayLabel, z, isActive, members, count: members.length };
     });
 
@@ -1362,7 +1422,7 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
 
     const lanes = cardKeys.map((key, i) => {
       const z = ZONES[key];
-      const isActive = phase === key || (key === 'repaso' && phase === 'juegos');
+      const isActive = isRoomOpen(key);
       const cx = (i + 0.5) / 4, halfW = 1 / 8;
       const fL = (cx - halfW) * 100, fR = (cx + halfW) * 100;
       const bL = (cx - halfW * NARROW) * 100, bR = (cx + halfW * NARROW) * 100;
@@ -1380,7 +1440,7 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
 
     const doors = cardKeys.map((key, i) => {
       const z = ZONES[key];
-      const isActive = phase === key || (key === 'repaso' && phase === 'juegos');
+      const isActive = isRoomOpen(key);
       const lx = (i + 0.5) / 4;
       return h('div', { key: 'pad' + key, style: { position: 'absolute', left: `${lx * 100}%`, top: '34px', transform: 'translateX(-50%)', pointerEvents: 'none', zIndex: 5 } },
         isActive ? h('div', { style: { position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 8, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: z.colorDark, background: '#fff', border: `1px solid ${z.color}`, borderRadius: 50, padding: '2px 9px', boxShadow: `0 2px 8px ${z.color}44`, whiteSpace: 'nowrap' } }, '● En vivo') : null,
@@ -1420,7 +1480,7 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
         // el corredor frente a su puerta (depth=0.15) para indicar dónde están.
         visualYp = cTop + 0.18 * (100 - cTop);
       }
-      const sc = (0.5 + ((visualYp - cTop) / (100 - cTop)) * 0.55) * (full ? 1.05 : 0.78);
+      const sc = (0.6 + ((visualYp - cTop) / (100 - cTop)) * 0.6) * (full ? 1.15 : 0.95);
       const myReactionsOnUser = reactions?.[uid] || {};
       const reactionCounts = REACTIONS.map(r => ({ ...r, count: Object.values(myReactionsOnUser).filter(v => v && typeof v === 'object' ? v[r.id] : v === r.id).length })).filter(r => r.count > 0);
       return h('div', {
@@ -1474,7 +1534,18 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
               h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: full ? 11 : 9, letterSpacing: '.14em', textTransform: 'uppercase', color: z.colorDark } }, z.mrnt),
               h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: full ? 22 : 15, color: '#0a0e2e', lineHeight: 1.1 } }, card.displayLabel),
               h('div', { style: { fontFamily: 'Inter,sans-serif', fontWeight: 700, fontSize: full ? 13 : 10, color: card.isActive ? '#10b981' : '#3b3f5a' } }, `${card.isActive ? '● En vivo' : '○ Sala abierta'} · ${card.count === 1 ? '1 persona' : card.count + ' personas'}`),
-              !full && h('button', { onClick: () => enterRoom(card.displayKey), style: { padding: full ? 12 : 9, borderRadius: 50, border: 'none', background: `linear-gradient(135deg, ${z.color}, ${z.colorDark})`, color: textC, cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: full ? 15 : 12, letterSpacing: '.05em', textTransform: 'uppercase' } }, 'Entrar →')
+              !full && h('button', { onClick: () => enterRoom(card.displayKey), style: { padding: full ? 12 : 9, borderRadius: 50, border: 'none', background: `linear-gradient(135deg, ${z.color}, ${z.colorDark})`, color: textC, cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: full ? 15 : 12, letterSpacing: '.05em', textTransform: 'uppercase' } }, 'Entrar →'),
+              !full && isAdmin && h('div', { style: { display: 'flex', gap: 6 } },
+                h('button', {
+                  onClick: () => onToggleRoomOpen && onToggleRoomOpen(card.key),
+                  style: { flex: 1, padding: 7, borderRadius: 50, border: `1.5px solid ${card.isActive ? '#10b981' : 'rgba(10,14,46,.15)'}`, background: card.isActive ? 'rgba(16,185,129,.12)' : '#fff', color: card.isActive ? '#10b981' : '#3b3f5a', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 10, letterSpacing: '.06em', textTransform: 'uppercase' }
+                }, card.isActive ? '● En vivo' : 'Iniciar sala'),
+                h('button', {
+                  onClick: () => onRenameRoom && onRenameRoom(card.key),
+                  title: 'Renombrar sala',
+                  style: { width: 32, padding: 7, borderRadius: 50, border: '1px solid rgba(10,14,46,.12)', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#3b3f5a', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+                }, '✎')
+              )
             )
           );
         })
@@ -1507,7 +1578,19 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
   const renderRoom = (key) => {
     const z = ZONES[key];
     const inZone = entries.filter(([, u]) => effectiveZone(u) === key);
-    const isActive = phase === key;
+    const isActive = isRoomOpen(key) || phase === key;
+    const roomLabel = roomNames[key] || z.label;
+    // Etiqueta de la actividad asociada a la sala.
+    const activityLabel = {
+      mision: 'Misión',
+      confra: 'Confraternización',
+      repaso: 'Repaso Bíblico',
+      juegos: 'Kahoot & Juegos',
+      templo: 'Templo'
+    }[key] || z.label;
+    // ¿La actividad de esta sala está corriendo? Comparamos contra phase real,
+    // excepto repaso que también acepta juegos como sub-fase.
+    const activityRunning = phase === key || (key === 'repaso' && phase === 'juegos');
     return h('div', {
       ref: roomRef,
       onMouseMove: handleDragMove, onMouseUp: handleDragEnd, onMouseLeave: handleDragEnd,
@@ -1526,8 +1609,23 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
       // Título grande de la sala.
       h('div', { style: { position: 'absolute', top: 56, left: 0, right: 0, textAlign: 'center', pointerEvents: 'none', zIndex: 2 } },
         h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', color: z.colorDark } }, z.mrnt),
-        h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 28, letterSpacing: '.02em', color: '#0a0e2e', lineHeight: 1.1, marginTop: 2 } }, z.label),
+        h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 28, letterSpacing: '.02em', color: '#0a0e2e', lineHeight: 1.1, marginTop: 2 } }, roomLabel),
         isActive && h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, background: '#fff', color: z.colorDark, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', padding: '3px 9px', borderRadius: 50, boxShadow: `0 2px 8px ${z.color}44`, border: `1px solid ${z.color}` } }, '● En vivo')
+      ),
+      // Controles del admin dentro de la sala: iniciar/terminar actividad + renombrar.
+      isAdmin && h('div', { style: { position: 'absolute', top: 130, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 30, pointerEvents: 'auto' } },
+        h('button', {
+          onClick: () => {
+            if (activityRunning) { onEndRoomActivity && onEndRoomActivity(key); }
+            else                 { onStartRoomActivity && onStartRoomActivity(key); }
+          },
+          style: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 50, border: 'none', background: activityRunning ? '#ef4444' : `linear-gradient(135deg, ${z.color}, ${z.colorDark})`, color: (key === 'confra' && !activityRunning) ? '#0a0e2e' : '#fff', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', boxShadow: '0 4px 14px rgba(10,14,46,.18)' }
+        }, activityRunning ? `■ Terminar ${activityLabel}` : `▶ Iniciar ${activityLabel}`),
+        h('button', {
+          onClick: () => onRenameRoom && onRenameRoom(key),
+          title: 'Renombrar sala',
+          style: { width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(10,14,46,.12)', background: '#fff', cursor: 'pointer', fontSize: 14, color: '#3b3f5a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(10,14,46,.08)' }
+        }, '✎')
       ),
       // Avatares de la sala.
       inZone.map(([uid, u]) => {
@@ -1555,7 +1653,7 @@ function RoomCanvas({ users, myId, session, onDragMove, roomRef, full, reactions
             reactionCounts.map(r => h('div', { key: r.id, style: { background: '#fff', borderRadius: 20, padding: '2px 6px', fontSize: 10, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid rgba(10,14,46,.08)' } }, h('span', null, r.e), r.count > 1 ? h('span', { style: { fontSize: 8, color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800 } }, r.count) : null))
           ),
           h('div', { style: { marginBottom: 3, fontSize: 10, color: '#0a0e2e', background: '#fff', padding: '2px 8px', borderRadius: 20, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, letterSpacing: '.04em', border: `1.5px solid ${u.color || '#ffd000'}`, boxShadow: '0 2px 6px rgba(10,14,46,.08)' } }, isMine ? '★ ' + (u.name || 'Tú') : (u.name || 'Anon')),
-          h(IsoChar, { profile: u, isMe: isMine, glow: isMine, scale: 0.82 }),
+          h(IsoChar, { profile: u, isMe: isMine, glow: isMine, scale: 1.0 }),
           h('div', { style: { width: 30, height: 8, borderRadius: '50%', background: 'rgba(10,14,46,.18)', marginTop: -4, filter: 'blur(2px)' } })
         );
       }),
@@ -10120,6 +10218,10 @@ function EditProfileModal({
   const [avatar, setAvatar] = useState(profile.avatar || null);
   const [color, setColor] = useState(profile.color || '#ffd000');
   const [photo, setPhoto] = useState(profile.photo || null);
+  const [bodyColor, setBodyColor] = useState(profile.bodyColor || profile.color || '#ffd000');
+  const [armsColor, setArmsColor] = useState(profile.armsColor || profile.color || '#ffd000');
+  const [legsColor, setLegsColor] = useState(profile.legsColor || '#23284a');
+  const [accessory, setAccessory] = useState(profile.accessory || 'none');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   const fileRef = useRef();
@@ -10139,7 +10241,11 @@ function EditProfileModal({
         name: name.trim(),
         avatar,
         color,
-        photo
+        photo,
+        bodyColor,
+        armsColor,
+        legsColor,
+        accessory
       });
     } catch (e) {
       setErr('Error al guardar. Intenta de nuevo.');
@@ -10393,7 +10499,56 @@ function EditProfileModal({
       boxShadow: color === c ? `0 6px 16px ${c}66` : 'none',
       transition: 'all .15s'
     }
-  })))), err && /*#__PURE__*/React.createElement("div", {
+  })))),
+  // ───────── Personaliza tu personaje (cuerpo/brazos/piernas + accesorio) ─────────
+  /*#__PURE__*/React.createElement("div", {
+    style: { marginBottom: 18, padding: '14px 14px 16px', background: '#fff', borderRadius: 16, border: '1.5px solid rgba(10,14,46,.08)', boxShadow: '0 4px 14px rgba(10,14,46,.06)' }
+  },
+    /*#__PURE__*/React.createElement("div", { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, letterSpacing: '.08em', textTransform: 'uppercase', color: '#0a0e2e', marginBottom: 4 } }, "Personaliza tu personaje"),
+    /*#__PURE__*/React.createElement("div", { style: { fontSize: 12, color: 'var(--muted)', marginBottom: 12 } }, "Tus colores y accesorios aparecen para todos en la sala."),
+    /*#__PURE__*/React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 16, padding: '8px 0 14px' } },
+      /*#__PURE__*/React.createElement("div", { style: { width: 88, display: 'flex', justifyContent: 'center' } },
+        /*#__PURE__*/React.createElement(IsoChar, { profile: { name, avatar, color, photo, bodyColor, armsColor, legsColor, accessory }, isMe: true, scale: 1.1 })
+      ),
+      /*#__PURE__*/React.createElement("div", { style: { flex: 1, fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.5 } }, "Personalización en vivo — los cambios se ven al instante.")
+    ),
+    // Cuerpo
+    /*#__PURE__*/React.createElement("label", { style: { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginTop: 4, marginBottom: 6, fontFamily: 'Barlow Condensed,sans-serif' } }, "Cuerpo"),
+    /*#__PURE__*/React.createElement("div", { style: { display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 10 } },
+      COLORS.map(c => /*#__PURE__*/React.createElement("div", {
+        key: 'body' + c, onClick: () => setBodyColor(c),
+        style: { width: 24, height: 24, borderRadius: '50%', background: c, cursor: 'pointer', border: bodyColor === c ? '3px solid #0a0e2e' : '3px solid transparent', boxShadow: bodyColor === c ? `0 4px 10px ${c}66` : 'none' }
+      }))
+    ),
+    // Brazos
+    /*#__PURE__*/React.createElement("label", { style: { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6, fontFamily: 'Barlow Condensed,sans-serif' } }, "Brazos"),
+    /*#__PURE__*/React.createElement("div", { style: { display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 10 } },
+      COLORS.map(c => /*#__PURE__*/React.createElement("div", {
+        key: 'arms' + c, onClick: () => setArmsColor(c),
+        style: { width: 24, height: 24, borderRadius: '50%', background: c, cursor: 'pointer', border: armsColor === c ? '3px solid #0a0e2e' : '3px solid transparent' }
+      }))
+    ),
+    // Piernas
+    /*#__PURE__*/React.createElement("label", { style: { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6, fontFamily: 'Barlow Condensed,sans-serif' } }, "Piernas / pantalón"),
+    /*#__PURE__*/React.createElement("div", { style: { display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 10 } },
+      ['#23284a', '#0a0e2e', '#7c2d12', '#1d4ed8', '#15803d', '#7c3aed', '#9a3412', '#374151'].map(c => /*#__PURE__*/React.createElement("div", {
+        key: 'legs' + c, onClick: () => setLegsColor(c),
+        style: { width: 24, height: 24, borderRadius: '50%', background: c, cursor: 'pointer', border: legsColor === c ? '3px solid #ffd000' : '3px solid transparent' }
+      }))
+    ),
+    // Accesorio
+    /*#__PURE__*/React.createElement("label", { style: { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6, fontFamily: 'Barlow Condensed,sans-serif' } }, "Accesorio"),
+    /*#__PURE__*/React.createElement("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 } },
+      AVATAR_ACCESSORIES.map(a => /*#__PURE__*/React.createElement("button", {
+        key: a.id, onClick: () => setAccessory(a.id),
+        style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 4px', borderRadius: 10, border: accessory === a.id ? '2px solid #ffd000' : '2px solid rgba(10,14,46,.1)', background: accessory === a.id ? 'rgba(255,208,0,.15)' : '#fff', cursor: 'pointer', fontSize: 18 }
+      },
+        /*#__PURE__*/React.createElement("span", null, a.icon),
+        /*#__PURE__*/React.createElement("span", { style: { fontSize: 9, color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, letterSpacing: '.02em' } }, a.label)
+      ))
+    )
+  ),
+  err && /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 10,
       color: '#dc2626',
@@ -12838,7 +12993,7 @@ function App() {
     // Mostrar panel inmediatamente en el admin (antes del echo de Firebase)
     setConfraOpen(true);
     try {
-      await db.ref(`sessions/${SID.current}`).set({
+      await db.ref(`sessions/${SID.current}`).set({ openRooms: sessionRef.current?.openRooms || null, roomNames: sessionRef.current?.roomNames || null,
         phase: 'confra',
         confra: {
           active: true,
@@ -12869,7 +13024,7 @@ function App() {
   const endConfra = async () => {
     setConfraOpen(false);
     setEndBanner('confra'); // local inmediato para el admin
-    await db.ref(`sessions/${SID.current}`).set({
+    await db.ref(`sessions/${SID.current}`).set({ openRooms: sessionRef.current?.openRooms || null, roomNames: sessionRef.current?.roomNames || null,
       phase: 'waiting'
     });
     await db.ref(`sessions/${SID.current}/lastBanner`).set('confra');
@@ -12879,7 +13034,7 @@ function App() {
     // configuración debe quedar accesible. El chat se abre con su ícono.
     setRepasoChatOpen(false);
     try {
-      await db.ref(`sessions/${SID.current}`).set({
+      await db.ref(`sessions/${SID.current}`).set({ openRooms: sessionRef.current?.openRooms || null, roomNames: sessionRef.current?.roomNames || null,
         phase: 'repaso',
         repaso: {
           active: true,
@@ -12892,7 +13047,7 @@ function App() {
   };
   const endRepaso = async () => {
     setEndBanner('repaso');
-    await db.ref(`sessions/${SID.current}`).set({
+    await db.ref(`sessions/${SID.current}`).set({ openRooms: sessionRef.current?.openRooms || null, roomNames: sessionRef.current?.roomNames || null,
       phase: 'waiting'
     });
     await db.ref(`sessions/${SID.current}/lastBanner`).set('repaso');
@@ -12979,7 +13134,7 @@ function App() {
   };
   const startJuegos = async () => {
     try {
-      await db.ref(`sessions/${SID.current}`).set({
+      await db.ref(`sessions/${SID.current}`).set({ openRooms: sessionRef.current?.openRooms || null, roomNames: sessionRef.current?.roomNames || null,
         phase: 'juegos',
         juegos: {
           active: true,
@@ -13000,7 +13155,7 @@ function App() {
   };
   const startMision = async (_misionUsers = [], mode = 'commitments') => {
     try {
-      await db.ref(`sessions/${SID.current}`).set({
+      await db.ref(`sessions/${SID.current}`).set({ openRooms: sessionRef.current?.openRooms || null, roomNames: sessionRef.current?.roomNames || null,
         phase: 'mision',
         mision: {
           active: true,
@@ -13062,13 +13217,51 @@ function App() {
     setWordCloudOpen(false);
     setRepasoChatOpen(false);
     try {
-      await db.ref(`sessions/${SID.current}`).set({
+      await db.ref(`sessions/${SID.current}`).set({ openRooms: sessionRef.current?.openRooms || null, roomNames: sessionRef.current?.roomNames || null,
         phase: 'waiting'
       });
       await db.ref(`rooms/${SID.current}/chat`).remove();
     } catch (e) {
       console.error('Error reiniciando sesión:', e);
     }
+  };
+  // Toggle "abrir/cerrar" sala desde el lobby (independiente del phase). El
+  // admin puede tener varias salas en vivo al mismo tiempo.
+  const toggleRoomOpen = async (key) => {
+    if (!isAdmin) return;
+    try {
+      const cur = !!(sessionRef.current?.openRooms?.[key]);
+      await db.ref(`sessions/${SID.current}/openRooms/${key}`).set(!cur);
+    } catch (e) { console.error('toggleRoomOpen', e); }
+  };
+  // Renombrar la sala (rótulo visible en el lobby y en la cabecera 3D).
+  const renameRoom = (key) => {
+    if (!isAdmin) return;
+    const defaultName = sessionRef.current?.roomNames?.[key] || ZONES[key]?.label || '';
+    const newName = window.prompt('Nuevo nombre de la sala:', defaultName);
+    if (!newName || !newName.trim()) return;
+    db.ref(`sessions/${SID.current}/roomNames/${key}`).set(newName.trim())
+      .catch(e => console.error('renameRoom', e));
+  };
+  // Despachador: el admin inicia o termina la actividad asociada a una sala
+  // desde adentro de la sala (botón ▶ Iniciar / ■ Terminar).
+  const startRoomActivity = (key) => {
+    if (!isAdmin) return;
+    const ents = Object.entries(users || {});
+    const inZ = ents.filter(([, u]) => effectiveZone(u) === key);
+    if (key === 'confra')      startConfra(inZ);
+    else if (key === 'repaso') startRepaso(inZ);
+    else if (key === 'juegos') startJuegos();
+    else if (key === 'mision') startMision(inZ, 'projects');
+    else if (key === 'templo') startTemplo && startTemplo();
+  };
+  const endRoomActivity = (key) => {
+    if (!isAdmin) return;
+    if (key === 'confra')      endConfra();
+    else if (key === 'repaso') endRepaso();
+    else if (key === 'juegos') endJuegos && endJuegos();
+    else if (key === 'mision') endMision && endMision();
+    else if (key === 'templo') endTemplo && endTemplo();
   };
   const phase = session?.phase || 'waiting';
   const usersArr = Object.entries(users);
@@ -13742,7 +13935,12 @@ function App() {
     onDragMove: handleDragMove,
     roomRef: roomRef,
     full: false,
-    reactions: reactions
+    reactions: reactions,
+    isAdmin: isAdmin,
+    onToggleRoomOpen: toggleRoomOpen,
+    onRenameRoom: renameRoom,
+    onStartRoomActivity: startRoomActivity,
+    onEndRoomActivity: endRoomActivity
   }), phase === 'repaso' && !repasoChatOpen && (users[UID.current]?.zone === 'repaso' || isAdmin) && /*#__PURE__*/React.createElement("button", {
     onClick: () => setRepasoChatOpen(true),
     style: {
