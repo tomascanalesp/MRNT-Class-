@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v11';
+const APP_VERSION = '2026-06-27-sala3d-v12';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -16058,6 +16058,7 @@ class Component extends React.Component {
     this._usersRef = window.db.ref(`users/${this.SID}`);
     this._usersRef.on('value', (snap) => {
       const data = snap.val() || {};
+      const myFb = this.uid ? data[this.uid] : null;
       const others = Object.entries(data)
         .filter(([uid]) => uid !== this.uid)
         .map(([uid, u]) => ({
@@ -16071,12 +16072,33 @@ class Component extends React.Component {
           klass: u.klass || u.class || 'gteen',
           x: u.x ?? 8, y: u.y ?? 6.5,
           status: u.status || '', mood: u.mood || '',
+          hand: !!u.hand,
           room: u.room || null
         }));
       this.setState((s) => {
         const me = s.chars.find((c) => c.id === 'me');
-        return { chars: me ? [me, ...others] : others };
+        // Propaga el flag hand desde Firebase (admin pudo haber bajado la mano).
+        const meMerged = me ? { ...me, hand: myFb ? !!myFb.hand : !!me.hand } : null;
+        return { chars: meMerged ? [meMerged, ...others] : others };
       });
+      // Confra activa: el admin agrega automáticamente a la queue los uids
+      // que ingresan a la sala confra después de que ya empezó.
+      if (this.isAdmin && this.state.session?.confra?.active) {
+        const conf = this.state.session.confra;
+        const rawQ = conf.queue || {};
+        const queue = Array.isArray(rawQ) ? rawQ : Object.values(rawQ);
+        const inQueue = new Set(queue);
+        const inConfraNow = Object.entries(data)
+          .filter(([uid, u]) => uid !== this.uid && u && u.room === 'confra')
+          .map(([uid]) => uid);
+        const newcomers = inConfraNow.filter((uid) => !inQueue.has(uid));
+        if (newcomers.length) {
+          const next = [...queue, ...newcomers];
+          const obj = {};
+          next.forEach((uid, i) => { obj[i] = uid; });
+          window.db.ref(`sessions/${this.SID}/confra/queue`).set(obj).catch(() => {});
+        }
+      }
     });
     // Listener: sesión completa (phase + sub-actividades + openRooms + roomNames).
     this._sessRef = window.db.ref(`sessions/${this.SID}`);
@@ -16090,7 +16112,9 @@ class Component extends React.Component {
         const phase = v.phase;
         if (phase && phase !== 'waiting') {
           const inMyRoom = this.screenMode || (s.currentRoom === phase) || (s.currentRoom === 'repaso' && phase === 'juegos');
-          if (inMyRoom && !s.activity) activity = phase;
+          // Repaso es opcional: nadie ve el chat auto. Aparece sólo si tocan el FAB 💬.
+          // Las demás fases sí abren su pantalla cuando estás en la sala.
+          if (inMyRoom && !s.activity && phase !== 'repaso') activity = phase;
           // Si la fase termina, cerrar la actividad asociada.
         } else if (phase === 'waiting' && ['confra','repaso','juegos','mision','templo'].includes(s.activity)) {
           activity = null;
@@ -16109,8 +16133,29 @@ class Component extends React.Component {
       });
     });
     // Listener: reacciones flotantes + respuestas de encuesta + historial juegos.
+    this._reacLastTs = {};
     this._reacRef = window.db.ref(`sessions/${this.SID}/reactions`);
-    this._reacRef.on('value', (snap) => this.setState({ reactionsFb: snap.val() || {} }));
+    this._reacRef.on('value', (snap) => {
+      const data = snap.val() || {};
+      // Detecta reacciones nuevas (no vistas todavía) y las dispara como pop
+      // animado sobre la cabeza del avatar correspondiente.
+      const popQueue = [];
+      Object.entries(data).forEach(([uid, byTs]) => {
+        if (!byTs) return;
+        const tsList = Object.keys(byTs);
+        let maxTs = 0, maxRid = null;
+        tsList.forEach((ts) => { const n = Number(ts); if (n > maxTs) { maxTs = n; maxRid = byTs[ts]; } });
+        if (!this._reacLastTs[uid]) { this._reacLastTs[uid] = maxTs; return; }
+        if (maxTs > this._reacLastTs[uid] && Date.now() - maxTs < 6000) {
+          popQueue.push({ uid, rid: maxRid, ts: maxTs });
+          this._reacLastTs[uid] = maxTs;
+        } else if (maxTs > this._reacLastTs[uid]) {
+          this._reacLastTs[uid] = maxTs;
+        }
+      });
+      if (popQueue.length) this._popReactions(popQueue);
+      this.setState({ reactionsFb: data });
+    });
     this._surveyRef = window.db.ref(`sessions/${this.SID}/survey/responses`);
     this._surveyRef.on('value', (snap) => this.setState({ surveyResponses: snap.val() || {} }));
     // Historial de juegos del usuario actual (lo usan AttendanceModal y el podio).
@@ -16388,16 +16433,45 @@ class Component extends React.Component {
     this.setState({ activity: key, placeMode: null, selectedId: null, selFurn: null });
   };
   closeActivity = () => this.setState({ activity: null });
+  // Tabla: id (rid) -> emoji para mapear lo que viene de Firebase.
+  RID_EMOJI = { heart: '❤️', pray: '🙏', thumbs: '👍', smile: '😊', cry: '😢', party: '🎉' };
   fireReaction = (emoji) => {
-    const id = 'r' + Date.now() + Math.random();
-    this.setState((s) => ({ reacts: [...s.reacts, { id, emoji, x: 4 + Math.random() * 48 }] }));
-    setTimeout(() => this.setState((s) => ({ reacts: s.reacts.filter((r) => r.id !== id) })), 1200);
-    // Publica también a Firebase para sincronizar con todos.
+    // Publica a Firebase. El listener se encarga de mostrar el pop sobre tu
+    // propia cabeza Y la de todos los demás participantes en vivo.
     if (this.uid && this.SID && window.db) {
       const map = { '❤️': 'heart', '🙏': 'pray', '👍': 'thumbs', '😊': 'smile', '😢': 'cry', '🎉': 'party' };
       const rid = map[emoji] || 'heart';
       window.db.ref(`sessions/${this.SID}/reactions/${this.uid}/${Date.now()}`).set(rid).catch(() => {});
     }
+  };
+  _popReactions = (items) => {
+    this.setState((s) => {
+      const next = Object.assign({}, s.popReacts || {});
+      items.forEach((it) => { next[it.uid] = { rid: it.rid, ts: it.ts }; });
+      return { popReacts: next };
+    });
+    setTimeout(() => {
+      this.setState((s) => {
+        const next = Object.assign({}, s.popReacts || {});
+        items.forEach((it) => {
+          if (next[it.uid] && next[it.uid].ts === it.ts) delete next[it.uid];
+        });
+        return { popReacts: next };
+      });
+    }, 1500);
+  };
+  // ✋ levantar/bajar mano. Persiste en users/<SID>/<uid>/hand y en chars local.
+  toggleHand = () => {
+    if (!this.uid) return;
+    const me = this.state.chars.find((c) => c.id === 'me') || {};
+    const next = !me.hand;
+    this.setState((s) => ({ chars: s.chars.map((c) => c.id === 'me' ? { ...c, hand: next } : c) }));
+    this._saveMe({ hand: next });
+  };
+  // Admin: tap en avatar con mano levantada baja la mano de ese usuario.
+  lowerHandOf = (uid) => {
+    if (!this.isAdmin || !uid || !this.SID || !window.db) return;
+    window.db.ref(`users/${this.SID}/${uid}/hand`).set(false).catch(() => {});
   };
 
   /* ════════ 3D PIECES ════════ */
@@ -16505,12 +16579,26 @@ class Component extends React.Component {
     );
   }
   _avatarInner(c, isMe) { return avatarParts(c, isMe); }
+  // Render del decorado encima del avatar: pop de reacción + mano levantada.
+  _avatarOverlay(c) {
+    const popReacts = this.state.popReacts || {};
+    const uidKey = c.id === 'me' ? this.uid : c.id;
+    const pop = uidKey ? popReacts[uidKey] : null;
+    const emoji = pop ? this.RID_EMOJI[pop.rid] : null;
+    return h(React.Fragment, null,
+      // Pop animado hacia arriba.
+      pop && emoji ? h('span', { key: 'pop' + pop.ts, style: { position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', fontSize: 30, animation: 'mr-reactFloat 1.4s ease-out forwards', pointerEvents: 'none', zIndex: 999, textShadow: '0 2px 6px rgba(0,0,0,.25)' } }, emoji) : null,
+      // Mano levantada — emoji al lado de la cabeza, con leve bamboleo.
+      c.hand ? h('span', { style: { position: 'absolute', top: -10, right: -16, fontSize: 28, animation: 'mr-pulse 1.2s ease-in-out infinite', pointerEvents: 'none', zIndex: 998, transform: 'rotate(-10deg)' } }, '✋') : null,
+    );
+  }
   renderChar(c) {
     const isMe = c.id === 'me';
     const moving = isMe && this.state.dragging;
     return h('div', { key: c.id, 'data-char': '1', 'data-me': isMe ? '1' : '0', onClick: (e) => { e.stopPropagation(); this.onCharClick(c.id); },
       style: { position: 'absolute', left: this.iso(c.x, c.y).left, top: this.iso(c.x, c.y).top, transform: 'translate(-50%,-88%)', transition: moving ? 'none' : 'left .5s cubic-bezier(.23,1,.32,1), top .5s cubic-bezier(.23,1,.32,1)', zIndex: this.depth(c.x, c.y) + (isMe ? 1 : 0), cursor: isMe ? 'grab' : 'pointer', width: 56, display: 'flex', flexDirection: 'column', alignItems: 'center' } },
-      this._avatarInner(c, isMe));
+      this._avatarInner(c, isMe),
+      this._avatarOverlay(c));
   }
   renderLobbyAvatar(c, geom) {
     const isMe = c.id === 'me';
@@ -16521,7 +16609,8 @@ class Component extends React.Component {
     const top = geom.backTop + c.depth * geom.span, sc = 0.5 + c.depth * 0.55;
     return h('div', { key: c.id, 'data-lobby-char': '1', 'data-me': isMe ? '1' : '0', onClick: (e) => e.stopPropagation(),
       style: { position: 'absolute', left: `${ex * 100}%`, top: `${top}%`, transform: `translate(-50%,-92%) scale(${sc})`, transformOrigin: 'bottom center', transition: (isMe && this.state.lobbyDragging) ? 'opacity .4s' : 'left .35s linear, top .35s linear, opacity .4s', zIndex: Math.round(120 + c.depth * 120) + (isMe ? 600 : 0), cursor: isMe ? 'grab' : 'default', width: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: c.hidden ? 0 : 1, pointerEvents: c.hidden ? 'none' : 'auto' } },
-      this._avatarInner(c, isMe));
+      this._avatarInner(c, isMe),
+      this._avatarOverlay(c));
   }
   renderStatusCard(c) {
     const isMe = c.id === 'me';
@@ -16541,6 +16630,8 @@ class Component extends React.Component {
           c.status || (isMe ? 'Aún no pusiste un estado…' : 'Sin estado'),
         ),
         isMe ? h('button', { onClick: (e) => { e.stopPropagation(); this.setState({ editing: true }); }, style: { marginTop: 9, width: '100%', padding: 8, border: 'none', borderRadius: 'var(--r-pill)', cursor: 'pointer', background: 'var(--ink)', color: 'var(--cream-50)', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase' } }, '✎ Editar estado') : null,
+        // Admin: si el avatar tocado tiene la mano levantada, ofrecer bajársela.
+        (!isMe && this.isAdmin && c.hand) ? h('button', { onClick: (e) => { e.stopPropagation(); this.lowerHandOf(c.id); this.setState({ selectedId: null }); }, style: { marginTop: 9, width: '100%', padding: 8, border: 'none', borderRadius: 'var(--r-pill)', cursor: 'pointer', background: 'linear-gradient(135deg,#fbbf24,#f59e0b)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', boxShadow: '0 4px 14px rgba(245,158,11,.45)' } }, '✋ Bajar mano') : null,
         h('span', { style: { position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%) rotate(45deg)', width: 14, height: 14, background: '#fff', borderRight: `2px solid ${c.color}`, borderBottom: `2px solid ${c.color}` } }),
       ),
     );
@@ -16558,12 +16649,15 @@ class Component extends React.Component {
   }
   renderReactionBar() {
     const st = this.state;
+    const me = st.chars.find((c) => c.id === 'me') || {};
+    const handUp = !!me.hand;
     const tap = (s) => ({ onMouseDown: (e) => { e.currentTarget.style.transform = s; }, onMouseUp: (e) => { e.currentTarget.style.transform = 'scale(1)'; }, onMouseLeave: (e) => { e.currentTarget.style.transform = 'scale(1)'; } });
-    return h('div', { style: { position: 'absolute', right: 16, bottom: 44, zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center' } },
-      h('div', { style: { position: 'relative', height: 0, width: 56 } },
-        st.reacts.map((r) => h('span', { key: r.id, style: { position: 'absolute', bottom: 0, left: r.x, fontSize: 26, animation: 'mr-reactFloat 1.2s ease-out forwards', pointerEvents: 'none' } }, r.emoji)),
-      ),
-      h('div', { style: { display: 'flex', gap: 3, background: '#fff', borderRadius: 'var(--r-pill)', padding: '6px 9px', boxShadow: 'var(--shadow-float)', border: '1px solid var(--border-on-light)', marginTop: 6 } },
+    return h('div', { style: { position: 'absolute', right: 16, bottom: 44, zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } },
+      // Botón ✋ Levantar / Bajar mano — para admin y usuarios.
+      h('button', Object.assign({ onClick: this.toggleHand, title: handUp ? 'Bajar la mano' : 'Levantar la mano', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 'var(--r-pill)', border: 'none', cursor: 'pointer', background: handUp ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : '#fff', color: handUp ? '#fff' : 'var(--ink)', boxShadow: handUp ? '0 4px 14px rgba(245,158,11,.45)' : 'var(--shadow-float)', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.05em', textTransform: 'uppercase', border: handUp ? 'none' : '1px solid var(--border-on-light)', transition: 'all .15s' } }, tap('scale(1.05)')),
+        '✋', handUp ? 'Bajar mano' : 'Levantar mano'),
+      // Píldora con los emoticones.
+      h('div', { style: { display: 'flex', gap: 3, background: '#fff', borderRadius: 'var(--r-pill)', padding: '6px 9px', boxShadow: 'var(--shadow-float)', border: '1px solid var(--border-on-light)' } },
         this.REACT_EMOJIS.map((e) => h('button', Object.assign({ key: e, onClick: () => this.fireReaction(e), style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '2px 3px', transition: 'transform .12s' } }, tap('scale(1.3)')), e)),
       ),
     );
@@ -16582,6 +16676,7 @@ class Component extends React.Component {
         legsColor: c.legColor, legColor: c.legColor,
         accessory: c.accessory,
         status: c.status, mood: c.mood,
+        hand: !!c.hand,
         x: (c.x || 0) * 6.25, y: (c.y || 0) * 8.33,  // 16cols/12rows → 0-100%
         zone, room: c.room
       };
@@ -17033,8 +17128,17 @@ class Component extends React.Component {
         onStartConfra: (us) => { const queueObj = {}; us.map(([uid]) => uid).sort(() => Math.random() - .5).forEach((u, i) => { queueObj[i] = u; }); db.ref(`sessions/${this.SID}`).update({ phase: 'confra', confra: { active: true, queue: queueObj, currentIdx: 0, startTime: Date.now() } }); },
         onNextSpeaker: this._nextConfraSpeaker,
         onEndConfra: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', confra: null }),
-        onStartRepaso: () => db.ref(`sessions/${this.SID}`).update({ phase: 'repaso', repaso: { active: true, startTime: Date.now() } }),
-        onEndRepaso: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', repaso: null }),
+        onStartRepaso: () => {
+          // Reset del chat y reacciones al abrir Repaso (sala limpia).
+          db.ref(`sessions/${this.SID}/messages`).remove().catch(() => {});
+          db.ref(`sessions/${this.SID}/chatReactions`).remove().catch(() => {});
+          db.ref(`sessions/${this.SID}`).update({ phase: 'repaso', repaso: { active: true, startTime: Date.now() } });
+        },
+        onEndRepaso: () => {
+          db.ref(`sessions/${this.SID}/messages`).remove().catch(() => {});
+          db.ref(`sessions/${this.SID}/chatReactions`).remove().catch(() => {});
+          db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', repaso: null });
+        },
         onOpenPresentationMenu: () => this.setState({ activity: 'presenta-menu' }),
         onEndPresentation: () => db.ref(`sessions/${this.SID}/presentation`).remove(),
         onOpenVideoMenu: () => this.setState({ activity: 'videos-menu' }),
@@ -17068,6 +17172,11 @@ class Component extends React.Component {
       st.verseRef ? h(VerseOverlay, { refStr: st.verseRef, broadcast: false, canClose: true, onClose: () => this.setState({ verseRef: null }) }) : null,
       // QR de acceso (admin) — útil para proyección. En screenMode siempre visible.
       (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 220), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || { x: 24, y: 80 }, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
+      // FAB del chat del Repaso: aparece cuando el admin abrió Repaso (phase==='repaso')
+      // y el usuario no tiene otra actividad abierta. Click → abre el chat.
+      !screen && st.session?.phase === 'repaso' && st.activity !== 'repaso'
+        ? h(ChatFab, { onClick: () => this.setState({ activity: 'repaso' }), count: (st.msgs || []).length })
+        : null,
       // Toast de bienvenida cuando alguien se une (solo participantes).
       !screen ? h(AttNotifyToast, null) : null
     );
