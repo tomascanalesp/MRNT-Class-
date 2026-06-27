@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v5';
+const APP_VERSION = '2026-06-27-sala3d-v6';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -15818,10 +15818,11 @@ function LoginScreen({ onSignedIn }) {
   const [pwd, setPwd] = React.useState('');
   const [klass, setKlass] = React.useState('gteen');
   const [err, setErr] = React.useState('');
+  const [info, setInfo] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const submit = async (e) => {
     e.preventDefault();
-    setErr(''); setBusy(true);
+    setErr(''); setInfo(''); setBusy(true);
     try {
       if (mode === 'signin') await window.auth.signInWithEmailAndPassword(email.trim(), pwd);
       else {
@@ -15835,6 +15836,19 @@ function LoginScreen({ onSignedIn }) {
       setErr(getErr(e.code || ''));
       setBusy(false);
     }
+  };
+  const resetPwd = async () => {
+    setErr(''); setInfo('');
+    const target = email.trim();
+    if (!target) { setErr('Escribe tu correo arriba y vuelve a tocar “¿Olvidaste tu contraseña?”'); return; }
+    setBusy(true);
+    try {
+      await window.auth.sendPasswordResetEmail(target);
+      setInfo(`Te enviamos un correo a ${target} para crear una contraseña nueva. Revisa también la carpeta de spam.`);
+    } catch (e) {
+      setErr(getErr(e.code || ''));
+    }
+    setBusy(false);
   };
   return h('div', { style: { position: 'fixed', inset: 0, background: 'var(--cream-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'var(--font-sans)' } },
     h('form', { onSubmit: submit, style: { width: '100%', maxWidth: 380, background: '#fff', borderRadius: 'var(--r-xl)', padding: '28px 26px', boxShadow: 'var(--shadow-float)' } },
@@ -15859,8 +15873,10 @@ function LoginScreen({ onSignedIn }) {
       h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Contraseña'),
       h('input', { type: 'password', value: pwd, required: true, autoComplete: mode === 'signin' ? 'current-password' : 'new-password', onChange: (e) => setPwd(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 14, boxSizing: 'border-box' } }),
       err ? h('div', { style: { background: 'rgba(239,68,68,.1)', color: '#dc2626', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 } }, '⚠️ ' + err) : null,
+      info ? h('div', { style: { background: 'rgba(16,185,129,.1)', color: '#047857', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, lineHeight: 1.4 } }, '✉️ ' + info) : null,
       h('button', { type: 'submit', disabled: busy, style: { width: '100%', padding: 13, borderRadius: 'var(--r-pill)', border: 'none', background: busy ? 'var(--cream-300)' : 'var(--yellow)', color: 'var(--navy-900)', cursor: busy ? 'default' : 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '.06em', textTransform: 'uppercase', boxShadow: busy ? 'none' : '0 0 24px rgba(255,208,0,.35)' } }, busy ? 'Un momento…' : (mode === 'signin' ? 'Entrar →' : 'Crear cuenta →')),
-      h('button', { type: 'button', onClick: () => { setMode(mode === 'signin' ? 'signup' : 'signin'); setErr(''); }, style: { width: '100%', marginTop: 10, padding: 9, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: '.04em', textTransform: 'uppercase' } }, mode === 'signin' ? 'No tengo cuenta · Crear una' : 'Ya tengo cuenta · Entrar')
+      mode === 'signin' ? h('button', { type: 'button', onClick: resetPwd, disabled: busy, style: { width: '100%', marginTop: 8, padding: 8, border: 'none', background: 'transparent', cursor: busy ? 'default' : 'pointer', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.04em', textTransform: 'uppercase', textDecoration: 'underline', textUnderlineOffset: 3 } }, '¿Olvidaste tu contraseña?') : null,
+      h('button', { type: 'button', onClick: () => { setMode(mode === 'signin' ? 'signup' : 'signin'); setErr(''); setInfo(''); }, style: { width: '100%', marginTop: 10, padding: 9, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: '.04em', textTransform: 'uppercase' } }, mode === 'signin' ? 'No tengo cuenta · Crear una' : 'Ya tengo cuenta · Entrar')
     )
   );
 }
