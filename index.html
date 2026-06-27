@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-22-sala3d-v1';
+const APP_VERSION = '2026-06-27-sala3d-v2';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -2248,7 +2248,15 @@ function RepasoChat({
       })));
     }
 
-    // Mensajes normales
+    // Mensajes normales — reacciones inline igual que los tags.
+    const normalReactions = chatReactions?.[m.id] || {};
+    const normalTotals = {};
+    REACTIONS.forEach(r => { normalTotals[r.id] = 0; });
+    Object.values(normalReactions).forEach(userRxns => {
+      REACTIONS.forEach(r => { if (userRxns[r.id]) normalTotals[r.id]++; });
+    });
+    const myNormalReactions = normalReactions[myId] || {};
+    const hasAnyReaction = Object.values(normalTotals).some(n => n > 0);
     return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       style: {
@@ -2325,7 +2333,57 @@ function RepasoChat({
         display: 'block',
         cursor: 'zoom-in'
       }
-    }) : /*#__PURE__*/React.createElement("span", null, m.text))));
+    }) : /*#__PURE__*/React.createElement("span", null, m.text)),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 4,
+        marginTop: 5,
+        justifyContent: isMe ? 'flex-end' : 'flex-start'
+      }
+    }, REACTIONS.map(r => {
+      const count = normalTotals[r.id] || 0;
+      const active = !!myNormalReactions[r.id];
+      // Cuando no hay ninguna reacción aún, mostramos versión chiquita.
+      if (!hasAnyReaction && !active) return /*#__PURE__*/React.createElement("button", {
+        key: r.id,
+        onClick: () => toggleChatReaction(m.id, r.id),
+        style: {
+          padding: '1px 5px',
+          borderRadius: 14,
+          border: 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          fontSize: 12,
+          opacity: 0.35,
+          transition: 'opacity .15s'
+        }
+      }, r.e);
+      return /*#__PURE__*/React.createElement("button", {
+        key: r.id,
+        onClick: () => toggleChatReaction(m.id, r.id),
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 3,
+          padding: '2px 6px',
+          borderRadius: 14,
+          border: 'none',
+          background: active ? `${c}33` : 'rgba(10,14,46,.05)',
+          outline: active ? `1px solid ${c}77` : '1px solid rgba(10,14,46,.1)',
+          cursor: 'pointer',
+          fontSize: 12,
+          transition: 'all .15s'
+        }
+      }, /*#__PURE__*/React.createElement("span", null, r.e), count > 0 && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 9,
+          color: active ? c : 'var(--muted)',
+          fontWeight: 700
+        }
+      }, count));
+    }))));
   }), /*#__PURE__*/React.createElement("div", {
     ref: endRef
   })), zoomImg && /*#__PURE__*/React.createElement("div", {
@@ -3809,11 +3867,14 @@ function VersesBox({
     }
   }, "Ref. bíblica"), verses.map((v, i) => {
     const hasText = !!BIBLE_VERSES[v];
-    const clickable = hasText && !!onVerseClick;
-    return /*#__PURE__*/React.createElement(clickable ? "button" : "span", {
+    // Si hay texto local y callback → abre el overlay; si no → abre BibleGateway.
+    const onClick = hasText && onVerseClick
+      ? () => onVerseClick(v)
+      : () => window.open(bibleGatewayUrl(v), '_blank', 'noopener,noreferrer');
+    return /*#__PURE__*/React.createElement("button", {
       key: i,
-      onClick: clickable ? () => onVerseClick(v) : undefined,
-      title: clickable ? 'Abrir versículo' : undefined,
+      onClick: onClick,
+      title: hasText ? 'Abrir versículo' : 'Ver en BibleGateway',
       style: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -3824,17 +3885,17 @@ function VersesBox({
         color: T.accentDark,
         letterSpacing: '.03em',
         textAlign: 'left',
-        background: clickable ? 'rgba(60,81,29,.08)' : 'transparent',
-        border: clickable ? `1px solid ${T.accent}` : 'none',
-        borderRadius: clickable ? 7 : 0,
-        padding: clickable ? '1px 7px' : 0,
-        margin: clickable ? '1px 0' : 0,
-        cursor: clickable ? 'pointer' : 'default',
-        textDecoration: clickable ? 'underline' : 'none',
+        background: 'rgba(60,81,29,.08)',
+        border: `1px solid ${T.accent}`,
+        borderRadius: 7,
+        padding: '1px 7px',
+        margin: '1px 0',
+        cursor: 'pointer',
+        textDecoration: 'underline',
         textDecorationStyle: 'dotted',
         textUnderlineOffset: 2
       }
-    }, "• ", v, clickable ? ' 📖' : '');
+    }, "• ", v, hasText ? ' 📖' : ' ↗');
   })));
 }
 
@@ -4634,7 +4695,32 @@ function VerseOverlay({
       letterSpacing: '.14em',
       textTransform: 'uppercase'
     }
-  }, BIBLE_VERSION, broadcast ? ' · 🔴 En vivo' : '')), canClose && /*#__PURE__*/React.createElement("button", {
+  }, BIBLE_VERSION, broadcast ? ' · 🔴 En vivo' : '')),
+  /*#__PURE__*/React.createElement("a", {
+    href: bibleGatewayUrl(refStr),
+    target: "_blank",
+    rel: "noopener noreferrer",
+    title: "Abrir en BibleGateway",
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      flexShrink: 0,
+      padding: '7px 11px',
+      borderRadius: 11,
+      border: '1px solid rgba(60,81,29,.25)',
+      background: 'rgba(60,81,29,.07)',
+      color: SLIDE_T.accentDark,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 800,
+      fontSize: 11,
+      letterSpacing: '.08em',
+      textTransform: 'uppercase',
+      textDecoration: 'none',
+      whiteSpace: 'nowrap'
+    }
+  }, "BibleGateway ↗"),
+  canClose && /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       width: 38,
@@ -15623,9 +15709,92 @@ function ChatFab({
   }, count > 99 ? '99+' : count));
 }
 
+/* ════════════════════════ HELPERS GLOBALES ════════════════════════ */
+// Email autorizado como admin (envía el botón 👑 y el panel global).
+const ADMIN_EMAILS = ['sromeromolina10@gmail.com'];
+const isAdminEmail = (email) => !!email && ADMIN_EMAILS.includes(String(email).trim().toLowerCase());
+// Una sesión por día — usado como bucket de Firebase para attendance/users/etc.
+const getSID = () => new Date().toISOString().slice(0, 10);
+// Mensajes de error de Firebase Auth en castellano.
+const AUTH_ERRORS = {
+  'auth/user-not-found': 'No existe una cuenta con ese correo',
+  'auth/wrong-password': 'Contraseña incorrecta',
+  'auth/email-already-in-use': 'Ese correo ya tiene una cuenta',
+  'auth/invalid-email': 'El correo no es válido',
+  'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
+  'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos',
+  'auth/invalid-credential': 'Correo o contraseña incorrectos',
+  'auth/network-request-failed': 'Sin conexión. Revisa tu internet'
+};
+const getErr = (code) => AUTH_ERRORS[code] || (code ? `Error: ${code}` : 'Algo salió mal');
+// Construye un link a BibleGateway (NVI por defecto) para una referencia.
+const bibleGatewayUrl = (ref) => `https://www.biblegateway.com/passage/?search=${encodeURIComponent(ref)}&version=NVI`;
+// Modo proyección: la URL trae ?screen=1 → app sin avatar propio, solo observador.
+const isScreenMode = () => {
+  try { return new URLSearchParams(window.location.search).get('screen') === '1'; }
+  catch (_) { return false; }
+};
+// Flag de localStorage para no repetir el tutorial.
+const GUIDE_LS_KEY = 'mrnt-guide-seen-v1';
+const LANDING_LS_KEY = 'mrnt-landed-v1';
+
 /* ════════════════════════ GUÍA DE USO ════════════════════════ */
 // Mini-maqueta reutilizable: simula una "captura" de la app con marco de
 // teléfono para ilustrar cada paso de la guía. Usa los colores MRNT.
+
+// Pantalla de aterrizaje: logo + descripción corta + botón "Entrar".
+// Se muestra antes del login a usuarios que llegan a la URL.
+function LandingPage({ onEnter }) {
+  return h('div', { style: { position: 'fixed', inset: 0, background: 'linear-gradient(160deg,#07091f 0%,#0d1239 55%,#0a0e2e 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 22, fontFamily: 'var(--font-sans)', color: '#fff', overflow: 'auto' } },
+    h('div', { style: { width: '100%', maxWidth: 460, textAlign: 'center' } },
+      // Logo MRNT (4 letras con sus colores)
+      h('div', { style: { display: 'inline-flex', gap: 9, marginBottom: 22 } },
+        ROOMS.map((r) => h('span', { key: r.key, style: { width: 56, height: 56, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 30, color: '#fff', background: `linear-gradient(150deg,${r.color},${r.dark})`, boxShadow: `0 10px 26px ${r.dark}66, inset 0 -3px 0 rgba(0,0,0,.18)`, letterSpacing: '.03em' } }, r.letter))
+      ),
+      h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(28px,5vw,40px)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 4 } }, 'Maranata Class'),
+      h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.32em', textTransform: 'uppercase', color: 'rgba(247,243,235,.55)', marginBottom: 22 } }, 'Sala 3D · Iglesia Adventista · Las Condes'),
+      h('div', { style: { fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px,1.8vw,18px)', lineHeight: 1.55, color: 'rgba(247,243,235,.85)', marginBottom: 30, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' } },
+        'Una sala virtual para vivir la clase juntos: cuatro espacios MRNT, actividades en vivo, juegos y un avatar propio.'
+      ),
+      h('button', { onClick: onEnter, style: { background: 'var(--yellow)', color: 'var(--navy-900)', border: 'none', borderRadius: 'var(--r-pill)', padding: '14px 36px', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 14, letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 0 28px rgba(255,208,0,.5)' } }, 'Entrar →'),
+      h('div', { style: { marginTop: 26, fontSize: 11, color: 'rgba(247,243,235,.4)', letterSpacing: '.04em' } }, 'Necesitas una cuenta para participar. Es gratis y se crea en segundos.')
+    )
+  );
+}
+
+// Tutorial overlay — 4 tarjetas con pasos clave. Se muestra una vez tras el primer login.
+function GuideModal({ onClose }) {
+  const [step, setStep] = React.useState(0);
+  const steps = [
+    { icon: '🌟', title: 'Toca tu personaje', body: 'Personalízate: foto, colores, accesorios y tu clase (Gteen 🌱 o JA 🔥).' },
+    { icon: '🚪', title: 'Las puertas MRNT', body: 'Cada puerta del corredor lleva a una sala: Misión, Confraternización, Repaso, Templo. Entrá a la que el admin haya abierto.' },
+    { icon: '🎬', title: 'Sigue al admin', body: 'El líder inicia presentaciones, videos, juegos y la encuesta. Te aparecen en pantalla en el momento.' },
+    { icon: '💛', title: 'Reaccioná y participá', body: 'Usá emojis, escribí en el chat de Repaso, jugá Kahoot y compartí tu palabra en la nube.' }
+  ];
+  const s = steps[step];
+  const last = step === steps.length - 1;
+  return h('div', { style: { position: 'fixed', inset: 0, zIndex: 10001, background: 'rgba(10,14,46,.55)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 22 } },
+    h('div', { style: { width: '100%', maxWidth: 420, background: 'var(--cream-50)', borderRadius: 22, padding: '26px 26px 22px', boxShadow: '0 32px 80px rgba(10,14,46,.4)', animation: 'mr-modalIn .25s ease' } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 } },
+        h('div', { style: { width: 56, height: 56, borderRadius: 18, background: 'linear-gradient(150deg,#fbbf6b,#fb923c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, boxShadow: '0 8px 24px rgba(251,146,60,.4)' } }, s.icon),
+        h('div', null,
+          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, `Paso ${step + 1} de ${steps.length}`),
+          h('div', { style: { fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 22, color: 'var(--ink)' } }, s.title)
+        )
+      ),
+      h('div', { style: { fontFamily: 'var(--font-sans)', fontSize: 14.5, lineHeight: 1.55, color: 'var(--ink-soft)', marginBottom: 18 } }, s.body),
+      h('div', { style: { display: 'flex', justifyContent: 'center', gap: 5, marginBottom: 16 } },
+        steps.map((_, i) => h('span', { key: i, style: { width: i === step ? 22 : 7, height: 7, borderRadius: 4, background: i === step ? 'var(--yellow)' : 'rgba(10,14,46,.18)', transition: 'all .2s' } }))
+      ),
+      h('div', { style: { display: 'flex', gap: 10 } },
+        h('button', { onClick: onClose, style: { flex: 1, padding: 11, borderRadius: 'var(--r-pill)', border: '1px solid var(--border-on-light)', background: '#fff', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, last ? 'Cerrar' : 'Saltar'),
+        last
+          ? h('button', { onClick: onClose, style: { flex: 1.4, padding: 11, borderRadius: 'var(--r-pill)', border: 'none', background: 'var(--yellow)', color: 'var(--navy-900)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', boxShadow: '0 0 22px rgba(255,208,0,.4)' } }, '¡Empezar! →')
+          : h('button', { onClick: () => setStep(step + 1), style: { flex: 1.4, padding: 11, borderRadius: 'var(--r-pill)', border: 'none', background: 'var(--yellow)', color: 'var(--navy-900)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', boxShadow: '0 0 22px rgba(255,208,0,.4)' } }, 'Siguiente →')
+      )
+    )
+  );
+}
 
 function LoginScreen({ onSignedIn }) {
   const [mode, setMode] = React.useState('signin');
@@ -15682,8 +15851,24 @@ function LoginScreen({ onSignedIn }) {
 
 function AppRoot() {
   const [authState, setAuthState] = React.useState({ loading: true, user: null });
+  // Modo proyección: la URL trae ?screen=1 → la app no registra avatar propio.
+  const screenMode = React.useMemo(() => isScreenMode(), []);
+  // Landing previa al login. En screen mode o si ya entraron una vez se salta.
+  const [landed, setLanded] = React.useState(() => {
+    if (screenMode) return true;
+    try { return window.localStorage.getItem(LANDING_LS_KEY) === '1'; } catch (_) { return false; }
+  });
+  // Tutorial post-login (solo la primera vez, fuera de screen mode).
+  const [showGuide, setShowGuide] = React.useState(false);
   React.useEffect(() => {
-    const off = window.auth.onAuthStateChanged((u) => setAuthState({ loading: false, user: u }));
+    const off = window.auth.onAuthStateChanged((u) => {
+      setAuthState({ loading: false, user: u });
+      if (u && !screenMode) {
+        try {
+          if (window.localStorage.getItem(GUIDE_LS_KEY) !== '1') setShowGuide(true);
+        } catch (_) {}
+      }
+    });
     // Auto-actualización: si cambia /config/appVersion, recargar.
     const verRef = window.db && window.db.ref('config/appVersion');
     let firstVer = true;
@@ -15693,10 +15878,22 @@ function AppRoot() {
       if (v && v !== APP_VERSION) window.location.reload();
     });
     return () => { off && off(); if (verRef) verRef.off(); };
-  }, []);
+  }, [screenMode]);
+  const dismissGuide = () => {
+    setShowGuide(false);
+    try { window.localStorage.setItem(GUIDE_LS_KEY, '1'); } catch (_) {}
+  };
+  const enterFromLanding = () => {
+    setLanded(true);
+    try { window.localStorage.setItem(LANDING_LS_KEY, '1'); } catch (_) {}
+  };
   if (authState.loading) return h('div', { style: { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cream-50)', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', fontSize: 12 } }, 'Cargando…');
+  if (!landed && !authState.user) return h(LandingPage, { onEnter: enterFromLanding });
   if (!authState.user) return h(LoginScreen, { onSignedIn: () => { /* listener picks it up */ } });
-  return h(Component, { autoWander: false, user: authState.user });
+  return h(React.Fragment, null,
+    h(Component, { autoWander: false, user: authState.user, screenMode }),
+    showGuide ? h(GuideModal, { onClose: dismissGuide }) : null
+  );
 }
 
 class Component extends React.Component {
@@ -15743,6 +15940,11 @@ class Component extends React.Component {
     this.uid = user.uid;
     this.SID = getSID();
     this.isAdmin = isAdminEmail(user.email);
+    // En modo proyección: solo lee la sesión, sin registrar avatar ni asistencia.
+    this.screenMode = !!this.props.screenMode;
+    if (this.screenMode) {
+      this.setState((s) => ({ chars: s.chars.filter((c) => c.id !== 'me') }));
+    }
     const meRef = window.db.ref(`users/${this.SID}/${this.uid}`);
     const profileRef = window.db.ref(`profiles/${this.uid}`);
     // Lee el perfil persistente (nombre, color, accesorios) y entra en la sesión.
@@ -15764,6 +15966,7 @@ class Component extends React.Component {
         status: p.status || '', mood: p.mood || '',
         room: null
       };
+      if (this.screenMode) return; // solo observador
       // Actualiza al "me" local con datos del perfil.
       this.setState((s) => ({
         chars: s.chars.map((c) => c.id === 'me' ? { ...c, ...merged, id: 'me' } : c)
@@ -15809,20 +16012,20 @@ class Component extends React.Component {
       const op = v.openRooms || {};
       this.setState((s) => {
         // Auto-abrir actividad cuando phase coincida con la sala actual.
-        // Solo si el usuario está dentro de la sala correspondiente.
+        // En modo proyección, siempre la activamos sin estar en sala.
         let activity = s.activity;
         const phase = v.phase;
         if (phase && phase !== 'waiting') {
-          const inMyRoom = (s.currentRoom === phase) || (s.currentRoom === 'repaso' && phase === 'juegos');
+          const inMyRoom = this.screenMode || (s.currentRoom === phase) || (s.currentRoom === 'repaso' && phase === 'juegos');
           if (inMyRoom && !s.activity) activity = phase;
           // Si la fase termina, cerrar la actividad asociada.
         } else if (phase === 'waiting' && ['confra','repaso','juegos','mision','templo'].includes(s.activity)) {
           activity = null;
         }
         // Presentaciones y videos pueden estar activos en paralelo a la sala.
-        if (v.presentation?.active && !s.activity && s.currentRoom) activity = 'presenta';
-        if (v.video?.active && !s.activity && s.currentRoom)        activity = 'videos';
-        if (v.wordcloud?.active && !s.activity && s.currentRoom === 'repaso') activity = 'wordcloud';
+        if (v.presentation?.active && !s.activity && (s.currentRoom || this.screenMode)) activity = 'presenta';
+        if (v.video?.active && !s.activity && (s.currentRoom || this.screenMode))        activity = 'videos';
+        if (v.wordcloud?.active && !s.activity && (s.currentRoom === 'repaso' || this.screenMode)) activity = 'wordcloud';
         return {
           session: v,
           started: { mision: !!op.mision, confra: !!op.confra, repaso: !!op.repaso, templo: !!op.templo },
@@ -15849,7 +16052,7 @@ class Component extends React.Component {
     if (this._reacRef)      this._reacRef.off();
     if (this._surveyRef)    this._surveyRef.off();
     if (this._histRef)      this._histRef.off();
-    if (this.uid && this.SID && window.db) {
+    if (this.uid && this.SID && window.db && !this.screenMode) {
       window.db.ref(`users/${this.SID}/${this.uid}`).remove().catch(() => {});
     }
   }
@@ -16427,6 +16630,22 @@ class Component extends React.Component {
 
   /* ════════ TEMPLATE (chrome) ════════ */
   renderHeader(v, me) {
+    // Modo proyección: header reducido, sin botones personales.
+    if (this.screenMode) {
+      return h('header', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 18px', background: '#fff', borderBottom: '1px solid var(--border-on-light)', flexShrink: 0, zIndex: 50 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 11 } },
+          h('span', { style: { width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(150deg,#fbbf6b,#fb923c)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 18, boxShadow: '0 4px 14px rgba(251,146,60,.45)' } }, 'M'),
+          h('div', { style: { lineHeight: 1.05 } },
+            h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 18, letterSpacing: '.02em', color: 'var(--ink)' } }, v.title),
+            h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 9, letterSpacing: '.2em', color: 'var(--ink-soft)', marginTop: 3 } }, '📺 Modo proyección · ' + v.subtitle),
+          ),
+        ),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 9 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: 'var(--navy-900)', color: 'var(--yellow)', borderRadius: 'var(--r-pill)', padding: '6px 14px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
+            h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: 'var(--yellow)' } }), `${v.count} en línea`),
+        ),
+      );
+    }
     return h('header', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 18px', background: '#fff', borderBottom: '1px solid var(--border-on-light)', flexShrink: 0, zIndex: 50 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 11 } },
         h('span', { style: { width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(150deg,#fbbf6b,#fb923c)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 18, boxShadow: '0 4px 14px rgba(251,146,60,.45)' } }, 'M'),
@@ -16444,6 +16663,7 @@ class Component extends React.Component {
           h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: 'var(--yellow)' } }), `${v.count} en línea`),
         h('button', { onClick: () => this.setState({ activity: 'asistencia' }), title: 'Mi asistencia', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📅'),
         this.isAdmin ? h('button', { onClick: () => this.setState((s) => ({ showQR: !s.showQR })), title: 'Mostrar QR', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📲') : null,
+        this.isAdmin ? h('button', { onClick: () => { const u = new URL(window.location.href); u.searchParams.set('screen', '1'); window.open(u.toString(), '_blank', 'noopener'); }, title: 'Abrir vista para proyección', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📺') : null,
         h('button', { onClick: () => window.auth && window.auth.signOut(), title: 'Cerrar sesión', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, 'Salir'),
       ),
     );
@@ -16487,13 +16707,14 @@ class Component extends React.Component {
     const v = this.renderVals();
     const st = this.state;
     const me = st.chars.find((c) => c.id === 'me') || {};
+    const screen = this.screenMode;
     return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', background: 'var(--cream-50)', fontFamily: 'var(--font-sans)', overflow: 'hidden', WebkitUserSelect: 'none', userSelect: 'none' } },
       this.renderHeader(v, me),
       v.inLobby ? this.renderLobbySection(v) : null,
-      v.inRoom ? h(React.Fragment, null, v.stage, this.renderFooter(v)) : null,
-      st.avatarEditing ? h(AvatarEditor, { char: me, onSave: this.saveAvatar, onClose: () => this.setState({ avatarEditing: false }) }) : null,
+      v.inRoom ? h(React.Fragment, null, v.stage, screen ? null : this.renderFooter(v)) : null,
+      !screen && st.avatarEditing ? h(AvatarEditor, { char: me, onSave: this.saveAvatar, onClose: () => this.setState({ avatarEditing: false }) }) : null,
       // AdminPanel global (botón 👑 flotante) — solo admin.
-      this.isAdmin ? h(AdminPanel, {
+      !screen && this.isAdmin ? h(AdminPanel, {
         session: st.session || {}, users: this._usersDict(),
         onStartConfra: (us) => { const queueObj = {}; us.map(([uid]) => uid).sort(() => Math.random() - .5).forEach((u, i) => { queueObj[i] = u; }); db.ref(`sessions/${this.SID}`).update({ phase: 'confra', confra: { active: true, queue: queueObj, currentIdx: 0, startTime: Date.now() } }); },
         onNextSpeaker: this._nextConfraSpeaker,
@@ -16522,17 +16743,17 @@ class Component extends React.Component {
         surveyResponses: st.surveyResponses || {}
       }) : null,
       // Menús auxiliares (admin)
-      st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slideIdx: 0, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
-      st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, active: true, playing: true, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
-      st.activity === 'download' ? h(DataDownloadModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
-      st.activity === 'survey-results' ? h(AdminSurveyModal, Object.assign({}, this._commonProps(), { responses: st.surveyResponses || {}, onClose: this.closeActivity })) : null,
-      st.activity === 'admin-stats' ? h(AdminStatsModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
+      !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slideIdx: 0, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
+      !screen && st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, active: true, playing: true, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
+      !screen && st.activity === 'download' ? h(DataDownloadModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
+      !screen && st.activity === 'survey-results' ? h(AdminSurveyModal, Object.assign({}, this._commonProps(), { responses: st.surveyResponses || {}, onClose: this.closeActivity })) : null,
+      !screen && st.activity === 'admin-stats' ? h(AdminStatsModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
       // Asistencia (modal disponible siempre, abierto desde el header).
-      st.activity === 'asistencia' ? h(AttendanceModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
-      // QR de acceso (admin) — útil para proyección.
-      this.isAdmin && st.showQR ? h(DraggableQR, { qrSize: st.qrSize || 220, setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || { x: 24, y: 80 }, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
-      // Toast de bienvenida cuando alguien se une.
-      h(AttNotifyToast, null)
+      !screen && st.activity === 'asistencia' ? h(AttendanceModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
+      // QR de acceso (admin) — útil para proyección. En screenMode siempre visible.
+      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 220), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || { x: 24, y: 80 }, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
+      // Toast de bienvenida cuando alguien se une (solo participantes).
+      !screen ? h(AttNotifyToast, null) : null
     );
   }
 }
