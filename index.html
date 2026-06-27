@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v10';
+const APP_VERSION = '2026-06-27-sala3d-v11';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -6859,7 +6859,14 @@ function MisionActivity({
 /* ════════════════════════ NOTIFICACIÓN ASISTENCIA ════════════════════════ */
 
 /* ── AttNotifyToast  (líneas 8198-8223) ── */
+// Toast verde que aparece al entrar: auto-cierra a los 5s o con botón X.
 function AttNotifyToast() {
+  const [open, setOpen] = React.useState(true);
+  React.useEffect(() => {
+    const t = setTimeout(() => setOpen(false), 5000);
+    return () => clearTimeout(t);
+  }, []);
+  if (!open) return null;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
@@ -6869,7 +6876,7 @@ function AttNotifyToast() {
       zIndex: 400,
       background: 'linear-gradient(135deg,#10b981,#059669)',
       borderRadius: 12,
-      padding: '10px 22px',
+      padding: '10px 14px 10px 18px',
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 800,
       fontSize: 14,
@@ -6878,10 +6885,19 @@ function AttNotifyToast() {
       letterSpacing: '.05em',
       boxShadow: '0 4px 20px rgba(16,185,129,.5)',
       animation: 'slideIn .3s ease',
-      pointerEvents: 'none',
-      whiteSpace: 'nowrap'
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      maxWidth: 'calc(100vw - 32px)'
     }
-  }, "✅ ¡Asistencia del sábado registrada!");
+  },
+    /*#__PURE__*/React.createElement('span', { style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, "✅ ¡Asistencia del sábado registrada!"),
+    /*#__PURE__*/React.createElement('button', {
+      onClick: () => setOpen(false),
+      'aria-label': 'Cerrar',
+      style: { background: 'rgba(255,255,255,.18)', border: 'none', color: '#fff', width: 24, height: 24, borderRadius: '50%', cursor: 'pointer', fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
+    }, '✕')
+  );
 }
 
 /* ════════════════════════ PROMPT: UNIRSE A ACTIVIDAD ACTIVA ════════════════════════ */
@@ -15949,12 +15965,26 @@ class Component extends React.Component {
     chars: [
       { id: 'me', name: 'Tú', emoji: '🌟', color: '#ffd000', bodyColor: '#ffd000', armColor: '#ffd000', legColor: '#2a2f52', accessory: 'none', photo: null, x: 8, y: 6.5, status: '', mood: '', room: null }
     ],
-    furniture: {
-      mision: [{ id: 'm1', type: 'tv', x: 12, y: 2, dir: 0 }, { id: 'm2', type: 'sofa', x: 4, y: 4, dir: 0 }, { id: 'm3', type: 'plant', x: 1, y: 1, dir: 0 }, { id: 'm4', type: 'table', x: 8, y: 9, dir: 0 }, { id: 'm5', type: 'lamp', x: 14, y: 6, dir: 0 }],
-      confra: [{ id: 'c1', type: 'sofa', x: 5, y: 4, dir: 0 }, { id: 'c2', type: 'sofa', x: 9, y: 4, dir: 2 }, { id: 'c3', type: 'table', x: 7, y: 6, dir: 0 }, { id: 'c4', type: 'lamp', x: 13, y: 2, dir: 0 }, { id: 'c5', type: 'rug', x: 7, y: 8, dir: 0 }, { id: 'c6', type: 'plant', x: 1, y: 10, dir: 0 }],
-      repaso: [{ id: 'r1', type: 'screen', x: 8, y: 1, dir: 0 }, { id: 'r2', type: 'chair', x: 6, y: 5, dir: 0 }, { id: 'r3', type: 'chair', x: 8, y: 5, dir: 0 }, { id: 'r4', type: 'chair', x: 10, y: 5, dir: 0 }, { id: 'r5', type: 'table', x: 8, y: 8, dir: 0 }, { id: 'r6', type: 'plant', x: 14, y: 1, dir: 0 }],
-      templo: [{ id: 't1', type: 'pulpit', x: 8, y: 2, dir: 0 }, { id: 't2', type: 'chair', x: 6, y: 6, dir: 3 }, { id: 't3', type: 'chair', x: 10, y: 6, dir: 1 }, { id: 't4', type: 'rug', x: 8, y: 5, dir: 0 }, { id: 't5', type: 'plant', x: 1, y: 10, dir: 0 }, { id: 't6', type: 'plant', x: 14, y: 10, dir: 0 }],
-    },
+    // Las 4 salas arrancan con el mismo layout: mesa vertical en el centro,
+    // sillones a los costados, sillas en las cabezas y plantas en las esquinas.
+    // El admin puede luego abrir "editar muebles" y mover/girar/quitar/agregar.
+    furniture: (() => {
+      const BASE = [
+        ['table', 8, 6, 0],
+        ['sofa',  4, 6, 1],
+        ['sofa',  12, 6, 3],
+        ['chair', 8, 4, 2],
+        ['chair', 8, 8, 0],
+        ['plant', 1, 1, 0],
+        ['plant', 14, 1, 0],
+        ['lamp',  14, 10, 0],
+      ];
+      const make = (pref) => BASE.map(([t, x, y, d], i) => ({ id: `${pref}${i + 1}`, type: t, x, y, dir: d }));
+      return { mision: make('m'), confra: make('c'), repaso: make('r'), templo: make('t') };
+    })(),
+    // editFurn: admin abre/cierra el modo de edición de muebles. Cerrado:
+    // muebles fijos. Abierto: se pueden agregar, mover, girar y eliminar.
+    editFurn: false,
     selectedId: null, editing: false, placeMode: null, selFurn: null, dragging: false,
     activity: null, reacts: [], scale: 1, lobbyDragging: false,
     lobby: {
@@ -16250,10 +16280,45 @@ class Component extends React.Component {
 
   /* ---- furniture (per room) ---- */
   setFurn = (fn) => this.setState((s) => ({ furniture: { ...s.furniture, [s.currentRoom]: fn(s.furniture[s.currentRoom] || []) } }));
-  togglePlace = (type) => this.setState((s) => ({ placeMode: s.placeMode === type ? null : type, selFurn: null, selectedId: null }));
-  selectFurn = (id) => this.setState((s) => ({ selFurn: s.selFurn === id ? null : id, selectedId: null }));
-  rotateFurn = (id) => this.setFurn((list) => list.map((f) => f.id === id ? { ...f, dir: ((f.dir || 0) + 1) % 4 } : f));
-  removeFurn = (id) => { this.setFurn((list) => list.filter((f) => f.id !== id)); this.setState({ selFurn: null }); };
+  togglePlace = (type) => {
+    if (!this.state.editFurn) return;
+    this.setState((s) => ({ placeMode: s.placeMode === type ? null : type, selFurn: null, selectedId: null }));
+  };
+  selectFurn = (id) => {
+    if (!this.state.editFurn) return;
+    this.setState((s) => ({ selFurn: s.selFurn === id ? null : id, selectedId: null }));
+  };
+  rotateFurn = (id) => { if (!this.state.editFurn) return; this.setFurn((list) => list.map((f) => f.id === id ? { ...f, dir: ((f.dir || 0) + 1) % 4 } : f)); };
+  removeFurn = (id) => { if (!this.state.editFurn) return; this.setFurn((list) => list.filter((f) => f.id !== id)); this.setState({ selFurn: null }); };
+  toggleEditFurn = () => { if (!this.isAdmin) return; this.setState((s) => ({ editFurn: !s.editFurn, placeMode: null, selFurn: null })); };
+
+  /* ---- furniture drag (cuando editFurn=true) ---- */
+  _furnDown = (e, id) => {
+    if (!this.state.editFurn) return;
+    e.stopPropagation();
+    this._furnDragging = id;
+    this._furnMoved = false;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  };
+  _furnMove = (e, id) => {
+    if (this._furnDragging !== id) return;
+    e.stopPropagation();
+    const { x, y } = this._evToTile(e);
+    const cx = this.clamp(x, 0.5, this.COLS - 0.5);
+    const cy = this.clamp(y, 0.5, this.ROWS - 0.5);
+    this._furnMoved = true;
+    this.setFurn((list) => list.map((f) => f.id === id ? { ...f, x: cx, y: cy } : f));
+  };
+  _furnUp = (e, id) => {
+    if (this._furnDragging !== id) return;
+    e.stopPropagation();
+    this._furnDragging = null;
+    // Suppress siguiente onClick si hubo arrastre real (evita seleccionar al soltar).
+    if (this._furnMoved) {
+      this._furnSuppressClick = true;
+      setTimeout(() => { this._furnSuppressClick = false; }, 100);
+    }
+  };
 
   /* ---- continuous-touch movement ---- */
   _evToTile = (e) => { const r = this.layerEl.getBoundingClientRect(); const sc = r.width / this.LW || 1; return this.s2t((e.clientX - r.left) / sc, (e.clientY - r.top) / sc); };
@@ -16355,7 +16420,20 @@ class Component extends React.Component {
       h('button', { title: 'Quitar', style: hBtn('#ef4444'), onClick: (e) => { e.stopPropagation(); this.removeFurn(item.id); } }, '✕'),
     ) : null;
     const outline = selected ? '2px dashed rgba(255,208,0,.9)' : 'none';
-    const common = { 'data-furn': '1', style: { position: 'absolute', left: pos.left, top: pos.top, zIndex: this.depth(item.x, item.y), transform: 'translate(-50%,-72%)', cursor: 'pointer' }, onClick: (e) => { e.stopPropagation(); this.selectFurn(item.id); } };
+    const editable = this.state.editFurn;
+    const common = {
+      'data-furn': '1',
+      style: {
+        position: 'absolute', left: pos.left, top: pos.top, zIndex: this.depth(item.x, item.y),
+        transform: 'translate(-50%,-72%)',
+        cursor: editable ? 'grab' : 'default',
+        touchAction: editable ? 'none' : 'auto'
+      },
+      onClick: (e) => { e.stopPropagation(); if (this._furnSuppressClick) return; if (editable) this.selectFurn(item.id); },
+      onPointerDown: editable ? (e) => this._furnDown(e, item.id) : undefined,
+      onPointerMove: editable ? (e) => this._furnMove(e, item.id) : undefined,
+      onPointerUp:   editable ? (e) => this._furnUp(e, item.id)   : undefined
+    };
     const wrap = (g) => h('div', common, handles, h('div', { style: { transform: flipX ? 'scaleX(-1)' : 'none', transformOrigin: 'bottom center', position: 'relative', outline, outlineOffset: 4, borderRadius: 8 } }, g));
 
     if (item.type === 'tv') return wrap(h('div', null,
@@ -16628,6 +16706,24 @@ class Component extends React.Component {
         onClose: this.closeActivity
       }));
     }
+    // Templo abre la encuesta semanal automáticamente.
+    if (k === 'templo') {
+      const me = this.state.chars.find((c) => c.id === 'me') || {};
+      const responses = this.state.surveyResponses || {};
+      const surveyActive = !!this.state.session?.survey?.active;
+      if (this.isAdmin) {
+        return h(AdminSurveyModal, Object.assign({}, cp, {
+          responses,
+          surveyActive,
+          onToggle: () => db.ref(`sessions/${this.SID}/survey/active`).set(!surveyActive)
+        }));
+      }
+      return h(SurveyModal, Object.assign({}, cp, {
+        myName: me.name || 'Anon',
+        alreadyResponded: !!responses[this.uid],
+        onSent: this.closeActivity
+      }));
+    }
     return null;
   }
   // Despachadores para iniciar/terminar actividades reales (admin desde dentro de la sala).
@@ -16798,7 +16894,7 @@ class Component extends React.Component {
         ),
       ),
       h('div', { style: { display: 'flex', alignItems: 'center', gap: isMobile ? 5 : 9, flexShrink: 0 } },
-        v.inRoom ? h('button', { onClick: v.onBack, style: { display: 'flex', alignItems: 'center', gap: 5, background: '#fff', color: 'var(--ink)', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: isMobile ? '6px 10px' : '7px 15px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase' } }, isMobile ? '←' : '← Salas') : null,
+        v.inRoom ? h('button', { onClick: v.onBack, title: 'Volver al lobby', style: { display: 'flex', alignItems: 'center', gap: 5, background: 'var(--cream-100)', color: 'var(--ink)', border: '1.5px solid var(--ink)', borderRadius: 'var(--r-pill)', padding: isMobile ? '6px 12px' : '7px 15px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase' } }, '← Salas') : null,
         h('button', { onClick: () => this.setState({ avatarEditing: true }), title: 'Editar mi avatar', style: { display: 'flex', alignItems: 'center', gap: isMobile ? 0 : 7, background: '#fff', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: isMobile ? 3 : '4px 14px 4px 4px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--ink)' } },
           h('span', { style: { width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(circle at 35% 35%, ${(me.color || '#ffd000')}33, ${(me.color || '#ffd000')}11)`, border: `2px solid ${me.color || '#ffd000'}`, fontSize: 14 } }, me.photo ? h('img', { src: me.photo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover' } }) : (me.emoji || '🌟')),
           isMobile ? null : 'Avatar'),
@@ -16865,6 +16961,7 @@ class Component extends React.Component {
 
   _renderMobileLobby(v) {
     const st = this.state;
+    const me = st.chars.find((c) => c.id === 'me') || {};
     return h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(ellipse at 50% 0%, #fffdf8, var(--cream-50) 70%)' } },
       h('div', { style: { flex: 1, overflowX: 'auto', overflowY: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', padding: '10px 14px 20px' } },
         h('div', { style: { display: 'flex', gap: 10, alignItems: 'stretch' } },
@@ -16882,20 +16979,38 @@ class Component extends React.Component {
           })
         )
       ),
-      h('div', { style: { padding: '8px 14px 12px', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--ink-soft)', opacity: .55, borderTop: '1px solid var(--border-on-light)' } },
-        '◀ Desliza para ver las 4 salas MRNT ▶'),
+      // Footer del lobby con avatar del usuario actual + hint.
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 11, padding: '10px 14px 12px', borderTop: '1px solid var(--border-on-light)', background: '#fff' } },
+        h('div', { style: { width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(circle at 35% 35%, ${(me.color || '#ffd000')}33, ${(me.color || '#ffd000')}11)`, border: `2.5px solid ${me.color || '#ffd000'}`, fontSize: 22, flexShrink: 0, boxShadow: '0 0 12px rgba(255,208,0,.3)' } },
+          me.photo ? h('img', { src: me.photo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover' } }) : (me.emoji || '🌟')),
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 14, color: 'var(--ink)', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, me.name || 'Tú'),
+          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginTop: 2 } }, '◀ Desliza para ver las 4 salas MRNT ▶')
+        ),
+      ),
     );
   }
   renderFooter(v) {
-    // Mobile: footer compacto sin grilla de muebles para no tapar la sala.
+    const editFurn = this.state.editFurn;
+    // Mobile: footer compacto. Admin tiene además toggle de muebles.
     if (this.state.isMobile) {
-      return h('footer', { style: { display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', background: '#fff', borderTop: '1px solid var(--border-on-light)', flexShrink: 0, zIndex: 50, justifyContent: 'space-between' } },
+      return h('footer', { style: { display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', background: '#fff', borderTop: '1px solid var(--border-on-light)', flexShrink: 0, zIndex: 50, justifyContent: 'space-between', flexWrap: 'wrap' } },
         h('button', { onClick: () => this.setState({ avatarEditing: true }), style: { display: 'flex', alignItems: 'center', gap: 5, background: '#fff', color: 'var(--ink)', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '7px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.04em', textTransform: 'uppercase' } }, '🎨 Avatar'),
         h('button', { onClick: v.onMyStatus, style: { display: 'flex', alignItems: 'center', gap: 5, background: 'var(--action-accent)', color: 'var(--navy-900)', border: 'none', borderRadius: 'var(--r-pill)', padding: '7px 14px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.04em', textTransform: 'uppercase', boxShadow: 'var(--glow-yellow)' } }, '✎ Estado'),
+        this.isAdmin ? h('button', { onClick: this.toggleEditFurn, style: { display: 'flex', alignItems: 'center', gap: 5, background: editFurn ? 'var(--ink)' : '#fff', color: editFurn ? 'var(--cream-50)' : 'var(--ink)', border: `1px solid ${editFurn ? 'var(--ink)' : 'var(--border-on-light)'}`, borderRadius: 'var(--r-pill)', padding: '7px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.04em', textTransform: 'uppercase' } }, editFurn ? '✓ Listo' : '🛋️ Muebles') : null,
+        // Cuando admin abre edición, ofrecemos la grilla de tipos para agregar muebles nuevos.
+        editFurn && this.isAdmin ? h('div', { style: { width: '100%', display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 6 } },
+          v.furnitureItems.map((f, i) => h('button', { key: i, onClick: f.onClick, style: f.style }, h('span', { style: { fontSize: 13 } }, f.icon), f.label))
+        ) : null,
       );
     }
     return h('footer', { style: { display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', background: '#fff', borderTop: '1px solid var(--border-on-light)', flexShrink: 0, flexWrap: 'wrap', zIndex: 50 } },
-      h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginRight: 2 } }, 'Colocar'),
+      // Toggle de edición de muebles (solo admin).
+      this.isAdmin ? h('button', { onClick: this.toggleEditFurn, style: { display: 'flex', alignItems: 'center', gap: 6, background: editFurn ? 'var(--ink)' : '#fff', color: editFurn ? 'var(--cream-50)' : 'var(--ink)', border: `1.5px solid ${editFurn ? 'var(--ink)' : 'var(--border-on-light)'}`, borderRadius: 'var(--r-pill)', padding: '7px 14px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase', marginRight: 6 } }, editFurn ? '✓ Listo' : '🛋️ Editar muebles') : null,
+      // Grilla de tipos visible solo cuando el admin está editando.
+      editFurn && this.isAdmin ? h(React.Fragment, null,
+        h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginRight: 2 } }, 'Colocar'),
+      ) : null,
       v.furnitureItems.map((f, i) => h('button', { key: i, onClick: f.onClick, style: f.style }, h('span', { style: { fontSize: 15 } }, f.icon), f.label)),
       h('div', { style: { flex: 1, minWidth: 8 } }),
       h('button', { onClick: () => this.setState({ avatarEditing: true }), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', color: 'var(--ink)', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '9px 16px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, letterSpacing: '.05em', textTransform: 'uppercase' } }, '🎨 Mi avatar'),
@@ -16928,8 +17043,8 @@ class Component extends React.Component {
         onEndJuegos: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', juegos: null }),
         onStartMision: (us, mode) => db.ref(`sessions/${this.SID}`).update({ phase: 'mision', mision: { active: true, mode: mode || 'projects', startTime: Date.now() } }),
         onEndMision: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', mision: null }),
-        onStartTemplo: () => db.ref(`sessions/${this.SID}`).update({ phase: 'templo', templo: { active: true, startTime: Date.now() } }),
-        onEndTemplo: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', templo: null }),
+        onStartTemplo: () => db.ref(`sessions/${this.SID}`).update({ phase: 'templo', templo: { active: true, startTime: Date.now() }, survey: { active: true } }),
+        onEndTemplo: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', templo: null, survey: null }),
         onOpenStats: () => this.setState({ activity: 'admin-stats' }),
         onToggleWordCloud: () => {
           const a = !!this.state.session?.wordcloud?.active;
@@ -16942,8 +17057,8 @@ class Component extends React.Component {
         surveyResponses: st.surveyResponses || {}
       }) : null,
       // Menús auxiliares (admin)
-      !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slide: 0, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
-      !screen && st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { const v = VIDEOS.find((x) => x.id === id); db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, videoId: v?.youtubeId || null, active: true, state: 'playing', position: 0, updatedAt: Date.now() }); this.setState({ activity: null }); } }) : null,
+      !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slide: 0, startTime: Date.now() }); this.setState({ activity: 'presenta' }); } }) : null,
+      !screen && st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { const v = VIDEOS.find((x) => x.id === id); db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, videoId: v?.youtubeId || null, active: true, state: 'playing', position: 0, updatedAt: Date.now() }); this.setState({ activity: 'videos' }); } }) : null,
       !screen && st.activity === 'download' ? h(DataDownloadModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
       !screen && st.activity === 'survey-results' ? h(AdminSurveyModal, Object.assign({}, this._commonProps(), { responses: st.surveyResponses || {}, onClose: this.closeActivity })) : null,
       !screen && st.activity === 'admin-stats' ? h(AdminStatsModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
