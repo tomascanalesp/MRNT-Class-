@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v4';
+const APP_VERSION = '2026-06-27-sala3d-v5';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -15711,7 +15711,7 @@ function ChatFab({
 
 /* ════════════════════════ HELPERS GLOBALES ════════════════════════ */
 // Emails autorizados como admin (botón 👑, panel global, abrir/cerrar salas).
-const ADMIN_EMAILS = ['sromeromolina10@gmail.com', 'tomas.canales@gmail.com'];
+const ADMIN_EMAILS = ['sromeromolina10@gmail.com', 'tomascanalesp@gmail.com'];
 // Gmail ignora puntos antes del @ y mayúsculas — normalizamos igual al comparar.
 const normalizeEmail = (email) => {
   if (!email) return '';
