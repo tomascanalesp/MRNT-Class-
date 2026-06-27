@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v13';
+const APP_VERSION = '2026-06-27-sala3d-v14';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -3569,107 +3569,159 @@ const PRESENTATIONS = [{
     lessonTitle: 'Hacia la eternidad',
     ref: 'Apocalipsis 21–22'
   }, {
-    type: 'list',
-    day: 'APOCALIPSIS 21–22',
-    kicker: 'PANORAMA',
-    items: [{
-      n: '1',
-      title: 'Todo hecho nuevo',
-      refs: ['Ap 21:1-8 · Cielo y tierra nuevos; Dios mora con los hombres; no más muerte ni dolor']
+    type: 'content',
+    day: 'SÁBADO',
+    kicker: 'INICIA',
+    title: 'Seguir al Cordero',
+    verses: ['Apocalipsis 3:14', 'Mateo 24:21-22', 'Hebreos 13:5', 'Hebreos 10:23', 'Mateo 24:13', 'Salmos 25:15', 'Mateo 5:12', 'Apocalipsis 22:12', 'Apocalipsis 5:12', 'Juan 1:35-37', 'Apocalipsis 14:4', 'Apocalipsis 7:17', 'Apocalipsis 22:4'],
+    cards: [{
+      variant: 'box',
+      lead: 'Aunque el futuro pueda traer desafíos, Jesús permanece fiel a sus promesas',
+      rest: 'y sostiene a quienes perseveran hasta el fin con la esperanza de la vida eterna.'
     }, {
-      n: '2',
-      title: 'La Nueva Jerusalén',
-      refs: ['Ap 21:9-21 · La esposa del Cordero: muro, 12 puertas, 12 cimientos, oro y piedras preciosas']
+      variant: 'note',
+      lead: 'La mayor recompensa del cielo no será solo la ausencia de dolor o muerte, sino vivir para siempre en la presencia de Cristo,',
+      rest: 'adorando al Cordero que nos redimió.'
     }, {
-      n: '3',
-      title: 'Sin templo ni sol',
-      refs: ['Ap 21:22-27 · Dios y el Cordero son su templo y su luz; entran los del libro de la vida']
+      variant: 'plain',
+      lead: 'Seguir a Jesús en la eternidad comienza con seguirlo fielmente en la tierra,',
+      rest: 'confiando en su dirección y permaneciendo cerca de Él cada día.'
     }, {
-      n: '4',
-      title: 'El río y el árbol de la vida',
-      refs: ['Ap 22:1-5 · Agua de vida, sanidad de las naciones; verán su rostro y reinarán por siempre']
-    }, {
-      n: '5',
-      title: '"He aquí, vengo pronto"',
-      refs: ['Ap 22:6-15 · Palabras fieles y verdaderas; "mi galardón conmigo"; guarda estas palabras']
-    }, {
-      n: '6',
-      title: 'La invitación final',
-      refs: ['Ap 22:16-21 · "El Espíritu y la Esposa dicen: Ven"; "Sí, ven, Señor Jesús"']
+      variant: 'note',
+      lead: 'La esperanza del cielo fortalece nuestra fe',
+      rest: 'y nos impulsa a mantener nuestros ojos puestos en Cristo, quien será nuestro Pastor por toda la eternidad.'
     }]
   }, {
-    type: 'egw',
-    day: 'APOCALIPSIS 21',
-    kicker: 'LEE',
-    title: 'Apocalipsis 21:1-7',
-    text: '1 Vi un cielo nuevo y una tierra nueva; porque el primer cielo y la primera tierra pasaron, y el mar ya no existía más. 2 Y yo Juan vi la santa ciudad, la nueva Jerusalén, descender del cielo, de Dios, dispuesta como una esposa ataviada para su marido. 3 Y oí una gran voz del cielo que decía: He aquí el tabernáculo de Dios con los hombres, y él morará con ellos; y ellos serán su pueblo, y Dios mismo estará con ellos como su Dios. 4 Enjugará Dios toda lágrima de los ojos de ellos; y ya no habrá muerte, ni habrá más llanto, ni clamor, ni dolor; porque las primeras cosas pasaron. 5 Y el que estaba sentado en el trono dijo: He aquí, yo hago nuevas todas las cosas. Y me dijo: Escribe; porque estas palabras son fieles y verdaderas. 6 Y me dijo: Hecho está. Yo soy el Alfa y la Omega, el principio y el fin. Al que tuviere sed, yo le daré gratuitamente de la fuente del agua de la vida. 7 El que venciere heredará todas las cosas, y yo seré su Dios, y él será mi hijo.',
-    cite: 'Apocalipsis 21:1-7, Reina-Valera 1960.'
+    type: 'quote',
+    day: 'DOMINGO',
+    kicker: 'ESCRIBE',
+    name: 'Ministerio Joven',
+    handle: '@ministeriojoven',
+    text: 'Jesús, el Cordero, es también nuestro Pastor y guía nuestros pasos como nadie más puede hacerlo.'
   }, {
-    type: 'list',
-    day: 'GRANDES TEMAS',
-    kicker: 'MAPA CONCEPTUAL',
-    items: [{
-      n: '1',
-      title: 'Lo nuevo',
-      refs: ['"He aquí, yo hago nuevas todas las cosas" (21:5)']
+    type: 'content',
+    day: 'LUNES',
+    kicker: 'ASIMILA',
+    title: 'La novia',
+    verses: ['Juan 14:1-3', 'Colosenses 3:2', 'Apocalipsis 19:7', 'Apocalipsis 21:2', 'Apocalipsis 21:9-10', 'Apocalipsis 22:4'],
+    cards: [{
+      variant: 'box',
+      lead: 'El cielo es la culminación de la relación entre Cristo y su pueblo,',
+      rest: 'representada por la imagen de una boda, donde Jesús recibe a quienes ha redimido.'
     }, {
-      n: '2',
-      title: 'La presencia',
-      refs: ['"El tabernáculo de Dios con los hombres" — Él morará con ellos (21:3)']
+      variant: 'note',
+      lead: 'Él mismo está preparando un lugar para sus hijos',
+      rest: 'y desea que vivamos con la mirada puesta en la eternidad.'
     }, {
-      n: '3',
-      title: 'La ciudad-esposa',
-      refs: ['La nueva Jerusalén, ataviada como esposa del Cordero (21:2, 9)']
+      variant: 'plain',
+      lead: 'La Nueva Jerusalén simboliza la unión perfecta entre Dios y los redimidos,',
+      rest: 'quienes vivirán para siempre en su presencia.'
     }, {
-      n: '4',
-      title: 'La luz',
-      refs: ['Sin sol ni lámpara: "el Cordero es su lumbrera" (21:23; 22:5)']
-    }, {
-      n: '5',
-      title: 'La vida',
-      refs: ['Río y árbol de la vida; hojas para sanidad de las naciones (22:1-2)']
-    }, {
-      n: '6',
-      title: 'La invitación',
-      refs: ['"Y el que tiene sed, venga; y el que quiera, tome del agua de la vida" (22:17)']
+      variant: 'note',
+      lead: 'Mientras esperamos ese día, nuestra preparación consiste en cultivar una relación diaria con Jesús',
+      rest: 'y permanecer fieles hasta su regreso.'
     }]
   }, {
     type: 'content',
-    day: 'APOCALIPSIS 21',
-    kicker: 'CLAVES',
-    title: 'La ciudad de Dios',
-    verses: ['Ap 21:3', 'Ap 21:4', 'Ap 21:22-23', 'Ap 21:27'],
+    day: 'MARTES',
+    kicker: 'INTERPRETA',
+    title: 'Por fin, cara a cara',
+    verses: ['Génesis 2:7', 'Juan 3:16', 'Eclesiastés 3:11', 'Filipenses 3:20-21', 'Apocalipsis 14:14', 'Mateo 25:31', 'Apocalipsis 1:7', '1 Tesalonicenses 4:16', 'Juan 5:28', 'Apocalipsis 22:4', 'Apocalipsis 22:6'],
     cards: [{
       variant: 'box',
-      lead: 'La meta de toda la historia de la salvación es la comunión restaurada:',
-      rest: 'Dios vuelve a habitar con su pueblo, cara a cara, sin el pecado que los separaba.'
+      lead: 'Dios nos creó para vivir en una relación eterna con Él',
+      rest: 'y ha hecho todo lo necesario para restaurarla mediante el plan de salvación.'
     }, {
       variant: 'box',
-      lead: 'No habrá muerte, ni llanto, ni clamor, ni dolor,',
-      rest: 'porque las primeras cosas pasaron; Dios mismo enjuga toda lágrima de los ojos de los redimidos.'
+      lead: 'Aunque enfrentamos las luchas del gran conflicto, nuestra verdadera ciudadanía está en el cielo',
+      rest: 'y vivimos con la esperanza del regreso de Cristo.'
     }, {
       variant: 'plain',
-      lead: 'La Nueva Jerusalén no tiene templo ni necesita sol,',
-      rest: 'porque el Señor Dios Todopoderoso y el Cordero son su templo y su luz para siempre.'
+      lead: 'Jesús volverá con poder y gloria',
+      rest: 'para resucitar a los que durmieron en Él y reunir a su pueblo.'
     }, {
       variant: 'note',
-      lead: 'Solo entran los inscritos en el libro de la vida del Cordero:',
-      rest: 'la entrada a la eternidad se decide hoy, al elegir seguir al Cordero que nos redimió.'
+      lead: 'Ese día contemplaremos finalmente el rostro de nuestro Redentor',
+      rest: 'y comprobaremos que cada prueba, oración y acto de fidelidad habrá valido la pena.'
+    }]
+  }, {
+    type: 'list',
+    day: 'MIÉRCOLES',
+    kicker: 'INVESTIGA',
+    items: [{
+      n: '01',
+      title: 'Ver a Dios y vivir con Él',
+      refs: ['Job 19:25-27', 'Salmo 27:4-9', 'Juan 14:1-3']
+    }, {
+      n: '02',
+      title: 'No más lágrimas',
+      refs: ['Isaías 25:8-9', 'Apocalipsis 7:16-17']
+    }, {
+      n: '03',
+      title: 'Estar preparados para la boda',
+      refs: ['Mateo 22:1-14', 'Mateo 25:1-13', 'Lucas 12:35-48']
+    }]
+  }, {
+    type: 'content',
+    day: 'JUEVES',
+    kicker: 'ENFOCA',
+    title: '«¡Ven!»',
+    verses: ['Isaías 55:1-3', 'Mateo 11:28-30', 'Apocalipsis 22:17', 'Juan 6:37', 'Apocalipsis 22:20', 'Apocalipsis 21:3-5', '1 Corintios 13:12'],
+    cards: [{
+      variant: 'box',
+      lead: 'Dios continúa invitando a toda persona a venir a Él',
+      rest: 'y recibir gratuitamente el agua de la vida que solo Cristo puede ofrecer.'
+    }, {
+      variant: 'box',
+      lead: 'Quienes aceptan esta invitación encuentran paz, seguridad en la salvación',
+      rest: 'y el deseo de compartir esa esperanza con otros.'
+    }, {
+      variant: 'plain',
+      lead: 'La promesa del pronto regreso de Jesús fortalece nuestra fe',
+      rest: 'y nos anima a perseverar mientras esperamos su venida.'
+    }, {
+      variant: 'note',
+      lead: 'La comunión que hoy disfrutamos con Dios alcanzará su plenitud',
+      rest: 'cuando lo veamos cara a cara y vivamos eternamente en su presencia.'
     }]
   }, {
     type: 'egw',
-    day: 'APOCALIPSIS 22',
-    kicker: 'LEE',
-    title: 'Apocalipsis 22:1-5',
-    text: '1 Después me mostró un río limpio de agua de vida, resplandeciente como cristal, que salía del trono de Dios y del Cordero. 2 En medio de la calle de la ciudad, y a uno y otro lado del río, estaba el árbol de la vida, que produce doce frutos, dando cada mes su fruto; y las hojas del árbol eran para la sanidad de las naciones. 3 Y no habrá más maldición; y el trono de Dios y del Cordero estará en ella, y sus siervos le servirán, 4 y verán su rostro, y su nombre estará en sus frentes. 5 No habrá allí más noche; y no tienen necesidad de luz de lámpara, ni de luz del sol, porque Dios el Señor los iluminará; y reinarán por los siglos de los siglos.',
-    cite: 'Apocalipsis 22:1-5, Reina-Valera 1960.'
+    day: 'VIERNES',
+    kicker: 'REFLEXIONA',
+    title: 'Anhelo del cielo',
+    text: 'Si no recibimos la religión de Cristo por alimentarnos de la Palabra de Dios, no tendremos derecho a la entrada en la ciudad de Dios. Habiéndonos alimentado de manjares terrenales, habiendo educado nuestros gustos en el amor a las cosas mundanas, no estaremos capacitados para entrar en las cortes celestiales; no apreciaríamos las puras corrientes celestiales que circulan en el cielo. No nos satisfarían las voces de los ángeles ni la música de sus arpas. La ciencia del cielo resultaría un enigma para nuestras mentes.',
+    cite: 'Elena de White, The Faith I Live By (Review and Herald, 1958), p. 365. Parcialmente en La fe por la cual vivo (ACES, 1959), p. 367.'
   }, {
-    type: 'quote',
-    day: 'APOCALIPSIS 22',
-    kicker: 'RESPONDE',
-    name: 'El Espíritu y la Esposa',
-    handle: 'Apocalipsis 22:17, 20',
-    text: 'Y el Espíritu y la Esposa dicen: Ven. Y el que oye, diga: Ven. Y el que tiene sed, venga; y el que quiera, tome del agua de la vida gratuitamente. […] El que da testimonio de estas cosas dice: Ciertamente vengo en breve. Amén; sí, ven, Señor Jesús.'
+    type: 'dialoga',
+    columns: [{
+      title: 'El cielo y la tierra nueva',
+      items: [
+        '1. ¿Qué hará que el cielo y la tierra nueva sean diferentes de la vida actual? (Apoc. 21:1-5).',
+        '2. ¿Qué significa que el cielo se represente en términos de una boda? (Apoc. 19:7; 21:9-11).',
+        '3. ¿Qué te llama la atención de la visión de Juan sobre la ciudad santa, la Nueva Jerusalén? (Apoc. 21:9-27).',
+        '4. ¿Qué personas de tu entorno necesitan escuchar acerca de la esperanza del cielo? Comprométete a compartir esa esperanza con ellas lo antes posible. Recuerda: no puedes compartir una esperanza que no tengas.'
+      ]
+    }, {
+      title: 'Junto a Dios',
+      items: [
+        '1. ¿Qué tipo de relación cercana disfrutarán los salvados con Dios para siempre? (Juan 14:1-3; Apoc. 22:4).',
+        '2. Si vamos a seguir al Cordero en la eternidad (Apoc. 7:17), ¿qué debemos aprender a hacer ahora? (Apoc. 14:4).',
+        '3. ¿De qué maneras estás aprendiendo a escuchar a Dios y a seguir su guía? ¿En qué momentos esto ha sido un desafío y qué has aprendido?'
+      ]
+    }, {
+      title: 'Estar preparados',
+      items: [
+        '1. ¿Cuál es la amorosa invitación de Dios para nosotros y para todos en preparación para su venida? (Apoc. 22:17).',
+        '2. ¿Cómo serán recompensadas las personas cuando venga Jesús? (Apoc. 22:12-15).',
+        '3. ¿Para qué debemos estar siempre preparados y esperar con ansias? (Apoc. 22:7, 12, 20).',
+        '4. ¿Qué aspecto de las lecciones de este trimestre deseas recordar más para mantener fuerte tu relación con Dios hasta que veas a Jesús cara a cara?'
+      ]
+    }]
+  }, {
+    type: 'preview',
+    label: 'Un vistazo',
+    title: 'Las escenas finales',
+    text: 'Iniciaremos un nuevo trimestre · Alista tu Biblia. Dios es amor, y la mayor prueba de ese amor fue Jesús en la cruz. Aun en medio del dolor, el rechazo y el abandono, Jesús pensó en nosotros y entregó su vida para salvarnos. Durante este trimestre estudiaremos los últimos días de Jesús, desde sus enseñanzas a los discípulos hasta su muerte y resurrección, para descubrir cuánto nos ama y cómo ese amor puede transformar nuestra vida. La invitación es a conocer más a Jesús y permitir que su sacrificio cambie nuestro corazón.'
   }, {
     type: 'credits',
     title: 'Conócenos — Ministerio Joven Unión Chilena',
