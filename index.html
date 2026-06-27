@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v8';
+const APP_VERSION = '2026-06-27-sala3d-v9';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -15941,6 +15941,7 @@ class Component extends React.Component {
   ROOMS = ROOMS; FURN = FURN; MOODS = MOODS; REACT_EMOJIS = REACT_EMOJIS; ACTS = ACTS;
 
   state = {
+    isMobile: typeof window !== 'undefined' && window.innerWidth < 640,
     view: 'lobby', currentRoom: null,
     roomNames: { mision: 'Misión Joven', confra: 'Confraternización', repaso: 'Repaso · Hechos 4', templo: 'Templo · Adoración' },
     started: { mision: false, confra: false, repaso: false, templo: false },
@@ -15964,7 +15965,11 @@ class Component extends React.Component {
   };
 
   componentDidMount() {
-    this._onResize = () => this._measure();
+    this._onResize = () => {
+      this._measure();
+      const m = window.innerWidth < 640;
+      if (m !== this.state.isMobile) this.setState({ isMobile: m });
+    };
     window.addEventListener('resize', this._onResize);
     this._initFirebase();
   }
@@ -16463,6 +16468,8 @@ class Component extends React.Component {
     );
   }
   renderRail() {
+    // Rail solo para admin en desktop. En mobile el admin controla todo desde ⚙️.
+    if (!this.isAdmin || this.state.isMobile) return null;
     return h('div', { style: { position: 'absolute', top: 14, left: 14, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 8, width: 200, maxHeight: 'calc(100% - 28px)', overflowY: 'auto' } },
       h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--ink-soft)', padding: '0 4px 2px' } }, 'Iniciar actividad'),
       this.ACTS.map((a) => h('button', { key: a.key, onClick: () => this.openActivity(a.key), style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 14, border: `2px solid ${a.color}`, background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(4px)', cursor: 'pointer', boxShadow: `0 4px 14px ${a.color}33`, textAlign: 'left' } },
@@ -16780,30 +16787,36 @@ class Component extends React.Component {
         ),
       );
     }
-    return h('header', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 18px', background: '#fff', borderBottom: '1px solid var(--border-on-light)', flexShrink: 0, zIndex: 50 } },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 11 } },
-        h('span', { style: { width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(150deg,#fbbf6b,#fb923c)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 18, boxShadow: '0 4px 14px rgba(251,146,60,.45)' } }, 'M'),
-        h('div', { style: { lineHeight: 1.05 } },
-          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 18, letterSpacing: '.02em', color: 'var(--ink)' } }, v.title),
-          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 9, letterSpacing: '.2em', color: 'var(--ink-soft)', marginTop: 3 } }, v.subtitle),
+    const isMobile = this.state.isMobile;
+    const iconBtn = (extra) => Object.assign({ background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: isMobile ? '5px 9px' : '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: isMobile ? 12 : 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' }, extra || {});
+    return h('header', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '8px 12px' : '11px 18px', background: '#fff', borderBottom: '1px solid var(--border-on-light)', flexShrink: 0, zIndex: 50, gap: 6 } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 11, minWidth: 0, flex: '0 1 auto' } },
+        h('span', { style: { width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, flexShrink: 0, borderRadius: 9, background: 'linear-gradient(150deg,#fbbf6b,#fb923c)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: isMobile ? 16 : 18, boxShadow: '0 4px 14px rgba(251,146,60,.45)' } }, 'M'),
+        h('div', { style: { lineHeight: 1.05, minWidth: 0, overflow: 'hidden' } },
+          h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: isMobile ? 15 : 18, letterSpacing: '.02em', color: 'var(--ink)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' } }, v.title),
+          isMobile ? null : h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 9, letterSpacing: '.2em', color: 'var(--ink-soft)', marginTop: 3 } }, v.subtitle),
         ),
       ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 9 } },
-        v.inRoom ? h('button', { onClick: v.onBack, style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', color: 'var(--ink)', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '7px 15px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase' } }, '← Salas') : null,
-        h('button', { onClick: () => this.setState({ avatarEditing: true }), title: 'Editar mi avatar', style: { display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '4px 14px 4px 4px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--ink)' } },
-          h('span', { style: { width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(circle at 35% 35%, ${(me.color || '#ffd000')}33, ${(me.color || '#ffd000')}11)`, border: `2px solid ${me.color || '#ffd000'}`, fontSize: 15 } }, me.photo ? h('img', { src: me.photo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover' } }) : (me.emoji || '🌟')),
-          'Avatar'),
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: 'var(--navy-900)', color: 'var(--yellow)', borderRadius: 'var(--r-pill)', padding: '6px 14px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: isMobile ? 5 : 9, flexShrink: 0 } },
+        v.inRoom ? h('button', { onClick: v.onBack, style: { display: 'flex', alignItems: 'center', gap: 5, background: '#fff', color: 'var(--ink)', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: isMobile ? '6px 10px' : '7px 15px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase' } }, isMobile ? '←' : '← Salas') : null,
+        h('button', { onClick: () => this.setState({ avatarEditing: true }), title: 'Editar mi avatar', style: { display: 'flex', alignItems: 'center', gap: isMobile ? 0 : 7, background: '#fff', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: isMobile ? 3 : '4px 14px 4px 4px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--ink)' } },
+          h('span', { style: { width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(circle at 35% 35%, ${(me.color || '#ffd000')}33, ${(me.color || '#ffd000')}11)`, border: `2px solid ${me.color || '#ffd000'}`, fontSize: 14 } }, me.photo ? h('img', { src: me.photo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover' } }) : (me.emoji || '🌟')),
+          isMobile ? null : 'Avatar'),
+        isMobile ? null : h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: 'var(--navy-900)', color: 'var(--yellow)', borderRadius: 'var(--r-pill)', padding: '6px 14px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
           h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: 'var(--yellow)' } }), `${v.count} en línea`),
-        h('button', { onClick: () => this.setState({ activity: 'asistencia' }), title: 'Mi asistencia', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📅'),
-        this.isAdmin ? h('button', { onClick: () => this.setState((s) => ({ showQR: !s.showQR })), title: 'Mostrar QR', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📲') : null,
-        this.isAdmin ? h('button', { onClick: () => { const u = new URL(window.location.href); u.searchParams.set('screen', '1'); window.open(u.toString(), '_blank', 'noopener'); }, title: 'Abrir vista para proyección', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, '📺') : null,
-        h('button', { onClick: () => window.auth && window.auth.signOut(), title: 'Cerrar sesión', style: { background: 'transparent', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '6px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-soft)' } }, 'Salir'),
+        h('button', { onClick: () => this.setState({ activity: 'asistencia' }), title: 'Mi asistencia', style: iconBtn() }, '📅'),
+        this.isAdmin ? h('button', { onClick: () => this.setState((s) => ({ showQR: !s.showQR })), title: 'Mostrar QR', style: iconBtn() }, '📲') : null,
+        this.isAdmin && !isMobile ? h('button', { onClick: () => { const u = new URL(window.location.href); u.searchParams.set('screen', '1'); window.open(u.toString(), '_blank', 'noopener'); }, title: 'Abrir vista para proyección', style: iconBtn() }, '📺') : null,
+        h('button', { onClick: () => window.auth && window.auth.signOut(), title: 'Cerrar sesión', style: iconBtn() }, isMobile ? '⏻' : 'Salir'),
       ),
     );
   }
-  renderRoomCard(r) {
-    return h('div', { key: r.key, style: r.cardStyle },
+  renderRoomCard(r, isMobile) {
+    // En mobile, cada card es un slide horizontal con tamaño fijo.
+    const cardStyle = isMobile
+      ? Object.assign({}, r.cardStyle, { flex: '0 0 78vw', minWidth: '78vw', maxWidth: 280, scrollSnapAlign: 'start' })
+      : r.cardStyle;
+    return h('div', { key: r.key, style: cardStyle },
       h('div', { style: r.bandStyle },
         h('span', { style: r.letterStyle }, r.letter),
         h('div', { style: { display: 'flex', gap: 6, position: 'relative', zIndex: 2 } },
@@ -16823,12 +16836,24 @@ class Component extends React.Component {
     );
   }
   renderLobbySection(v) {
+    const isMobile = this.state.isMobile;
+    // Mobile: cards en scroll horizontal con snap; cada card ocupa ~78% del viewport.
+    const stripStyle = isMobile
+      ? { display: 'flex', gap: 10, padding: '10px 14px 6px', flexShrink: 0, overflowX: 'auto', overflowY: 'hidden', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }
+      : { display: 'flex', gap: 14, padding: '14px 20px 6px', flexShrink: 0 };
     return h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(ellipse at 50% 0%, #fffdf8, var(--cream-50) 70%)' } },
-      h('div', { style: { display: 'flex', gap: 14, padding: '14px 20px 6px', flexShrink: 0 } }, v.roomCards.map((r) => this.renderRoomCard(r))),
+      h('div', { style: stripStyle }, v.roomCards.map((r) => this.renderRoomCard(r, isMobile))),
       v.lobbyGround,
     );
   }
   renderFooter(v) {
+    // Mobile: footer compacto sin grilla de muebles para no tapar la sala.
+    if (this.state.isMobile) {
+      return h('footer', { style: { display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', background: '#fff', borderTop: '1px solid var(--border-on-light)', flexShrink: 0, zIndex: 50, justifyContent: 'space-between' } },
+        h('button', { onClick: () => this.setState({ avatarEditing: true }), style: { display: 'flex', alignItems: 'center', gap: 5, background: '#fff', color: 'var(--ink)', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: '7px 12px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.04em', textTransform: 'uppercase' } }, '🎨 Avatar'),
+        h('button', { onClick: v.onMyStatus, style: { display: 'flex', alignItems: 'center', gap: 5, background: 'var(--action-accent)', color: 'var(--navy-900)', border: 'none', borderRadius: 'var(--r-pill)', padding: '7px 14px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.04em', textTransform: 'uppercase', boxShadow: 'var(--glow-yellow)' } }, '✎ Estado'),
+      );
+    }
     return h('footer', { style: { display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', background: '#fff', borderTop: '1px solid var(--border-on-light)', flexShrink: 0, flexWrap: 'wrap', zIndex: 50 } },
       h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginRight: 2 } }, 'Colocar'),
       v.furnitureItems.map((f, i) => h('button', { key: i, onClick: f.onClick, style: f.style }, h('span', { style: { fontSize: 15 } }, f.icon), f.label)),
