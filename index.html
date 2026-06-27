@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v9';
+const APP_VERSION = '2026-06-27-sala3d-v10';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -16811,12 +16811,10 @@ class Component extends React.Component {
       ),
     );
   }
-  renderRoomCard(r, isMobile) {
-    // En mobile, cada card es un slide horizontal con tamaño fijo.
-    const cardStyle = isMobile
-      ? Object.assign({}, r.cardStyle, { flex: '0 0 78vw', minWidth: '78vw', maxWidth: 280, scrollSnapAlign: 'start' })
-      : r.cardStyle;
-    return h('div', { key: r.key, style: cardStyle },
+  renderRoomCard(r, _isMobile) {
+    // El wrapper externo (en _renderMobileLobby) se encarga del width; el card
+    // toma el ancho que le da su contenedor.
+    return h('div', { key: r.key, style: r.cardStyle },
       h('div', { style: r.bandStyle },
         h('span', { style: r.letterStyle }, r.letter),
         h('div', { style: { display: 'flex', gap: 6, position: 'relative', zIndex: 2 } },
@@ -16837,13 +16835,55 @@ class Component extends React.Component {
   }
   renderLobbySection(v) {
     const isMobile = this.state.isMobile;
-    // Mobile: cards en scroll horizontal con snap; cada card ocupa ~78% del viewport.
-    const stripStyle = isMobile
-      ? { display: 'flex', gap: 10, padding: '10px 14px 6px', flexShrink: 0, overflowX: 'auto', overflowY: 'hidden', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }
-      : { display: 'flex', gap: 14, padding: '14px 20px 6px', flexShrink: 0 };
+    // Mobile: un único scroll horizontal con 4 "páginas". Cada página apila
+    // card + puerta de la misma sala, así swipe izquierda/derecha mueve todo
+    // junto y la puerta de la sala actual queda alineada con su card.
+    if (isMobile) return this._renderMobileLobby(v);
     return h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(ellipse at 50% 0%, #fffdf8, var(--cream-50) 70%)' } },
-      h('div', { style: stripStyle }, v.roomCards.map((r) => this.renderRoomCard(r, isMobile))),
+      h('div', { style: { display: 'flex', gap: 14, padding: '14px 20px 6px', flexShrink: 0 } }, v.roomCards.map((r) => this.renderRoomCard(r, false))),
       v.lobbyGround,
+    );
+  }
+
+  // Dibuja una puerta compacta para mobile, sin perspectiva 3D.
+  _renderMobileDoor(r, started) {
+    return h('div', { style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } },
+      started ? h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: r.dark, background: '#fff', border: `1px solid ${r.color}`, borderRadius: 'var(--r-pill)', padding: '2px 9px', boxShadow: `0 2px 8px ${r.color}44` } }, '● En vivo')
+              : h('div', { style: { height: 17 } }),
+      h('div', { style: { position: 'relative', width: 96, height: 84, borderRadius: '18px 18px 7px 7px', padding: 6, boxSizing: 'border-box', background: started ? `linear-gradient(180deg, ${r.color}, ${r.dark})` : 'linear-gradient(180deg, #c7c2b6, #b3aea1)', border: `2px solid ${started ? r.color : 'rgba(10,14,46,.14)'}`, boxShadow: started ? `0 0 28px ${r.color}66` : 'none' } },
+        started
+          ? h('div', { style: { position: 'relative', width: '100%', height: '100%', borderRadius: '12px 12px 4px 4px', overflow: 'hidden', background: `radial-gradient(ellipse at 50% 120%, ${r.color}cc, #0a0c28 80%)`, boxShadow: 'inset 0 3px 8px rgba(0,0,0,.6)' } },
+              h('div', { style: { position: 'absolute', top: 0, bottom: 0, left: 0, width: '34%', background: `linear-gradient(90deg, ${r.dark}, ${r.color})`, borderRight: '1px solid rgba(0,0,0,.3)', transform: 'perspective(60px) rotateY(38deg)', transformOrigin: 'left center', boxShadow: '2px 0 6px rgba(0,0,0,.4)' } },
+                h('div', { style: { position: 'absolute', right: 4, top: '50%', width: 3, height: 3, borderRadius: '50%', background: '#ffd000' } })),
+              h('span', { style: { position: 'absolute', right: 10, bottom: 6, fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 17, color: '#fff', opacity: .9 } }, r.letter),
+            )
+          : h('div', { style: { width: '100%', height: '100%', borderRadius: '12px 12px 4px 4px', background: 'linear-gradient(180deg, #d8d3c8, #c2bdb1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 3px rgba(255,255,255,.5)' } },
+              h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 28, color: 'rgba(10,14,46,.28)' } }, r.letter)),
+      ),
+    );
+  }
+
+  _renderMobileLobby(v) {
+    const st = this.state;
+    return h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'radial-gradient(ellipse at 50% 0%, #fffdf8, var(--cream-50) 70%)' } },
+      h('div', { style: { flex: 1, overflowX: 'auto', overflowY: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', padding: '10px 14px 20px' } },
+        h('div', { style: { display: 'flex', gap: 10, alignItems: 'stretch' } },
+          v.roomCards.map((r) => {
+            const room = this.ROOMS.find((x) => x.key === r.key);
+            const started = st.started[r.key];
+            return h('div', { key: r.key, style: { flex: '0 0 78vw', minWidth: '78vw', maxWidth: 320, scrollSnapAlign: 'center', display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'stretch' } },
+              this.renderRoomCard(r, false),
+              h('div', { style: { display: 'flex', justifyContent: 'center', paddingTop: 4 } },
+                this._renderMobileDoor(room, started),
+              ),
+              h('div', { style: { textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink-soft)', opacity: .65 } },
+                started ? 'Toca ENTRAR · sala abierta' : (this.isAdmin ? 'Tu sala · toca ABRIR' : '🔒 Espera que abran')),
+            );
+          })
+        )
+      ),
+      h('div', { style: { padding: '8px 14px 12px', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--ink-soft)', opacity: .55, borderTop: '1px solid var(--border-on-light)' } },
+        '◀ Desliza para ver las 4 salas MRNT ▶'),
     );
   }
   renderFooter(v) {
