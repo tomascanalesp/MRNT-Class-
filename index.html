@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v12';
+const APP_VERSION = '2026-06-27-sala3d-v13';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -15987,6 +15987,10 @@ class Component extends React.Component {
     editFurn: false,
     selectedId: null, editing: false, placeMode: null, selFurn: null, dragging: false,
     activity: null, reacts: [], scale: 1, lobbyDragging: false,
+    // Zoom manual del usuario sobre la sala 3D (1 = ajuste a pantalla).
+    userScale: 1,
+    // Pan: offset (px) aplicado al layer para arrastrar el viewport mobile.
+    pan: { x: 0, y: 0 },
     lobby: {
       me: { lx: 0.5, depth: 0.62 },
       others: [],
@@ -16208,11 +16212,11 @@ class Component extends React.Component {
   /* ---- navigation ---- */
   enterRoom = (key) => {
     this._saveMe({ room: key, x: 8, y: 7 });
-    this.setState((s) => ({ view: 'room', currentRoom: key, selectedId: null, selFurn: null, placeMode: null, activity: null, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: key, x: 8, y: 7 } : c) }));
+    this.setState((s) => ({ view: 'room', currentRoom: key, selectedId: null, selFurn: null, placeMode: null, activity: null, userScale: 1, pan: { x: 0, y: 0 }, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: key, x: 8, y: 7 } : c) }));
   };
   exitRoom = () => {
     this._saveMe({ room: null });
-    this.setState((s) => ({ view: 'lobby', currentRoom: null, selectedId: null, selFurn: null, placeMode: null, activity: null, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: null } : c) }));
+    this.setState((s) => ({ view: 'lobby', currentRoom: null, selectedId: null, selFurn: null, placeMode: null, activity: null, userScale: 1, pan: { x: 0, y: 0 }, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: null } : c) }));
   };
   // Admin abre/cierra cualquier sala remotamente; varias pueden estar en vivo a la vez.
   toggleStart = (key) => {
@@ -16387,14 +16391,36 @@ class Component extends React.Component {
     const t = e.target;
     if (t.closest && t.closest('[data-furn]')) return;
     const ch = t.closest && t.closest('[data-char]');
+    // Si toca el avatar de otra persona, nada.
     if (ch && ch.getAttribute('data-me') !== '1') return;
+    // Si toca el fondo (no su propio avatar): paneo el viewport.
+    if (!ch) {
+      this._panStart = { x: e.clientX, y: e.clientY, px: this.state.pan.x, py: this.state.pan.y };
+      this.setState({ panning: true });
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+      return;
+    }
+    // Drag de mi propio avatar (comportamiento original).
     this._dragged = false;
     try { this.layerEl.setPointerCapture(e.pointerId); } catch (_) {}
     this.setState({ dragging: true, selectedId: null, selFurn: null });
     this._moveMe(e);
   };
-  onLayerMove = (e) => { if (this.state.dragging) { this._dragged = true; this._moveMe(e); } };
-  onLayerUp = () => { if (this.state.dragging) { if (this._dragged) this._dragEnd = Date.now(); this._dragged = false; this.setState({ dragging: false }); } };
+  onLayerMove = (e) => {
+    if (this.state.panning) {
+      const dx = e.clientX - this._panStart.x;
+      const dy = e.clientY - this._panStart.y;
+      this.setState({ pan: { x: this._panStart.px + dx, y: this._panStart.py + dy } });
+      return;
+    }
+    if (this.state.dragging) { this._dragged = true; this._moveMe(e); }
+  };
+  onLayerUp = () => {
+    if (this.state.panning) { this.setState({ panning: false }); return; }
+    if (this.state.dragging) { if (this._dragged) this._dragEnd = Date.now(); this._dragged = false; this.setState({ dragging: false }); }
+  };
+  zoomBy = (factor) => this.setState((s) => ({ userScale: Math.max(0.5, Math.min(2.5, s.userScale * factor)) }));
+  zoomReset = () => this.setState({ userScale: 1, pan: { x: 0, y: 0 } });
   onLayerClick = (e) => {
     if (this.state.placeMode) {
       const r = this.layerEl.getBoundingClientRect(); const sc = r.width / this.LW || 1;
@@ -16894,7 +16920,7 @@ class Component extends React.Component {
     const hint = st.placeMode ? `Toca el piso para colocar · ${placeLabel}` : st.selFurn ? 'Usa ⟳ para girar en los 4 sentidos · ✕ para quitar' : 'Mantén presionado tu personaje y arrástralo · toca a alguien para ver su estado';
 
     return h('div', { key: 'stage', ref: this.setStage, style: { position: 'relative', flex: 1, overflow: 'hidden', background: `radial-gradient(ellipse at 50% 26%, #fffdf8, ${room.color}0c 75%, var(--cream-50))`, cursor: st.placeMode ? 'copy' : 'default', touchAction: 'none' } },
-      h('div', { ref: (el) => { this.layerEl = el; }, onPointerDown: this.onLayerDown, onPointerMove: this.onLayerMove, onPointerUp: this.onLayerUp, onPointerCancel: this.onLayerUp, onClick: this.onLayerClick, style: { position: 'absolute', left: '50%', top: '50%', width: this.LW, height: this.LH, transform: `translate(-50%,-50%) scale(${st.scale})`, transformOrigin: 'center center' } },
+      h('div', { ref: (el) => { this.layerEl = el; }, onPointerDown: this.onLayerDown, onPointerMove: this.onLayerMove, onPointerUp: this.onLayerUp, onPointerCancel: this.onLayerUp, onClick: this.onLayerClick, style: { position: 'absolute', left: '50%', top: '50%', width: this.LW, height: this.LH, transform: `translate(calc(-50% + ${st.pan.x}px), calc(-50% + ${st.pan.y}px)) scale(${st.scale * st.userScale})`, transformOrigin: 'center center', transition: (st.panning || st.dragging) ? 'none' : 'transform .2s ease' } },
         h('svg', { width: this.LW, height: this.LH, style: { position: 'absolute', left: 0, top: 0, overflow: 'visible' } }, walls, tiles),
         wallTitle,
         furniture.map((f) => h(React.Fragment, { key: f.id }, this.renderFurn(f))),
@@ -16903,7 +16929,13 @@ class Component extends React.Component {
       ),
       this.renderRail(),
       this.renderReactionBar(),
-      h('div', { style: { position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', pointerEvents: 'none', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-soft)', opacity: .7, padding: '0 16px' } }, hint),
+      // Controles de zoom + reset (visibles siempre, útiles en mobile).
+      h('div', { style: { position: 'absolute', top: 14, right: 14, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 6, background: '#fff', borderRadius: 'var(--r-lg)', padding: 4, boxShadow: 'var(--shadow-float)', border: '1px solid var(--border-on-light)' } },
+        h('button', { onClick: () => this.zoomBy(1.25), title: 'Acercar', style: { width: 32, height: 32, border: 'none', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 18, fontWeight: 900, color: 'var(--ink)' } }, '+'),
+        h('button', { onClick: () => this.zoomBy(0.8), title: 'Alejar', style: { width: 32, height: 32, border: 'none', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 18, fontWeight: 900, color: 'var(--ink)' } }, '−'),
+        h('button', { onClick: this.zoomReset, title: 'Reiniciar vista', style: { width: 32, height: 32, border: 'none', borderRadius: 8, background: 'var(--cream-100)', cursor: 'pointer', fontSize: 14, color: 'var(--ink)' } }, '🎯'),
+      ),
+      h('div', { style: { position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', pointerEvents: 'none', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-soft)', opacity: .7, padding: '0 16px' } }, this.state.isMobile ? '☝️ Tu avatar para moverlo · resto para mover la vista · +/− para zoom' : hint),
       st.editing ? h(StatusEditor, { char: this.state.chars.find((c) => c.id === 'me'), moods: this.MOODS, onSave: this.saveStatus, onClose: () => this.setState({ editing: false }) }) : null,
       st.activity ? this.renderActivity() : null,
     );
