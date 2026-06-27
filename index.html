@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v7';
+const APP_VERSION = '2026-06-27-sala3d-v8';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -16078,7 +16078,8 @@ class Component extends React.Component {
     this._reacRef.on('value', (snap) => this.setState({ reactionsFb: snap.val() || {} }));
     this._surveyRef = window.db.ref(`sessions/${this.SID}/survey/responses`);
     this._surveyRef.on('value', (snap) => this.setState({ surveyResponses: snap.val() || {} }));
-    this._histRef = window.db.ref(`gameHistory/${this.SID}`);
+    // Historial de juegos del usuario actual (lo usan AttendanceModal y el podio).
+    this._histRef = window.db.ref(`gameHistory/${this.uid}`);
     this._histRef.on('value', (snap) => this.setState({ gameHistory: snap.val() || {} }));
     // Mensajes del chat de Repaso + reacciones por mensaje.
     this._msgsRef = window.db.ref(`sessions/${this.SID}/messages`).orderByChild('ts');
@@ -16515,10 +16516,28 @@ class Component extends React.Component {
   renderActivity() {
     const k = this.state.activity;
     const cp = this._commonProps();
-    if (k === 'confra')   return h(ConfraSpeakerPanel, Object.assign({}, cp, {
-      onNextSpeaker: () => this._nextConfraSpeaker(),
-      onEndConfra: () => this._endRoomActivity('confra')
-    }));
+    if (k === 'confra') {
+      const confra = this.state.session?.confra || {};
+      const rawQueue = confra.queue || {};
+      const queue = Array.isArray(rawQueue) ? rawQueue : Object.values(rawQueue);
+      const curIdx = typeof confra.currentIdx === 'number' ? confra.currentIdx : 0;
+      const speakerUid = queue[curIdx];
+      const allConfraReactions = (this.state.session?.confra?.reactions || {})[speakerUid] || {};
+      const myConfraReactions = allConfraReactions[this.uid] || {};
+      const myUid = this.uid;
+      return h(ConfraSpeakerPanel, Object.assign({}, cp, {
+        onNext: () => this._nextConfraSpeaker(),
+        onEnd: () => this._endRoomActivity('confra'),
+        onReact: (rid) => {
+          if (!speakerUid || !myUid) return;
+          const path = `sessions/${this.SID}/confra/reactions/${speakerUid}/${myUid}/${rid}`;
+          const cur = myConfraReactions[rid];
+          db.ref(path).set(cur ? null : true);
+        },
+        myReactions: myConfraReactions,
+        allReactions: allConfraReactions
+      }));
+    }
     if (k === 'repaso')   return h(RepasoChat, Object.assign({}, cp, {
       msgs: this.state.msgs || [],
       chatReactions: this.state.chatReactions || {},
@@ -16541,7 +16560,7 @@ class Component extends React.Component {
       // Si hay un juego específico activo, despacharlo directamente.
       const sess = this.state.session || {};
       if (sess.tabu?.active)     return h(TabuController, Object.assign({}, cp, { onEndTabu: () => db.ref(`sessions/${this.SID}/tabu`).remove() }));
-      if (sess.quienSoy?.active) return h(QuienSoyController, Object.assign({}, cp, { onEndQuienSoy: () => db.ref(`sessions/${this.SID}/quienSoy`).remove() }));
+      if (sess.quiensoy?.active) return h(QuienSoyController, Object.assign({}, cp, { onEndQuienSoy: () => db.ref(`sessions/${this.SID}/quiensoy`).remove() }));
       if (sess.dibuja?.active)   return h(DibujaController, Object.assign({}, cp, { onEndDibuja: () => db.ref(`sessions/${this.SID}/dibuja`).remove() }));
       return h(KahootController, Object.assign({}, cp, {
         gameHistory: this.state.gameHistory || {},
@@ -16577,12 +16596,31 @@ class Component extends React.Component {
       onEnd: () => { db.ref(`sessions/${this.SID}/video`).remove(); this.closeActivity(); },
       onEndVideo: () => { db.ref(`sessions/${this.SID}/video`).remove(); this.closeActivity(); }
     }));
-    if (k === 'encuesta') return this.isAdmin
-      ? h(AdminSurveyModal, Object.assign({}, cp, { responses: this.state.surveyResponses || {} }))
-      : h(SurveyModal, Object.assign({}, cp, { responses: this.state.surveyResponses || {} }));
-    if (k === 'wordcloud') return h(WordCloudActivity, Object.assign({}, cp, {
-      onClose: this.closeActivity
-    }));
+    if (k === 'encuesta') {
+      const me = this.state.chars.find((c) => c.id === 'me') || {};
+      const responses = this.state.surveyResponses || {};
+      const surveyActive = !!this.state.session?.survey?.active;
+      if (this.isAdmin) {
+        return h(AdminSurveyModal, Object.assign({}, cp, {
+          responses,
+          surveyActive,
+          onToggle: () => db.ref(`sessions/${this.SID}/survey/active`).set(!surveyActive)
+        }));
+      }
+      return h(SurveyModal, Object.assign({}, cp, {
+        myName: me.name || 'Anon',
+        alreadyResponded: !!responses[this.uid],
+        onSent: this.closeActivity
+      }));
+    }
+    if (k === 'wordcloud') {
+      const wc = this.state.session?.wordcloud || {};
+      return h(WordCloudActivity, Object.assign({}, cp, {
+        wordcloud: wc,
+        question: wc.question || '',
+        onClose: this.closeActivity
+      }));
+    }
     return null;
   }
   // Despachadores para iniciar/terminar actividades reales (admin desde dentro de la sala).
