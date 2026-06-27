@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v14';
+const APP_VERSION = '2026-06-27-sala3d-v15';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -17255,7 +17255,12 @@ class Component extends React.Component {
       // VerseOverlay: lo abre el click en una referencia bíblica desde la presentación.
       st.verseRef ? h(VerseOverlay, { refStr: st.verseRef, broadcast: false, canClose: true, onClose: () => this.setState({ verseRef: null }) }) : null,
       // QR de acceso (admin) — útil para proyección. En screenMode siempre visible.
-      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 220), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || { x: 24, y: 80 }, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
+      // QR siempre que admin lo haya pedido (botón 📲) o en modo proyección.
+      // qrSize: 'small' (chip arriba) → click → 'medium' (panel grande arriba) →
+      // click → 'large' (overlay a pantalla completa). Click sobre el overlay
+      // grande lo vuelve a 'small'. Z-index alto para que se vea por encima de
+      // presentaciones y videos.
+      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 'small'), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || null, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
       // FAB del chat del Repaso: aparece cuando el admin abrió Repaso (phase==='repaso')
       // y el usuario no tiene otra actividad abierta. Click → abre el chat.
       !screen && st.session?.phase === 'repaso' && st.activity !== 'repaso'
