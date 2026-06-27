@@ -98,7 +98,7 @@ html,body{margin:0;height:100%}
 <script>
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
-const APP_VERSION = '2026-06-27-sala3d-v6';
+const APP_VERSION = '2026-06-27-sala3d-v7';
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -3701,6 +3701,10 @@ const PRESENTATIONS = [{
     people: ['Makarina Valdivia F. — Ilustración, Resumen y Edición', 'Daniela Garcés B. — Ilustración, Resumen y Edición']
   }]
 }];
+
+/* Busca un deck por id; si no existe devuelve el primero (fallback seguro). */
+const findPresentation = (id) =>
+  (id && PRESENTATIONS.find((p) => p.id === id)) || PRESENTATIONS[0];
 
 /* ── VIDEOS  (líneas 3883-3889) ── */
 const VIDEOS = [{
@@ -16057,9 +16061,10 @@ class Component extends React.Component {
           activity = null;
         }
         // Presentaciones y videos pueden estar activos en paralelo a la sala.
-        if (v.presentation?.active && !s.activity && (s.currentRoom || this.screenMode)) activity = 'presenta';
-        if (v.video?.active && !s.activity && (s.currentRoom || this.screenMode))        activity = 'videos';
-        if (v.wordcloud?.active && !s.activity && (s.currentRoom === 'repaso' || this.screenMode)) activity = 'wordcloud';
+        // Admin las ve siempre (incluso desde el lobby) para poder controlarlas.
+        if (v.presentation?.active && !s.activity && (s.currentRoom || this.screenMode || this.isAdmin)) activity = 'presenta';
+        if (v.video?.active && !s.activity && (s.currentRoom || this.screenMode || this.isAdmin))        activity = 'videos';
+        if (v.wordcloud?.active && !s.activity && (s.currentRoom === 'repaso' || this.screenMode || this.isAdmin)) activity = 'wordcloud';
         return {
           session: v,
           started: { mision: !!op.mision, confra: !!op.confra, repaso: !!op.repaso, templo: !!op.templo },
@@ -16075,6 +16080,15 @@ class Component extends React.Component {
     this._surveyRef.on('value', (snap) => this.setState({ surveyResponses: snap.val() || {} }));
     this._histRef = window.db.ref(`gameHistory/${this.SID}`);
     this._histRef.on('value', (snap) => this.setState({ gameHistory: snap.val() || {} }));
+    // Mensajes del chat de Repaso + reacciones por mensaje.
+    this._msgsRef = window.db.ref(`sessions/${this.SID}/messages`).orderByChild('ts');
+    this._msgsRef.on('value', (snap) => {
+      const data = snap.val() || {};
+      const list = Object.entries(data).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+      this.setState({ msgs: list });
+    });
+    this._chatRxRef = window.db.ref(`sessions/${this.SID}/chatReactions`);
+    this._chatRxRef.on('value', (snap) => this.setState({ chatReactions: snap.val() || {} }));
   }
 
   componentWillUnmount() {
@@ -16086,6 +16100,8 @@ class Component extends React.Component {
     if (this._reacRef)      this._reacRef.off();
     if (this._surveyRef)    this._surveyRef.off();
     if (this._histRef)      this._histRef.off();
+    if (this._msgsRef)      this._msgsRef.off();
+    if (this._chatRxRef)    this._chatRxRef.off();
     if (this.uid && this.SID && window.db && !this.screenMode) {
       window.db.ref(`users/${this.SID}/${this.uid}`).remove().catch(() => {});
     }
@@ -16492,6 +16508,7 @@ class Component extends React.Component {
       users: this._usersDict(),
       myId: this.uid || 'me',
       isAdmin: !!this.isAdmin,
+      SID: this.SID,
       onClose: this.closeActivity
     };
   }
@@ -16503,6 +16520,21 @@ class Component extends React.Component {
       onEndConfra: () => this._endRoomActivity('confra')
     }));
     if (k === 'repaso')   return h(RepasoChat, Object.assign({}, cp, {
+      msgs: this.state.msgs || [],
+      chatReactions: this.state.chatReactions || {},
+      onSend: (text, extra) => {
+        const me = this.state.chars.find((c) => c.id === 'me') || {};
+        const payload = {
+          uid: this.uid, name: me.name || 'Anon', color: me.color || '#3b82f6',
+          avatar: me.emoji || '🌟', photo: me.photo || null,
+          text: text || '', tag: (extra && extra.tag) || null,
+          type: (extra && extra.type) || 'text',
+          imageData: (extra && extra.imageData) || null,
+          time: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+          ts: Date.now()
+        };
+        db.ref(`sessions/${this.SID}/messages`).push(payload).catch(() => {});
+      },
       onEndRepaso: () => this._endRoomActivity('repaso')
     }));
     if (k === 'juegos') {
@@ -16519,10 +16551,30 @@ class Component extends React.Component {
     if (k === 'mision')   return h(MisionActivity, Object.assign({}, cp, {
       onEndMision: () => this._endRoomActivity('mision')
     }));
-    if (k === 'presenta') return h(PresentationOverlay, Object.assign({}, cp, {
-      onEndPresentation: () => { db.ref(`sessions/${this.SID}/presentation`).remove(); this.closeActivity(); }
-    }));
+    if (k === 'presenta') {
+      const pres = this.state.session?.presentation;
+      const deck = findPresentation(pres?.id);
+      const total = (deck.slides || []).length;
+      const curIdx = Math.max(0, Math.min(total - 1, pres?.slide || 0));
+      const setSlide = (i) => db.ref(`sessions/${this.SID}/presentation/slide`).set(Math.max(0, Math.min(total - 1, i)));
+      return h(PresentationOverlay, Object.assign({}, cp, {
+        onPrev: () => setSlide(curIdx - 1),
+        onNext: () => setSlide(curIdx + 1),
+        onEnd: () => { db.ref(`sessions/${this.SID}/presentation`).remove(); this.closeActivity(); },
+        onEndPresentation: () => { db.ref(`sessions/${this.SID}/presentation`).remove(); this.closeActivity(); },
+        onToggleWordCloud: () => {
+          const a = !!this.state.session?.wordcloud?.active;
+          if (a) db.ref(`sessions/${this.SID}/wordcloud/active`).set(false);
+          else   db.ref(`sessions/${this.SID}/wordcloud`).set({ active: true, words: [] });
+        },
+        onToggleQR: () => this.setState((s) => ({ showQR: !s.showQR })),
+        qrOn: !!this.state.showQR,
+        onVerseClick: (ref) => this.setState({ verseRef: ref })
+      }));
+    }
     if (k === 'videos')   return h(VideoOverlay, Object.assign({}, cp, {
+      SID: this.SID,
+      onEnd: () => { db.ref(`sessions/${this.SID}/video`).remove(); this.closeActivity(); },
       onEndVideo: () => { db.ref(`sessions/${this.SID}/video`).remove(); this.closeActivity(); }
     }));
     if (k === 'encuesta') return this.isAdmin
@@ -16787,13 +16839,15 @@ class Component extends React.Component {
         surveyResponses: st.surveyResponses || {}
       }) : null,
       // Menús auxiliares (admin)
-      !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slideIdx: 0, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
-      !screen && st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, active: true, playing: true, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
+      !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slide: 0, startTime: Date.now() }); this.setState({ activity: null }); } }) : null,
+      !screen && st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { const v = VIDEOS.find((x) => x.id === id); db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, videoId: v?.youtubeId || null, active: true, state: 'playing', position: 0, updatedAt: Date.now() }); this.setState({ activity: null }); } }) : null,
       !screen && st.activity === 'download' ? h(DataDownloadModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
       !screen && st.activity === 'survey-results' ? h(AdminSurveyModal, Object.assign({}, this._commonProps(), { responses: st.surveyResponses || {}, onClose: this.closeActivity })) : null,
       !screen && st.activity === 'admin-stats' ? h(AdminStatsModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
       // Asistencia (modal disponible siempre, abierto desde el header).
       !screen && st.activity === 'asistencia' ? h(AttendanceModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
+      // VerseOverlay: lo abre el click en una referencia bíblica desde la presentación.
+      st.verseRef ? h(VerseOverlay, { refStr: st.verseRef, broadcast: false, canClose: true, onClose: () => this.setState({ verseRef: null }) }) : null,
       // QR de acceso (admin) — útil para proyección. En screenMode siempre visible.
       (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 220), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || { x: 24, y: 80 }, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
       // Toast de bienvenida cuando alguien se une (solo participantes).
