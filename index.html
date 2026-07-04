@@ -15837,6 +15837,54 @@ const PICTONARY_ITEMS = [
 
 const PICTONARY_COLORS = ['#0a0e2e', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#78350f'];
 
+// Dado de categoría: 5 categorías disponibles + 1 cara repetida para
+// completar las 6 caras de un cubo.
+const CATEGORY_DIE_FACES = ['Lugares', 'Personajes', 'Historias', 'Objetos', 'Verbos / Acciones', 'Personajes'];
+// Dado de dificultad: 2 caras Fácil, 2 Mediano, 2 Difícil.
+const DIFFICULTY_DIE_FACES = ['Fácil', 'Fácil', 'Mediano', 'Mediano', 'Difícil', 'Difícil'];
+
+/* Cubo con 6 caras en CSS 3D real (perspective + preserve-3d). `resultIndex`
+   (0-5) indica qué cara debe quedar al frente; cuando cambia, el cubo gira
+   varias vueltas completas antes de asentarse — efecto de "tirar el dado". */
+function DiceCube3D({ faces, resultIndex, size = 84 }) {
+  const half = size / 2;
+  const FACE_PLACEMENT = [
+    { axis: 'y', deg: 0 },    // frente
+    { axis: 'y', deg: 180 },  // atrás
+    { axis: 'y', deg: 90 },   // derecha
+    { axis: 'y', deg: -90 },  // izquierda
+    { axis: 'x', deg: -90 },  // arriba
+    { axis: 'x', deg: 90 },   // abajo
+  ];
+  // Para traer la cara i al frente, el cubo entero gira lo opuesto a su colocación.
+  const OUTER = [{ x: 0, y: 0 }, { x: 0, y: 180 }, { x: 0, y: -90 }, { x: 0, y: 90 }, { x: 90, y: 0 }, { x: -90, y: 0 }];
+  const spinRef = useRef(0);
+  const [rot, setRot] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    if (resultIndex == null) return;
+    spinRef.current += 1;
+    const turns = 360 * (2 + (spinRef.current % 3));
+    const target = OUTER[resultIndex] || OUTER[0];
+    setRot({ x: target.x + turns, y: target.y + turns * 1.3 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultIndex]);
+  return h('div', { style: { width: size, height: size, perspective: 500 } },
+    h('div', {
+      style: {
+        width: '100%', height: '100%', position: 'relative', transformStyle: 'preserve-3d',
+        transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg)`,
+        transition: 'transform 1.1s cubic-bezier(.34,1.56,.64,1)'
+      }
+    },
+      faces.map((label, i) => {
+        const fp = FACE_PLACEMENT[i];
+        const t = fp.axis === 'y' ? `rotateY(${fp.deg}deg) translateZ(${half}px)` : `rotateX(${fp.deg}deg) translateZ(${half}px)`;
+        return h('div', { key: i, style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 4, background: '#fff', border: '2px solid #0a0e2e', borderRadius: 12, boxShadow: 'inset 0 0 10px rgba(10,14,46,.08)', transform: t, backfaceVisibility: 'hidden', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11, color: '#0a0e2e', lineHeight: 1.1 } }, label);
+      }),
+    ),
+  );
+}
+
 /* Pizarra en blanco con lienzo <canvas> real: soporta varios colores de
    lápiz y una goma de borrar de verdad (destination-out), sincronizada en
    vivo vía Firebase (igual que DibujaCanvas: puntos normalizados 0..1). */
@@ -15971,23 +16019,27 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   }, [chat.length]);
   useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
 
-  const pickItem = (history) => {
-    // Primero se sortea la categoría (parejo entre las 5), y recién ahí la
-    // carta dentro de esa categoría — así cada ronda arranca con un rubro
-    // al azar en vez de que salga siempre de la misma categoría.
+  // Elige la carta según lo que salió en los dados (categoría + dificultad),
+  // con caída en cascada si esa combinación no tiene cartas disponibles.
+  const pickItemFor = (categoria, dificultad, history) => {
     const avoid = new Set(history || []);
-    const categorias = [...new Set(PICTONARY_ITEMS.map((it) => it.categoria))];
-    const categoria = categorias[Math.floor(Math.random() * categorias.length)];
-    const pool = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && !avoid.has(it.titulo));
-    const list = pool.length ? pool : PICTONARY_ITEMS.filter((it) => it.categoria === categoria);
-    return list[Math.floor(Math.random() * list.length)];
+    const byBoth = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && it.dificultad === dificultad && !avoid.has(it.titulo));
+    if (byBoth.length) return byBoth[Math.floor(Math.random() * byBoth.length)];
+    const byCategoria = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && !avoid.has(it.titulo));
+    if (byCategoria.length) return byCategoria[Math.floor(Math.random() * byCategoria.length)];
+    const anyCategoria = PICTONARY_ITEMS.filter((it) => it.categoria === categoria);
+    if (anyCategoria.length) return anyCategoria[Math.floor(Math.random() * anyCategoria.length)];
+    return PICTONARY_ITEMS[Math.floor(Math.random() * PICTONARY_ITEMS.length)];
   };
+  // Sólo el admin decide quién juega (al azar o eligiéndolo); el que dibuja
+  // no puede pasarse el turno a otro por su cuenta. Después de asignar el
+  // turno, primero se tiran los dados (categoría + dificultad) y recién ahí
+  // arranca el cronómetro.
   const nuevaRonda = (uid) => {
-    const item = pickItem(game.history);
-    const history = [...(game.history || []), item.titulo].slice(-8);
     return db.ref(`sessions/${SID}/pictonary`).update({
-      active: true, gameState: 'playing', currentDrawer: uid, currentItem: item,
-      roundStartTime: Date.now(), strokes: null, live: null, chat: null, history
+      active: true, gameState: 'rolling', currentDrawer: uid, currentItem: null,
+      categoryRoll: null, difficultyRoll: null, roundStartTime: null,
+      strokes: null, live: null, chat: null
     });
   };
   const seleccionarRandom = async () => {
@@ -15997,18 +16049,43 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   };
   const seleccionarManual = async (uid) => { await nuevaRonda(uid); };
   const limpiarPizarra = () => { db.ref(`sessions/${SID}/pictonary`).update({ strokes: null, live: null }); };
+  const rollCategoryDie = () => {
+    const idx = Math.floor(Math.random() * CATEGORY_DIE_FACES.length);
+    db.ref(`sessions/${SID}/pictonary/categoryRoll`).set({ index: idx, value: CATEGORY_DIE_FACES[idx] });
+  };
+  const rollDifficultyDie = () => {
+    const idx = Math.floor(Math.random() * DIFFICULTY_DIE_FACES.length);
+    db.ref(`sessions/${SID}/pictonary/difficultyRoll`).set({ index: idx, value: DIFFICULTY_DIE_FACES[idx] });
+  };
+  const empezarDibujo = async () => {
+    const categoria = game.categoryRoll?.value;
+    const dificultad = game.difficultyRoll?.value;
+    if (!categoria || !dificultad) return;
+    const item = pickItemFor(categoria, dificultad, game.history);
+    const history = [...(game.history || []), item.titulo].slice(-8);
+    await db.ref(`sessions/${SID}/pictonary`).update({ gameState: 'playing', currentItem: item, roundStartTime: Date.now(), history });
+  };
+  // Admin: si se arrepiente de a quién le tocó tirar, vuelve a la selección.
+  const cancelarRolling = async () => {
+    await db.ref(`sessions/${SID}/pictonary`).update({
+      gameState: 'idle', currentDrawer: null, currentItem: null,
+      categoryRoll: null, difficultyRoll: null, roundStartTime: null
+    });
+  };
   const adivinador = async (uid) => {
     const newScores = { ...scores };
     newScores[uid] = (newScores[uid] || 0) + 10;
     if (currentDrawerId) newScores[currentDrawerId] = (newScores[currentDrawerId] || 0) + 5;
     await db.ref(`sessions/${SID}/pictonary`).update({
       scores: newScores, gameState: 'idle', currentDrawer: null, currentItem: null,
-      roundStartTime: null, strokes: null, live: null, chat: null
+      categoryRoll: null, difficultyRoll: null, roundStartTime: null, strokes: null, live: null, chat: null
     });
   };
+  // Sólo el admin puede pasar el turno o volver a sortear a alguien nuevo.
   const skipTurn = async () => {
     await db.ref(`sessions/${SID}/pictonary`).update({
-      gameState: 'idle', currentDrawer: null, currentItem: null, roundStartTime: null,
+      gameState: 'idle', currentDrawer: null, currentItem: null,
+      categoryRoll: null, difficultyRoll: null, roundStartTime: null,
       strokes: null, live: null, chat: null
     });
   };
@@ -16089,6 +16166,36 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
     );
   }
 
+  /* ── Rolling: el dibujante tira los dados de categoría y dificultad ── */
+  if (gState === 'rolling') {
+    const catIdx = game.categoryRoll?.index;
+    const difIdx = game.difficultyRoll?.index;
+    const bothRolled = catIdx != null && difIdx != null;
+    const dieBlock = (label, faces, idx, roll, rollLabel) => h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.14em' } }, label),
+      h(DiceCube3D, { faces, resultIndex: idx }),
+      idx != null
+        ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 15, color: '#15803d', textTransform: 'uppercase' } }, faces[idx])
+        : (isDrawer ? h('button', { onClick: roll, style: { padding: '8px 18px', background: '#15803d', border: 'none', borderRadius: 20, color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, rollLabel) : h('div', { style: { fontSize: 11, color: 'var(--muted)' } }, '(sin tirar)')),
+    );
+    return h('div', { style: wrapStyle },
+      headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 20, overflowY: 'auto' } },
+        currentDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', padding: '8px 16px', borderRadius: 20 } },
+          h(AvatarBubble, { profile: currentDrawer, size: 32 }),
+          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 15, color: '#0a0e2e' } }, isDrawer ? '¡Te toca tirar los dados!' : `${currentDrawer.name} está tirando los dados…`),
+        ) : null,
+        h('div', { style: { display: 'flex', gap: 30, flexWrap: 'wrap', justifyContent: 'center' } },
+          dieBlock('Categoría', CATEGORY_DIE_FACES, catIdx, rollCategoryDie, '🎲 Tirar'),
+          dieBlock('Dificultad', DIFFICULTY_DIE_FACES, difIdx, rollDifficultyDie, '🎲 Tirar'),
+        ),
+        isDrawer && bothRolled ? h('button', { onClick: empezarDibujo, style: { padding: '14px 28px', background: '#ffd000', border: 'none', borderRadius: 20, color: '#0a0e2e', fontWeight: 900, fontSize: 15, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 8px 24px rgba(255,208,0,.4)' } }, '🎨 ¡A dibujar! (1:30)') : null,
+        !isDrawer ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, fontStyle: 'italic' } }, 'Esperando a que termine de tirar los dados…') : null,
+        isAdmin ? h('button', { onClick: cancelarRolling, style: { border: 'none', background: 'none', color: 'var(--muted)', fontSize: 12, textDecoration: 'underline', cursor: 'pointer' } }, 'Cancelar y elegir a otra persona') : null,
+      ),
+    );
+  }
+
   /* ── Jugando: pizarra + herramientas + chat lateral ── */
   const timeColor = over ? '#dc2626' : remaining < 20 ? '#c2410c' : '#a16207';
   const guessers = juegosUsers.filter((u) => u.uid !== currentDrawerId);
@@ -16136,10 +16243,12 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
               h(AvatarBubble, { profile: u, size: 22 }), u.name,
             )),
           ),
-          h('div', { style: { display: 'flex', gap: 8, marginTop: 2 } },
+          // Sólo el admin decide qué pasa con el turno (al azar o pasar); el
+          // que dibuja no puede saltarse a otro jugador por su cuenta.
+          isAdmin ? h('div', { style: { display: 'flex', gap: 8, marginTop: 2 } },
             h('button', { onClick: seleccionarRandom, style: { flex: 1, background: '#15803d', border: 'none', borderRadius: 12, padding: '9px', color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🎲 Siguiente al azar'),
             h('button', { onClick: skipTurn, style: { flex: 1, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px', color: '#0a0e2e', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar turno'),
-          ),
+          ) : null,
         ) : null,
       ),
       h('div', { style: { flex: isMobile ? 'none' : 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 220 : 0, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden' } },
