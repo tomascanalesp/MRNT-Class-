@@ -15972,9 +15972,14 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
 
   const pickItem = (history) => {
+    // Primero se sortea la categoría (parejo entre las 5), y recién ahí la
+    // carta dentro de esa categoría — así cada ronda arranca con un rubro
+    // al azar en vez de que salga siempre de la misma categoría.
     const avoid = new Set(history || []);
-    const pool = PICTONARY_ITEMS.filter((it) => !avoid.has(it.titulo));
-    const list = pool.length ? pool : PICTONARY_ITEMS;
+    const categorias = [...new Set(PICTONARY_ITEMS.map((it) => it.categoria))];
+    const categoria = categorias[Math.floor(Math.random() * categorias.length)];
+    const pool = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && !avoid.has(it.titulo));
+    const list = pool.length ? pool : PICTONARY_ITEMS.filter((it) => it.categoria === categoria);
     return list[Math.floor(Math.random() * list.length)];
   };
   const nuevaRonda = (uid) => {
@@ -16096,12 +16101,17 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
         h(AvatarBubble, { profile: currentDrawer, size: 28 }),
         h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 13, color: '#0a0e2e' } }, isDrawer ? 'Tú dibujas' : `${currentDrawer.name} dibuja`),
       ) : null,
-      (!isDrawer && !isAdmin) ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '👀 ¿Qué está dibujando?') : null,
+      // La categoría la ve TODO el mundo (dibujante, admin y quienes adivinan);
+      // sólo el título/pista quedan ocultos para quienes adivinan.
+      currentItem?.categoria ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(21,128,61,.1)', border: '1px solid rgba(21,128,61,.3)', padding: '6px 14px', borderRadius: 20 } },
+        h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, 'Categoría'),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: '#15803d', textTransform: 'uppercase' } }, currentItem.categoria),
+      ) : null,
+      (!isDrawer && !isAdmin) ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '👀 ¿Qué será?') : null,
       over ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', background: 'rgba(239,68,68,.1)', padding: '5px 12px', borderRadius: 20 } }, '⏱ Tiempo terminado') : null,
     ),
     currentItem && (isDrawer || isAdmin) ? h('div', { style: { margin: '0 16px 10px', padding: '10px 14px', background: 'linear-gradient(135deg,#fff,#f8f5ef)', border: '2px solid #ffd000', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-        h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.1em', background: 'rgba(21,128,61,.1)', padding: '2px 8px', borderRadius: 20 } }, currentItem.categoria),
         currentItem.dificultad ? h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: dificultadColor, textTransform: 'uppercase', letterSpacing: '.1em', background: `${dificultadColor}1a`, padding: '2px 8px', borderRadius: 20 } }, currentItem.dificultad) : null,
         h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 17, color: '#0a0e2e' } }, currentItem.titulo),
       ),
