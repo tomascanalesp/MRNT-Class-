@@ -15749,7 +15749,9 @@ function PictonaryCanvas({ SID, canDraw, color, tool, strokes, live, height = 32
 function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   const game = session?.pictonary || {};
   const gState = game.gameState;
-  const juegosUsers = Object.entries(users || {}).filter(([, u]) => u.zone === 'juegos').map(([uid, u]) => ({ uid, ...u }));
+  // El admin siempre puede jugar (elegirse al azar o a sí mismo), esté o no
+  // parado en el rincón "Juegos" — útil para jugar desde un solo celular.
+  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => u.zone === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
   const currentDrawerId = game.currentDrawer;
   const currentDrawer = currentDrawerId ? users[currentDrawerId] : null;
   const isDrawer = currentDrawerId === myId;
