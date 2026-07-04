@@ -10409,6 +10409,7 @@ function GameSelectMenu({
   onStartTabu,
   onStartQuienSoy,
   onStartDibuja,
+  onStartPictonary,
   onCancel
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -10682,6 +10683,65 @@ function GameSelectMenu({
     style: {
       fontSize: 20,
       color: '#15803d',
+      opacity: .6
+    }
+  }, "›")), /*#__PURE__*/React.createElement("button", {
+    onClick: onStartPictonary,
+    style: {
+      width: '100%',
+      maxWidth: 380,
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
+      borderRadius: 20,
+      padding: '16px 20px',
+      textAlign: 'left',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 16,
+      boxShadow: '0 12px 30px rgba(10,14,46,.1)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 4,
+      alignSelf: 'stretch',
+      borderRadius: 4,
+      background: '#f97316',
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 20,
+      color: '#c2410c',
+      textTransform: 'uppercase',
+      letterSpacing: '.05em'
+    }
+  }, "Pictonary Bíblico"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow,sans-serif',
+      fontSize: 13,
+      color: '#0a0e2e',
+      marginTop: 3,
+      lineHeight: 1.4
+    }
+  }, "Pizarra en blanco: dibuja y el resto adivina"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--muted)',
+      marginTop: 5,
+      display: 'flex',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "Al azar"), /*#__PURE__*/React.createElement("span", null, "1:30 por turno"))), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 20,
+      color: '#c2410c',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -11158,6 +11218,13 @@ function KahootController({
         await db.ref(`sessions/${SID}/dibuja`).set({
           active: true,
           gameState: 'setup'
+        });
+      },
+      onStartPictonary: async () => {
+        await db.ref(`sessions/${SID}/pictonary`).set({
+          active: true,
+          gameState: 'idle',
+          scores: {}
         });
       },
       onCancel: () => {
@@ -15489,6 +15556,399 @@ function DibujaController({
   })));
 }
 
+/* ═══ PICTONARY BÍBLICO — pizarra en blanco: dibuja y adivina ═══ */
+// Juego aparte de "Dibujando la Biblia" (tablero por equipos, aún en
+// construcción): acá se elige a alguien al azar para dibujar en una pizarra
+// en blanco (colores + goma de borrar + limpiar todo) un personaje, lugar o
+// escena bíblica; el resto adivina por el chat lateral o en voz alta.
+
+const PICTONARY_ROUND_SECONDS = 90; // 1.5 min para dibujar
+
+const PICTONARY_ITEMS = [
+  { titulo: 'Adán y Eva', categoria: 'Personaje' },
+  { titulo: 'Noé', categoria: 'Personaje' },
+  { titulo: 'Abraham', categoria: 'Personaje' },
+  { titulo: 'Moisés', categoria: 'Personaje' },
+  { titulo: 'José el soñador', categoria: 'Personaje' },
+  { titulo: 'David', categoria: 'Personaje' },
+  { titulo: 'Goliat', categoria: 'Personaje' },
+  { titulo: 'Sansón', categoria: 'Personaje' },
+  { titulo: 'Rut', categoria: 'Personaje' },
+  { titulo: 'Ester', categoria: 'Personaje' },
+  { titulo: 'Daniel', categoria: 'Personaje' },
+  { titulo: 'Jonás', categoria: 'Personaje' },
+  { titulo: 'Elías', categoria: 'Personaje' },
+  { titulo: 'Salomón', categoria: 'Personaje' },
+  { titulo: 'Juan el Bautista', categoria: 'Personaje' },
+  { titulo: 'María, madre de Jesús', categoria: 'Personaje' },
+  { titulo: 'Jesús', categoria: 'Personaje' },
+  { titulo: 'Pedro', categoria: 'Personaje' },
+  { titulo: 'Judas Iscariote', categoria: 'Personaje' },
+  { titulo: 'Pablo', categoria: 'Personaje' },
+  { titulo: 'Job', categoria: 'Personaje' },
+  { titulo: 'El Arca de Noé', categoria: 'Escena' },
+  { titulo: 'La Torre de Babel', categoria: 'Escena' },
+  { titulo: 'La escalera de Jacob', categoria: 'Escena' },
+  { titulo: 'José vendido por sus hermanos', categoria: 'Escena' },
+  { titulo: 'Las plagas de Egipto', categoria: 'Escena' },
+  { titulo: 'El Mar Rojo abriéndose', categoria: 'Escena' },
+  { titulo: 'Los Diez Mandamientos', categoria: 'Escena' },
+  { titulo: 'El becerro de oro', categoria: 'Escena' },
+  { titulo: 'David y Goliat (el duelo)', categoria: 'Escena' },
+  { titulo: 'David tocando el arpa', categoria: 'Escena' },
+  { titulo: 'Sansón derribando las columnas', categoria: 'Escena' },
+  { titulo: 'Josué y las murallas de Jericó', categoria: 'Escena' },
+  { titulo: 'Daniel en el foso de los leones', categoria: 'Escena' },
+  { titulo: 'Los tres hombres en el horno de fuego', categoria: 'Escena' },
+  { titulo: 'Jonás y el gran pez', categoria: 'Escena' },
+  { titulo: 'Elías y el carro de fuego', categoria: 'Escena' },
+  { titulo: 'Elías y los profetas de Baal', categoria: 'Escena' },
+  { titulo: 'Ester ante el rey', categoria: 'Escena' },
+  { titulo: 'El nacimiento de Jesús (el pesebre)', categoria: 'Escena' },
+  { titulo: 'Los pastores y el ángel', categoria: 'Escena' },
+  { titulo: 'Los reyes magos', categoria: 'Escena' },
+  { titulo: 'El bautismo de Jesús', categoria: 'Escena' },
+  { titulo: 'Jesús calmando la tormenta', categoria: 'Escena' },
+  { titulo: 'La multiplicación de los panes y los peces', categoria: 'Escena' },
+  { titulo: 'Jesús camina sobre el agua', categoria: 'Escena' },
+  { titulo: 'El buen samaritano', categoria: 'Escena' },
+  { titulo: 'La oveja perdida', categoria: 'Escena' },
+  { titulo: 'El hijo pródigo', categoria: 'Escena' },
+  { titulo: 'Zaqueo en el árbol', categoria: 'Escena' },
+  { titulo: 'La mujer samaritana en el pozo', categoria: 'Escena' },
+  { titulo: 'Jesús resucitando a Lázaro', categoria: 'Escena' },
+  { titulo: 'La Última Cena', categoria: 'Escena' },
+  { titulo: 'Jesús lavando los pies de los discípulos', categoria: 'Escena' },
+  { titulo: 'La crucifixión', categoria: 'Escena' },
+  { titulo: 'La resurrección de Jesús', categoria: 'Escena' },
+  { titulo: 'La ascensión de Jesús', categoria: 'Escena' },
+  { titulo: 'Pentecostés (lenguas de fuego)', categoria: 'Escena' },
+  { titulo: 'La conversión de Pablo camino a Damasco', categoria: 'Escena' },
+  { titulo: 'El Jardín del Edén', categoria: 'Lugar' },
+  { titulo: 'El Jardín de Getsemaní', categoria: 'Lugar' },
+  { titulo: 'El Monte Sinaí', categoria: 'Lugar' },
+  { titulo: 'Jerusalén', categoria: 'Lugar' },
+  { titulo: 'Belén', categoria: 'Lugar' },
+  { titulo: 'Nazaret', categoria: 'Lugar' },
+  { titulo: 'Egipto', categoria: 'Lugar' },
+  { titulo: 'El río Jordán', categoria: 'Lugar' },
+];
+
+const PICTONARY_COLORS = ['#0a0e2e', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#78350f'];
+
+/* Pizarra en blanco con lienzo <canvas> real: soporta varios colores de
+   lápiz y una goma de borrar de verdad (destination-out), sincronizada en
+   vivo vía Firebase (igual que DibujaCanvas: puntos normalizados 0..1). */
+function PictonaryCanvas({ SID, canDraw, color, tool, strokes, live, height = 320 }) {
+  const canvasRef = useRef(null);
+  const wrapRef = useRef(null);
+  const curRef = useRef(null);
+  const lastWriteRef = useRef(0);
+  const drawingRef = useRef(false);
+  const [localLive, setLocalLive] = useState(null);
+
+  const paintStroke = (ctx, w, hgt, s) => {
+    const pts = (s && s.points) || [];
+    if (pts.length < 2) return;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = s.tool === 'eraser' ? 'rgba(0,0,0,1)' : (s.color || '#0a0e2e');
+    ctx.lineWidth = s.tool === 'eraser' ? 26 : 5;
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const x = p.x * w, y = p.y * hgt;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  };
+  const drawAll = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width, hgt = canvas.height;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, w, hgt);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, hgt);
+    const strokeArr = strokes ? Object.values(strokes) : [];
+    strokeArr.forEach((s) => paintStroke(ctx, w, hgt, s));
+    if (live && live.points) paintStroke(ctx, w, hgt, live);
+    if (localLive && localLive.points) paintStroke(ctx, w, hgt, localLive);
+    ctx.globalCompositeOperation = 'source-over';
+  }, [strokes, live, localLive]);
+
+  useEffect(() => { drawAll(); }, [drawAll]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current, wrap = wrapRef.current;
+    if (!canvas || !wrap || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      const r = wrap.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.round(r.width));
+      canvas.height = Math.max(1, Math.round(r.height));
+      drawAll();
+    });
+    ro.observe(wrap);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const getPt = (e) => {
+    const r = canvasRef.current.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return { x: (p.clientX - r.left) / r.width, y: (p.clientY - r.top) / r.height };
+  };
+  const writeLive = () => {
+    db.ref(`sessions/${SID}/pictonary/live`).set({ tool, color, points: curRef.current });
+  };
+  const start = (e) => {
+    if (!canDraw) return;
+    if (e.cancelable) e.preventDefault();
+    drawingRef.current = true;
+    curRef.current = [getPt(e)];
+    setLocalLive({ tool, color, points: curRef.current });
+    writeLive();
+  };
+  const move = (e) => {
+    if (!canDraw || !drawingRef.current) return;
+    if (e.cancelable) e.preventDefault();
+    curRef.current.push(getPt(e));
+    setLocalLive({ tool, color, points: [...curRef.current] });
+    const now = Date.now();
+    if (now - lastWriteRef.current > 70) {
+      lastWriteRef.current = now;
+      writeLive();
+    }
+  };
+  const end = () => {
+    if (!canDraw || !drawingRef.current) return;
+    drawingRef.current = false;
+    if (curRef.current && curRef.current.length > 1) {
+      db.ref(`sessions/${SID}/pictonary/strokes`).push({ tool, color, points: curRef.current });
+    }
+    curRef.current = null;
+    setLocalLive(null);
+    db.ref(`sessions/${SID}/pictonary/live`).remove();
+  };
+  const empty = (!strokes || Object.keys(strokes).length === 0) && !live && !localLive;
+
+  return h('div', { ref: wrapRef, style: { width: '100%', height, background: '#fff', borderRadius: 14, border: '3px solid #ffd000', overflow: 'hidden', position: 'relative', boxShadow: '0 12px 30px rgba(10,14,46,.18)' } },
+    h('canvas', {
+      ref: canvasRef,
+      onMouseDown: start, onMouseMove: move, onMouseUp: end, onMouseLeave: end,
+      onTouchStart: start, onTouchMove: move, onTouchEnd: end,
+      style: { width: '100%', height: '100%', display: 'block', touchAction: 'none', cursor: canDraw ? (tool === 'eraser' ? 'cell' : 'crosshair') : 'default' }
+    }),
+    empty ? h('div', { style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c9c4b8', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 15, letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' } }, canDraw ? '✏️ Dibuja aquí' : 'Esperando el dibujo...') : null,
+  );
+}
+
+/* ── PictonaryController — juego completo ── */
+function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
+  const game = session?.pictonary || {};
+  const gState = game.gameState;
+  const juegosUsers = Object.entries(users || {}).filter(([, u]) => u.zone === 'juegos').map(([uid, u]) => ({ uid, ...u }));
+  const currentDrawerId = game.currentDrawer;
+  const currentDrawer = currentDrawerId ? users[currentDrawerId] : null;
+  const isDrawer = currentDrawerId === myId;
+  const currentItem = game.currentItem;
+  const scores = game.scores || {};
+  const { remaining, over } = useTimer(gState === 'playing' ? game.roundStartTime : null, PICTONARY_ROUND_SECONDS);
+  const [color, setColor] = useState(PICTONARY_COLORS[0]);
+  const [tool, setTool] = useState('pen');
+  const [chatText, setChatText] = useState('');
+  const chatEndRef = useRef(null);
+  const isMobile = useIsMobile();
+
+  const chat = game.chat ? Object.entries(game.chat).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0)) : [];
+  useEffect(() => {
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
+  }, [chat.length]);
+  useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
+
+  const pickItem = (history) => {
+    const avoid = new Set(history || []);
+    const pool = PICTONARY_ITEMS.filter((it) => !avoid.has(it.titulo));
+    const list = pool.length ? pool : PICTONARY_ITEMS;
+    return list[Math.floor(Math.random() * list.length)];
+  };
+  const nuevaRonda = (uid) => {
+    const item = pickItem(game.history);
+    const history = [...(game.history || []), item.titulo].slice(-8);
+    return db.ref(`sessions/${SID}/pictonary`).update({
+      active: true, gameState: 'playing', currentDrawer: uid, currentItem: item,
+      roundStartTime: Date.now(), strokes: null, live: null, chat: null, history
+    });
+  };
+  const seleccionarRandom = async () => {
+    if (juegosUsers.length === 0) return;
+    const random = juegosUsers[Math.floor(Math.random() * juegosUsers.length)];
+    await nuevaRonda(random.uid);
+  };
+  const seleccionarManual = async (uid) => { await nuevaRonda(uid); };
+  const limpiarPizarra = () => { db.ref(`sessions/${SID}/pictonary`).update({ strokes: null, live: null }); };
+  const adivinador = async (uid) => {
+    const newScores = { ...scores };
+    newScores[uid] = (newScores[uid] || 0) + 10;
+    if (currentDrawerId) newScores[currentDrawerId] = (newScores[currentDrawerId] || 0) + 5;
+    await db.ref(`sessions/${SID}/pictonary`).update({
+      scores: newScores, gameState: 'idle', currentDrawer: null, currentItem: null,
+      roundStartTime: null, strokes: null, live: null, chat: null
+    });
+  };
+  const skipTurn = async () => {
+    await db.ref(`sessions/${SID}/pictonary`).update({
+      gameState: 'idle', currentDrawer: null, currentItem: null, roundStartTime: null,
+      strokes: null, live: null, chat: null
+    });
+  };
+  const finalizar = async () => { await db.ref(`sessions/${SID}/pictonary`).update({ gameState: 'finished' }); };
+  const cerrar = async () => {
+    await db.ref(`sessions/${SID}/pictonary`).remove();
+    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    if (onClose) onClose();
+  };
+  const enviarGuess = () => {
+    const t = chatText.trim();
+    if (!t || !SID) return;
+    const me = users[myId] || {};
+    db.ref(`sessions/${SID}/pictonary/chat`).push({
+      uid: myId, name: me.name || 'Anon', avatar: me.avatar || '👤', color: me.color || '#ffd000', text: t, ts: Date.now()
+    }).catch(() => {});
+    setChatText('');
+  };
+
+  const myZone = users[myId]?.zone;
+  if (myZone !== 'juegos' && !isAdmin) return null;
+
+  const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+  const headerBar = h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
+    h('span', { style: { fontSize: 22 } }, '🎨'),
+    h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Pictonary Bíblico'),
+    isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
+  );
+
+  /* ── Resultados finales ── */
+  if (gState === 'finished') {
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
+    return h('div', { style: wrapStyle },
+      headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
+        h(Confetti, null),
+        h('div', { style: { fontSize: 54 } }, '🏆'),
+        h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 30, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.06em', margin: 0, textAlign: 'center' } }, '¡Pictonary Bíblico — Resultados!'),
+        h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 } },
+          ranking.map((r, i) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)', border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.1)' } },
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: i === 0 ? '#a16207' : '#0a0e2e', width: 36, textAlign: 'center' } }, i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`),
+            h(AvatarBubble, { profile: r.user, size: 40 }),
+            h('div', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 18, color: '#0a0e2e' } }, r.user.name),
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: '#a16207' } }, r.pts, ' pts'),
+          )),
+        ),
+        isAdmin ? h('button', { onClick: cerrar, style: { marginTop: 14, background: '#ffd000', border: 'none', borderRadius: 14, padding: '14px 32px', color: '#f8f5ef', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer' } }, 'Cerrar juego') : null,
+      ),
+    );
+  }
+
+  /* ── Idle: elegir/pasar turno ── */
+  if (!gState || gState === 'idle') {
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
+    return h('div', { style: wrapStyle },
+      headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
+        h('p', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, maxWidth: 340 } }, 'Se elige a alguien al azar para dibujar un personaje, lugar o escena bíblica. El resto adivina por el chat o en voz alta.'),
+        ranking.length > 0 ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 6 } },
+          ranking.map((r) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 12, background: 'rgba(10,14,46,.04)' } },
+            h(AvatarBubble, { profile: r.user, size: 28 }),
+            h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, color: '#0a0e2e' } }, r.user.name),
+            h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: '#a16207' } }, r.pts),
+          )),
+        ) : null,
+        isAdmin ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10 } },
+          h('button', { onClick: seleccionarRandom, disabled: juegosUsers.length === 0, style: { padding: '14px 20px', background: juegosUsers.length === 0 ? 'rgba(21,128,61,.2)' : '#15803d', border: 'none', borderRadius: 14, color: '#f8f5ef', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: juegosUsers.length === 0 ? 'not-allowed' : 'pointer', opacity: juegosUsers.length === 0 ? .5 : 1 } }, '🎲 Elegir dibujante al azar'),
+          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.15em', marginTop: 4 } }, 'O elige tú quién dibuja:'),
+          juegosUsers.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, padding: 14 } }, 'Nadie en la zona de juegos aún.') : h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 } },
+            juegosUsers.map((u) => h('button', { key: u.uid, onClick: () => seleccionarManual(u.uid), style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', border: '1px solid rgba(10,14,46,.12)', borderRadius: 10, padding: '8px 10px', cursor: 'pointer', color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, textAlign: 'left' } },
+              h(AvatarBubble, { profile: u, size: 26 }),
+              h('span', { style: { flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, u.name),
+            )),
+          ),
+          ranking.length > 0 ? h('button', { onClick: finalizar, style: { marginTop: 6, background: 'rgba(255,208,0,.18)', border: '1px solid rgba(255,208,0,.4)', borderRadius: 14, padding: '12px', color: '#a16207', fontWeight: 800, fontSize: 13, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏆 Finalizar y ver resultados') : null,
+        ) : h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 14, maxWidth: 300 } }, 'Esperando que el admin elija quién dibuja… ', h(Spinner, { size: 22 })),
+      ),
+    );
+  }
+
+  /* ── Jugando: pizarra + herramientas + chat lateral ── */
+  const timeColor = over ? '#dc2626' : remaining < 20 ? '#c2410c' : '#a16207';
+  const guessers = juegosUsers.filter((u) => u.uid !== currentDrawerId);
+  return h('div', { style: wrapStyle },
+    headerBar,
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', flexWrap: 'wrap', flexShrink: 0 } },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 30, color: timeColor, lineHeight: 1, minWidth: 64 } }, formatTime(Math.max(0, remaining))),
+      currentDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', padding: '6px 12px', borderRadius: 20 } },
+        h(AvatarBubble, { profile: currentDrawer, size: 28 }),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 13, color: '#0a0e2e' } }, isDrawer ? 'Tú dibujas' : `${currentDrawer.name} dibuja`),
+      ) : null,
+      currentItem && (isDrawer || isAdmin) ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(21,128,61,.1)', border: '1px solid rgba(21,128,61,.3)', padding: '6px 14px', borderRadius: 20 } },
+        h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.1em' } }, currentItem.categoria),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 15, color: '#0a0e2e' } }, currentItem.titulo),
+      ) : (!isDrawer ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '👀 ¿Qué está dibujando?') : null),
+      over ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', background: 'rgba(239,68,68,.1)', padding: '5px 12px', borderRadius: 20 } }, '⏱ Tiempo terminado') : null,
+    ),
+    h('div', { style: { flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, padding: '0 16px 16px', overflow: 'hidden', minHeight: 0 } },
+      h('div', { style: { flex: isMobile ? 'none' : 2, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 } },
+        h(PictonaryCanvas, { SID, canDraw: isDrawer && !over, color, tool, strokes: game.strokes, live: game.live, height: isMobile ? 220 : 360 }),
+        isDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+          PICTONARY_COLORS.map((c) => h('button', {
+            key: c, onClick: () => { setColor(c); setTool('pen'); }, title: 'Color',
+            style: { width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer', border: (tool === 'pen' && color === c) ? '3px solid #0a0e2e' : '2px solid rgba(10,14,46,.15)', padding: 0 }
+          })),
+          h('button', { onClick: () => setTool('eraser'), title: 'Goma de borrar', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: tool === 'eraser' ? '2px solid #0a0e2e' : '1px solid rgba(10,14,46,.15)', background: tool === 'eraser' ? 'rgba(10,14,46,.08)' : '#fff', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#0a0e2e' } }, '🧼 Goma'),
+          h('button', { onClick: limpiarPizarra, title: 'Limpiar toda la pizarra', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(239,68,68,.35)', background: 'rgba(239,68,68,.08)', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#dc2626', marginLeft: 'auto' } }, '🗑️ Limpiar todo'),
+        ) : null,
+        (isDrawer || isAdmin) ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 10 } },
+          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, '¿Quién adivinó? (toca para sumarle puntos)'),
+          guessers.length === 0 ? h('div', { style: { fontSize: 12, color: 'var(--muted)' } }, 'Nadie más en la zona de juegos aún.') : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
+            guessers.map((u) => h('button', { key: u.uid, onClick: () => adivinador(u.uid), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '5px 10px 5px 5px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12.5, color: '#0a0e2e' } },
+              h(AvatarBubble, { profile: u, size: 22 }), u.name,
+            )),
+          ),
+          h('div', { style: { display: 'flex', gap: 8, marginTop: 2 } },
+            h('button', { onClick: seleccionarRandom, style: { flex: 1, background: '#15803d', border: 'none', borderRadius: 12, padding: '9px', color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🎲 Siguiente al azar'),
+            h('button', { onClick: skipTurn, style: { flex: 1, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px', color: '#0a0e2e', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar turno'),
+          ),
+        ) : null,
+      ),
+      h('div', { style: { flex: isMobile ? 'none' : 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 220 : 0, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden' } },
+        h('div', { style: { padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '💬 Adivina aquí'),
+        h('div', { style: { flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 } },
+          chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá, o dila en voz alta.') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
+            h(AvatarBubble, { profile: m, size: 20 }),
+            h('div', null,
+              h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11.5, color: m.color || '#0a0e2e' } }, m.name, ' '),
+              h('span', { style: { fontSize: 13, color: '#0a0e2e' } }, m.text),
+            ),
+          )),
+          h('div', { ref: chatEndRef }),
+        ),
+        h('div', { style: { display: 'flex', gap: 6, padding: 8, borderTop: '1px solid rgba(10,14,46,.08)' } },
+          h('input', {
+            value: chatText, onChange: (e) => setChatText(e.target.value),
+            onKeyDown: (e) => { if (e.key === 'Enter') enviarGuess(); },
+            placeholder: isDrawer ? 'Sólo espectadores pueden adivinar' : 'Escribe tu respuesta…',
+            disabled: isDrawer,
+            style: { flex: 1, border: '1px solid rgba(10,14,46,.15)', borderRadius: 20, padding: '8px 14px', fontSize: 13.5, fontFamily: 'inherit' }
+          }),
+          h('button', { onClick: enviarGuess, disabled: isDrawer, style: { border: 'none', background: isDrawer ? 'rgba(21,128,61,.3)' : '#15803d', color: '#fff', borderRadius: 20, padding: '8px 16px', fontWeight: 800, fontSize: 13, cursor: isDrawer ? 'not-allowed' : 'pointer' } }, 'Enviar'),
+        ),
+      ),
+    ),
+  );
+}
+
 /* ── CountdownTimer  (19838-19871) ── */
 function CountdownTimer({
   from,
@@ -16007,11 +16467,15 @@ class Component extends React.Component {
   s2t = (px, py) => { const a = 2 * (px - this.OX) / this.TW, b = 2 * (py - this.OY) / this.TH; return { x: (a + b) / 2, y: (b - a) / 2 }; };
   clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   ROOMS = ROOMS; FURN = FURN; MOODS = MOODS; REACT_EMOJIS = REACT_EMOJIS; ACTS = ACTS;
+  // Zona "Juegos" dentro de la sala Repaso: rincón inferior derecho de la
+  // grilla (COLS×ROWS). Quien mueva su avatar ahí entra a la zona de juegos.
+  GAMES_ZONE = { x1: 11, y1: 8 };
+  _isInGamesZone = (x, y) => x >= this.GAMES_ZONE.x1 && y >= this.GAMES_ZONE.y1;
 
   state = {
     isMobile: typeof window !== 'undefined' && window.innerWidth < 640,
     view: 'lobby', currentRoom: null,
-    roomNames: { mision: 'Misión Joven', confra: 'Confraternización', repaso: 'Repaso · Hechos 4', templo: 'Templo · Adoración' },
+    roomNames: { mision: 'Misión Joven', confra: 'Confraternización', repaso: 'Repaso', templo: 'Templo · Adoración' },
     started: { mision: false, confra: false, repaso: false, templo: false },
     avatarEditing: false,
     chars: [
@@ -16136,7 +16600,7 @@ class Component extends React.Component {
         // Propaga el flag hand desde Firebase (admin pudo haber bajado la mano).
         const meMerged = me ? { ...me, hand: myFb ? !!myFb.hand : !!me.hand } : null;
         return { chars: meMerged ? [meMerged, ...others] : others };
-      });
+      }, () => this._maybeOpenGamesActivity());
       // Confra activa: el admin agrega automáticamente a la queue los uids
       // que ingresan a la sala confra después de que ya empezó.
       if (this.isAdmin && this.state.session?.confra?.active) {
@@ -16167,7 +16631,12 @@ class Component extends React.Component {
         let activity = s.activity;
         const phase = v.phase;
         if (phase && phase !== 'waiting') {
-          const inMyRoom = this.screenMode || (s.currentRoom === phase) || (s.currentRoom === 'repaso' && phase === 'juegos');
+          // La zona "Juegos" vive dentro de Repaso: sólo se abre la pantalla
+          // de juegos para quien esté físicamente parado en ese rincón (o el
+          // admin, que siempre puede supervisar/gestionar el juego).
+          const me = s.chars.find((c) => c.id === 'me');
+          const inGamesZone = this.isAdmin || (me && this._isInGamesZone(me.x || 0, me.y || 0));
+          const inMyRoom = this.screenMode || (s.currentRoom === phase) || (s.currentRoom === 'repaso' && phase === 'juegos' && inGamesZone);
           // Repaso es opcional: nadie ve el chat auto. Aparece sólo si tocan el FAB 💬.
           // Las demás fases sí abren su pantalla cuando estás en la sala.
           if (inMyRoom && !s.activity && phase !== 'repaso') activity = phase;
@@ -16715,15 +17184,9 @@ class Component extends React.Component {
     );
   }
   renderRail() {
-    // Rail solo para admin en desktop. En mobile el admin controla todo desde ⚙️.
-    if (!this.isAdmin || this.state.isMobile) return null;
-    return h('div', { style: { position: 'absolute', top: 14, left: 14, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 8, width: 200, maxHeight: 'calc(100% - 28px)', overflowY: 'auto' } },
-      h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--ink-soft)', padding: '0 4px 2px' } }, 'Iniciar actividad'),
-      this.ACTS.map((a) => h('button', { key: a.key, onClick: () => this.openActivity(a.key), style: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 14, border: `2px solid ${a.color}`, background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(4px)', cursor: 'pointer', boxShadow: `0 4px 14px ${a.color}33`, textAlign: 'left' } },
-        h('span', { style: { width: 30, height: 30, flexShrink: 0, borderRadius: 9, background: a.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 } }, a.icon),
-        h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13.5, letterSpacing: '.02em', textTransform: 'uppercase', color: a.dark, lineHeight: 1.05 } }, a.label),
-      )),
-    );
+    // Deshabilitado: el admin controla todo desde el engranaje ⚙️ (AdminPanel).
+    // Nadie ve un menú de acciones en la izquierda, ni siquiera el admin.
+    return null;
   }
   renderReactionBar() {
     const st = this.state;
@@ -16746,8 +17209,11 @@ class Component extends React.Component {
     const out = {};
     for (const c of this.state.chars) {
       const uid = c.id === 'me' ? (this.uid || 'me') : c.id;
-      // Mapeo del nuevo modelo (room) al viejo (zone).
-      const zone = c.room || 'entrada';
+      // Mapeo del nuevo modelo (room) al viejo (zone). Dentro de Repaso, el
+      // rincón "Juegos" (GAMES_ZONE) se mapea a zone:'juegos' para que los
+      // controladores de juegos (Tabú/¿Quién soy?/Dibuja/Kahoot/Pictonary) los
+      // detecten como jugadores activos.
+      const zone = (c.room === 'repaso' && this._isInGamesZone(c.x || 0, c.y || 0)) ? 'juegos' : (c.room || 'entrada');
       out[uid] = {
         name: c.name, color: c.color, avatar: c.emoji, photo: c.photo,
         bodyColor: c.bodyColor, armsColor: c.armColor, armColor: c.armColor,
@@ -16761,6 +17227,17 @@ class Component extends React.Component {
     }
     return out;
   }
+  // Si el juego de la sala Repaso ya está activo y me acabo de mover al
+  // rincón "Juegos" (o soy admin), abro la pantalla de juegos para mí.
+  // Cubre el caso de entrar tarde a un juego ya iniciado.
+  _maybeOpenGamesActivity = () => {
+    const s = this.state;
+    if (s.activity || s.currentRoom !== 'repaso') return;
+    if (s.session?.phase !== 'juegos') return;
+    const me = s.chars.find((c) => c.id === 'me');
+    const eligible = this.isAdmin || (me && this._isInGamesZone(me.x || 0, me.y || 0));
+    if (eligible) this.setState({ activity: 'juegos' });
+  };
   _commonProps() {
     return {
       session: this.state.session || {},
@@ -16820,6 +17297,7 @@ class Component extends React.Component {
       if (sess.tabu?.active)     return h(TabuController, Object.assign({}, cp, { onEndTabu: () => db.ref(`sessions/${this.SID}/tabu`).remove() }));
       if (sess.quiensoy?.active) return h(QuienSoyController, Object.assign({}, cp, { onEndQuienSoy: () => db.ref(`sessions/${this.SID}/quiensoy`).remove() }));
       if (sess.dibuja?.active)   return h(DibujaController, Object.assign({}, cp, { onEndDibuja: () => db.ref(`sessions/${this.SID}/dibuja`).remove() }));
+      if (sess.pictonary?.active) return h(PictonaryController, Object.assign({}, cp, { onEndPictonary: () => db.ref(`sessions/${this.SID}/pictonary`).remove() }));
       return h(KahootController, Object.assign({}, cp, {
         gameHistory: this.state.gameHistory || {},
         onEndJuegos: () => this._endRoomActivity('juegos')
@@ -16950,11 +17428,21 @@ class Component extends React.Component {
     const st = this.state;
     const room = this.ROOMS.find((r) => r.key === st.currentRoom) || this.ROOMS[0];
     const tiles = [];
+    const isGamesTile = (x, y) => room.key === 'repaso' && this._isInGamesZone(x, y);
     for (let y = 0; y < this.ROWS; y++) for (let x = 0; x < this.COLS; x++) {
       const p0 = this.iso(x, y), p1 = this.iso(x + 1, y), p2 = this.iso(x + 1, y + 1), p3 = this.iso(x, y + 1);
-      const fill = (x + y) % 2 === 0 ? `${room.color}1f` : `${room.color}12`;
-      tiles.push(h('polygon', { key: `${x}-${y}`, points: `${p0.left},${p0.top} ${p1.left},${p1.top} ${p2.left},${p2.top} ${p3.left},${p3.top}`, fill, stroke: 'rgba(10,14,46,.06)', strokeWidth: 1 }));
+      const fill = isGamesTile(x, y) ? ((x + y) % 2 === 0 ? '#f9731633' : '#f9731622') : ((x + y) % 2 === 0 ? `${room.color}1f` : `${room.color}12`);
+      tiles.push(h('polygon', { key: `${x}-${y}`, points: `${p0.left},${p0.top} ${p1.left},${p1.top} ${p2.left},${p2.top} ${p3.left},${p3.top}`, fill, stroke: isGamesTile(x, y) ? 'rgba(249,115,22,.3)' : 'rgba(10,14,46,.06)', strokeWidth: 1 }));
     }
+    // Etiqueta flotante sobre el rincón "Juegos" de la sala Repaso.
+    const gamesZoneLabel = (room.key === 'repaso') ? (() => {
+      const cx = (this.GAMES_ZONE.x1 + this.COLS) / 2, cy = (this.GAMES_ZONE.y1 + this.ROWS) / 2;
+      const p = this.iso(cx, cy);
+      return h('div', { style: { position: 'absolute', left: p.left, top: p.top, transform: 'translate(-50%,-50%)', zIndex: 2, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 } },
+        h('span', { style: { fontSize: 26 } }, '🎮'),
+        h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 10.5, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c2410c', opacity: .8 } }, 'Juegos'),
+      );
+    })() : null;
     const a = this.iso(0, 0), lb = this.iso(0, this.ROWS), rb = this.iso(this.COLS, 0), H = this.WALLH;
     const walls = h('g', null,
       h('polygon', { points: `${a.left},${a.top} ${lb.left},${lb.top} ${lb.left},${lb.top - H} ${a.left},${a.top - H}`, fill: '#efeae0', stroke: 'rgba(10,14,46,.08)', strokeWidth: 1 }),
@@ -16975,6 +17463,7 @@ class Component extends React.Component {
       h('div', { ref: (el) => { this.layerEl = el; }, onPointerDown: this.onLayerDown, onPointerMove: this.onLayerMove, onPointerUp: this.onLayerUp, onPointerCancel: this.onLayerUp, onClick: this.onLayerClick, style: { position: 'absolute', left: '50%', top: '50%', width: this.LW, height: this.LH, transform: `translate(calc(-50% + ${st.pan.x}px), calc(-50% + ${st.pan.y}px)) scale(${st.scale * st.userScale})`, transformOrigin: 'center center', transition: (st.panning || st.dragging) ? 'none' : 'transform .2s ease' } },
         h('svg', { width: this.LW, height: this.LH, style: { position: 'absolute', left: 0, top: 0, overflow: 'visible' } }, walls, tiles),
         wallTitle,
+        gamesZoneLabel,
         furniture.map((f) => h(React.Fragment, { key: f.id }, this.renderFurn(f))),
         chars.map((c) => this.renderChar(c)),
         selected ? this.renderStatusCard(selected) : null,
@@ -17239,7 +17728,7 @@ class Component extends React.Component {
           if (a) db.ref(`sessions/${this.SID}/wordcloud/active`).set(false);
           else   db.ref(`sessions/${this.SID}/wordcloud`).set({ active: true, words: [] });
         },
-        onResetSession: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', confra: null, repaso: null, juegos: null, mision: null, templo: null, presentation: null, video: null, wordcloud: null }),
+        onResetSession: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', confra: null, repaso: null, juegos: null, mision: null, templo: null, presentation: null, video: null, wordcloud: null, tabu: null, quiensoy: null, dibuja: null, pictonary: null }),
         onOpenDownload: () => this.setState({ activity: 'download' }),
         onOpenSurveyResults: () => this.setState({ activity: 'survey-results' }),
         surveyResponses: st.surveyResponses || {}
