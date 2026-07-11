@@ -7765,14 +7765,27 @@ function DataDownloadModal({
   const [busy, setBusy] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  // Formato de descarga: 'txt' (texto separado por tabulaciones) o
+  // 'excel' (CSV real, con BOM UTF-8 para que Excel abra tildes/ñ bien).
+  const [format, setFormat] = useState('txt');
+  // Convierte el TSV que arman fetchAttendance/fetchGames/fetchSurveys en CSV
+  // válido (comas, celdas entre comillas si hace falta escapar).
+  const tsvToCSV = (tsv) => tsv.split('\n').map(line => line.split('\t').map(cell => {
+    const c = String(cell ?? '');
+    return /[",;\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c;
+  }).join(',')).join('\r\n');
   const dl = (content, filename) => {
-    const blob = new Blob([content], {
-      type: 'text/plain;charset=utf-8'
+    const isExcel = format === 'excel';
+    const BOM = String.fromCharCode(0xFEFF);
+    const out = isExcel ? BOM + tsvToCSV(content) : content;
+    const finalName = isExcel ? filename.replace(/\.txt$/, '.csv') : filename;
+    const blob = new Blob([out], {
+      type: isExcel ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8'
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = finalName;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -7993,7 +8006,40 @@ function DataDownloadModal({
       fontFamily: 'Barlow,sans-serif',
       lineHeight: 1.45
     }
-  }, "Genera un archivo de texto separado por tabulaciones — pegable directamente en Google Sheets / Excel."), /*#__PURE__*/React.createElement("div", {
+  }, format === 'excel' ? "Genera un archivo .csv (Excel / Google Sheets), con tildes y ñ correctos." : "Genera un archivo .txt separado por tabulaciones — pegable directamente en Google Sheets / Excel."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      background: 'rgba(10,14,46,.04)',
+      borderRadius: 10,
+      padding: 3,
+      marginBottom: 12,
+      border: '1px solid rgba(255,208,0,.08)'
+    }
+  }, [{
+    id: 'txt',
+    l: '📄 Texto (.txt)'
+  }, {
+    id: 'excel',
+    l: '📊 Excel (.csv)'
+  }].map(f => /*#__PURE__*/React.createElement("button", {
+    key: f.id,
+    onClick: () => setFormat(f.id),
+    style: {
+      flex: 1,
+      padding: '7px 4px',
+      borderRadius: 8,
+      border: 'none',
+      background: format === f.id ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'transparent',
+      color: format === f.id ? '#f8f5ef' : 'var(--muted)',
+      fontSize: 12,
+      fontWeight: 700,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.03em',
+      textTransform: 'uppercase',
+      cursor: 'pointer',
+      transition: 'all .2s'
+    }
+  }, f.l))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'rgba(10,14,46,.03)',
       border: '1px solid rgba(255,208,0,.12)',
@@ -11102,16 +11148,7 @@ function KahootController({
     });
   };
   const finishGame = async () => {
-    const fs = game?.scores || {};
-    const sorted = Object.entries(fs).sort((a, b) => b[1] - a[1]);
-    const gid = `${SID}_${Date.now()}`;
-    await Promise.all(sorted.map(([uid, score], i) => db.ref(`gameHistory/${uid}/${gid}`).set({
-      date: SID,
-      score,
-      rank: i + 1,
-      totalPlayers: sorted.length,
-      name: users[uid]?.name || '?'
-    })));
+    await saveGameHistory(SID, game?.scores || {}, users);
     await db.ref(`sessions/${SID}/juegos/gameState`).set('finished');
   };
   const skipQuestion = async () => {
@@ -11448,6 +11485,22 @@ function KahootController({
    BACKEND LEGACY P2 — Juegos restantes (Tabu/QuienSoy/Dibuja) + QR + utils.
    Extraído verbatim del commit ad19c23.
    ════════════════════════════════════════════════════════════════════════ */
+
+// Persiste el resultado final de un juego (uid → puntaje) en /gameHistory,
+// que alimenta la pestaña "Juegos" de AttendanceModal, el podio y las
+// descargas de datos del admin. Antes solo Kahoot guardaba esto.
+const saveGameHistory = (SID, scores, users) => {
+  const sorted = Object.entries(scores || {}).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length) return Promise.resolve();
+  const gid = `${SID}_${Date.now()}`;
+  return Promise.all(sorted.map(([uid, score], i) => db.ref(`gameHistory/${uid}/${gid}`).set({
+    date: SID,
+    score,
+    rank: i + 1,
+    totalPlayers: sorted.length,
+    name: users[uid]?.name || '?'
+  })));
+};
 
 /* ── TABU_CARDS  (13947-14239) ── */
 const TABU_CARDS = [{
@@ -12279,6 +12332,7 @@ function TabuController({
     });
   };
   const finalizar = async () => {
+    await saveGameHistory(SID, scores, users);
     await db.ref(`sessions/${SID}/tabu`).update({
       gameState: 'finished'
     });
@@ -12962,6 +13016,7 @@ function QuienSoyController({
     });
   };
   const finalizar = async () => {
+    await saveGameHistory(SID, scores, users);
     await db.ref(`sessions/${SID}/quiensoy`).update({
       gameState: 'finished'
     });
@@ -14614,6 +14669,15 @@ function DibujaController({
     });
   };
   const finalizar = async () => {
+    // Convierte el progreso de cada equipo en un puntaje por jugador (todos los
+    // miembros del equipo comparten el puntaje/posición final de su equipo).
+    const teamScores = {};
+    order.forEach(tid => {
+      const t = teams[tid];
+      if (!t) return;
+      Object.keys(t.members || {}).forEach(uid => { teamScores[uid] = t.pos || 0; });
+    });
+    await saveGameHistory(SID, teamScores, users);
     await ref().update({
       gameState: 'finished'
     });
@@ -16089,7 +16153,7 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
       strokes: null, live: null, chat: null
     });
   };
-  const finalizar = async () => { await db.ref(`sessions/${SID}/pictonary`).update({ gameState: 'finished' }); };
+  const finalizar = async () => { await saveGameHistory(SID, scores, users); await db.ref(`sessions/${SID}/pictonary`).update({ gameState: 'finished' }); };
   const cerrar = async () => {
     await db.ref(`sessions/${SID}/pictonary`).remove();
     await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
@@ -16319,7 +16383,8 @@ function DraggableQR({
   qrSize,
   setQrSize,
   qrPos,
-  setQrPos
+  setQrPos,
+  onHide
 }) {
   const url = window.location.origin + window.location.pathname;
   const dragRef = useRef({
@@ -16328,6 +16393,10 @@ function DraggableQR({
     offX: 0,
     offY: 0
   });
+  // Z-index alto y fijo para que el QR quede siempre por encima de cualquier
+  // sala o pantalla de actividad (juegos, presentaciones, videos, admin, etc.)
+  // y así la gente pueda escanearlo estando en cualquier parte de la app.
+  const QR_Z = 9990;
 
   // Vista grande: overlay centrado (no arrastrable)
   if (qrSize === 'large') {
@@ -16336,7 +16405,7 @@ function DraggableQR({
       style: {
         position: 'fixed',
         inset: 0,
-        zIndex: 210,
+        zIndex: QR_Z + 5,
         background: 'rgba(10,14,46,.45)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
@@ -16348,6 +16417,7 @@ function DraggableQR({
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
+        position: 'relative',
         background: '#fff',
         borderRadius: 24,
         padding: '28px 28px 22px',
@@ -16358,7 +16428,26 @@ function DraggableQR({
         boxShadow: '0 24px 60px rgba(10,14,46,.3)',
         maxWidth: '92vmin'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, onHide && /*#__PURE__*/React.createElement("button", {
+      onClick: (e) => { e.stopPropagation(); onHide(); },
+      title: "Ocultar QR",
+      style: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        width: 28,
+        height: 28,
+        borderRadius: '50%',
+        border: 'none',
+        background: 'rgba(10,14,46,.06)',
+        color: '#0a0e2e',
+        fontSize: 15,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    }, "✕"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Barlow Condensed,sans-serif',
         fontWeight: 900,
@@ -16456,7 +16545,7 @@ function DraggableQR({
     style: {
       position: 'fixed',
       ...posStyle,
-      zIndex: 205,
+      zIndex: QR_Z,
       background: '#fff',
       borderRadius: 14,
       padding: isMed ? '10px 12px 8px' : '5px 5px 3px',
@@ -16470,7 +16559,30 @@ function DraggableQR({
       alignItems: 'center',
       gap: isMed ? 5 : 3
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, onHide && /*#__PURE__*/React.createElement("button", {
+    onMouseDown: (e) => e.stopPropagation(),
+    onTouchStart: (e) => e.stopPropagation(),
+    onClick: (e) => { e.stopPropagation(); onHide(); },
+    title: "Ocultar QR",
+    style: {
+      position: 'absolute',
+      top: -8,
+      right: -8,
+      width: 20,
+      height: 20,
+      borderRadius: '50%',
+      border: '1px solid rgba(10,14,46,.12)',
+      background: '#fff',
+      color: '#0a0e2e',
+      fontSize: 10,
+      lineHeight: 1,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 2px 6px rgba(10,14,46,.2)'
+    }
+  }, "✕"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -17015,6 +17127,9 @@ class Component extends React.Component {
     // Historial de juegos del usuario actual (lo usan AttendanceModal y el podio).
     this._histRef = window.db.ref(`gameHistory/${this.uid}`);
     this._histRef.on('value', (snap) => this.setState({ gameHistory: snap.val() || {} }));
+    // Historial de asistencia del usuario actual (lo usa AttendanceModal).
+    this._myAttRef = window.db.ref(`attendance/${this.uid}`);
+    this._myAttRef.on('value', (snap) => this.setState({ myAtt: snap.val() || {} }));
     // Mensajes del chat de Repaso + reacciones por mensaje.
     this._msgsRef = window.db.ref(`sessions/${this.SID}/messages`).orderByChild('ts');
     this._msgsRef.on('value', (snap) => {
@@ -17035,6 +17150,7 @@ class Component extends React.Component {
     if (this._reacRef)      this._reacRef.off();
     if (this._surveyRef)    this._surveyRef.off();
     if (this._histRef)      this._histRef.off();
+    if (this._myAttRef)     this._myAttRef.off();
     if (this._msgsRef)      this._msgsRef.off();
     if (this._chatRxRef)    this._chatRxRef.off();
     if (this.uid && this.SID && window.db && !this.screenMode) {
@@ -18069,16 +18185,19 @@ class Component extends React.Component {
       !screen && st.activity === 'survey-results' ? h(AdminSurveyModal, Object.assign({}, this._commonProps(), { responses: st.surveyResponses || {}, onClose: this.closeActivity })) : null,
       !screen && st.activity === 'admin-stats' ? h(AdminStatsModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
       // Asistencia (modal disponible siempre, abierto desde el header).
-      !screen && st.activity === 'asistencia' ? h(AttendanceModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
+      !screen && st.activity === 'asistencia' ? h(AttendanceModal, Object.assign({}, this._commonProps(), { myAtt: st.myAtt || {}, gameHistory: st.gameHistory || {}, onClose: this.closeActivity })) : null,
       // VerseOverlay: lo abre el click en una referencia bíblica desde la presentación.
       st.verseRef ? h(VerseOverlay, { refStr: st.verseRef, broadcast: false, canClose: true, onClose: () => this.setState({ verseRef: null }) }) : null,
       // QR de acceso (admin) — útil para proyección. En screenMode siempre visible.
       // QR siempre que admin lo haya pedido (botón 📲) o en modo proyección.
+      // Se renderiza fuera de cualquier `st.activity`, así que queda visible
+      // en TODAS las salas y pantallas de acciones (juegos, presentaciones,
+      // videos, admin, etc.) — no solo en la pantalla principal.
       // qrSize: 'small' (chip arriba) → click → 'medium' (panel grande arriba) →
       // click → 'large' (overlay a pantalla completa). Click sobre el overlay
-      // grande lo vuelve a 'small'. Z-index alto para que se vea por encima de
-      // presentaciones y videos.
-      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 'small'), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || null, setQrPos: (v) => this.setState({ qrPos: v }) }) : null,
+      // grande lo vuelve a 'small'. Z-index alto (ver QR_Z) para que se vea por
+      // encima de presentaciones, videos y juegos.
+      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 'small'), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || null, setQrPos: (v) => this.setState({ qrPos: v }), onHide: screen ? null : () => this.setState({ showQR: false }) }) : null,
       // FAB del chat del Repaso: aparece cuando el admin abrió Repaso (phase==='repaso')
       // y el usuario no tiene otra actividad abierta. Click → abre el chat.
       !screen && st.session?.phase === 'repaso' && st.activity !== 'repaso'
