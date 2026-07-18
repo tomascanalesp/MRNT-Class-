@@ -5070,7 +5070,12 @@ function PresentationOverlay({
     if (fsEl) {
       (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
     } else {
-      const el = overlayRef.current;
+      // Se pide fullscreen sobre <html> (no sobre overlayRef): el navegador
+      // solo pinta el subárbol del elemento fullscreened, y el QR (DraggableQR)
+      // se renderiza aparte, como hermano en la raíz de la app. Si se pidiera
+      // fullscreen sobre el div de la presentación, el QR quedaría invisible
+      // en pantalla completa sin importar su z-index.
+      const el = document.documentElement;
       if (!el) return;
       (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
     }
@@ -18475,7 +18480,22 @@ class Component extends React.Component {
       // click → 'large' (overlay a pantalla completa). Click sobre el overlay
       // grande lo vuelve a 'small'. Z-index alto (ver QR_Z) para que se vea por
       // encima de presentaciones, videos y juegos.
-      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 'small'), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || null, setQrPos: (v) => this.setState({ qrPos: v }), onHide: screen ? null : () => this.setState({ showQR: false }) }) : null,
+      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 'small'), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || null, setQrPos: (v) => this.setState({ qrPos: v }), onHide: screen ? null : () => this.setState({ showQR: false }) }) :
+      // Cuando el QR está oculto, el botón del header (📲) queda tapado por
+      // cualquier actividad/juego en pantalla completa (position:fixed con
+      // z-index propio) — así que dejamos un disparador siempre alcanzable,
+      // al mismo nivel de z-index que el QR, para poder abrirlo desde
+      // cualquier sala, juego o presentación sin tener que salir primero.
+      (!screen && this.isAdmin) ? h('button', {
+        onClick: () => this.setState({ showQR: true }),
+        title: 'Mostrar QR de acceso',
+        style: {
+          position: 'fixed', top: 64, right: 10, zIndex: 9990,
+          width: 40, height: 40, borderRadius: '50%', border: 'none',
+          background: '#fff', boxShadow: '0 10px 28px rgba(10,14,46,.28), 0 0 0 2px rgba(255,208,0,.55)',
+          cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }
+      }, '📲') : null,
       // FAB del chat del Repaso: aparece cuando el admin abrió Repaso (phase==='repaso')
       // y el usuario no tiene otra actividad abierta. Click → abre el chat.
       !screen && st.session?.phase === 'repaso' && st.activity !== 'repaso'
