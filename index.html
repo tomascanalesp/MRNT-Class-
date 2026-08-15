@@ -17190,13 +17190,13 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
           pictabTeamMemberList(turnTeam, users).map((u) => h('button', { key: u.uid, onClick: () => setDrawerManual(u.uid), style: { display: 'flex', alignItems: 'center', gap: 4, background: u.uid === currentDrawerId ? 'rgba(255,208,0,.25)' : '#fff', border: u.uid === currentDrawerId ? '1px solid #ffd000' : '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '3px 8px 3px 3px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: '#0a0e2e' } }, h(AvatarBubble, { profile: u, size: 18 }), u.name)),
         ) : null,
       ),
-      h('div', { style: { flex: isMobile ? 'none' : 1, display: 'flex', flexDirection: 'column', flexShrink: 0, height: isMobile ? (chatExpanded ? '58vh' : 210) : undefined, minHeight: isMobile ? undefined : 0, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden', transition: 'height .2s ease' } },
+      h('div', { style: { flex: isMobile ? 'none' : '0 0 320px', display: 'flex', flexDirection: 'column', flexShrink: 0, height: chatExpanded ? '58vh' : 210, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden', transition: 'height .2s ease' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
           h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '💬 Adivina aquí'),
-          isMobile ? h('button', {
+          h('button', {
             onClick: () => setChatExpanded((v) => !v),
             style: { border: 'none', background: 'rgba(10,14,46,.06)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 800, cursor: 'pointer', color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif' }
-          }, chatExpanded ? '🗕 Achicar' : '🗖 Agrandar') : null,
+          }, chatExpanded ? '🗕 Achicar' : '🗖 Agrandar'),
         ),
         h('div', { ref: chatListRef, style: { flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 } },
           chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá — exactamente como en la tarjeta (no importan tildes ni mayúsculas).') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
@@ -17498,13 +17498,13 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
           ) : null,
         ) : null,
       ),
-      h('div', { style: { flex: isMobile ? 'none' : 1, display: 'flex', flexDirection: 'column', flexShrink: 0, height: isMobile ? (chatExpanded ? '58vh' : 210) : undefined, minHeight: isMobile ? undefined : 0, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden', transition: 'height .2s ease' } },
+      h('div', { style: { flex: isMobile ? 'none' : '0 0 320px', display: 'flex', flexDirection: 'column', flexShrink: 0, height: chatExpanded ? '58vh' : 210, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden', transition: 'height .2s ease' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
           h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '💬 Adivina aquí'),
-          isMobile ? h('button', {
+          h('button', {
             onClick: () => setChatExpanded((v) => !v),
             style: { border: 'none', background: 'rgba(10,14,46,.06)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 800, cursor: 'pointer', color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif' }
-          }, chatExpanded ? '🗕 Achicar' : '🗖 Agrandar') : null,
+          }, chatExpanded ? '🗕 Achicar' : '🗖 Agrandar'),
         ),
         h('div', { ref: chatListRef, style: { flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 } },
           chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá — exactamente como en la tarjeta (no importan tildes ni mayúsculas) — o dila en voz alta.') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
