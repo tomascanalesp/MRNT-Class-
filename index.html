@@ -16439,22 +16439,35 @@ const PICTAB_CAT_ORDER = ['verbos', 'lugares', 'personajes', 'historias', 'objet
 // 36 casillas: 6 por categoría (4 "sólo tu equipo adivina" + 2 "todos
 // participan" con lápices cruzados), 5 casillas blancas (el capitán elige el
 // color/categoría, sólo para su equipo) y una casilla final de todos los
-// colores. Semilla fija → el "azar" queda igual para todas las partidas, sin
-// tener que sincronizar el layout por Firebase.
+// colores. El color de cada casilla sigue el ciclo fijo de categorías
+// (verde, lugar, personaje, historia, objeto, y de nuevo verde…) para que el
+// tablero quede realmente alternado — "parte con el verde y sigue así la
+// secuencia" — y sólo las casillas "todos participan" quedan sorteadas al
+// azar (semilla fija, así el tablero es igual para todos los que juegan).
 const PICTAB_BOARD = (() => {
-  const cells = [];
-  PICTAB_CAT_ORDER.forEach((k) => {
-    for (let i = 0; i < 4; i++) cells.push({ cat: k, all: false });
-    for (let i = 0; i < 2; i++) cells.push({ cat: k, all: true });
-  });
-  for (let i = 0; i < 5; i++) cells.push({ cat: null, all: false, white: true });
+  const n = 35; // casillas de color/blancas antes de la meta
+  const base = Array.from({ length: n }, (_, i) => PICTAB_CAT_ORDER[i % 5]);
   const rand = pictabSeededRandom(20260815);
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    const tmp = cells[i]; cells[i] = cells[j]; cells[j] = tmp;
-  }
-  const greenIdx = cells.findIndex((c) => c.cat === 'verbos' && !c.all);
-  if (greenIdx > 0) { const tmp = cells[0]; cells[0] = cells[greenIdx]; cells[greenIdx] = tmp; }
+  // Una casilla blanca por categoría, repartida lejos entre sí y sin tocar
+  // nunca la casilla 0 (que debe quedar verde).
+  const whiteIdx = new Set();
+  PICTAB_CAT_ORDER.forEach((k, ki) => {
+    const occurrences = [];
+    for (let i = 0; i < n; i++) if (base[i] === k) occurrences.push(i);
+    let pick = occurrences[(ki + 1) % occurrences.length];
+    if (pick === 0) pick = occurrences[1];
+    whiteIdx.add(pick);
+  });
+  // Dos casillas "todos participan" por categoría, sorteadas al azar entre
+  // las que le quedan a cada color.
+  const allIdx = new Set();
+  PICTAB_CAT_ORDER.forEach((k) => {
+    const occurrences = [];
+    for (let i = 0; i < n; i++) if (base[i] === k && !whiteIdx.has(i)) occurrences.push(i);
+    const shuffled = [...occurrences].sort(() => rand() - 0.5);
+    shuffled.slice(0, 2).forEach((i) => allIdx.add(i));
+  });
+  const cells = base.map((cat, i) => whiteIdx.has(i) ? { cat: null, all: false, white: true } : { cat, all: allIdx.has(i) });
   cells.push({ finish: true });
   return cells.map((c, i) => Object.assign({ i: i }, c));
 })();
@@ -16908,6 +16921,8 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
         updates.phase = 'difficulty'; updates.isFinal = false; updates.allPlay = !!cell.all;
         updates.currentCategoryKey = cell.cat; updates.chosenCat = null; updates.difficultyRoll = null;
         await ref().update(updates);
+        const catLabel = PICTAB_CATS[cell.cat]?.label || '';
+        ref().child('toast').set({ text: cell.all ? `✏️✏️ ¡Cayó en ${catLabel}! Todos participan` : `🎯 ${turnTeam.name} cayó en ${catLabel} — sólo su equipo adivina`, ts: Date.now() });
       }
     }, 900);
   };
@@ -17027,6 +17042,11 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
   const limpiarPizarra = () => ref().update({ strokes: null, live: null });
   const setCaptain = (tid, uid) => ref().child(`teams/${tid}/captain`).set(uid);
   const setDrawerManual = (uid) => ref().update({ currentDrawer: uid });
+  const setDrawerRandom = () => {
+    const list = pictabTeamMemberList(turnTeam, users);
+    if (!list.length) return;
+    setDrawerManual(list[Math.floor(Math.random() * list.length)].uid);
+  };
   const finalizar = async () => { await saveGameHistory(SID, scores, users); await ref().update({ gameState: 'finished' }); };
 
   const canSendChat = phase === 'draw' && !isDrawer && !!myTeamId && (allPlay ? true : myTeamId === turnTeamId);
@@ -17131,6 +17151,7 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
 
         isAdmin && phase === 'draw' && currentDrawer ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'center', background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 8, width: '100%', maxWidth: 420 } },
           h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '🎯 Cambiar quién dibuja:'),
+          h('button', { onClick: setDrawerRandom, style: { display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(139,92,246,.14)', border: '1px solid rgba(139,92,246,.4)', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11, color: '#6d28d9' } }, '🎲 Al azar'),
           pictabTeamMemberList(turnTeam, users).map((u) => h('button', { key: u.uid, onClick: () => setDrawerManual(u.uid), style: { display: 'flex', alignItems: 'center', gap: 4, background: u.uid === currentDrawerId ? 'rgba(255,208,0,.25)' : '#fff', border: u.uid === currentDrawerId ? '1px solid #ffd000' : '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '3px 8px 3px 3px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: '#0a0e2e' } }, h(AvatarBubble, { profile: u, size: 18 }), u.name)),
         ) : null,
       ),
