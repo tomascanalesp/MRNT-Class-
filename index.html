@@ -16674,7 +16674,7 @@ function PictabRoster({ teams, order, users, myId, isAdmin, onSetCaptain }) {
 }
 
 /* ── PictabSetup — arma los 2 equipos al azar (o a mano) ── */
-function PictabSetup({ game, SID, juegosUsers, onCancel, onContinue }) {
+function PictabSetup({ game, SID, users, juegosUsers, onCancel, onContinue }) {
   const ref = () => db.ref(`sessions/${SID}/pictonary`);
   const order = (game && game.order) || ['t0', 't1'];
   const teams = (game && game.teams) || {};
@@ -16835,7 +16835,7 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
   };
 
   const myZone = users[myId]?.zone;
-  if (myZone !== 'juegos' && !isAdmin) return null;
+  const blocked = myZone !== 'juegos' && !isAdmin;
 
   const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
   const headerBar = h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
@@ -16844,27 +16844,15 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
     isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
   );
 
-  /* ── SETUP: armado de equipos ── */
-  if (!gState || gState === 'setup') {
-    if (isAdmin) return h(PictabSetup, {
-      game, SID, juegosUsers,
-      onCancel: cerrar,
-      onContinue: () => ref().update({ gameState: 'captains', captainsDeadline: null }),
-    });
-    return h('div', { style: wrapStyle }, headerBar,
-      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 } },
-        h('div', { style: { fontSize: 40 } }, '🎨'),
-        h('div', { style: { color: 'var(--muted)', fontSize: 14 } }, 'El anfitrión está armando los equipos…'),
-        h(Spinner, { size: 22 }),
-      ),
-    );
-  }
-
-  /* ── CAPTAINS: cada equipo elige su capitán ── */
-  if (gState === 'captains') {
-    return h(PictabCaptains, { game, SID, users, myId, isAdmin });
-  }
-
+  // NOTA IMPORTANTE: acá NO se puede hacer `return` todavía (ni por zona, ni
+  // por gState) — React exige llamar exactamente los mismos hooks, en el
+  // mismo orden, en cada render de este mismo componente. Como más abajo se
+  // usan useTimer/useState/useRef/useEffect, cortar la función acá antes de
+  // llegar a esos hooks hacía que, al pasar de "armando equipos" a "jugando",
+  // este mismo componente llamara de golpe muchos hooks más que en el
+  // render anterior → React tiraba una excepción y la pantalla quedaba en
+  // blanco. Por eso los `return` de zona/armado/capitanes se movieron a
+  // después de declarar todos los hooks (ver más abajo).
   const order = game.order || [];
   const teams = game.teams || {};
   const turnIdx = game.turnIdx || 0;
@@ -17057,6 +17045,32 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
     db.ref(`sessions/${SID}/pictonary/chat`).push({ uid: myId, name: me.name || 'Anon', avatar: me.avatar || '👤', color: me.color || '#ffd000', text: t, ts: Date.now() }).catch(() => {});
     setChatText('');
   };
+
+  // A partir de acá ya se llamaron todos los hooks del componente en este
+  // render, así que recién ahora es seguro cortar y devolver JSX distinto
+  // según la zona/el estado del juego.
+  if (blocked) return null;
+
+  /* ── SETUP: armado de equipos ── */
+  if (!gState || gState === 'setup') {
+    if (isAdmin) return h(PictabSetup, {
+      game, SID, users, juegosUsers,
+      onCancel: cerrar,
+      onContinue: () => ref().update({ gameState: 'captains', captainsDeadline: null }),
+    });
+    return h('div', { style: wrapStyle }, headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 } },
+        h('div', { style: { fontSize: 40 } }, '🎨'),
+        h('div', { style: { color: 'var(--muted)', fontSize: 14 } }, 'El anfitrión está armando los equipos…'),
+        h(Spinner, { size: 22 }),
+      ),
+    );
+  }
+
+  /* ── CAPTAINS: cada equipo elige su capitán ── */
+  if (gState === 'captains') {
+    return h(PictabCaptains, { game, SID, users, myId, isAdmin });
+  }
 
   /* ── FINISHED: resultados ── */
   if (gState === 'finished') {
