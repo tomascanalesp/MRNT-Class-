@@ -16426,6 +16426,23 @@ function pictabSeededRandom(seed) {
 // cómo las tipeen ("Belen" === "Belén" === "BELÉN").
 const pictabNormalize = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
 
+// Palabras que no cuentan para el "se acercó lo suficiente" (artículos,
+// preposiciones, etc.) — así "la resurrección de Jesús" no exige adivinar
+// "la"/"de" para llegar al 60%.
+const PICTAB_STOPWORDS = new Set(['el', 'la', 'los', 'las', 'de', 'del', 'al', 'y', 'o', 'en', 'a', 'un', 'una', 'unos', 'unas', 'que', 'su', 'sus']);
+// Qué porcentaje de las palabras clave de "target" aparecen en "candidate"
+// (un solo mensaje). Se usa al acabarse el tiempo: si nadie adivinó exacto
+// pero alguien escribió, en un único mensaje, al menos el 60% de las
+// palabras de la frase, igual se le da como ganador.
+function pictabWordMatchRatio(target, candidate) {
+  const targetWords = pictabNormalize(target).split(' ').filter((w) => w && !PICTAB_STOPWORDS.has(w));
+  if (!targetWords.length) return pictabNormalize(target) === pictabNormalize(candidate) ? 1 : 0;
+  const candidateWords = new Set(pictabNormalize(candidate).split(' ').filter(Boolean));
+  const matched = targetWords.filter((w) => candidateWords.has(w)).length;
+  return matched / targetWords.length;
+}
+const PICTAB_CLOSE_ENOUGH_RATIO = 0.6;
+
 const PICTAB_CATS = {
   verbos: { key: 'verbos', categoria: 'Verbos / Acciones', label: 'Acción bíblica', color: '#2ecc71', dark: '#1e8e4f', icon: '🏃' },
   lugares: { key: 'lugares', categoria: 'Lugares', label: 'Lugar bíblico', color: '#f39c12', dark: '#b9770e', icon: '📍' },
@@ -16987,7 +17004,7 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat.length, phase, currentItem?.titulo]);
 
-  const resolverAdivinanza = async (winnerTid, guesserUid, guesserName) => {
+  const resolverAdivinanza = async (winnerTid, guesserUid, guesserName, near) => {
     const myToken = `${guesserUid}|${Date.now()}|${Math.random()}`;
     const lockRes = await ref().child('solvedBy').transaction((cur) => cur || myToken);
     if (!lockRes.committed || lockRes.snapshot.val() !== myToken) return;
@@ -16997,13 +17014,14 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
     const newScores = { ...scores };
     newScores[guesserUid] = (newScores[guesserUid] || 0) + 15;
     if (drawerUid) newScores[drawerUid] = (newScores[drawerUid] || 0) + 5;
+    const verbo = near ? 'se acercó lo suficiente a' : 'adivinó';
 
     if (isFinal) {
       Object.keys(teams[winnerTid]?.members || {}).forEach((uid) => { newScores[uid] = (newScores[uid] || 0) + 50; });
       const updates = {
         scores: newScores,
         gameState: 'finished', winner: winnerTid,
-        correctGuess: { text: `🎉 ¡${guesserName} adivinó "${item.titulo}"! ${teams[winnerTid]?.name} gana la partida`, ts: Date.now(), ms: 4000 }
+        correctGuess: { text: `🎉 ¡${guesserName} ${verbo} "${item.titulo}"! ${teams[winnerTid]?.name} gana la partida`, ts: Date.now(), ms: 4000 }
       };
       updates[`teams/${winnerTid}/points`] = (teams[winnerTid]?.points || 0) + 70;
       await ref().update(updates);
@@ -17020,15 +17038,34 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
     updates.currentCategoryKey = null; updates.currentItem = null; updates.currentDrawer = null;
     updates.roundStartTime = null; updates.strokes = null; updates.live = null; updates.chat = null;
     updates.allPlay = false; updates.isFinal = false; updates.solvedBy = null;
-    updates.correctGuess = { text: `🎉 ¡${guesserName} adivinó "${item.titulo}"! (${teams[winnerTid]?.name})`, ts: Date.now(), ms: 4000 };
+    updates.correctGuess = { text: `🎉 ¡${guesserName} ${verbo} "${item.titulo}"! (${teams[winnerTid]?.name})`, ts: Date.now(), ms: 4000 };
     await ref().update(updates);
   };
 
-  /* Si se acaba el tiempo sin que adivinen, pasa el turno al otro equipo. */
+  /* Si se acaba el tiempo sin que adivinen exacto, revisa si alguien se
+     acercó lo suficiente (60%+ de las palabras clave en UN solo mensaje,
+     no sumando varios) antes de pasarle el turno al otro equipo. */
   useEffect(() => {
     if (phase !== 'draw' || !over || !game.roundStartTime) return;
     if (timeoutFiredRef.current === game.roundStartTime) return;
     timeoutFiredRef.current = game.roundStartTime;
+    if (currentItem) {
+      const allowedChat = chat.filter((m) => {
+        if (m.uid === currentDrawerId) return false;
+        const senderTeamId = order.find((tid) => teams[tid]?.members?.[m.uid]);
+        return allPlay ? !!senderTeamId : senderTeamId === turnTeamId;
+      });
+      let best = null;
+      allowedChat.forEach((m) => {
+        const ratio = pictabWordMatchRatio(currentItem.titulo, m.text);
+        if (ratio >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || ratio > best.ratio)) best = { ratio, m };
+      });
+      if (best) {
+        const senderTeamId = order.find((tid) => teams[tid]?.members?.[best.m.uid]);
+        resolverAdivinanza(senderTeamId, best.m.uid, best.m.name, true);
+        return;
+      }
+    }
     seAcaboTiempo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, over, game.roundStartTime]);
@@ -17257,6 +17294,7 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
   const [chatExpanded, setChatExpanded] = useState(false);
   const chatListRef = useRef(null);
   const lastCheckedRef = useRef(null);
+  const timeoutFiredRef = useRef(null);
   const isMobile = useIsMobile();
   const ref = () => db.ref(`sessions/${SID}/pictonary`);
 
@@ -17305,15 +17343,16 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
   const cancelarRolling = async () => {
     await ref().update({ gameState: 'idle', currentDrawer: null, currentItem: null, categoryRoll: null, difficultyRoll: null, roundStartTime: null });
   };
-  const adivinador = async (uid, uname) => {
+  const adivinador = async (uid, uname, near) => {
     const newScores = { ...scores };
     newScores[uid] = (newScores[uid] || 0) + 10;
     if (currentDrawerId) newScores[currentDrawerId] = (newScores[currentDrawerId] || 0) + 5;
+    const verbo = near ? 'se acercó lo suficiente a' : 'adivinó';
     await ref().update({
       scores: newScores, gameState: 'idle', currentDrawer: null, currentItem: null,
       categoryRoll: null, difficultyRoll: null, roundStartTime: null, strokes: null, live: null, chat: null,
       libreSolvedBy: null,
-      correctGuess: { text: `🎉 ¡${uname || (users[uid] && users[uid].name) || 'Alguien'} adivinó "${currentItem?.titulo}"!`, ts: Date.now(), ms: 4000 }
+      correctGuess: { text: `🎉 ¡${uname || (users[uid] && users[uid].name) || 'Alguien'} ${verbo} "${currentItem?.titulo}"!`, ts: Date.now(), ms: 4000 }
     });
   };
   const skipTurn = async () => {
@@ -17337,11 +17376,11 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
 
   /* Detección automática: cualquiera que no sea quien dibuja, si escribe la
      palabra exacta (sin tildes/mayúsculas) gana los puntos automáticamente. */
-  const resolverAdivinanzaLibre = async (guesserUid, guesserName) => {
+  const resolverAdivinanzaLibre = async (guesserUid, guesserName, near) => {
     const myToken = `${guesserUid}|${Date.now()}|${Math.random()}`;
     const lockRes = await ref().child('libreSolvedBy').transaction((cur) => cur || myToken);
     if (!lockRes.committed || lockRes.snapshot.val() !== myToken) return;
-    await adivinador(guesserUid, guesserName);
+    await adivinador(guesserUid, guesserName, near);
   };
   useEffect(() => {
     if (gState !== 'playing' || !currentItem) return;
@@ -17354,6 +17393,23 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat.length, gState, currentItem?.titulo]);
+
+  /* Si se acaba el tiempo sin que adivinen exacto, revisa si alguien se
+     acercó lo suficiente (60%+ de las palabras clave en UN solo mensaje)
+     antes de dejar la ronda sin ganador. */
+  useEffect(() => {
+    if (gState !== 'playing' || !over || !game.roundStartTime || !currentItem) return;
+    if (timeoutFiredRef.current === game.roundStartTime) return;
+    timeoutFiredRef.current = game.roundStartTime;
+    const allowedChat = chat.filter((m) => m.uid !== currentDrawerId);
+    let best = null;
+    allowedChat.forEach((m) => {
+      const ratio = pictabWordMatchRatio(currentItem.titulo, m.text);
+      if (ratio >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || ratio > best.ratio)) best = { ratio, m };
+    });
+    if (best) resolverAdivinanzaLibre(best.m.uid, best.m.name, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gState, over, game.roundStartTime]);
 
   const myZone = users[myId]?.zone;
   if (myZone !== 'juegos' && !isAdmin) return null;
@@ -18635,8 +18691,23 @@ class Component extends React.Component {
       }
     });
   };
+  // Pellizco con dos dedos: cada dedo dispara su propio pointerId con los
+  // Pointer Events, así que basta con guardar la posición de cada uno y
+  // comparar la distancia entre ambos a medida que se mueven.
   onLayerDown = (e) => {
     if (this.state.placeMode) return;
+    if (!this._pointers) this._pointers = new Map();
+    this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this._pointers.size === 2) {
+      // Empieza el pellizco: cancela cualquier paneo/arrastre con 1 dedo.
+      this._pinchStart = null;
+      this.setState({ panning: false, dragging: false });
+      const pts = [...this._pointers.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (dist > 0) this._pinchStart = { dist, scale: this.state.userScale };
+      return;
+    }
+    if (this._pointers.size > 2) return; // ignora un 3er dedo
     const t = e.target;
     if (t.closest && t.closest('[data-furn]')) return;
     const ch = t.closest && t.closest('[data-char]');
@@ -18656,6 +18727,16 @@ class Component extends React.Component {
     this._moveMe(e);
   };
   onLayerMove = (e) => {
+    if (this._pointers && this._pointers.has(e.pointerId)) {
+      this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+    if (this._pointers && this._pointers.size === 2 && this._pinchStart) {
+      const pts = [...this._pointers.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const next = Math.max(0.5, Math.min(2.5, this._pinchStart.scale * (dist / this._pinchStart.dist)));
+      if (next !== this.state.userScale) this.setState({ userScale: next });
+      return;
+    }
     if (this.state.panning) {
       const dx = e.clientX - this._panStart.x;
       const dy = e.clientY - this._panStart.y;
@@ -18664,7 +18745,9 @@ class Component extends React.Component {
     }
     if (this.state.dragging) { this._dragged = true; this._moveMe(e); }
   };
-  onLayerUp = () => {
+  onLayerUp = (e) => {
+    if (this._pointers && e) this._pointers.delete(e.pointerId);
+    if (!this._pointers || this._pointers.size < 2) this._pinchStart = null;
     if (this.state.panning) { this.setState({ panning: false }); return; }
     if (this.state.dragging) { if (this._dragged) this._dragEnd = Date.now(); this._dragged = false; this.setState({ dragging: false }); }
   };
