@@ -11611,7 +11611,7 @@ function KahootController({
       onStartPictonary: async () => {
         await db.ref(`sessions/${SID}/pictonary`).set({
           active: true,
-          gameState: 'setup',
+          gameState: 'mode',
           scores: {}
         });
       },
@@ -16809,7 +16809,7 @@ function PictabCaptains({ game, SID, users, myId, isAdmin }) {
 }
 
 /* ── PictonaryController — juego completo (tablero por equipos) ── */
-function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
+function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
   const game = session?.pictonary || {};
   const gState = game.gameState;
   const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => u.zone === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
@@ -16827,7 +16827,7 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
   const headerBar = h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
     h('span', { style: { fontSize: 22 } }, '🎨'),
-    h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Pictonary Bíblico'),
+    h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Pictonary Bíblico · Tablero'),
     isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
   );
 
@@ -17159,6 +17159,356 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
       ),
     ),
   );
+}
+
+/* Franja simple de jugadores para el modo libre — "para que sepamos cuántos
+   están jugando", con su puntaje al lado. */
+function PictabLibreRoster({ juegosUsers, scores, currentDrawerId, myId }) {
+  if (!juegosUsers.length) return null;
+  return h('div', { style: { width: '100%', display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 16px 8px', flexShrink: 0 } },
+    juegosUsers.map((u) => h('span', {
+      key: u.uid,
+      style: {
+        display: 'flex', alignItems: 'center', gap: 5, background: u.uid === currentDrawerId ? 'rgba(255,208,0,.22)' : (u.uid === myId ? 'rgba(21,128,61,.12)' : 'rgba(10,14,46,.05)'),
+        border: u.uid === currentDrawerId ? '1px solid #ffd000' : '1px solid rgba(10,14,46,.1)',
+        borderRadius: 20, padding: '3px 10px 3px 4px', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12, color: '#0a0e2e'
+      }
+    }, h(AvatarBubble, { profile: u, size: 20 }), u.uid === currentDrawerId ? '✏️ ' : '', u.name, (scores[u.uid] ? h('span', { style: { color: '#a16207', fontWeight: 900, marginLeft: 2 } }, ' · ', scores[u.uid]) : null)))
+  );
+}
+
+/* ── PictabLibreGame — modo "dibujo libre": pizarra individual, elige quién
+   dibuja (al azar o el admin), categoría + dificultad por dado, y todos
+   adivinan por el chat (o en voz alta, con el botón manual del admin). ── */
+function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
+  const game = session?.pictonary || {};
+  const gState = game.gameState;
+  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => u.zone === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
+  const currentDrawerId = game.currentDrawer;
+  const currentDrawer = currentDrawerId ? users[currentDrawerId] : null;
+  const isDrawer = currentDrawerId === myId;
+  const currentItem = game.currentItem;
+  const scores = game.scores || {};
+  const { remaining, over } = useTimer(gState === 'playing' ? game.roundStartTime : null, PICTONARY_ROUND_SECONDS);
+  const [color, setColor] = useState(PICTONARY_COLORS[0]);
+  const [tool, setTool] = useState('pen');
+  const [chatText, setChatText] = useState('');
+  const chatEndRef = useRef(null);
+  const lastCheckedRef = useRef(null);
+  const isMobile = useIsMobile();
+  const ref = () => db.ref(`sessions/${SID}/pictonary`);
+
+  const chat = game.chat ? Object.entries(game.chat).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0)) : [];
+  useEffect(() => { setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60); }, [chat.length]);
+  useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
+
+  const nuevaRonda = (uid) => ref().update({
+    active: true, gameState: 'rolling', currentDrawer: uid, currentItem: null,
+    categoryRoll: null, difficultyRoll: null, roundStartTime: null,
+    strokes: null, live: null, chat: null, libreSolvedBy: null
+  });
+  const seleccionarRandom = async () => {
+    if (juegosUsers.length === 0) return;
+    const random = juegosUsers[Math.floor(Math.random() * juegosUsers.length)];
+    await nuevaRonda(random.uid);
+  };
+  const seleccionarManual = async (uid) => { await nuevaRonda(uid); };
+  const limpiarPizarra = () => ref().update({ strokes: null, live: null });
+  const rollCategoryDie = () => {
+    const idx = Math.floor(Math.random() * CATEGORY_DIE_FACES.length);
+    ref().child('categoryRoll').set({ index: idx, value: CATEGORY_DIE_FACES[idx] });
+  };
+  const rollDifficultyDie = () => {
+    const idx = Math.floor(Math.random() * DIFFICULTY_DIE_FACES.length);
+    ref().child('difficultyRoll').set({ index: idx, value: DIFFICULTY_DIE_FACES[idx] });
+  };
+  const empezarDibujo = async () => {
+    const categoria = game.categoryRoll?.value;
+    const dificultad = game.difficultyRoll?.value;
+    if (!categoria || !dificultad) return;
+    const item = pictabPickItem(categoria, dificultad, game.history);
+    const history = [...(game.history || []), item.titulo].slice(-8);
+    await ref().update({ gameState: 'playing', currentItem: item, roundStartTime: Date.now(), history });
+  };
+  const cancelarRolling = async () => {
+    await ref().update({ gameState: 'idle', currentDrawer: null, currentItem: null, categoryRoll: null, difficultyRoll: null, roundStartTime: null });
+  };
+  const adivinador = async (uid, uname) => {
+    const newScores = { ...scores };
+    newScores[uid] = (newScores[uid] || 0) + 10;
+    if (currentDrawerId) newScores[currentDrawerId] = (newScores[currentDrawerId] || 0) + 5;
+    await ref().update({
+      scores: newScores, gameState: 'idle', currentDrawer: null, currentItem: null,
+      categoryRoll: null, difficultyRoll: null, roundStartTime: null, strokes: null, live: null, chat: null,
+      libreSolvedBy: null,
+      correctGuess: { text: `🎉 ¡${uname || (users[uid] && users[uid].name) || 'Alguien'} adivinó "${currentItem?.titulo}"!`, ts: Date.now(), ms: 4000 }
+    });
+  };
+  const skipTurn = async () => {
+    await ref().update({ gameState: 'idle', currentDrawer: null, currentItem: null, categoryRoll: null, difficultyRoll: null, roundStartTime: null, strokes: null, live: null, chat: null });
+  };
+  const finalizar = async () => { await saveGameHistory(SID, scores, users); await ref().update({ gameState: 'finished' }); };
+  const cerrar = async () => {
+    await db.ref(`sessions/${SID}/pictonary`).remove();
+    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    if (onClose) onClose();
+  };
+  const enviarGuess = () => {
+    const t = chatText.trim();
+    if (!t || !SID || isDrawer) return;
+    const me = users[myId] || {};
+    db.ref(`sessions/${SID}/pictonary/chat`).push({
+      uid: myId, name: me.name || 'Anon', avatar: me.avatar || '👤', color: me.color || '#ffd000', text: t, ts: Date.now()
+    }).catch(() => {});
+    setChatText('');
+  };
+
+  /* Detección automática: cualquiera que no sea quien dibuja, si escribe la
+     palabra exacta (sin tildes/mayúsculas) gana los puntos automáticamente. */
+  const resolverAdivinanzaLibre = async (guesserUid, guesserName) => {
+    const myToken = `${guesserUid}|${Date.now()}|${Math.random()}`;
+    const lockRes = await ref().child('libreSolvedBy').transaction((cur) => cur || myToken);
+    if (!lockRes.committed || lockRes.snapshot.val() !== myToken) return;
+    await adivinador(guesserUid, guesserName);
+  };
+  useEffect(() => {
+    if (gState !== 'playing' || !currentItem) return;
+    const last = chat[chat.length - 1];
+    if (!last || last.id === lastCheckedRef.current) return;
+    lastCheckedRef.current = last.id;
+    if (last.uid === currentDrawerId) return;
+    if (pictabNormalize(last.text) === pictabNormalize(currentItem.titulo)) {
+      resolverAdivinanzaLibre(last.uid, last.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat.length, gState, currentItem?.titulo]);
+
+  const myZone = users[myId]?.zone;
+  if (myZone !== 'juegos' && !isAdmin) return null;
+
+  const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+  const headerBar = h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
+    h('span', { style: { fontSize: 22 } }, '🎨'),
+    h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Pictonary Bíblico · Dibujo libre'),
+    isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
+  );
+  const roster = h(PictabLibreRoster, { juegosUsers, scores, currentDrawerId, myId });
+  const toasts = h(GameToast, { toast: game.correctGuess, ms: 4000, tone: 'success' });
+
+  /* ── Resultados finales ── */
+  if (gState === 'finished') {
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
+    return h('div', { style: wrapStyle },
+      headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
+        h(Confetti, null),
+        h('div', { style: { fontSize: 54 } }, '🏆'),
+        h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 30, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.06em', margin: 0, textAlign: 'center' } }, '¡Pictonary Bíblico — Resultados!'),
+        h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 } },
+          ranking.map((r, i) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)', border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.1)' } },
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: i === 0 ? '#a16207' : '#0a0e2e', width: 36, textAlign: 'center' } }, i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`),
+            h(AvatarBubble, { profile: r.user, size: 40 }),
+            h('div', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 18, color: '#0a0e2e' } }, r.user.name),
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: '#a16207' } }, r.pts, ' pts'),
+          )),
+        ),
+        isAdmin ? h('button', { onClick: cerrar, style: { marginTop: 14, background: '#ffd000', border: 'none', borderRadius: 14, padding: '14px 32px', color: '#f8f5ef', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer' } }, 'Cerrar juego') : null,
+      ),
+    );
+  }
+
+  /* ── Idle: elegir/pasar turno ── */
+  if (!gState || gState === 'idle') {
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
+    return h('div', { style: wrapStyle },
+      headerBar, roster, toasts,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
+        h('p', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, maxWidth: 340 } }, 'Se elige a alguien al azar para dibujar un personaje, lugar o escena bíblica. El resto adivina por el chat (se detecta solo) o en voz alta.'),
+        ranking.length > 0 ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 6 } },
+          ranking.map((r) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 12, background: 'rgba(10,14,46,.04)' } },
+            h(AvatarBubble, { profile: r.user, size: 28 }),
+            h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, color: '#0a0e2e' } }, r.user.name),
+            h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: '#a16207' } }, r.pts),
+          )),
+        ) : null,
+        isAdmin ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10 } },
+          h('button', { onClick: seleccionarRandom, disabled: juegosUsers.length === 0, style: { padding: '14px 20px', background: juegosUsers.length === 0 ? 'rgba(21,128,61,.2)' : '#15803d', border: 'none', borderRadius: 14, color: '#f8f5ef', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: juegosUsers.length === 0 ? 'not-allowed' : 'pointer', opacity: juegosUsers.length === 0 ? .5 : 1 } }, '🎲 Elegir dibujante al azar'),
+          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.15em', marginTop: 4 } }, 'O elige tú quién dibuja:'),
+          juegosUsers.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, padding: 14 } }, 'Nadie en la zona de juegos aún.') : h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 } },
+            juegosUsers.map((u) => h('button', { key: u.uid, onClick: () => seleccionarManual(u.uid), style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', border: '1px solid rgba(10,14,46,.12)', borderRadius: 10, padding: '8px 10px', cursor: 'pointer', color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, textAlign: 'left' } },
+              h(AvatarBubble, { profile: u, size: 26 }),
+              h('span', { style: { flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, u.name),
+            )),
+          ),
+          ranking.length > 0 ? h('button', { onClick: finalizar, style: { marginTop: 6, background: 'rgba(255,208,0,.18)', border: '1px solid rgba(255,208,0,.4)', borderRadius: 14, padding: '12px', color: '#a16207', fontWeight: 800, fontSize: 13, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏆 Finalizar y ver resultados') : null,
+        ) : h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 14, maxWidth: 300 } }, 'Esperando que el admin elija quién dibuja… ', h(Spinner, { size: 22 })),
+      ),
+    );
+  }
+
+  /* ── Rolling: el dibujante tira los dados de categoría y dificultad ── */
+  if (gState === 'rolling') {
+    const catIdx = game.categoryRoll?.index;
+    const difIdx = game.difficultyRoll?.index;
+    const bothRolled = catIdx != null && difIdx != null;
+    const dieBlock = (label, faces, idx, roll, rollLabel) => h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.14em' } }, label),
+      h(DiceCube3D, { faces, resultIndex: idx }),
+      idx != null
+        ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 15, color: '#15803d', textTransform: 'uppercase' } }, faces[idx])
+        : (isDrawer ? h('button', { onClick: roll, style: { padding: '8px 18px', background: '#15803d', border: 'none', borderRadius: 20, color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, rollLabel) : h('div', { style: { fontSize: 11, color: 'var(--muted)' } }, '(sin tirar)')),
+    );
+    return h('div', { style: wrapStyle },
+      headerBar, roster,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 20, overflowY: 'auto' } },
+        currentDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', padding: '8px 16px', borderRadius: 20 } },
+          h(AvatarBubble, { profile: currentDrawer, size: 32 }),
+          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 15, color: '#0a0e2e' } }, isDrawer ? '¡Te toca tirar los dados!' : `${currentDrawer.name} está tirando los dados…`),
+        ) : null,
+        h('div', { style: { display: 'flex', gap: 30, flexWrap: 'wrap', justifyContent: 'center' } },
+          dieBlock('Categoría', CATEGORY_DIE_FACES, catIdx, rollCategoryDie, '🎲 Tirar'),
+          dieBlock('Dificultad', DIFFICULTY_DIE_FACES, difIdx, rollDifficultyDie, '🎲 Tirar'),
+        ),
+        isDrawer && bothRolled ? h('button', { onClick: empezarDibujo, style: { padding: '14px 28px', background: '#ffd000', border: 'none', borderRadius: 20, color: '#0a0e2e', fontWeight: 900, fontSize: 15, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 8px 24px rgba(255,208,0,.4)' } }, '🎨 ¡A dibujar! (1:30)') : null,
+        !isDrawer ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, fontStyle: 'italic' } }, 'Esperando a que termine de tirar los dados…') : null,
+        isAdmin ? h('button', { onClick: cancelarRolling, style: { border: 'none', background: 'none', color: 'var(--muted)', fontSize: 12, textDecoration: 'underline', cursor: 'pointer' } }, 'Cancelar y elegir a otra persona') : null,
+      ),
+    );
+  }
+
+  /* ── Jugando: pizarra + herramientas + chat lateral ── */
+  const timeColor = over ? '#dc2626' : remaining < 20 ? '#c2410c' : '#a16207';
+  const guessers = juegosUsers.filter((u) => u.uid !== currentDrawerId);
+  const dificultadColor = { 'Fácil': '#15803d', 'Mediano': '#c2410c', 'Difícil': '#dc2626' }[currentItem?.dificultad] || '#a16207';
+  return h('div', { style: wrapStyle },
+    headerBar, roster, toasts,
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', flexWrap: 'wrap', flexShrink: 0 } },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 30, color: timeColor, lineHeight: 1, minWidth: 64 } }, formatTime(Math.max(0, remaining))),
+      currentDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', padding: '6px 12px', borderRadius: 20 } },
+        h(AvatarBubble, { profile: currentDrawer, size: 28 }),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 13, color: '#0a0e2e' } }, isDrawer ? 'Tú dibujas' : `${currentDrawer.name} dibuja`),
+      ) : null,
+      currentItem?.categoria ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(21,128,61,.1)', border: '1px solid rgba(21,128,61,.3)', padding: '6px 14px', borderRadius: 20 } },
+        h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, 'Categoría'),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: '#15803d', textTransform: 'uppercase' } }, currentItem.categoria),
+      ) : null,
+      !isDrawer ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '👀 ¿Qué será?') : null,
+      over ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', background: 'rgba(239,68,68,.1)', padding: '5px 12px', borderRadius: 20 } }, '⏱ Tiempo terminado') : null,
+    ),
+    currentItem && isDrawer ? h('div', { style: { margin: '0 16px 10px', padding: '10px 14px', background: 'linear-gradient(135deg,#fff,#f8f5ef)', border: '2px solid #ffd000', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+        currentItem.dificultad ? h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: dificultadColor, textTransform: 'uppercase', letterSpacing: '.1em', background: `${dificultadColor}1a`, padding: '2px 8px', borderRadius: 20 } }, currentItem.dificultad) : null,
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 17, color: '#0a0e2e' } }, currentItem.titulo),
+      ),
+      currentItem.pista ? h('div', { style: { fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic' } }, '💡 ', currentItem.pista) : null,
+    ) : null,
+    h('div', { style: { flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, padding: '0 16px 16px', overflow: 'hidden', minHeight: 0 } },
+      h('div', { style: { flex: isMobile ? 'none' : 2, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 } },
+        h(PictonaryCanvas, { SID, canDraw: isDrawer && !over, color, tool, strokes: game.strokes, live: game.live, height: isMobile ? 220 : 360 }),
+        isDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+          PICTONARY_COLORS.map((c) => h('button', {
+            key: c, onClick: () => { setColor(c); setTool('pen'); }, title: 'Color',
+            style: { width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer', border: (tool === 'pen' && color === c) ? '3px solid #0a0e2e' : '2px solid rgba(10,14,46,.15)', padding: 0 }
+          })),
+          h('button', { onClick: () => setTool('eraser'), title: 'Goma de borrar', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: tool === 'eraser' ? '2px solid #0a0e2e' : '1px solid rgba(10,14,46,.15)', background: tool === 'eraser' ? 'rgba(10,14,46,.08)' : '#fff', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#0a0e2e' } }, '🧼 Goma'),
+          h('button', { onClick: limpiarPizarra, title: 'Limpiar toda la pizarra', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(239,68,68,.35)', background: 'rgba(239,68,68,.08)', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#dc2626', marginLeft: 'auto' } }, '🗑️ Limpiar todo'),
+        ) : null,
+        isAdmin ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 10 } },
+          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, '¿Adivinaron en voz alta? Toca quién fue (el chat ya detecta las respuestas escritas solo):'),
+          guessers.length === 0 ? h('div', { style: { fontSize: 12, color: 'var(--muted)' } }, 'Nadie más en la zona de juegos aún.') : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
+            guessers.map((u) => h('button', { key: u.uid, onClick: () => adivinador(u.uid, u.name), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '5px 10px 5px 5px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12.5, color: '#0a0e2e' } },
+              h(AvatarBubble, { profile: u, size: 22 }), u.name,
+            )),
+          ),
+          isAdmin ? h('div', { style: { display: 'flex', gap: 8, marginTop: 2 } },
+            h('button', { onClick: seleccionarRandom, style: { flex: 1, background: '#15803d', border: 'none', borderRadius: 12, padding: '9px', color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🎲 Siguiente al azar'),
+            h('button', { onClick: skipTurn, style: { flex: 1, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px', color: '#0a0e2e', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar turno'),
+          ) : null,
+        ) : null,
+      ),
+      h('div', { style: { flex: isMobile ? 'none' : 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 220 : 0, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden' } },
+        h('div', { style: { padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '💬 Adivina aquí'),
+        h('div', { style: { flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 } },
+          chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá — exactamente como en la tarjeta (no importan tildes ni mayúsculas) — o dila en voz alta.') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
+            h(AvatarBubble, { profile: m, size: 20 }),
+            h('div', null,
+              h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11.5, color: m.color || '#0a0e2e' } }, m.name, ' '),
+              h('span', { style: { fontSize: 13, color: '#0a0e2e' } }, m.text),
+            ),
+          )),
+          h('div', { ref: chatEndRef }),
+        ),
+        h('div', { style: { display: 'flex', gap: 6, padding: 8, borderTop: '1px solid rgba(10,14,46,.08)' } },
+          h('input', {
+            value: chatText, onChange: (e) => setChatText(e.target.value),
+            onKeyDown: (e) => { if (e.key === 'Enter') enviarGuess(); },
+            placeholder: isDrawer ? 'Sólo espectadores pueden adivinar' : 'Escribe tu respuesta…',
+            disabled: isDrawer,
+            style: { flex: 1, border: '1px solid rgba(10,14,46,.15)', borderRadius: 20, padding: '8px 14px', fontSize: 13.5, fontFamily: 'inherit' }
+          }),
+          h('button', { onClick: enviarGuess, disabled: isDrawer, style: { border: 'none', background: isDrawer ? 'rgba(21,128,61,.3)' : '#15803d', color: '#fff', borderRadius: 20, padding: '8px 16px', fontWeight: 800, fontSize: 13, cursor: isDrawer ? 'not-allowed' : 'pointer' } }, 'Enviar'),
+        ),
+      ),
+    ),
+  );
+}
+
+/* ── Dispatcher raíz: elige modo (libre / tablero) y delega ── */
+function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
+  const game = session?.pictonary || {};
+  const gState = game.gameState;
+  const mode = game.mode;
+  const ref = () => db.ref(`sessions/${SID}/pictonary`);
+  const cerrar = async () => {
+    await db.ref(`sessions/${SID}/pictonary`).remove();
+    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    if (onClose) onClose();
+  };
+
+  const myZone = users[myId]?.zone;
+  if (myZone !== 'juegos' && !isAdmin) return null;
+
+  if (!gState || gState === 'mode') {
+    const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+    const headerBar = h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
+      h('span', { style: { fontSize: 22 } }, '🎨'),
+      h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Pictonary Bíblico'),
+      isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
+    );
+    if (!isAdmin) {
+      return h('div', { style: wrapStyle }, headerBar,
+        h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 } },
+          h('div', { style: { fontSize: 40 } }, '🎨'),
+          h('div', { style: { color: 'var(--muted)', fontSize: 14 } }, 'El anfitrión está eligiendo el modo de juego…'),
+          h(Spinner, { size: 22 }),
+        ),
+      );
+    }
+    return h('div', { style: wrapStyle }, headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 } },
+        h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: '#0a0e2e', textTransform: 'uppercase', letterSpacing: '.05em', margin: 0, textAlign: 'center' } }, '¿Cómo juegan hoy?'),
+        h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 12 } },
+          h('button', {
+            onClick: () => ref().update({ mode: 'libre', gameState: 'idle', scores: {} }),
+            style: { textAlign: 'left', background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 18, padding: '16px 18px', cursor: 'pointer', boxShadow: '0 10px 26px rgba(10,14,46,.1)' }
+          },
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.04em' } }, '🖌️ Dibujo libre'),
+            h('div', { style: { fontSize: 13, color: 'var(--muted)', marginTop: 3 } }, 'Pizarra individual · uno dibuja y todos adivinan · sin equipos'),
+          ),
+          h('button', {
+            onClick: () => ref().update({ mode: 'tablero', gameState: 'setup', scores: {} }),
+            style: { textAlign: 'left', background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 18, padding: '16px 18px', cursor: 'pointer', boxShadow: '0 10px 26px rgba(10,14,46,.1)' }
+          },
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#a16207', textTransform: 'uppercase', letterSpacing: '.04em' } }, '🧩 Tablero por equipos'),
+            h('div', { style: { fontSize: 13, color: 'var(--muted)', marginTop: 3 } }, '2 equipos · capitanes · tablero de 36 casillas con dados'),
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (mode === 'tablero') return h(PictabTableroGame, { session, users, myId, isAdmin, SID, onClose });
+  return h(PictabLibreGame, { session, users, myId, isAdmin, SID, onClose });
 }
 
 /* ── CountdownTimer  (19838-19871) ── */
