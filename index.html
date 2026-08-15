@@ -16680,14 +16680,18 @@ function PictabSetup({ game, SID, users, juegosUsers, onCancel, onContinue }) {
   const teams = (game && game.teams) || {};
 
   useEffect(() => {
-    if (game && game.teams) return;
+    // Si el juego ya no está activo (se acaba de cerrar en otra pestaña,
+    // por ejemplo) no reconstruyas un esqueleto de equipos nuevo — eso
+    // resucitaría un juego que el admin recién cerró.
+    if (!game || !game.active) return;
+    if (game.teams) return;
     const t = {};
     order.forEach((tid, i) => {
       t[tid] = { name: PICTAB_TEAM_NAMES[i], avatar: PICTAB_TEAM_AVATARS[i], color: PICTAB_TEAM_COLORS[i], members: {}, captain: null, pos: -1, drawerIdx: 0, points: 0 };
     });
     ref().update({ order, teams: t });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game && !!game.teams]);
+  }, [game && game.active, game && !!game.teams]);
 
   const repartirAzar = async () => {
     const shuffled = [...juegosUsers].sort(() => Math.random() - 0.5);
@@ -16829,9 +16833,15 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
   const ref = () => db.ref(`sessions/${SID}/pictonary`);
   const isMobile = useIsMobile();
   const cerrar = async () => {
-    await db.ref(`sessions/${SID}/pictonary`).remove();
-    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    // Primero avisamos a todo el mundo que la fase terminó (eso hace que
+    // cada cliente cierre su propia pantalla del juego) y recién después
+    // borramos los datos — si se borra primero, algún cliente que todavía
+    // tiene la pantalla de armar equipos montada puede alcanzar a leer
+    // "no hay juego" y volver a crear un esqueleto de equipos vacío justo
+    // cuando se supone que estamos cerrando.
     if (onClose) onClose();
+    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    await db.ref(`sessions/${SID}/pictonary`).remove();
   };
 
   const myZone = users[myId]?.zone;
@@ -17495,9 +17505,15 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   const mode = game.mode;
   const ref = () => db.ref(`sessions/${SID}/pictonary`);
   const cerrar = async () => {
-    await db.ref(`sessions/${SID}/pictonary`).remove();
-    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    // Primero avisamos a todo el mundo que la fase terminó (eso hace que
+    // cada cliente cierre su propia pantalla del juego) y recién después
+    // borramos los datos — si se borra primero, algún cliente que todavía
+    // tiene la pantalla de armar equipos montada puede alcanzar a leer
+    // "no hay juego" y volver a crear un esqueleto de equipos vacío justo
+    // cuando se supone que estamos cerrando.
     if (onClose) onClose();
+    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    await db.ref(`sessions/${SID}/pictonary`).remove();
   };
 
   const myZone = users[myId]?.zone;
