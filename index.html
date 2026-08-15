@@ -18210,14 +18210,16 @@ class Component extends React.Component {
         chars: s.chars.map((c) => c.id === 'me' ? { ...c, ...merged, id: 'me' } : c)
       }));
       // Registra al usuario en la sesión y limpia al desconectar.
-      meRef.set({ ...merged, joinedAt: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
+      meRef.set({ ...merged, joinedAt: firebase.database.ServerValue.TIMESTAMP }).catch((e) => {
+        console.error('[MRNT] No se pudo registrar la presencia en users/' + this.SID + '/' + this.uid + ' — otros usuarios no te van a ver en la sala:', e);
+      });
       meRef.onDisconnect().remove();
       // Marca asistencia del día (visible en AttendanceModal).
       window.db.ref(`attendance/${this.uid}/${this.SID}`).set({
         ts: firebase.database.ServerValue.TIMESTAMP,
         name: merged.name,
         email: user.email || ''
-      }).catch(() => {});
+      }).catch((e) => { console.error('[MRNT] No se pudo marcar asistencia:', e); });
     });
     // Listener: usuarios en la sesión → state.chars (mantiene a 'me' como id local).
     this._usersRef = window.db.ref(`users/${this.SID}`);
@@ -18264,6 +18266,8 @@ class Component extends React.Component {
           window.db.ref(`sessions/${this.SID}/confra/queue`).set(obj).catch(() => {});
         }
       }
+    }, (e) => {
+      console.error('[MRNT] No se pudo leer users/' + this.SID + ' — no vas a ver a los demás en la sala:', e);
     });
     // Listener: sesión completa (phase + sub-actividades + openRooms + roomNames).
     this._sessRef = window.db.ref(`sessions/${this.SID}`);
