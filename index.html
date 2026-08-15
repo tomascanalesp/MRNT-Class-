@@ -18385,7 +18385,19 @@ class Component extends React.Component {
   // Persiste cualquier campo del usuario actual en Firebase (con throttle suave).
   _saveMe = (patch) => {
     if (!this.uid || !this.SID || !window.db) return;
-    window.db.ref(`users/${this.SID}/${this.uid}`).update(patch).catch(() => {});
+    // Si el registro inicial de login no llegó a escribirse completo (por
+    // ejemplo, un corte de permisos de Firebase ese día) cada actualización
+    // de movimiento/estado "repara" también los datos de identidad — así
+    // nadie queda mostrándose como "Anon" para siempre hasta que recargue.
+    const me = this.state.chars.find((c) => c.id === 'me');
+    const heal = me ? {
+      name: me.name, emoji: me.emoji, color: me.color,
+      bodyColor: me.bodyColor || me.color, armColor: me.armColor || me.color,
+      legColor: me.legColor, accessory: me.accessory, klass: me.klass
+    } : {};
+    window.db.ref(`users/${this.SID}/${this.uid}`).update({ ...heal, ...patch }).catch((e) => {
+      console.error('[MRNT] No se pudo guardar tu estado en users/' + this.SID + '/' + this.uid + ':', e);
+    });
   };
   _saveProfile = (patch) => {
     if (!this.uid || !window.db) return;
