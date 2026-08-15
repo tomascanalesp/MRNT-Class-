@@ -18214,6 +18214,20 @@ class Component extends React.Component {
       if (m !== this.state.isMobile) this.setState({ isMobile: m });
     };
     window.addEventListener('resize', this._onResize);
+    // En celular, si la pestaña/app pasa un buen rato en segundo plano, el
+    // WebSocket de Firebase puede quedar "zombie": el navegador no se da
+    // cuenta de que se cortó hasta más tarde, así que al volver todo se ve
+    // congelado (no llegan movimientos ni se ven los tuyos) hasta refrescar
+    // a mano. Forzamos una reconexión limpia apenas la pantalla vuelve a
+    // estar visible, sin necesidad de recargar la página.
+    this._onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        firebase.database().goOffline();
+        setTimeout(() => { try { firebase.database().goOnline(); } catch (_) {} }, 250);
+      } catch (_) {}
+    };
+    document.addEventListener('visibilitychange', this._onVisibility);
     this._initFirebase();
   }
 
@@ -18399,6 +18413,7 @@ class Component extends React.Component {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this._onResize);
+    document.removeEventListener('visibilitychange', this._onVisibility);
     if (this._raf) cancelAnimationFrame(this._raf);
     if (this._lraf) cancelAnimationFrame(this._lraf);
     if (this._usersRef)     this._usersRef.off();
