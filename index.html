@@ -11002,27 +11002,30 @@ function GameSelectMenu({
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
-    onClick: onStartDibuja,
+    onClick: undefined,
+    disabled: true,
+    title: 'Muy pronto — en construcción',
     style: {
       width: '100%',
       maxWidth: 380,
-      background: '#ffffff',
-      border: '1px solid rgba(10,14,46,.1)',
+      background: 'rgba(10,14,46,.03)',
+      border: '1px solid rgba(10,14,46,.08)',
       borderRadius: 20,
       padding: '16px 20px',
       textAlign: 'left',
-      cursor: 'pointer',
+      cursor: 'not-allowed',
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      boxShadow: '0 12px 30px rgba(10,14,46,.1)'
+      opacity: .55,
+      filter: 'grayscale(.6)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 4,
       alignSelf: 'stretch',
       borderRadius: 4,
-      background: '#15803d',
+      background: 'var(--muted)',
       flexShrink: 0
     }
   }), /*#__PURE__*/React.createElement("div", {
@@ -11031,22 +11034,41 @@ function GameSelectMenu({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
       fontFamily: 'Barlow Condensed,sans-serif',
       fontWeight: 900,
       fontSize: 20,
-      color: '#15803d',
+      color: 'var(--muted)',
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
-  }, "Dibujando la Biblia"), /*#__PURE__*/React.createElement("div", {
+  }, "Dibujando la Biblia"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 800,
+      fontSize: 10,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.08em',
+      background: 'rgba(10,14,46,.08)',
+      border: '1px solid rgba(10,14,46,.12)',
+      borderRadius: 20,
+      padding: '2px 8px'
+    }
+  }, "Próximamente")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: 'Barlow,sans-serif',
       fontSize: 13,
-      color: '#0a0e2e',
+      color: 'var(--muted)',
       marginTop: 3,
       lineHeight: 1.4
     }
-  }, "Dibuja o haz mímica · tablero por equipos"), /*#__PURE__*/React.createElement("div", {
+  }, "En construcción · vuelve pronto"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--muted)',
@@ -11057,10 +11079,10 @@ function GameSelectMenu({
   }, /*#__PURE__*/React.createElement("span", null, "Equipos"), /*#__PURE__*/React.createElement("span", null, "Con dados"))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 20,
-      color: '#15803d',
-      opacity: .6
+      color: 'var(--muted)',
+      opacity: .4
     }
-  }, "›")), /*#__PURE__*/React.createElement("button", {
+  }, "🔒")), /*#__PURE__*/React.createElement("button", {
     onClick: onStartPictonary,
     style: {
       width: '100%',
@@ -11589,7 +11611,7 @@ function KahootController({
       onStartPictonary: async () => {
         await db.ref(`sessions/${SID}/pictonary`).set({
           active: true,
-          gameState: 'idle',
+          gameState: 'setup',
           scores: {}
         });
       },
@@ -16387,115 +16409,416 @@ function PictonaryCanvas({ SID, canDraw, color, tool, strokes, live, height = 32
   );
 }
 
-/* ── PictonaryController — juego completo ── */
+/* ═══ PICTONARY BÍBLICO — TABLERO POR EQUIPOS ═══ */
+// "Pictonary Bíblico" es un juego de tablero por equipos: 2 equipos elegidos
+// al azar (o armados a mano por el admin), capitanes que tiran el dado de
+// movimiento, categorías según el color de la casilla (reutiliza
+// PICTONARY_ITEMS, arriba) y un dado de dificultad que se tira solo al caer
+// en una casilla. La pizarra sigue siendo el mismo lienzo libre de siempre
+// (PictonaryCanvas, definido más arriba en este archivo).
+
+function pictabSeededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => (s = s * 16807 % 2147483647) / 2147483647;
+}
+// Quita tildes/mayúsculas para comparar respuestas del chat sin importar
+// cómo las tipeen ("Belen" === "Belén" === "BELÉN").
+const pictabNormalize = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
+
+const PICTAB_CATS = {
+  verbos: { key: 'verbos', categoria: 'Verbos / Acciones', label: 'Acción bíblica', color: '#2ecc71', dark: '#1e8e4f', icon: '🏃' },
+  lugares: { key: 'lugares', categoria: 'Lugares', label: 'Lugar bíblico', color: '#f39c12', dark: '#b9770e', icon: '📍' },
+  personajes: { key: 'personajes', categoria: 'Personajes', label: 'Personaje bíblico', color: '#e74c3c', dark: '#a93226', icon: '🧑' },
+  historias: { key: 'historias', categoria: 'Historias', label: 'Historia bíblica', color: '#3498db', dark: '#21618c', icon: '📖' },
+  objetos: { key: 'objetos', categoria: 'Objetos', label: 'Objeto bíblico', color: '#8b5cf6', dark: '#5b21b6', icon: '📦' }
+};
+// Orden fijo del ciclo de colores del tablero — "parte con el verde".
+const PICTAB_CAT_ORDER = ['verbos', 'lugares', 'personajes', 'historias', 'objetos'];
+
+// 36 casillas: 6 por categoría (4 "sólo tu equipo adivina" + 2 "todos
+// participan" con lápices cruzados), 5 casillas blancas (el capitán elige el
+// color/categoría, sólo para su equipo) y una casilla final de todos los
+// colores. Semilla fija → el "azar" queda igual para todas las partidas, sin
+// tener que sincronizar el layout por Firebase.
+const PICTAB_BOARD = (() => {
+  const cells = [];
+  PICTAB_CAT_ORDER.forEach((k) => {
+    for (let i = 0; i < 4; i++) cells.push({ cat: k, all: false });
+    for (let i = 0; i < 2; i++) cells.push({ cat: k, all: true });
+  });
+  for (let i = 0; i < 5; i++) cells.push({ cat: null, all: false, white: true });
+  const rand = pictabSeededRandom(20260815);
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const tmp = cells[i]; cells[i] = cells[j]; cells[j] = tmp;
+  }
+  const greenIdx = cells.findIndex((c) => c.cat === 'verbos' && !c.all);
+  if (greenIdx > 0) { const tmp = cells[0]; cells[0] = cells[greenIdx]; cells[greenIdx] = tmp; }
+  cells.push({ finish: true });
+  return cells.map((c, i) => Object.assign({ i: i }, c));
+})();
+const PICTAB_GOAL = PICTAB_BOARD.length - 1; // 35 → casilla 36 (índice 35)
+
+const PICTAB_TEAM_AVATARS = ['🦁', '🐺', '🦊', '🐻', '🐼', '🦅', '🐬', '🦄'];
+const PICTAB_TEAM_COLORS = ['#e74c3c', '#3498db'];
+const PICTAB_TEAM_NAMES = ['Equipo Rojo', 'Equipo Azul'];
+const PICTAB_MOVE_FACES = ['1', '2', '3', '4', '5', '6'];
+const PICTAB_ROUND_SECONDS = 75;
+const PICTAB_CAPTAIN_SECONDS = 15;
+
+// Elige una carta para (categoría, dificultad), evitando repetir las últimas usadas.
+function pictabPickItem(categoria, dificultad, history) {
+  const avoid = new Set(history || []);
+  const byBoth = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && it.dificultad === dificultad && !avoid.has(it.titulo));
+  if (byBoth.length) return byBoth[Math.floor(Math.random() * byBoth.length)];
+  const byCat = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && !avoid.has(it.titulo));
+  if (byCat.length) return byCat[Math.floor(Math.random() * byCat.length)];
+  const anyCat = PICTONARY_ITEMS.filter((it) => it.categoria === categoria);
+  if (anyCat.length) return anyCat[Math.floor(Math.random() * anyCat.length)];
+  return PICTONARY_ITEMS[Math.floor(Math.random() * PICTONARY_ITEMS.length)];
+}
+
+// Popup genérico (arriba, centrado) para avisos de transición ("se acabó el
+// tiempo…") y para el aviso de "¡adivinaron!" — se auto-cierra solo y además
+// tiene botón ✕ para cerrarlo antes.
+function GameToast({ toast, ms = 3000, tone = 'info' }) {
+  const [visible, setVisible] = useState(false);
+  const seenTs = useRef(null);
+  useEffect(() => {
+    const ts = toast && toast.ts;
+    if (!ts || ts === seenTs.current) return;
+    seenTs.current = ts;
+    setVisible(true);
+    const t = setTimeout(() => setVisible(false), (toast && toast.ms) || ms);
+    return () => clearTimeout(t);
+  }, [toast && toast.ts]);
+  if (!visible || !toast || !toast.text) return null;
+  const bg = tone === 'success' ? 'linear-gradient(135deg,#22c55e,#15803d)' : 'linear-gradient(135deg,#0a0e2e,#1d2547)';
+  return h('div', {
+    style: {
+      position: 'fixed', top: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 500,
+      background: bg, color: '#fff', padding: '12px 20px', borderRadius: 16,
+      boxShadow: '0 12px 30px rgba(10,14,46,.35)', display: 'flex', alignItems: 'center', gap: 12,
+      maxWidth: '92vw', fontFamily: 'Barlow Condensed,sans-serif'
+    }
+  },
+    h('span', { style: { fontWeight: 800, fontSize: 14, letterSpacing: '.02em' } }, toast.text),
+    h('button', {
+      onClick: () => setVisible(false),
+      style: { background: 'rgba(255,255,255,.18)', border: 'none', color: '#fff', borderRadius: '50%', width: 22, height: 22, cursor: 'pointer', fontSize: 13, lineHeight: 1, flexShrink: 0 }
+    }, '✕')
+  );
+}
+
+/* Casilla individual del tablero: color de categoría, lápices cruzados para
+   "todos participan", círculo de 5 colores para las blancas, arcoíris +
+   estrella para la meta. */
+function PictabSquare({ sq, here, size }) {
+  let bg = '#fff', border = 'rgba(10,14,46,.12)', content = null;
+  if (sq.finish) {
+    bg = 'conic-gradient(#2ecc71,#f39c12,#e74c3c,#3498db,#8b5cf6,#2ecc71)';
+    border = '#fff';
+    content = h('span', { style: { fontSize: size * .5, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.4))' } }, '⭐');
+  } else if (sq.white) {
+    bg = '#fff';
+    border = '#e5e0d3';
+    content = h('div', {
+      style: {
+        width: '62%', height: '62%', borderRadius: '50%',
+        background: 'conic-gradient(#2ecc71 0 20%,#f39c12 20% 40%,#e74c3c 40% 60%,#3498db 60% 80%,#8b5cf6 80% 100%)',
+        boxShadow: 'inset 0 0 0 2px rgba(255,255,255,.7)'
+      }
+    });
+  } else {
+    const cat = PICTAB_CATS[sq.cat];
+    bg = cat.color; border = cat.dark;
+    if (sq.all) {
+      content = h('div', { style: { position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit' } },
+        h('span', { style: { position: 'absolute', top: '50%', left: '50%', fontSize: size * .8, transform: 'translate(-50%,-50%) rotate(45deg)', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,.35))' } }, '✏️'),
+        h('span', { style: { position: 'absolute', top: '50%', left: '50%', fontSize: size * .8, transform: 'translate(-50%,-50%) rotate(-45deg) scaleX(-1)', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,.35))' } }, '✏️'),
+      );
+    } else {
+      content = h('span', { style: { fontSize: size * .42, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.3))' } }, cat.icon);
+    }
+  }
+  return h('div', {
+    style: {
+      position: 'relative', width: size, height: size, borderRadius: size * .28, background: bg,
+      border: `2px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: '0 3px 0 rgba(10,14,46,.18), 0 6px 10px rgba(10,14,46,.16), inset 0 1px 0 rgba(255,255,255,.35)'
+    }
+  },
+    content,
+    here && here.length > 0 && h('div', {
+      style: {
+        position: 'absolute', inset: -2, display: 'flex', flexWrap: 'wrap', alignItems: 'center',
+        justifyContent: 'center', gap: 1, background: 'rgba(10,14,46,.22)', borderRadius: 'inherit'
+      }
+    }, here.map((t, i) => h('span', { key: i, style: { fontSize: here.length > 1 ? size * .3 : size * .52, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.55))' } }, t.avatar))),
+  );
+}
+
+/* Tablero serpenteante (6 columnas, filas alternadas) con 36 casillas —
+   "camino con curvas" tipo Pictionary, con relieve para el efecto 3D. */
+function PictabBoard({ teams, order }) {
+  const cols = 6;
+  const size = 42;
+  const gap = 6;
+  const rows = Math.ceil(PICTAB_BOARD.length / cols);
+  const width = cols * size + (cols - 1) * gap;
+  const height = rows * size + (rows - 1) * gap;
+  const startTeams = order.map((tid) => teams[tid]).filter((t) => t && (t.pos == null || t.pos < 0));
+  return h('div', {
+    style: {
+      background: 'linear-gradient(160deg,#ffd000,#f97316)', borderRadius: 20, padding: 14,
+      boxShadow: '0 16px 34px rgba(10,14,46,.26)', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center'
+    }
+  },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+      h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 17, color: '#0a4d8c', letterSpacing: '.04em', textShadow: '0 1px 0 rgba(255,255,255,.5)' } }, 'PICTONARY BÍBLICO'),
+      h('span', { style: { fontSize: 16 } }, '🎨'),
+    ),
+    startTeams.length > 0 && h('div', {
+      style: {
+        display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.85)', borderRadius: 20,
+        padding: '4px 12px', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11, color: '#0a0e2e'
+      }
+    }, '🚪 Salida:', startTeams.map((t, i) => h('span', { key: i, style: { fontSize: 16 } }, t.avatar))),
+    h('div', { style: { position: 'relative', width, height } },
+      PICTAB_BOARD.map((sq, idx) => {
+        const row = Math.floor(idx / cols);
+        const inRow = idx % cols;
+        const col = row % 2 === 0 ? inRow : (cols - 1 - inRow);
+        const left = col * (size + gap);
+        const top = height - (row + 1) * size - row * gap; // casilla 0 abajo, meta arriba
+        const here = order.map((tid) => teams[tid]).filter((t) => t && t.pos === idx);
+        return h('div', { key: idx, style: { position: 'absolute', left, top } }, h(PictabSquare, { sq, here, size }));
+      })
+    ),
+    h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' } },
+      PICTAB_CAT_ORDER.map((k) => h('span', {
+        key: k, style: {
+          display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.85)', borderRadius: 20,
+          padding: '2px 8px', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 9, color: '#0a0e2e'
+        }
+      }, h('span', { style: { width: 9, height: 9, borderRadius: 3, background: PICTAB_CATS[k].color } }), PICTAB_CATS[k].label)),
+      h('span', { style: { display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.85)', borderRadius: 20, padding: '2px 8px', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 9, color: '#0a0e2e' } }, '✏️✏️ Todos participan'),
+      h('span', { style: { display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.85)', borderRadius: 20, padding: '2px 8px', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 9, color: '#0a0e2e' } }, '⚪ El capitán elige color'),
+    ),
+  );
+}
+
+/* Ordena a los miembros de un equipo de forma estable (mismo orden para
+   todos) — "el primero de la lista" dibuja primero y se va turnando hacia
+   abajo a medida que avanza el juego. */
+function pictabTeamMemberList(team, users) {
+  return Object.keys((team && team.members) || {})
+    .map((uid) => Object.assign({ uid }, users[uid] || {}))
+    .filter((u) => u.name)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+function pictabTeamDrawer(team, users) {
+  const list = pictabTeamMemberList(team, users);
+  if (!list.length) return null;
+  return list[(team.drawerIdx || 0) % list.length].uid;
+}
+
+/* Franja de jugadores (ambos equipos) — siempre visible para saber quiénes
+   están jugando; el admin puede reasignar el capitán tocando a cualquiera. */
+function PictabRoster({ teams, order, users, myId, isAdmin, onSetCaptain }) {
+  return h('div', { style: { width: '100%', maxWidth: 760, display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' } },
+    order.map((tid) => {
+      const team = teams[tid] || {};
+      const list = pictabTeamMemberList(team, users);
+      return h('div', {
+        key: tid, style: {
+          flex: '1 1 320px', minWidth: 260, background: `${team.color}14`, border: `1px solid ${team.color}55`,
+          borderRadius: 14, padding: '8px 10px'
+        }
+      },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 } },
+          h('span', { style: { fontSize: 18 } }, team.avatar),
+          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 13, color: team.color, flex: 1 } }, team.name),
+          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 13, color: '#a16207' } }, team.points || 0, ' pts'),
+        ),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4 } },
+          list.length === 0 ? h('span', { style: { fontSize: 11, color: 'var(--muted)' } }, 'Sin jugadores') :
+          list.map((u) => h('span', {
+            key: u.uid, onClick: isAdmin && onSetCaptain ? () => onSetCaptain(tid, u.uid) : undefined,
+            title: isAdmin ? 'Tocar para hacerlo/a capitán/a' : undefined,
+            style: {
+              display: 'flex', alignItems: 'center', gap: 4, background: u.uid === myId ? 'rgba(255,208,0,.22)' : 'rgba(10,14,46,.06)',
+              border: team.captain === u.uid ? '1px solid #ffd000' : '1px solid transparent',
+              borderRadius: 20, padding: '2px 8px 2px 3px', fontSize: 11.5, color: '#0a0e2e',
+              fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, cursor: isAdmin ? 'pointer' : 'default'
+            }
+          }, h(AvatarBubble, { profile: u, size: 18 }), team.captain === u.uid ? '👑 ' : '', u.name)),
+        ),
+      );
+    })
+  );
+}
+
+/* ── PictabSetup — arma los 2 equipos al azar (o a mano) ── */
+function PictabSetup({ game, SID, juegosUsers, onCancel, onContinue }) {
+  const ref = () => db.ref(`sessions/${SID}/pictonary`);
+  const order = (game && game.order) || ['t0', 't1'];
+  const teams = (game && game.teams) || {};
+
+  useEffect(() => {
+    if (game && game.teams) return;
+    const t = {};
+    order.forEach((tid, i) => {
+      t[tid] = { name: PICTAB_TEAM_NAMES[i], avatar: PICTAB_TEAM_AVATARS[i], color: PICTAB_TEAM_COLORS[i], members: {}, captain: null, pos: -1, drawerIdx: 0, points: 0 };
+    });
+    ref().update({ order, teams: t });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game && !!game.teams]);
+
+  const repartirAzar = async () => {
+    const shuffled = [...juegosUsers].sort(() => Math.random() - 0.5);
+    const updates = {};
+    shuffled.forEach((u, i) => {
+      const t = i % 2;
+      order.forEach((tid, j) => { updates[`teams/${tid}/members/${u.uid}`] = j === t ? true : null; });
+    });
+    await ref().update(updates);
+  };
+  const assignUser = async (uid, t) => {
+    const updates = {};
+    order.forEach((tid, j) => { updates[`teams/${tid}/members/${uid}`] = j === t ? true : null; });
+    await ref().update(updates);
+  };
+  const setAvatar = (t, av) => ref().child(`teams/${order[t]}/avatar`).set(av);
+  const teamOf = (uid) => order.findIndex((tid) => teams[tid] && teams[tid].members && teams[tid].members[uid]);
+  const bothHaveMembers = order.every((tid) => Object.keys((teams[tid] && teams[tid].members) || {}).length > 0);
+
+  return h('div', { style: { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px', gap: 14, overflowY: 'auto' } },
+    h('div', { style: { textAlign: 'center' } },
+      h('div', { style: { fontSize: 40 } }, '🎨'),
+      h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 26, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.05em', margin: 0 } }, 'Pictonary Bíblico'),
+      h('p', { style: { color: 'var(--muted)', fontSize: 13, marginTop: 4 } }, 'Arma los 2 equipos · ', juegosUsers.length, ' en sala'),
+    ),
+    h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 8 } },
+      order.map((tid, t) => {
+        const team = teams[tid] || {};
+        const members = Object.keys(team.members || {}).map((uid) => users[uid] ? Object.assign({ uid }, users[uid]) : null).filter(Boolean);
+        return h('div', { key: tid, style: { background: `${PICTAB_TEAM_COLORS[t]}1a`, border: `1px solid ${PICTAB_TEAM_COLORS[t]}55`, borderRadius: 12, padding: '8px 10px' } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: PICTAB_TEAM_COLORS[t], width: 92, flexShrink: 0 } }, team.name || PICTAB_TEAM_NAMES[t]),
+            h('div', { style: { display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1 } },
+              PICTAB_TEAM_AVATARS.map((av) => h('button', { key: av, onClick: () => setAvatar(t, av), style: { width: 26, height: 26, borderRadius: 8, fontSize: 14, cursor: 'pointer', border: team.avatar === av ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.15)', background: team.avatar === av ? 'rgba(255,208,0,.2)' : 'rgba(10,14,46,.05)' } }, av)),
+            ),
+          ),
+          members.length > 0 && h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 } },
+            members.map((u) => h('span', { key: u.uid, style: { display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(10,14,46,.08)', borderRadius: 20, padding: '2px 8px 2px 4px', fontSize: 11, color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700 } }, h(AvatarBubble, { profile: u, size: 18 }), u.name)),
+          ),
+        );
+      })
+    ),
+    h('div', { style: { width: '100%', maxWidth: 420 } },
+      h('button', { onClick: repartirAzar, disabled: juegosUsers.length === 0, style: { width: '100%', padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, letterSpacing: '.05em', textTransform: 'uppercase', opacity: juegosUsers.length ? 1 : .5 } }, '🎲 Repartir al azar (2 equipos)'),
+    ),
+    h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 6 } },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, 'O asigna manualmente:'),
+      juegosUsers.length === 0 ? h('div', { style: { color: 'var(--muted)', fontSize: 13, textAlign: 'center', padding: 10 } }, 'Nadie en sala de juegos aún.') :
+        juegosUsers.map((u) => {
+          const myT = teamOf(u.uid);
+          return h('div', { key: u.uid, style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.04)', borderRadius: 10, padding: '6px 8px' } },
+            h(AvatarBubble, { profile: u, size: 28 }),
+            h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, color: '#0a0e2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, u.name),
+            h('div', { style: { display: 'flex', gap: 4 } },
+              order.map((tid, t) => h('button', { key: t, onClick: () => assignUser(u.uid, t), style: { width: 30, height: 30, borderRadius: 8, cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 13, border: myT === t ? `2px solid ${PICTAB_TEAM_COLORS[t]}` : '1px solid rgba(10,14,46,.12)', background: myT === t ? `${PICTAB_TEAM_COLORS[t]}33` : 'rgba(10,14,46,.04)', color: myT === t ? PICTAB_TEAM_COLORS[t] : '#0a0e2e' } }, t + 1)),
+            ),
+          );
+        })
+    ),
+    h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', gap: 8, marginTop: 4 } },
+      h('button', { onClick: onCancel, style: { flex: 1, padding: '13px', borderRadius: 12, border: '1px solid rgba(10,14,46,.12)', background: 'rgba(10,14,46,.05)', color: 'var(--muted)', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, 'Cancelar'),
+      h('button', { onClick: onContinue, disabled: !bothHaveMembers, style: { flex: 2, padding: '13px', borderRadius: 12, border: 'none', cursor: bothHaveMembers ? 'pointer' : 'not-allowed', background: bothHaveMembers ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)', color: bothHaveMembers ? '#0a0e2e' : 'var(--muted)', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, letterSpacing: '.05em', textTransform: 'uppercase' } }, bothHaveMembers ? '👑 Elegir capitanes →' : 'Asigna jugadores a ambos equipos'),
+    ),
+  );
+}
+
+/* ── PictabCaptains — cada equipo elige capitán (15s, si no se sortea) ── */
+function PictabCaptains({ game, SID, users, myId, isAdmin }) {
+  const ref = () => db.ref(`sessions/${SID}/pictonary`);
+  const order = game.order || [];
+  const teams = game.teams || {};
+  const deadline = game.captainsDeadline;
+  const [left, setLeft] = useState(PICTAB_CAPTAIN_SECONDS);
+
+  useEffect(() => {
+    if (!deadline) { ref().update({ captainsDeadline: Date.now() + PICTAB_CAPTAIN_SECONDS * 1000 }); return; }
+    const iv = setInterval(() => { setLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000))); }, 250);
+    return () => clearInterval(iv);
+  }, [deadline]);
+
+  useEffect(() => {
+    if (!isAdmin || !deadline || Date.now() < deadline) return;
+    const missing = order.filter((tid) => teams[tid] && !teams[tid].captain && Object.keys(teams[tid].members || {}).length > 0);
+    if (!missing.length) return;
+    const updates = {};
+    missing.forEach((tid) => {
+      const members = Object.keys(teams[tid].members);
+      updates[`teams/${tid}/captain`] = members[Math.floor(Math.random() * members.length)];
+    });
+    ref().update(updates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [left, isAdmin, deadline]);
+
+  const claim = (tid, uid) => { db.ref(`sessions/${SID}/pictonary/teams/${tid}/captain`).transaction((cur) => cur || uid); };
+  const bothReady = order.length > 0 && order.every((tid) => teams[tid] && teams[tid].captain);
+  const comenzar = () => ref().update({ gameState: 'playing', turnIdx: Math.random() < 0.5 ? 0 : 1, phase: 'ready', scores: game.scores || {}, history: [] });
+
+  return h('div', { style: { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px', gap: 14, overflowY: 'auto' } },
+    h('div', { style: { textAlign: 'center' } },
+      h('div', { style: { fontSize: 40 } }, '👑'),
+      h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: '#a16207', textTransform: 'uppercase', letterSpacing: '.05em', margin: 0 } }, 'Elijan a su capitán'),
+      h('p', { style: { color: 'var(--muted)', fontSize: 13, marginTop: 4 } }, bothReady ? '¡Listo!' : `${left}s para elegir — si no, se sortea al azar`),
+    ),
+    h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 10 } },
+      order.map((tid) => {
+        const team = teams[tid] || {};
+        const members = Object.keys(team.members || {}).map((uid) => Object.assign({ uid }, users[uid] || {})).filter((u) => u.name);
+        return h('div', { key: tid, style: { background: `${team.color}1a`, border: `1px solid ${team.color}55`, borderRadius: 14, padding: '12px 14px' } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 } },
+            h('span', { style: { fontSize: 20 } }, team.avatar),
+            h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 15, color: team.color, flex: 1 } }, team.name),
+            team.captain ? h('span', { style: { fontSize: 12, fontWeight: 800, color: '#a16207' } }, '👑 ', (users[team.captain] && users[team.captain].name) || '') : null,
+          ),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
+            members.map((u) => h('button', {
+              key: u.uid, onClick: () => claim(tid, u.uid), disabled: !!team.captain,
+              style: {
+                display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 20, cursor: team.captain ? 'default' : 'pointer',
+                border: team.captain === u.uid ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.15)',
+                background: team.captain === u.uid ? 'rgba(255,208,0,.2)' : '#fff', opacity: team.captain && team.captain !== u.uid ? .5 : 1
+              }
+            }, h(AvatarBubble, { profile: u, size: 20 }), u.name, u.uid === myId ? ' (tú)' : '')),
+          ),
+        );
+      })
+    ),
+    isAdmin ? h('button', {
+      onClick: comenzar, disabled: !bothReady,
+      style: { width: '100%', maxWidth: 420, padding: '13px', borderRadius: 12, border: 'none', cursor: bothReady ? 'pointer' : 'not-allowed', background: bothReady ? 'linear-gradient(135deg,#ffd000,#e6a800)' : 'rgba(10,14,46,.1)', color: bothReady ? '#0a0e2e' : 'var(--muted)', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, letterSpacing: '.05em', textTransform: 'uppercase' }
+    }, bothReady ? '🎨 ¡Comenzar partida!' : 'Esperando capitanes…') : (bothReady ? h('div', { style: { color: 'var(--muted)', fontSize: 13 } }, 'Esperando que el anfitrión inicie…') : null),
+  );
+}
+
+/* ── PictonaryController — juego completo (tablero por equipos) ── */
 function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   const game = session?.pictonary || {};
   const gState = game.gameState;
-  // El admin siempre puede jugar (elegirse al azar o a sí mismo), esté o no
-  // parado en el rincón "Juegos" — útil para jugar desde un solo celular.
   const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => u.zone === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
-  const currentDrawerId = game.currentDrawer;
-  const currentDrawer = currentDrawerId ? users[currentDrawerId] : null;
-  const isDrawer = currentDrawerId === myId;
-  const currentItem = game.currentItem;
-  const scores = game.scores || {};
-  const { remaining, over } = useTimer(gState === 'playing' ? game.roundStartTime : null, PICTONARY_ROUND_SECONDS);
-  const [color, setColor] = useState(PICTONARY_COLORS[0]);
-  const [tool, setTool] = useState('pen');
-  const [chatText, setChatText] = useState('');
-  const chatEndRef = useRef(null);
+  const ref = () => db.ref(`sessions/${SID}/pictonary`);
   const isMobile = useIsMobile();
-
-  const chat = game.chat ? Object.entries(game.chat).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0)) : [];
-  useEffect(() => {
-    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
-  }, [chat.length]);
-  useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
-
-  // Elige la carta según lo que salió en los dados (categoría + dificultad),
-  // con caída en cascada si esa combinación no tiene cartas disponibles.
-  const pickItemFor = (categoria, dificultad, history) => {
-    const avoid = new Set(history || []);
-    const byBoth = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && it.dificultad === dificultad && !avoid.has(it.titulo));
-    if (byBoth.length) return byBoth[Math.floor(Math.random() * byBoth.length)];
-    const byCategoria = PICTONARY_ITEMS.filter((it) => it.categoria === categoria && !avoid.has(it.titulo));
-    if (byCategoria.length) return byCategoria[Math.floor(Math.random() * byCategoria.length)];
-    const anyCategoria = PICTONARY_ITEMS.filter((it) => it.categoria === categoria);
-    if (anyCategoria.length) return anyCategoria[Math.floor(Math.random() * anyCategoria.length)];
-    return PICTONARY_ITEMS[Math.floor(Math.random() * PICTONARY_ITEMS.length)];
-  };
-  // Sólo el admin decide quién juega (al azar o eligiéndolo); el que dibuja
-  // no puede pasarse el turno a otro por su cuenta. Después de asignar el
-  // turno, primero se tiran los dados (categoría + dificultad) y recién ahí
-  // arranca el cronómetro.
-  const nuevaRonda = (uid) => {
-    return db.ref(`sessions/${SID}/pictonary`).update({
-      active: true, gameState: 'rolling', currentDrawer: uid, currentItem: null,
-      categoryRoll: null, difficultyRoll: null, roundStartTime: null,
-      strokes: null, live: null, chat: null
-    });
-  };
-  const seleccionarRandom = async () => {
-    if (juegosUsers.length === 0) return;
-    const random = juegosUsers[Math.floor(Math.random() * juegosUsers.length)];
-    await nuevaRonda(random.uid);
-  };
-  const seleccionarManual = async (uid) => { await nuevaRonda(uid); };
-  const limpiarPizarra = () => { db.ref(`sessions/${SID}/pictonary`).update({ strokes: null, live: null }); };
-  const rollCategoryDie = () => {
-    const idx = Math.floor(Math.random() * CATEGORY_DIE_FACES.length);
-    db.ref(`sessions/${SID}/pictonary/categoryRoll`).set({ index: idx, value: CATEGORY_DIE_FACES[idx] });
-  };
-  const rollDifficultyDie = () => {
-    const idx = Math.floor(Math.random() * DIFFICULTY_DIE_FACES.length);
-    db.ref(`sessions/${SID}/pictonary/difficultyRoll`).set({ index: idx, value: DIFFICULTY_DIE_FACES[idx] });
-  };
-  const empezarDibujo = async () => {
-    const categoria = game.categoryRoll?.value;
-    const dificultad = game.difficultyRoll?.value;
-    if (!categoria || !dificultad) return;
-    const item = pickItemFor(categoria, dificultad, game.history);
-    const history = [...(game.history || []), item.titulo].slice(-8);
-    await db.ref(`sessions/${SID}/pictonary`).update({ gameState: 'playing', currentItem: item, roundStartTime: Date.now(), history });
-  };
-  // Admin: si se arrepiente de a quién le tocó tirar, vuelve a la selección.
-  const cancelarRolling = async () => {
-    await db.ref(`sessions/${SID}/pictonary`).update({
-      gameState: 'idle', currentDrawer: null, currentItem: null,
-      categoryRoll: null, difficultyRoll: null, roundStartTime: null
-    });
-  };
-  const adivinador = async (uid) => {
-    const newScores = { ...scores };
-    newScores[uid] = (newScores[uid] || 0) + 10;
-    if (currentDrawerId) newScores[currentDrawerId] = (newScores[currentDrawerId] || 0) + 5;
-    await db.ref(`sessions/${SID}/pictonary`).update({
-      scores: newScores, gameState: 'idle', currentDrawer: null, currentItem: null,
-      categoryRoll: null, difficultyRoll: null, roundStartTime: null, strokes: null, live: null, chat: null
-    });
-  };
-  // Sólo el admin puede pasar el turno o volver a sortear a alguien nuevo.
-  const skipTurn = async () => {
-    await db.ref(`sessions/${SID}/pictonary`).update({
-      gameState: 'idle', currentDrawer: null, currentItem: null,
-      categoryRoll: null, difficultyRoll: null, roundStartTime: null,
-      strokes: null, live: null, chat: null
-    });
-  };
-  const finalizar = async () => { await saveGameHistory(SID, scores, users); await db.ref(`sessions/${SID}/pictonary`).update({ gameState: 'finished' }); };
   const cerrar = async () => {
     await db.ref(`sessions/${SID}/pictonary`).remove();
     await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
     if (onClose) onClose();
-  };
-  const enviarGuess = () => {
-    const t = chatText.trim();
-    if (!t || !SID) return;
-    const me = users[myId] || {};
-    db.ref(`sessions/${SID}/pictonary/chat`).push({
-      uid: myId, name: me.name || 'Anon', avatar: me.avatar || '👤', color: me.color || '#ffd000', text: t, ts: Date.now()
-    }).catch(() => {});
-    setChatText('');
   };
 
   const myZone = users[myId]?.zone;
@@ -16508,15 +16831,223 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
     isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
   );
 
-  /* ── Resultados finales ── */
+  /* ── SETUP: armado de equipos ── */
+  if (!gState || gState === 'setup') {
+    if (isAdmin) return h(PictabSetup, {
+      game, SID, juegosUsers,
+      onCancel: cerrar,
+      onContinue: () => ref().update({ gameState: 'captains', captainsDeadline: null }),
+    });
+    return h('div', { style: wrapStyle }, headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 } },
+        h('div', { style: { fontSize: 40 } }, '🎨'),
+        h('div', { style: { color: 'var(--muted)', fontSize: 14 } }, 'El anfitrión está armando los equipos…'),
+        h(Spinner, { size: 22 }),
+      ),
+    );
+  }
+
+  /* ── CAPTAINS: cada equipo elige su capitán ── */
+  if (gState === 'captains') {
+    return h(PictabCaptains, { game, SID, users, myId, isAdmin });
+  }
+
+  const order = game.order || [];
+  const teams = game.teams || {};
+  const turnIdx = game.turnIdx || 0;
+  const turnTeamId = order[turnIdx];
+  const turnTeam = teams[turnTeamId];
+  const phase = game.phase || 'ready';
+  const captainUid = turnTeam?.captain;
+  const isCaptain = captainUid === myId;
+  const myTeamId = order.find((tid) => teams[tid]?.members?.[myId]);
+  const currentDrawerId = game.currentDrawer;
+  const currentDrawer = currentDrawerId ? users[currentDrawerId] : null;
+  const isDrawer = currentDrawerId === myId;
+  const currentItem = game.currentItem;
+  const allPlay = !!game.allPlay;
+  const isFinal = !!game.isFinal;
+  const currentCategoryKey = game.currentCategoryKey;
+  const currentCatMeta = currentCategoryKey ? PICTAB_CATS[currentCategoryKey] : null;
+  const scores = game.scores || {};
+  const { remaining, over } = useTimer(phase === 'draw' ? game.roundStartTime : null, PICTAB_ROUND_SECONDS);
+  const [color, setColor] = useState(PICTONARY_COLORS[0]);
+  const [tool, setTool] = useState('pen');
+  const [chatText, setChatText] = useState('');
+  const chatEndRef = useRef(null);
+  const lastCheckedRef = useRef(null);
+  const timeoutFiredRef = useRef(null);
+
+  const chat = game.chat ? Object.entries(game.chat).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0)) : [];
+  useEffect(() => { setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60); }, [chat.length]);
+  useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
+
+  /* Mueve el dado de movimiento: sólo el capitán del equipo en turno (o el admin). */
+  const tirarMovimiento = async () => {
+    if (!(isCaptain || isAdmin) || phase !== 'ready' || game.moveRoll) return;
+    const move = 1 + Math.floor(Math.random() * 6);
+    await ref().update({ moveRoll: { value: move, ts: Date.now() } });
+    setTimeout(async () => {
+      const cur = turnTeam.pos == null ? -1 : turnTeam.pos;
+      const next = Math.min(PICTAB_GOAL, cur + move);
+      const cell = PICTAB_BOARD[next];
+      const updates = {};
+      updates[`teams/${turnTeamId}/pos`] = next;
+      if (next === PICTAB_GOAL) {
+        const randomCat = PICTAB_CAT_ORDER[Math.floor(Math.random() * PICTAB_CAT_ORDER.length)];
+        updates.phase = 'difficulty'; updates.isFinal = true; updates.allPlay = false;
+        updates.currentCategoryKey = randomCat; updates.chosenCat = null; updates.difficultyRoll = null;
+        await ref().update(updates);
+        ref().child('toast').set({ text: `🏁 ¡${turnTeam.name} llegó a la meta! Última prueba para ganar…`, ts: Date.now(), ms: 3500 });
+      } else if (cell.white) {
+        updates.phase = 'choose'; updates.isFinal = false; updates.allPlay = false;
+        updates.currentCategoryKey = null; updates.difficultyRoll = null;
+        await ref().update(updates);
+        ref().child('toast').set({ text: `⚪ Casilla libre — el capitán de ${turnTeam.name} elige la categoría`, ts: Date.now() });
+      } else {
+        updates.phase = 'difficulty'; updates.isFinal = false; updates.allPlay = !!cell.all;
+        updates.currentCategoryKey = cell.cat; updates.chosenCat = null; updates.difficultyRoll = null;
+        await ref().update(updates);
+      }
+    }, 900);
+  };
+
+  const elegirColorBlanco = async (key) => {
+    if (!(isCaptain || isAdmin) || phase !== 'choose') return;
+    await ref().update({ currentCategoryKey: key, chosenCat: key, phase: 'difficulty', allPlay: false });
+    ref().child('toast').set({ text: `🎨 Categoría elegida: ${PICTAB_CATS[key].label}`, ts: Date.now() });
+  };
+
+  /* Auto: al entrar en "difficulty" el capitán (o el admin) tira el dado solo. */
+  useEffect(() => {
+    if (phase !== 'difficulty' || game.difficultyRoll || !currentCategoryKey) return;
+    if (!(isCaptain || isAdmin)) return;
+    const idx = Math.floor(Math.random() * DIFFICULTY_DIE_FACES.length);
+    ref().update({ difficultyRoll: { index: idx, value: DIFFICULTY_DIE_FACES[idx], ts: Date.now() } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, !!game.difficultyRoll, currentCategoryKey, isCaptain, isAdmin]);
+
+  /* Auto: una vez tirado el dado de dificultad, se elige la carta y arranca el dibujo. */
+  useEffect(() => {
+    if (phase !== 'difficulty' || !game.difficultyRoll || game.currentItem) return;
+    if (!(isCaptain || isAdmin)) return;
+    const t = setTimeout(() => {
+      const meta = PICTAB_CATS[game.currentCategoryKey];
+      if (!meta) return;
+      const item = pictabPickItem(meta.categoria, game.difficultyRoll.value, game.history);
+      const history = [...(game.history || []), item.titulo].slice(-10);
+      const drawer = pictabTeamDrawer(turnTeam, users);
+      ref().update({
+        currentItem: item, history, currentDrawer: drawer, roundStartTime: Date.now(),
+        phase: 'draw', strokes: null, live: null, chat: null, solvedBy: null
+      });
+    }, 1100);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, game.difficultyRoll?.ts, !!game.currentItem, isCaptain, isAdmin]);
+
+  /* Detección automática de la respuesta correcta en el chat — sin tildes ni
+     mayúsculas — sólo de quienes tienen permitido adivinar en esta ronda. */
+  useEffect(() => {
+    if (phase !== 'draw' || !currentItem) return;
+    const last = chat[chat.length - 1];
+    if (!last || last.id === lastCheckedRef.current) return;
+    lastCheckedRef.current = last.id;
+    if (last.uid === currentDrawerId) return;
+    const senderTeamId = order.find((tid) => teams[tid]?.members?.[last.uid]);
+    const allowed = allPlay ? !!senderTeamId : senderTeamId === turnTeamId;
+    if (!allowed) return;
+    if (pictabNormalize(last.text) === pictabNormalize(currentItem.titulo)) {
+      resolverAdivinanza(senderTeamId, last.uid, last.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat.length, phase, currentItem?.titulo]);
+
+  const resolverAdivinanza = async (winnerTid, guesserUid, guesserName) => {
+    const myToken = `${guesserUid}|${Date.now()}|${Math.random()}`;
+    const lockRes = await ref().child('solvedBy').transaction((cur) => cur || myToken);
+    if (!lockRes.committed || lockRes.snapshot.val() !== myToken) return;
+
+    const item = currentItem;
+    const drawerUid = currentDrawerId;
+    const newScores = { ...scores };
+    newScores[guesserUid] = (newScores[guesserUid] || 0) + 15;
+    if (drawerUid) newScores[drawerUid] = (newScores[drawerUid] || 0) + 5;
+
+    if (isFinal) {
+      Object.keys(teams[winnerTid]?.members || {}).forEach((uid) => { newScores[uid] = (newScores[uid] || 0) + 50; });
+      const updates = {
+        scores: newScores,
+        gameState: 'finished', winner: winnerTid,
+        correctGuess: { text: `🎉 ¡${guesserName} adivinó "${item.titulo}"! ${teams[winnerTid]?.name} gana la partida`, ts: Date.now(), ms: 4000 }
+      };
+      updates[`teams/${winnerTid}/points`] = (teams[winnerTid]?.points || 0) + 70;
+      await ref().update(updates);
+      await saveGameHistory(SID, newScores, users);
+      return;
+    }
+
+    const updates = { scores: newScores };
+    updates[`teams/${winnerTid}/points`] = (teams[winnerTid]?.points || 0) + 20;
+    updates[`teams/${turnTeamId}/drawerIdx`] = ((turnTeam.drawerIdx || 0) + 1) % Math.max(1, pictabTeamMemberList(turnTeam, users).length);
+    updates.turnIdx = order.indexOf(winnerTid);
+    updates.phase = 'ready';
+    updates.moveRoll = null; updates.chosenCat = null; updates.difficultyRoll = null;
+    updates.currentCategoryKey = null; updates.currentItem = null; updates.currentDrawer = null;
+    updates.roundStartTime = null; updates.strokes = null; updates.live = null; updates.chat = null;
+    updates.allPlay = false; updates.isFinal = false; updates.solvedBy = null;
+    updates.correctGuess = { text: `🎉 ¡${guesserName} adivinó "${item.titulo}"! (${teams[winnerTid]?.name})`, ts: Date.now(), ms: 4000 };
+    await ref().update(updates);
+  };
+
+  /* Si se acaba el tiempo sin que adivinen, pasa el turno al otro equipo. */
+  useEffect(() => {
+    if (phase !== 'draw' || !over || !game.roundStartTime) return;
+    if (timeoutFiredRef.current === game.roundStartTime) return;
+    timeoutFiredRef.current = game.roundStartTime;
+    seAcaboTiempo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, over, game.roundStartTime]);
+
+  const seAcaboTiempo = async () => {
+    const lockRes = await ref().child('solvedBy').transaction((cur) => cur || 'timeout');
+    if (!lockRes.committed || lockRes.snapshot.val() !== 'timeout') return;
+    const updates = {};
+    updates[`teams/${turnTeamId}/drawerIdx`] = ((turnTeam.drawerIdx || 0) + 1) % Math.max(1, pictabTeamMemberList(turnTeam, users).length);
+    updates.turnIdx = (turnIdx + 1) % order.length;
+    updates.phase = 'ready';
+    updates.moveRoll = null; updates.chosenCat = null; updates.difficultyRoll = null;
+    updates.currentCategoryKey = null; updates.currentItem = null; updates.currentDrawer = null;
+    updates.roundStartTime = null; updates.strokes = null; updates.live = null; updates.chat = null;
+    updates.allPlay = false; updates.isFinal = false; updates.solvedBy = null;
+    updates.toast = { text: '⏱️ Se acabó el tiempo — ¡juega el otro equipo!', ts: Date.now() };
+    await ref().update(updates);
+  };
+
+  const limpiarPizarra = () => ref().update({ strokes: null, live: null });
+  const setCaptain = (tid, uid) => ref().child(`teams/${tid}/captain`).set(uid);
+  const setDrawerManual = (uid) => ref().update({ currentDrawer: uid });
+  const finalizar = async () => { await saveGameHistory(SID, scores, users); await ref().update({ gameState: 'finished' }); };
+
+  const canSendChat = phase === 'draw' && !isDrawer && !!myTeamId && (allPlay ? true : myTeamId === turnTeamId);
+  const enviarGuess = () => {
+    const t = chatText.trim();
+    if (!t || !SID || !canSendChat) return;
+    const me = users[myId] || {};
+    db.ref(`sessions/${SID}/pictonary/chat`).push({ uid: myId, name: me.name || 'Anon', avatar: me.avatar || '👤', color: me.color || '#ffd000', text: t, ts: Date.now() }).catch(() => {});
+    setChatText('');
+  };
+
+  /* ── FINISHED: resultados ── */
   if (gState === 'finished') {
     const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
-    return h('div', { style: wrapStyle },
-      headerBar,
+    const winnerTeam = game.winner ? teams[game.winner] : null;
+    return h('div', { style: wrapStyle }, headerBar,
       h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
         h(Confetti, null),
         h('div', { style: { fontSize: 54 } }, '🏆'),
-        h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 30, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.06em', margin: 0, textAlign: 'center' } }, '¡Pictonary Bíblico — Resultados!'),
+        h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 28, color: '#15803d', textTransform: 'uppercase', letterSpacing: '.06em', margin: 0, textAlign: 'center' } },
+          winnerTeam ? `¡${winnerTeam.name} ${winnerTeam.avatar} ganó la partida!` : '¡Pictonary Bíblico — Resultados!'),
         h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 } },
           ranking.map((r, i) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: i === 0 ? 'linear-gradient(135deg,rgba(255,208,0,.22),rgba(255,208,0,.06))' : 'rgba(10,14,46,.04)', border: i === 0 ? '2px solid #ffd000' : '1px solid rgba(10,14,46,.1)' } },
             h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: i === 0 ? '#a16207' : '#0a0e2e', width: 36, textAlign: 'center' } }, i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`),
@@ -16530,124 +17061,83 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
     );
   }
 
-  /* ── Idle: elegir/pasar turno ── */
-  if (!gState || gState === 'idle') {
-    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
-    return h('div', { style: wrapStyle },
-      headerBar,
-      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
-        h('p', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, maxWidth: 340 } }, 'Se elige a alguien al azar para dibujar un personaje, lugar o escena bíblica. El resto adivina por el chat o en voz alta.'),
-        ranking.length > 0 ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 6 } },
-          ranking.map((r) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 12, background: 'rgba(10,14,46,.04)' } },
-            h(AvatarBubble, { profile: r.user, size: 28 }),
-            h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, color: '#0a0e2e' } }, r.user.name),
-            h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: '#a16207' } }, r.pts),
-          )),
-        ) : null,
-        isAdmin ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10 } },
-          h('button', { onClick: seleccionarRandom, disabled: juegosUsers.length === 0, style: { padding: '14px 20px', background: juegosUsers.length === 0 ? 'rgba(21,128,61,.2)' : '#15803d', border: 'none', borderRadius: 14, color: '#f8f5ef', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: juegosUsers.length === 0 ? 'not-allowed' : 'pointer', opacity: juegosUsers.length === 0 ? .5 : 1 } }, '🎲 Elegir dibujante al azar'),
-          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.15em', marginTop: 4 } }, 'O elige tú quién dibuja:'),
-          juegosUsers.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, padding: 14 } }, 'Nadie en la zona de juegos aún.') : h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 } },
-            juegosUsers.map((u) => h('button', { key: u.uid, onClick: () => seleccionarManual(u.uid), style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', border: '1px solid rgba(10,14,46,.12)', borderRadius: 10, padding: '8px 10px', cursor: 'pointer', color: '#0a0e2e', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, textAlign: 'left' } },
-              h(AvatarBubble, { profile: u, size: 26 }),
-              h('span', { style: { flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, u.name),
-            )),
-          ),
-          ranking.length > 0 ? h('button', { onClick: finalizar, style: { marginTop: 6, background: 'rgba(255,208,0,.18)', border: '1px solid rgba(255,208,0,.4)', borderRadius: 14, padding: '12px', color: '#a16207', fontWeight: 800, fontSize: 13, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏆 Finalizar y ver resultados') : null,
-        ) : h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 14, maxWidth: 300 } }, 'Esperando que el admin elija quién dibuja… ', h(Spinner, { size: 22 })),
-      ),
-    );
-  }
-
-  /* ── Rolling: el dibujante tira los dados de categoría y dificultad ── */
-  if (gState === 'rolling') {
-    const catIdx = game.categoryRoll?.index;
-    const difIdx = game.difficultyRoll?.index;
-    const bothRolled = catIdx != null && difIdx != null;
-    const dieBlock = (label, faces, idx, roll, rollLabel) => h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
-      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.14em' } }, label),
-      h(DiceCube3D, { faces, resultIndex: idx }),
-      idx != null
-        ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 15, color: '#15803d', textTransform: 'uppercase' } }, faces[idx])
-        : (isDrawer ? h('button', { onClick: roll, style: { padding: '8px 18px', background: '#15803d', border: 'none', borderRadius: 20, color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, rollLabel) : h('div', { style: { fontSize: 11, color: 'var(--muted)' } }, '(sin tirar)')),
-    );
-    return h('div', { style: wrapStyle },
-      headerBar,
-      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 20, overflowY: 'auto' } },
-        currentDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', padding: '8px 16px', borderRadius: 20 } },
-          h(AvatarBubble, { profile: currentDrawer, size: 32 }),
-          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 15, color: '#0a0e2e' } }, isDrawer ? '¡Te toca tirar los dados!' : `${currentDrawer.name} está tirando los dados…`),
-        ) : null,
-        h('div', { style: { display: 'flex', gap: 30, flexWrap: 'wrap', justifyContent: 'center' } },
-          dieBlock('Categoría', CATEGORY_DIE_FACES, catIdx, rollCategoryDie, '🎲 Tirar'),
-          dieBlock('Dificultad', DIFFICULTY_DIE_FACES, difIdx, rollDifficultyDie, '🎲 Tirar'),
-        ),
-        isDrawer && bothRolled ? h('button', { onClick: empezarDibujo, style: { padding: '14px 28px', background: '#ffd000', border: 'none', borderRadius: 20, color: '#0a0e2e', fontWeight: 900, fontSize: 15, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 8px 24px rgba(255,208,0,.4)' } }, '🎨 ¡A dibujar! (1:30)') : null,
-        !isDrawer ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, fontStyle: 'italic' } }, 'Esperando a que termine de tirar los dados…') : null,
-        isAdmin ? h('button', { onClick: cancelarRolling, style: { border: 'none', background: 'none', color: 'var(--muted)', fontSize: 12, textDecoration: 'underline', cursor: 'pointer' } }, 'Cancelar y elegir a otra persona') : null,
-      ),
-    );
-  }
-
-  /* ── Jugando: pizarra + herramientas + chat lateral ── */
+  /* ── PLAYING: cabecera de estado + tablero + pizarra + chat ── */
   const timeColor = over ? '#dc2626' : remaining < 20 ? '#c2410c' : '#a16207';
-  const guessers = juegosUsers.filter((u) => u.uid !== currentDrawerId);
   const dificultadColor = { 'Fácil': '#15803d', 'Mediano': '#c2410c', 'Difícil': '#dc2626' }[currentItem?.dificultad] || '#a16207';
+
   return h('div', { style: wrapStyle },
     headerBar,
+    h(GameToast, { toast: game.correctGuess, ms: 4000, tone: 'success' }),
+    h(GameToast, { toast: game.toast, ms: 3000, tone: 'info' }),
     h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', flexWrap: 'wrap', flexShrink: 0 } },
-      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 30, color: timeColor, lineHeight: 1, minWidth: 64 } }, formatTime(Math.max(0, remaining))),
-      currentDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,14,46,.05)', padding: '6px 12px', borderRadius: 20 } },
-        h(AvatarBubble, { profile: currentDrawer, size: 28 }),
-        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 13, color: '#0a0e2e' } }, isDrawer ? 'Tú dibujas' : `${currentDrawer.name} dibuja`),
+      turnTeam ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, background: `${turnTeam.color}1e`, border: `1px solid ${turnTeam.color}55`, padding: '6px 12px', borderRadius: 20 } },
+        h('span', { style: { fontSize: 18 } }, turnTeam.avatar),
+        h('div', null,
+          h('div', { style: { fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, 'Turno de'),
+          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: turnTeam.color } }, turnTeam.name),
+        ),
       ) : null,
-      // La categoría la ve TODO el mundo. El título/pista sólo los ve quien
-      // está dibujando en ese momento — ni siquiera el admin, para que no se
-      // filtre el personaje cuando el admin mira/proyecta la partida.
-      currentItem?.categoria ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(21,128,61,.1)', border: '1px solid rgba(21,128,61,.3)', padding: '6px 14px', borderRadius: 20 } },
+      captainUid && users[captainUid] ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,208,0,.14)', border: '1px solid rgba(255,208,0,.4)', padding: '4px 10px', borderRadius: 20, fontSize: 11.5, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: '#a16207' } }, '👑 ', users[captainUid].name) : null,
+      currentCatMeta ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: `${currentCatMeta.color}1a`, border: `1px solid ${currentCatMeta.color}55`, padding: '6px 14px', borderRadius: 20 } },
         h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, 'Categoría'),
-        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: '#15803d', textTransform: 'uppercase' } }, currentItem.categoria),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: currentCatMeta.dark, textTransform: 'uppercase' } }, currentCatMeta.icon, ' ', currentCatMeta.label),
       ) : null,
-      !isDrawer ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '👀 ¿Qué será?') : null,
-      over ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', background: 'rgba(239,68,68,.1)', padding: '5px 12px', borderRadius: 20 } }, '⏱ Tiempo terminado') : null,
+      game.difficultyRoll ? h('div', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: dificultadColor, textTransform: 'uppercase', letterSpacing: '.1em', background: `${dificultadColor}1a`, padding: '4px 10px', borderRadius: 20 } }, game.difficultyRoll.value) : null,
+      allPlay ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.05em', background: 'rgba(239,68,68,.12)', padding: '5px 12px', borderRadius: 20 } }, '✏️✏️ Todos participan') : null,
+      isFinal ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 12, color: '#a16207', textTransform: 'uppercase', letterSpacing: '.05em', background: 'rgba(255,208,0,.2)', padding: '5px 12px', borderRadius: 20 } }, '🏁 ¡Ronda final!') : null,
+      phase === 'draw' ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 28, color: timeColor, lineHeight: 1, marginLeft: 'auto' } }, formatTime(Math.max(0, remaining))) : null,
+      isAdmin ? h('button', { onClick: finalizar, title: 'Terminar el juego ahora', style: { border: 'none', background: 'rgba(10,14,46,.06)', color: 'var(--muted)', borderRadius: 20, padding: '5px 12px', fontWeight: 700, fontSize: 11, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginLeft: phase === 'draw' ? 0 : 'auto' } }, '🏆 Finalizar') : null,
     ),
-    currentItem && isDrawer ? h('div', { style: { margin: '0 16px 10px', padding: '10px 14px', background: 'linear-gradient(135deg,#fff,#f8f5ef)', border: '2px solid #ffd000', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 } },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-        currentItem.dificultad ? h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: dificultadColor, textTransform: 'uppercase', letterSpacing: '.1em', background: `${dificultadColor}1a`, padding: '2px 8px', borderRadius: 20 } }, currentItem.dificultad) : null,
-        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 17, color: '#0a0e2e' } }, currentItem.titulo),
-      ),
-      currentItem.pista ? h('div', { style: { fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic' } }, '💡 ', currentItem.pista) : null,
-    ) : null,
-    h('div', { style: { flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, padding: '0 16px 16px', overflow: 'hidden', minHeight: 0 } },
-      h('div', { style: { flex: isMobile ? 'none' : 2, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 } },
-        h(PictonaryCanvas, { SID, canDraw: isDrawer && !over, color, tool, strokes: game.strokes, live: game.live, height: isMobile ? 220 : 360 }),
-        isDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-          PICTONARY_COLORS.map((c) => h('button', {
-            key: c, onClick: () => { setColor(c); setTool('pen'); }, title: 'Color',
-            style: { width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer', border: (tool === 'pen' && color === c) ? '3px solid #0a0e2e' : '2px solid rgba(10,14,46,.15)', padding: 0 }
-          })),
-          h('button', { onClick: () => setTool('eraser'), title: 'Goma de borrar', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: tool === 'eraser' ? '2px solid #0a0e2e' : '1px solid rgba(10,14,46,.15)', background: tool === 'eraser' ? 'rgba(10,14,46,.08)' : '#fff', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#0a0e2e' } }, '🧼 Goma'),
-          h('button', { onClick: limpiarPizarra, title: 'Limpiar toda la pizarra', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(239,68,68,.35)', background: 'rgba(239,68,68,.08)', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#dc2626', marginLeft: 'auto' } }, '🗑️ Limpiar todo'),
+    h('div', { style: { padding: '0 16px 8px', flexShrink: 0 } }, h(PictabRoster, { teams, order, users, myId, isAdmin, onSetCaptain: setCaptain })),
+    h('div', { style: { flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, padding: '0 16px 16px', overflow: 'auto', minHeight: 0 } },
+      h('div', { style: { flex: isMobile ? 'none' : 2, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', minHeight: 0 } },
+        h(PictabBoard, { teams, order }),
+
+        phase === 'ready' ? h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
+          (isCaptain || isAdmin) ? h('button', { onClick: tirarMovimiento, style: { padding: '12px 26px', background: turnTeam?.color || '#ffd000', border: 'none', borderRadius: 20, color: '#fff', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 8px 20px rgba(10,14,46,.2)' } }, '🎲 Tirar dado y avanzar')
+            : h('div', { style: { color: 'var(--muted)', fontSize: 13, fontStyle: 'italic' } }, `Esperando a que ${captainUid && users[captainUid] ? users[captainUid].name : 'el capitán'} tire el dado…`),
         ) : null,
-        isAdmin ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 10 } },
-          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, '¿Quién adivinó? (toca para sumarle puntos a esa persona y a quien dibuja)'),
-          guessers.length === 0 ? h('div', { style: { fontSize: 12, color: 'var(--muted)' } }, 'Nadie más en la zona de juegos aún.') : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
-            guessers.map((u) => h('button', { key: u.uid, onClick: () => adivinador(u.uid), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '5px 10px 5px 5px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12.5, color: '#0a0e2e' } },
-              h(AvatarBubble, { profile: u, size: 22 }), u.name,
-            )),
+
+        (phase === 'choose') ? h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
+          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, 'El capitán elige la categoría'),
+          h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
+            PICTAB_CAT_ORDER.map((k) => h('button', {
+              key: k, onClick: () => elegirColorBlanco(k), disabled: !(isCaptain || isAdmin),
+              style: { display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: 'none', cursor: (isCaptain || isAdmin) ? 'pointer' : 'not-allowed', background: PICTAB_CATS[k].color, color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', opacity: (isCaptain || isAdmin) ? 1 : .6 }
+            }, PICTAB_CATS[k].icon, ' ', PICTAB_CATS[k].label)),
           ),
-          // Sólo el admin decide qué pasa con el turno (al azar o pasar); el
-          // que dibuja no puede saltarse a otro jugador por su cuenta.
-          isAdmin ? h('div', { style: { display: 'flex', gap: 8, marginTop: 2 } },
-            h('button', { onClick: seleccionarRandom, style: { flex: 1, background: '#15803d', border: 'none', borderRadius: 12, padding: '9px', color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🎲 Siguiente al azar'),
-            h('button', { onClick: skipTurn, style: { flex: 1, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px', color: '#0a0e2e', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar turno'),
-          ) : null,
+        ) : null,
+
+        (phase === 'difficulty') ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' } },
+          game.moveRoll ? h('div', { style: { textAlign: 'center' } }, h(DiceCube3D, { faces: PICTAB_MOVE_FACES, resultIndex: game.moveRoll.value - 1, size: 60 }), h('div', { style: { fontSize: 9, color: 'var(--muted)', marginTop: 3, textTransform: 'uppercase', letterSpacing: '.08em' } }, 'Movimiento')) : null,
+          h('div', { style: { textAlign: 'center' } }, h(DiceCube3D, { faces: DIFFICULTY_DIE_FACES, resultIndex: game.difficultyRoll?.index, size: 68 }), h('div', { style: { fontSize: 9, color: 'var(--muted)', marginTop: 3, textTransform: 'uppercase', letterSpacing: '.08em' } }, 'Dificultad')),
+        ) : null,
+
+        currentItem && isDrawer ? h('div', { style: { padding: '10px 14px', background: 'linear-gradient(135deg,#fff,#f8f5ef)', border: `2px solid ${currentCatMeta?.color || '#ffd000'}`, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 4, width: '100%', maxWidth: 420 } },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+            currentItem.dificultad ? h('span', { style: { fontSize: 10, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: dificultadColor, textTransform: 'uppercase', letterSpacing: '.1em', background: `${dificultadColor}1a`, padding: '2px 8px', borderRadius: 20 } }, currentItem.dificultad) : null,
+            h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 17, color: '#0a0e2e' } }, currentItem.titulo),
+          ),
+          currentItem.pista ? h('div', { style: { fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic' } }, '💡 ', currentItem.pista) : null,
+        ) : null,
+
+        phase === 'draw' ? h(PictonaryCanvas, { SID, canDraw: isDrawer && !over, color, tool, strokes: game.strokes, live: game.live, height: isMobile ? 220 : 320 }) : null,
+        phase === 'draw' && isDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
+          PICTONARY_COLORS.map((c) => h('button', { key: c, onClick: () => { setColor(c); setTool('pen'); }, title: 'Color', style: { width: 26, height: 26, borderRadius: '50%', background: c, cursor: 'pointer', border: (tool === 'pen' && color === c) ? '3px solid #0a0e2e' : '2px solid rgba(10,14,46,.15)', padding: 0 } })),
+          h('button', { onClick: () => setTool('eraser'), title: 'Goma de borrar', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: tool === 'eraser' ? '2px solid #0a0e2e' : '1px solid rgba(10,14,46,.15)', background: tool === 'eraser' ? 'rgba(10,14,46,.08)' : '#fff', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#0a0e2e' } }, '🧼 Goma'),
+          h('button', { onClick: limpiarPizarra, title: 'Limpiar toda la pizarra', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(239,68,68,.35)', background: 'rgba(239,68,68,.08)', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#dc2626' } }, '🗑️ Limpiar todo'),
+        ) : null,
+        phase === 'draw' && !isDrawer ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, fontStyle: 'italic' } }, currentDrawer ? `${currentDrawer.name} está dibujando — ¡adivina!` : '👀 ¿Qué será?') : null,
+
+        isAdmin && phase === 'draw' && currentDrawer ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'center', background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 8, width: '100%', maxWidth: 420 } },
+          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '🎯 Cambiar quién dibuja:'),
+          pictabTeamMemberList(turnTeam, users).map((u) => h('button', { key: u.uid, onClick: () => setDrawerManual(u.uid), style: { display: 'flex', alignItems: 'center', gap: 4, background: u.uid === currentDrawerId ? 'rgba(255,208,0,.25)' : '#fff', border: u.uid === currentDrawerId ? '1px solid #ffd000' : '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '3px 8px 3px 3px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: '#0a0e2e' } }, h(AvatarBubble, { profile: u, size: 18 }), u.name)),
         ) : null,
       ),
       h('div', { style: { flex: isMobile ? 'none' : 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 220 : 0, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden' } },
         h('div', { style: { padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '💬 Adivina aquí'),
         h('div', { style: { flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 } },
-          chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá, o dila en voz alta.') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
+          chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá — exactamente como en la tarjeta (no importan tildes ni mayúsculas).') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
             h(AvatarBubble, { profile: m, size: 20 }),
             h('div', null,
               h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11.5, color: m.color || '#0a0e2e' } }, m.name, ' '),
@@ -16660,11 +17150,11 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
           h('input', {
             value: chatText, onChange: (e) => setChatText(e.target.value),
             onKeyDown: (e) => { if (e.key === 'Enter') enviarGuess(); },
-            placeholder: isDrawer ? 'Sólo espectadores pueden adivinar' : 'Escribe tu respuesta…',
-            disabled: isDrawer,
+            placeholder: phase !== 'draw' ? 'Esperando la próxima ronda…' : isDrawer ? 'Quien dibuja no puede adivinar' : !myTeamId ? 'No estás en un equipo' : !canSendChat ? 'Le toca adivinar sólo al otro equipo' : 'Escribe tu respuesta…',
+            disabled: !canSendChat,
             style: { flex: 1, border: '1px solid rgba(10,14,46,.15)', borderRadius: 20, padding: '8px 14px', fontSize: 13.5, fontFamily: 'inherit' }
           }),
-          h('button', { onClick: enviarGuess, disabled: isDrawer, style: { border: 'none', background: isDrawer ? 'rgba(21,128,61,.3)' : '#15803d', color: '#fff', borderRadius: 20, padding: '8px 16px', fontWeight: 800, fontSize: 13, cursor: isDrawer ? 'not-allowed' : 'pointer' } }, 'Enviar'),
+          h('button', { onClick: enviarGuess, disabled: !canSendChat, style: { border: 'none', background: !canSendChat ? 'rgba(21,128,61,.3)' : '#15803d', color: '#fff', borderRadius: 20, padding: '8px 16px', fontWeight: 800, fontSize: 13, cursor: !canSendChat ? 'not-allowed' : 'pointer' } }, 'Enviar'),
         ),
       ),
     ),
