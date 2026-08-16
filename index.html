@@ -2036,7 +2036,7 @@ function RepasoChat({
       color: 'var(--muted)',
       marginTop: 1
     }
-  }, Object.values(users).filter(u => u.zone === 'repaso').length, " en sala ·", ' ', /*#__PURE__*/React.createElement("span", {
+  }, Object.values(users).filter(u => effectiveZone(u) === 'repaso').length, " en sala ·", ' ', /*#__PURE__*/React.createElement("span", {
     style: {
       color: isOver ? '#ef4444' : '#3b82f6',
       fontWeight: 600
@@ -2052,7 +2052,7 @@ function RepasoChat({
       display: 'flex',
       gap: 3
     }
-  }, Object.values(users).filter(u => u.zone === 'repaso').slice(0, 5).map((u, i) => /*#__PURE__*/React.createElement("div", {
+  }, Object.values(users).filter(u => effectiveZone(u) === 'repaso').slice(0, 5).map((u, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       width: 24,
@@ -6857,7 +6857,7 @@ function MisionActivity({
       color: 'var(--muted)',
       marginTop: 1
     }
-  }, Object.values(users).filter(u => u.zone === 'mision').length, " en sala ·", ' ', /*#__PURE__*/React.createElement("span", {
+  }, Object.values(users).filter(u => effectiveZone(u) === 'mision').length, " en sala ·", ' ', /*#__PURE__*/React.createElement("span", {
     style: {
       color: isOver ? '#ef4444' : '#3b82f6',
       fontWeight: 600
@@ -8514,11 +8514,11 @@ function AdminPanel({
   const [wcQ, setWcQ] = useState('');
   const phase = session?.phase || 'waiting';
   const allUsers = Object.entries(users);
-  const confraUsers = Object.entries(users).filter(([, u]) => u.zone === 'confra');
-  const repasoUsers = Object.entries(users).filter(([, u]) => u.zone === 'repaso');
-  const juegosUsers = Object.entries(users).filter(([, u]) => u.zone === 'juegos');
-  const misionUsers = Object.entries(users).filter(([, u]) => u.zone === 'mision');
-  const temploUsers = Object.entries(users).filter(([, u]) => u.zone === 'templo');
+  const confraUsers = Object.entries(users).filter(([, u]) => effectiveZone(u) === 'confra');
+  const repasoUsers = Object.entries(users).filter(([, u]) => effectiveZone(u) === 'repaso');
+  const juegosUsers = Object.entries(users).filter(([, u]) => effectiveZone(u) === 'juegos');
+  const misionUsers = Object.entries(users).filter(([, u]) => effectiveZone(u) === 'mision');
+  const temploUsers = Object.entries(users).filter(([, u]) => effectiveZone(u) === 'templo');
   const phaseColor = {
     waiting: 'var(--muted)',
     confra: '#eab308',
@@ -11450,7 +11450,7 @@ function KahootController({
   const scores = game?.scores || {};
   const myScore = scores[myId] || 0;
   const myAnswer = game?.answers?.[myId];
-  const juegosUsers = Object.entries(users).filter(([, u]) => u.zone === 'juegos');
+  const juegosUsers = Object.entries(users).filter(([, u]) => effectiveZone(u) === 'juegos');
   useEffect(() => {
     if (gState === 'question' && game?.qStartTime) {
       clearInterval(timerRef.current);
@@ -11526,7 +11526,7 @@ function KahootController({
       'juegos/active': false
     });
   };
-  const myZone = users[myId]?.zone;
+  const myZone = effectiveZone(users[myId]);
   if (myZone !== 'juegos' && !isAdmin) return null;
 
   /* ── Admin: menú de selección / setup ── */
@@ -12597,7 +12597,7 @@ function TabuController({
   const [timeLeft, setTimeLeft] = useState(180);
   const [showCard, setShowCard] = useState(false);
   const timerRef = useRef(null);
-  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => u.zone === 'juegos').map(([uid, u]) => ({
+  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => effectiveZone(u) === 'juegos').map(([uid, u]) => ({
     uid,
     ...u
   }));
@@ -12695,14 +12695,18 @@ function TabuController({
     });
     if (onClose) onClose();
   };
-  const myZone = users[myId]?.zone;
+  const myZone = effectiveZone(users[myId]);
   if (myZone !== 'juegos' && !isAdmin) return null;
   if (gState === 'finished') {
+    // No filtramos por "no está en users": si alguien se desconectó justo al
+    // terminar, su puntaje sigue contando y no se corre el ranking de los
+    // demás — si no, cada pantalla podía mostrar un "tercer lugar" distinto
+    // según a quién le faltara sincronizar la lista de conectados.
     const ranking = Object.entries(scores).map(([uid, pts]) => ({
       uid,
       pts,
-      user: users[uid]
-    })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+      user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' }
+    })).sort((a, b) => b.pts - a.pts);
     return /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'fixed',
@@ -13067,8 +13071,8 @@ function TabuController({
   const ranking = Object.entries(scores).map(([uid, pts]) => ({
     uid,
     pts,
-    user: users[uid]
-  })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+    user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' }
+  })).sort((a, b) => b.pts - a.pts);
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
@@ -13303,7 +13307,7 @@ function QuienSoyController({
 }) {
   const game = session?.quiensoy;
   const gState = game?.gameState;
-  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => u.zone === 'juegos').map(([uid, u]) => ({
+  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => effectiveZone(u) === 'juegos').map(([uid, u]) => ({
     uid,
     ...u
   }));
@@ -13379,14 +13383,18 @@ function QuienSoyController({
     });
     if (onClose) onClose();
   };
-  const myZone = users[myId]?.zone;
+  const myZone = effectiveZone(users[myId]);
   if (myZone !== 'juegos' && !isAdmin) return null;
   if (gState === 'finished') {
+    // No filtramos por "no está en users": si alguien se desconectó justo al
+    // terminar, su puntaje sigue contando y no se corre el ranking de los
+    // demás — si no, cada pantalla podía mostrar un "tercer lugar" distinto
+    // según a quién le faltara sincronizar la lista de conectados.
     const ranking = Object.entries(scores).map(([uid, pts]) => ({
       uid,
       pts,
-      user: users[uid]
-    })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+      user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' }
+    })).sort((a, b) => b.pts - a.pts);
     return /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'fixed',
@@ -13854,8 +13862,8 @@ function QuienSoyController({
   const ranking = Object.entries(scores).map(([uid, pts]) => ({
     uid,
     pts,
-    user: users[uid]
-  })).filter(x => x.user).sort((a, b) => b.pts - a.pts);
+    user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' }
+  })).sort((a, b) => b.pts - a.pts);
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
@@ -14890,8 +14898,9 @@ function DibujaController({
   const allPlay = !!game?.allPlay;
   const TURN_SECONDS = 90;
   const [timeLeft, setTimeLeft] = useState(TURN_SECONDS);
+  const [showCard, setShowCard] = useState(false);
   const timerRef = useRef(null);
-  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => u.zone === 'juegos').map(([uid, u]) => ({
+  const juegosUsers = Object.entries(users || {}).filter(([_, u]) => effectiveZone(u) === 'juegos').map(([uid, u]) => ({
     uid,
     ...u
   }));
@@ -14899,8 +14908,8 @@ function DibujaController({
   const isMyTurn = myTeamId === turnTeamId;
   const drawerId = game?.currentDrawer;
   const isDrawer = drawerId === myId;
-  // ¿Puedo ver la palabra? Solo el dibujante (y el admin). El equipo adivina.
-  const canSeeWord = isDrawer || isAdmin;
+  // ¿Puedo ver la palabra? El dibujante siempre; el admin recién al tocar "Mostrar carta".
+  const canSeeWord = isDrawer || (isAdmin && showCard);
   // ¿Puedo dibujar? El dibujante actual, solo si el modo es dibujo.
   const canDraw = isDrawer && mode === 'dibujo' && phase === 'draw';
 
@@ -14918,6 +14927,10 @@ function DibujaController({
     timerRef.current = setInterval(tick, 500);
     return () => clearInterval(timerRef.current);
   }, [phase, game?.roundStartTime]);
+  // Oculta la carta de nuevo para el admin cada vez que sale una carta nueva.
+  useEffect(() => {
+    setShowCard(false);
+  }, [card?.word]);
   const ref = () => db.ref(`sessions/${SID}/dibuja`);
   const clearDrawing = () => {
     ref().child('strokes').remove();
@@ -15111,7 +15124,7 @@ function DibujaController({
       live: null
     });
   };
-  const myZone = users[myId]?.zone;
+  const myZone = effectiveZone(users[myId]);
   if (myZone !== 'juegos' && !isAdmin) return null;
 
   // ── SETUP (armado de equipos) ──
@@ -15560,6 +15573,29 @@ function DibujaController({
   const cat = card ? DIBUJA_CATS[card.category] : null;
   const timeColor = timeLeft < 15 ? '#ef4444' : timeLeft < 35 ? '#c2410c' : '#a16207';
   const drawer = drawerId ? users[drawerId] : null;
+  // Panel de la carta: dibujante la ve siempre; admin debe tocar para revelarla;
+  // el resto solo ve un aviso genérico. Se reutiliza tanto en la pantalla de
+  // dados (mode/moved) como en la de dibujo (draw) para que la carta ya
+  // aparezca apenas se tira el dado, no recién al empezar a dibujar.
+  const cardPanel = card && h(React.Fragment, null,
+    canSeeWord && cat && h('div', {
+      style: { background: 'linear-gradient(135deg,#fff,#f8f5ef)', borderRadius: 16, padding: '14px 18px', border: `4px solid ${cat.color}`, textAlign: 'center' }
+    },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: cat.dark, textTransform: 'uppercase', letterSpacing: '.16em' } }, cat.icon, ' ', cat.label),
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 28, color: '#0a0e2e', textTransform: 'uppercase', lineHeight: 1.05, marginTop: 4 } }, card.word),
+      isDrawer && h('div', { style: { fontSize: 11, color: '#a16207', marginTop: 6 } }, mode === 'mimica' ? 'Actúa esta palabra ¡sin hablar!' : 'Dibújala ¡sin letras ni números!'),
+    ),
+    isAdmin && !canSeeWord && cat && h('button', {
+      onClick: () => setShowCard(true),
+      style: { width: '100%', padding: '30px 20px', background: 'rgba(255,208,0,.1)', border: '2px dashed #ffd000', borderRadius: 16, color: '#a16207', fontSize: 15, fontWeight: 800, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer' }
+    }, '👁 Mostrar carta (admin)'),
+    !isDrawer && !isAdmin && h('div', {
+      style: { background: 'rgba(10,14,46,.04)', border: '1px solid rgba(10,14,46,.12)', borderRadius: 16, padding: '12px', textAlign: 'center' }
+    },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 16, color: cat ? cat.color : '#ffd000', textTransform: 'uppercase', letterSpacing: '.05em' } }, cat ? cat.label : 'Adivina', ' ', cat ? cat.icon : '🤔'),
+      h('div', { style: { fontSize: 12, color: 'var(--muted)', marginTop: 4 } }, allPlay ? '¡Todos pueden adivinar! Grita tu respuesta.' : isMyTurn ? '¡Tu equipo adivina! Grita tu respuesta.' : 'Observa: adivina el equipo en turno.'),
+    ),
+  );
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
@@ -15667,7 +15703,9 @@ function DibujaController({
       letterSpacing: '.08em',
       marginTop: 4
     }
-  }, "Avanza ", game.moveRoll.value))), phase === 'draw' && /*#__PURE__*/React.createElement("div", {
+  }, "Avanza ", game.moveRoll.value))), (phase === 'mode' || phase === 'moved') && /*#__PURE__*/React.createElement("div", {
+    style: { width: '100%', maxWidth: 380 }
+  }, cardPanel), phase === 'draw' && /*#__PURE__*/React.createElement("div", {
     style: {
       width: '100%',
       maxWidth: 440,
@@ -15695,63 +15733,7 @@ function DibujaController({
       textTransform: 'uppercase',
       letterSpacing: '.05em'
     }
-  }, mode === 'mimica' ? 'Haz mímica' : 'Dibuja')), canSeeWord && cat && /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'linear-gradient(135deg,#fff,#f8f5ef)',
-      borderRadius: 16,
-      padding: '14px 18px',
-      border: `4px solid ${cat.color}`,
-      textAlign: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 700,
-      fontSize: 11,
-      color: cat.dark,
-      textTransform: 'uppercase',
-      letterSpacing: '.16em'
-    }
-  }, cat.icon, " ", cat.label), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 900,
-      fontSize: 28,
-      color: '#0a0e2e',
-      textTransform: 'uppercase',
-      lineHeight: 1.05,
-      marginTop: 4
-    }
-  }, card.word), isDrawer && /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: '#a16207',
-      marginTop: 6
-    }
-  }, mode === 'mimica' ? 'Actúa esta palabra ¡sin hablar!' : 'Dibújala ¡sin letras ni números!')), !canSeeWord && /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'rgba(10,14,46,.04)',
-      border: '1px solid rgba(10,14,46,.12)',
-      borderRadius: 16,
-      padding: '12px',
-      textAlign: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 900,
-      fontSize: 16,
-      color: cat ? cat.color : '#ffd000',
-      textTransform: 'uppercase',
-      letterSpacing: '.05em'
-    }
-  }, cat ? cat.label : 'Adivina', " ", cat ? cat.icon : '🤔'), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: 'var(--muted)',
-      marginTop: 4
-    }
-  }, allPlay ? '¡Todos pueden adivinar! Grita tu respuesta.' : isMyTurn ? '¡Tu equipo adivina! Grita tu respuesta.' : 'Observa: adivina el equipo en turno.')), mode === 'dibujo' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DibujaCanvas, {
+  }, mode === 'mimica' ? 'Haz mímica' : 'Dibuja')), cardPanel, mode === 'dibujo' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DibujaCanvas, {
     SID: SID,
     canDraw: canDraw,
     color: turnTeam?.color || '#0a0e2e',
@@ -16846,7 +16828,7 @@ function PictabCaptains({ game, SID, users, myId, isAdmin }) {
 function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
   const game = session?.pictonary || {};
   const gState = game.gameState;
-  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => u.zone === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
+  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => effectiveZone(u) === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
   const ref = () => db.ref(`sessions/${SID}/pictonary`);
   const isMobile = useIsMobile();
   const cerrar = async () => {
@@ -16861,7 +16843,7 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
     await db.ref(`sessions/${SID}/pictonary`).remove();
   };
 
-  const myZone = users[myId]?.zone;
+  const myZone = effectiveZone(users[myId]);
   const blocked = myZone !== 'juegos' && !isAdmin;
 
   const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
@@ -17132,7 +17114,7 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
 
   /* ── FINISHED: resultados ── */
   if (gState === 'finished') {
-    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' } })).sort((a, b) => b.pts - a.pts);
     const winnerTeam = game.winner ? teams[game.winner] : null;
     return h('div', { style: wrapStyle }, headerBar,
       h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
@@ -17281,7 +17263,7 @@ function PictabLibreRoster({ juegosUsers, scores, currentDrawerId, myId }) {
 function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
   const game = session?.pictonary || {};
   const gState = game.gameState;
-  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => u.zone === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
+  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => effectiveZone(u) === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
   const currentDrawerId = game.currentDrawer;
   const currentDrawer = currentDrawerId ? users[currentDrawerId] : null;
   const isDrawer = currentDrawerId === myId;
@@ -17411,7 +17393,7 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gState, over, game.roundStartTime]);
 
-  const myZone = users[myId]?.zone;
+  const myZone = effectiveZone(users[myId]);
   if (myZone !== 'juegos' && !isAdmin) return null;
 
   const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
@@ -17425,7 +17407,7 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
 
   /* ── Resultados finales ── */
   if (gState === 'finished') {
-    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' } })).sort((a, b) => b.pts - a.pts);
     return h('div', { style: wrapStyle },
       headerBar,
       h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
@@ -17447,7 +17429,7 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
 
   /* ── Idle: elegir/pasar turno ── */
   if (!gState || gState === 'idle') {
-    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] })).filter((x) => x.user).sort((a, b) => b.pts - a.pts);
+    const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' } })).sort((a, b) => b.pts - a.pts);
     return h('div', { style: wrapStyle },
       headerBar, roster, toasts,
       h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
@@ -17604,7 +17586,7 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
     await db.ref(`sessions/${SID}/pictonary`).remove();
   };
 
-  const myZone = users[myId]?.zone;
+  const myZone = effectiveZone(users[myId]);
   if (myZone !== 'juegos' && !isAdmin) return null;
 
   if (!gState || gState === 'mode') {
@@ -19191,7 +19173,7 @@ class Component extends React.Component {
   // Despachadores para iniciar/terminar actividades reales (admin desde dentro de la sala).
   _startRoomActivity = (key) => {
     if (!this.isAdmin || !this.SID) return;
-    const inRoomUsers = Object.entries(this._usersDict()).filter(([uid, u]) => u.zone === key);
+    const inRoomUsers = Object.entries(this._usersDict()).filter(([uid, u]) => effectiveZone(u) === key);
     if (key === 'confra') {
       const uids = inRoomUsers.map(([uid]) => uid).sort(() => Math.random() - .5);
       const queueObj = {};
