@@ -1154,9 +1154,12 @@ const AvatarBubble = ({
 
 /* ── useTimer  (líneas 1017-1032) ── */
 function useTimer(startTime, duration) {
-  const [elapsed, setElapsed] = useState(0);
+  const [elapsed, setElapsed] = useState(startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
   useEffect(() => {
-    if (!startTime) return;
+    if (!startTime) { setElapsed(0); return; }
+    // Recalcula de inmediato al cambiar de ronda para no arrastrar el elapsed
+    // de la ronda anterior (que haría que la nueva tarjeta salga ya "vencida").
+    setElapsed(Math.floor((Date.now() - startTime) / 1000));
     const iv = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
@@ -18164,6 +18167,9 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
   useEffect(() => {
     if (gState !== 'playing' || !over || !game.roundStartTime || !currentItem) return;
     if (timeoutFiredRef.current === game.roundStartTime) return;
+    // Verificación real contra roundStartTime: no revelar si de verdad todavía
+    // no pasó el tiempo (evita disparos prematuros por relojes desfasados).
+    if ((Date.now() - game.roundStartTime) / 1000 < EMOJI_ROUND_SECONDS) return;
     timeoutFiredRef.current = game.roundStartTime;
     let best = null;
     chat.forEach((m) => { const r = pictabWordMatchRatio(currentItem.titulo, m.text); if (r >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || r > best.ratio)) best = { ratio: r, m }; });
