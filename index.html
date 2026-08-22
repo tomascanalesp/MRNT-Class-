@@ -10785,6 +10785,7 @@ function GameSelectMenu({
   onStartQuienSoy,
   onStartDibuja,
   onStartPictonary,
+  onStartEmoji,
   onCancel
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -11139,6 +11140,65 @@ function GameSelectMenu({
     style: {
       fontSize: 20,
       color: '#c2410c',
+      opacity: .6
+    }
+  }, "›")), /*#__PURE__*/React.createElement("button", {
+    onClick: onStartEmoji,
+    style: {
+      width: '100%',
+      maxWidth: 380,
+      background: '#ffffff',
+      border: '1px solid rgba(10,14,46,.1)',
+      borderRadius: 20,
+      padding: '16px 20px',
+      textAlign: 'left',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 16,
+      boxShadow: '0 12px 30px rgba(10,14,46,.1)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 4,
+      alignSelf: 'stretch',
+      borderRadius: 4,
+      background: '#8b5cf6',
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 900,
+      fontSize: 20,
+      color: '#6d28d9',
+      textTransform: 'uppercase',
+      letterSpacing: '.05em'
+    }
+  }, "Adivina el Emoji"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'Barlow,sans-serif',
+      fontSize: 13,
+      color: '#0a0e2e',
+      marginTop: 3,
+      lineHeight: 1.4
+    }
+  }, "Emojis que representan la tarjeta: escríbela y gana"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--muted)',
+      marginTop: 5,
+      display: 'flex',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "Sin dados"), /*#__PURE__*/React.createElement("span", null, "1:30 por carta"))), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 20,
+      color: '#8b5cf6',
       opacity: .6
     }
   }, "›")), /*#__PURE__*/React.createElement("button", {
@@ -11612,6 +11672,13 @@ function KahootController({
         await db.ref(`sessions/${SID}/pictonary`).set({
           active: true,
           gameState: 'mode',
+          scores: {}
+        });
+      },
+      onStartEmoji: async () => {
+        await db.ref(`sessions/${SID}/emoji`).set({
+          active: true,
+          gameState: 'idle',
           scores: {}
         });
       },
@@ -16232,6 +16299,286 @@ const PICTONARY_ITEMS = [
   { titulo: 'Discernir', categoria: 'Verbos / Acciones', dificultad: 'Difícil', pista: 'Persona con una balanza eligiendo entre dos caminos', referencia: '1 Corintios 2:14' },
 ];
 
+/* ═══ ADIVINA EL EMOJI — datos (mismo banco bíblico que Pictonary) ═══ */
+const EMOJI_ROUND_SECONDS = PICTONARY_ROUND_SECONDS; // mismo tiempo que Pictonary (90s)
+const EMOJI_POINTS = { 'Fácil': 10, 'Mediano': 15, 'Difícil': 20 };
+const EMOJI_MAP = {
+  "Belén": "⭐👶🐑",
+  "Jerusalén": "🏛️🕍🧱",
+  "Nazaret": "🔨🏠⛰️",
+  "Egipto": "🐪🔺🌴",
+  "El Mar Rojo": "🌊🚶‍♂️🌊",
+  "El río Jordán": "🏞️🕊️💧",
+  "El monte Sinaí": "⛰️📜⚡",
+  "El jardín del Edén": "🌳🍎🐍",
+  "Jericó": "🧱📯💥",
+  "El mar de Galilea": "🌊🎣⛵",
+  "El desierto": "🏜️☀️🐫",
+  "Babilonia": "🏯🌿👑",
+  "Getsemaní": "🫒🙏😰",
+  "El Gólgota": "⛰️✝️💀",
+  "Nínive": "🏙️🐟🙏",
+  "El templo de Jerusalén": "🏛️🕎🙏",
+  "Sodoma y Gomorra": "🔥🏙️☄️",
+  "Canaán": "🍇🍯🐄",
+  "Damasco": "🛣️💡✨",
+  "El monte de los Olivos": "⛰️🫒🌆",
+  "El monte Carmelo": "⛰️🔥🙏",
+  "El Mar Muerto": "🌊🧂🏊",
+  "Capernaum": "🏘️🌊🕍",
+  "Samaria": "💧🏺👩",
+  "El aposento alto": "🏠🔥🕊️",
+  "La torre de Babel": "🗼🗣️🌍",
+  "Emaús": "🚶‍♂️🚶‍♂️🛣️",
+  "El valle de Ela": "🏞️🪨🗡️",
+  "El estanque de Betesda": "🏊♿💧",
+  "El monte Ararat": "⛰️🚢🌈",
+  "Antioquía": "🏙️🐟✝️",
+  "Siquem": "💧⛰️⛰️",
+  "Cesarea": "⚓🚢🏛️",
+  "Tarsis": "⛵🌊🏃",
+  "Ur de los caldeos": "🏛️🐫🗺️",
+  "Mesopotamia": "🗺️🏞️🏞️",
+  "La isla de Patmos": "🏝️👴📜",
+  "Macedonia": "🗺️🙋‍♂️➡️",
+  "Éfeso": "🏛️🗿👸",
+  "Corinto": "🏙️🌊🌊",
+  "Filipos": "⛓️💥🔓",
+  "El monte Nebo": "⛰️👴👀",
+  "Bet-el": "🪜👼🪨",
+  "Peniel": "🤼👼🌊",
+  "Gosén": "🌿🐑🇪🇬",
+  "Hebrón": "🌳⚰️👴",
+  "Cades-barnea": "🌴🏜️🕵️",
+  "Las encinas de Mamre": "🌳👼⛺",
+  "Berea": "📜🔍🙏",
+  "Listra": "🦵🙆‍♂️✨",
+  "La región de los gadarenos": "🐖🌊⛰️",
+  "Adán": "👨🍎🌿",
+  "Eva": "👩🍎🐍",
+  "Noé": "👴🚢🌈",
+  "Abraham": "👴⭐🌌",
+  "Moisés": "👴📜🪄",
+  "David": "🧑🎵🪨",
+  "Goliat": "🦍🗡️🛡️",
+  "Jonás": "🐋🙍‍♂️🌊",
+  "José": "🧥🌈👨",
+  "María": "👩🍼💙",
+  "Jesús": "✝️👑❤️",
+  "Juan el Bautista": "🐫💧🙏",
+  "Pedro": "🎣🔑⛵",
+  "Pablo": "📜⚔️✉️",
+  "Sansón": "💪💇‍♂️🏛️",
+  "Daniel": "🦁🦁🙏",
+  "El rey Salomón": "👑⚖️💎",
+  "Judas Iscariote": "🪙💰😈",
+  "Isaac": "👦🪵🔥",
+  "Jacob": "👨🪜🐑",
+  "Esaú": "🏹🧔🦌",
+  "Rut": "👩🌾💐",
+  "Elías": "👨🔥🐦",
+  "Eliseo": "👨‍🦲🧥✨",
+  "Gedeón": "🎺🔥🏺",
+  "Josué": "🎺🧱⚔️",
+  "Caín y Abel": "👨👨🩸",
+  "Ester": "👸👑🌟",
+  "Job": "🤕🔥😔",
+  "Zaqueo": "🧍‍♂️🌳👀",
+  "Lázaro": "⚰️🧟‍♂️✨",
+  "María Magdalena": "👩😭⚰️",
+  "Marta": "👩🍳🧹",
+  "Poncio Pilato": "🧑‍⚖️🧼🤲",
+  "El rey Herodes": "👑🗡️👶",
+  "Aarón": "🧔🌿⚡",
+  "Matusalén": "👴🔢⏳",
+  "Melquisedec": "👑🍞🍷",
+  "Nabucodonosor": "👑🗿🌿",
+  "Nicodemo": "🌙💡🧑",
+  "Cornelio": "🎖️🙏👼",
+  "Bernabé": "🤝💰🌾",
+  "Esteban": "🙏🪨🪨",
+  "Timoteo": "👦✉️📖",
+  "Barrabás": "⛓️🔓😮",
+  "Caifás": "👳‍♂️😱👘",
+  "Balaam": "🧙‍♂️🫏👼",
+  "Rahab": "👩🪟🧵",
+  "Gamaliel": "👴📚👨‍🏫",
+  "Débora": "👩🌴⚔️",
+  "Isaías": "👨🔥👄",
+  "Jeremías": "😭📜⛓️",
+  "Ezequiel": "💀🦴🎡",
+  "Belsasar": "👑🍷✍️",
+  "La creación del mundo": "🌍☀️🌙✨",
+  "El arca de Noé y el diluvio": "🚢🐘🌈",
+  "David y Goliat": "🧑🪨🦍",
+  "Jonás y el gran pez": "🐋🙍‍♂️💦",
+  "Daniel en el foso de los leones": "🦁🙏🕳️",
+  "El nacimiento de Jesús": "👶⭐🐑",
+  "La última cena": "🍞🍷🙏",
+  "La crucifixión de Jesús": "✝️⛰️😢",
+  "La resurrección de Jesús": "⚰️✨🙌",
+  "Moisés y la zarza ardiente": "🌿🔥👣",
+  "El cruce del Mar Rojo": "🌊🚶‍♂️🚶‍♀️",
+  "Adán y Eva en el Edén": "👫🍎🐍",
+  "José y la túnica de colores": "🧥🌈🕳️",
+  "Los Diez Mandamientos": "📜🔟⛰️",
+  "El buen samaritano": "🤕🛣️🤝",
+  "Jesús camina sobre el agua": "🚶‍♂️🌊✨",
+  "La multiplicación de panes y peces": "🍞🐟🧺",
+  "El bautismo de Jesús": "💧🕊️☀️",
+  "Las diez plagas de Egipto": "🐸🦗🩸",
+  "El maná en el desierto": "🍚☁️🏜️",
+  "La caída de los muros de Jericó": "🧱📯💥",
+  "Sansón y Dalila": "💇‍♂️✂️😴",
+  "Los tres jóvenes en el horno de fuego": "🔥🧍‍♂️🧍‍♂️",
+  "El juicio del rey Salomón": "👑⚖️👶",
+  "Elías y los profetas de Baal": "🔥🙏⛰️",
+  "La entrada triunfal a Jerusalén": "🐴🌿👏",
+  "Jesús calma la tempestad": "⛵🌊🤚",
+  "La conversión de Pablo": "🧑‍🦯💡🛣️",
+  "El hijo pródigo": "🧑🏃‍♂️🤗",
+  "La resurrección de Lázaro": "🧟‍♂️⚰️✨",
+  "Las bodas de Caná": "💒💧🍷",
+  "La mujer samaritana en el pozo": "👩💧🧑",
+  "El sacrificio de Isaac": "🔪🐏🪵",
+  "La transfiguración de Jesús": "✨⛰️😇",
+  "Rut y Booz": "👩🌾👨",
+  "Ester salva a su pueblo": "👸👑🛡️",
+  "El sueño de la estatua de Nabucodonosor": "🗿👑🪨",
+  "La escritura en la pared": "✍️🧱👑",
+  "El becerro de oro": "🐮🟡🙇",
+  "La serpiente de bronce": "🐍🔱⬆️",
+  "Balaam y el asna que habla": "🫏🗣️👼",
+  "El valle de los huesos secos": "🦴💀✨",
+  "El hacha que flota": "🪓🌊👆",
+  "Naamán sanado en el Jordán": "🧼🌊7️⃣",
+  "Elías arrebatado en el carro de fuego": "🔥🐎🌪️",
+  "Gedeón y el vellón de lana": "🐑💧☀️",
+  "Los espías y el racimo de uvas": "🍇🧍‍♂️🧍‍♂️",
+  "Pentecostés": "🔥🕊️🗣️",
+  "Pedro liberado de la cárcel por el ángel": "⛓️👼🔓",
+  "El naufragio de Pablo": "⛵🌊🪨",
+  "La escalera de Jacob": "🪜👼☁️",
+  "Job y sus pruebas": "🤕⚡🏚️",
+  "Jacob lucha con el ángel": "🤼👼🦵",
+  "La cruz": "✝️🪵",
+  "El arca de Noé": "🚢🐘🪵",
+  "La corona de espinas": "👑🌿🩸",
+  "El pez": "🐟",
+  "La oveja / el cordero": "🐑🐏",
+  "La estrella de Belén": "⭐✨🌟",
+  "El pan": "🍞",
+  "La copa": "🍷🏆",
+  "La vara de Moisés": "🦯➡️🐍",
+  "Las tablas de los Diez Mandamientos": "🪨🔟📜",
+  "El arpa de David": "🎵🎶🎼",
+  "La honda de David": "🪨🎯💪",
+  "La espada": "⚔️🗡️",
+  "La red de pesca": "🕸️🐟🎣",
+  "La barca": "⛵🚣",
+  "El asno": "🫏",
+  "La paloma": "🕊️🌿",
+  "La lámpara": "🪔💡",
+  "El arca del pacto": "📦👼✨",
+  "El maná": "🍚☁️🏺",
+  "La túnica de colores de José": "🧥🌈",
+  "La menorá": "🕎",
+  "El altar de los sacrificios": "🔥🪨🐑",
+  "La trompeta": "📯🎺",
+  "El manto de Elías": "🧥🌊",
+  "El cayado del pastor": "🦯🐑",
+  "El velo del templo": "🧵🏛️✂️",
+  "El sepulcro": "⚰️🪨🕳️",
+  "Las treinta piezas de plata": "💰🪙🥈",
+  "El incensario": "🔥💨🏺",
+  "El yugo": "🐂🪵🐂",
+  "Los panes de la proposición": "🍞🍞🍞",
+  "El frasco de alabastro": "🧴💧✨",
+  "La piedra angular": "🧱📐🏗️",
+  "El cántaro de agua": "🏺💧",
+  "El efod": "👕✨🧵",
+  "El pectoral del sumo sacerdote": "💎🟩🟦",
+  "El Urim y el Tumim": "🪨🪨✨",
+  "El propiciatorio": "📦👼👼",
+  "El mar de bronce": "🛁🐂🐂",
+  "El vellón de Gedeón": "🐑💦",
+  "El cetro real": "👑🪄",
+  "La piedra de molino": "🪨⭕⚙️",
+  "La lanza": "🔱🩸",
+  "El odre de vino": "🍷🎒",
+  "El anillo real": "💍👑",
+  "La mirra y el incienso": "🎁💨✨",
+  "El azote": "🪢〰️",
+  "La rueca y el huso": "🧶🪡",
+  "El madero": "🪵👁️",
+  "El altar del incienso": "🏛️🔥💨",
+  "La tinaja": "🫙💧",
+  "Orar": "🙏",
+  "Caminar": "🚶‍♂️👣",
+  "Pescar": "🎣🐟",
+  "Sembrar": "🌱🌾🤲",
+  "Segar": "🌾✂️",
+  "Comer": "🍽️😋",
+  "Llorar": "😭💧",
+  "Adorar": "🙌🎶",
+  "Cantar": "🎤🎵",
+  "Bautizar": "💧🙏🌊",
+  "Predicar": "📖🗣️📢",
+  "Sanar": "🤲💚✨",
+  "Bendecir": "🙌🙏✨",
+  "Arrodillarse": "🧎‍♂️",
+  "Correr": "🏃‍♂️💨",
+  "Edificar": "🔨🧱🏗️",
+  "Cargar la cruz": "🚶‍♂️✝️",
+  "Perdonar": "🤗⛓️‍💥",
+  "Ungir": "🛢️👤✨",
+  "Ayunar": "🍽️🚫",
+  "Sacrificar": "🐑🔥",
+  "Multiplicar": "🍞➕🍞",
+  "Resucitar": "⚰️🧍‍♂️✨",
+  "Crucificar": "✝️🔨🔩",
+  "Sepultar": "⚰️🪨",
+  "Apacentar": "🐑🐑🦯",
+  "Arrepentirse": "🔄😔🙏",
+  "Confesar": "🗣️❤️🤲",
+  "Testificar": "🗣️☝️✨",
+  "Ofrendar": "🪙📦🤲",
+  "Lavar los pies": "🦶🧼💧",
+  "Partir el pan": "🍞🙌",
+  "Echar las redes": "🕸️🌊⛵",
+  "Guiar al pueblo": "👣☁️🔥",
+  "Evangelizar": "📢❤️✝️",
+  "Sanar al leproso": "🤲🩹✨",
+  "Interceder": "🙏🤲👥",
+  "Consagrar": "🛢️⛪✨",
+  "Circuncidar": "🔪👶8️⃣",
+  "Purificar": "💧🧼✨",
+  "Expiar": "🩸🪨✝️",
+  "Profetizar": "📜☁️👁️",
+  "Apedrear": "🪨🪨👤",
+  "Azotar": "🪢〰️😖",
+  "Redimir": "💰⛓️🔓",
+  "Santificar": "✨📅😇",
+  "Reconciliar": "🤝🌉",
+  "Interpretar sueños": "💭🔮🗣️",
+  "Postrarse": "🙇‍♂️⬇️",
+  "Peregrinar": "🚶‍♂️🎒🛣️",
+  "Amortajar": "🧻⚰️",
+  "Sellar el sepulcro": "🪨🔏💂",
+  "Exhortar": "🗣️☝️💪",
+  "Discernir": "⚖️🤔🛤️",
+};
+// Reusa titulo/categoría/dificultad de PICTONARY_ITEMS y le agrega los emojis.
+const EMOJI_ITEMS = PICTONARY_ITEMS.map((it) => ({ titulo: it.titulo, categoria: it.categoria, dificultad: it.dificultad, emojis: EMOJI_MAP[it.titulo] || '❓' }));
+// Elige una tarjeta al azar (sin dados), evitando las últimas jugadas.
+function emojiPickItem(history) {
+  const avoid = new Set(history || []);
+  const pool = EMOJI_ITEMS.filter((it) => !avoid.has(it.titulo));
+  const src = pool.length ? pool : EMOJI_ITEMS;
+  return src[Math.floor(Math.random() * src.length)];
+}
+
+
 const PICTONARY_COLORS = ['#0a0e2e', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#78350f'];
 
 // Dado de categoría: 5 categorías disponibles + 1 cara repetida para
@@ -17631,6 +17978,312 @@ function PictonaryController({ session, users, myId, isAdmin, SID, onClose }) {
   if (mode === 'tablero') return h(PictabTableroGame, { session, users, myId, isAdmin, SID, onClose });
   return h(PictabLibreGame, { session, users, myId, isAdmin, SID, onClose });
 }
+
+/* ═══ ADIVINA EL EMOJI — mismo banco bíblico, pero con emojis en vez de dibujo ═══ */
+// Se muestra una tarjeta con emojis que representa un lugar/personaje/historia/
+// objeto/verbo bíblico. Todos adivinan por el chat (se detecta solo, exacto o
+// 60%+ de las palabras). El primero que calza gana puntos (según dificultad).
+// Sin dados: la carta aparece sola. El admin puede pasar aunque quede tiempo,
+// y al terminar se ven los puntajes y quién ganó.
+
+// Franja de jugadores con su puntaje (para saber cuántos juegan).
+function EmojiRoster({ juegosUsers, scores, myId }) {
+  if (!juegosUsers.length) return null;
+  return h('div', { style: { width: '100%', display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 16px 8px', flexShrink: 0 } },
+    juegosUsers.map((u) => h('span', {
+      key: u.uid,
+      style: {
+        display: 'flex', alignItems: 'center', gap: 5,
+        background: u.uid === myId ? 'rgba(139,92,246,.14)' : 'rgba(10,14,46,.05)',
+        border: u.uid === myId ? '1px solid #8b5cf6' : '1px solid rgba(10,14,46,.1)',
+        borderRadius: 20, padding: '3px 10px 3px 4px', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12, color: '#0a0e2e'
+      }
+    }, h(AvatarBubble, { profile: u, size: 20 }), u.name, (scores[u.uid] ? h('span', { style: { color: '#6d28d9', fontWeight: 900, marginLeft: 2 } }, ' · ', scores[u.uid]) : null)))
+  );
+}
+
+// Modal central para TODOS: quién ganó (o se acabó el tiempo / carta saltada) +
+// la tarjeta que había que adivinar. Se auto-cierra a los 4s y tiene botón ✕.
+function EmojiResultOverlay({ result, users }) {
+  const [visible, setVisible] = useState(false);
+  const seen = useRef(null);
+  useEffect(() => {
+    const ts = result && result.ts;
+    if (!ts || ts === seen.current) return;
+    seen.current = ts;
+    setVisible(true);
+    const t = setTimeout(() => setVisible(false), (result && result.ms) || 4000);
+    return () => clearTimeout(t);
+  }, [result && result.ts]);
+  if (!visible || !result) return null;
+  const tone = result.tone;
+  const winner = result.winnerUid ? (users[result.winnerUid] || { name: result.winnerName || 'Alguien', avatar: '👤', color: '#8b5cf6' }) : null;
+  const accent = tone === 'win' ? '#15803d' : tone === 'skip' ? '#a16207' : '#dc2626';
+  const bgGrad = tone === 'win' ? 'linear-gradient(135deg,rgba(34,197,94,.16),rgba(255,255,255,.98))' : 'linear-gradient(135deg,rgba(10,14,46,.05),rgba(255,255,255,.98))';
+  const heading = tone === 'win' ? '🎉 ¡Correcto!' : tone === 'skip' ? '⏭ Carta saltada' : '⏱ ¡Se acabó el tiempo!';
+  return h('div', {
+    onClick: (e) => { if (e.target === e.currentTarget) setVisible(false); },
+    style: { position: 'fixed', inset: 0, zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'rgba(10,14,46,.45)', backdropFilter: 'blur(4px)' }
+  },
+    tone === 'win' ? h(Confetti, null) : null,
+    h('div', {
+      style: {
+        position: 'relative', width: '100%', maxWidth: 420, background: bgGrad, borderRadius: 24,
+        border: `3px solid ${accent}`, boxShadow: '0 30px 70px rgba(10,14,46,.4)', padding: '26px 24px 24px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center', animation: 'mr-modalIn .35s ease'
+      }
+    },
+      h('button', {
+        onClick: () => setVisible(false), title: 'Cerrar',
+        style: { position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'rgba(10,14,46,.1)', color: '#0a0e2e', fontSize: 15, cursor: 'pointer', lineHeight: 1 }
+      }, '✕'),
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: accent, textTransform: 'uppercase', letterSpacing: '.05em' } }, heading),
+      winner ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(21,128,61,.1)', border: '1px solid rgba(21,128,61,.3)', borderRadius: 40, padding: '6px 16px 6px 6px' } },
+        h(AvatarBubble, { profile: winner, size: 34 }),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 19, color: '#15803d' } }, winner.name, ' ¡gana', result.pts ? ` +${result.pts}` : '', '!'),
+      ) : null,
+      winner && result.near ? h('div', { style: { fontSize: 12, color: 'var(--muted)', fontStyle: 'italic', marginTop: -6 } }, '(se acercó lo suficiente)') : null,
+      h('div', { style: { fontSize: 46, lineHeight: 1.1, letterSpacing: 2 } }, result.emojis || '❓'),
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.16em' } }, 'La tarjeta era'),
+        h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 26, color: '#0a0e2e' } }, result.titulo || '—'),
+      ),
+    ),
+  );
+}
+
+// Tarjeta grande de emojis (pantalla de juego).
+function EmojiCard({ item, dim }) {
+  if (!item) return null;
+  const difColor = { 'Fácil': '#15803d', 'Mediano': '#c2410c', 'Difícil': '#dc2626' }[item.dificultad] || '#a16207';
+  return h('div', {
+    style: {
+      width: '100%', maxWidth: 520, margin: '0 auto', background: 'linear-gradient(135deg,#fff,#f8f5ef)',
+      border: '3px solid #8b5cf6', borderRadius: 26, padding: '22px 20px 26px', boxShadow: '0 20px 50px rgba(139,92,246,.2)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, opacity: dim ? .55 : 1, transition: 'opacity .2s'
+    }
+  },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
+      h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '.1em', background: 'rgba(139,92,246,.12)', border: '1px solid rgba(139,92,246,.3)', borderRadius: 20, padding: '3px 12px' } }, item.categoria),
+      h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: difColor, textTransform: 'uppercase', letterSpacing: '.1em', background: `${difColor}1a`, borderRadius: 20, padding: '3px 12px' } }, item.dificultad),
+    ),
+    h('div', { style: { fontSize: 'clamp(46px, 12vw, 84px)', lineHeight: 1.15, letterSpacing: 4, textAlign: 'center' } }, item.emojis || '❓'),
+    h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '¿Qué representan estos emojis?'),
+  );
+}
+
+/* ── EmojiController — el juego completo ── */
+function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
+  const game = session?.emoji || {};
+  const gState = game.gameState;
+  const scores = game.scores || {};
+  const currentItem = game.currentItem;
+  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => effectiveZone(u) === 'juegos' || (isAdmin && uid === myId)).map(([uid, u]) => ({ uid, ...u }));
+  const { remaining, over } = useTimer(gState === 'playing' ? game.roundStartTime : null, EMOJI_ROUND_SECONDS);
+  const [chatText, setChatText] = useState('');
+  const chatListRef = useRef(null);
+  const lastCheckedRef = useRef(null);
+  const timeoutFiredRef = useRef(null);
+  const isMobile = useIsMobile();
+  const ref = () => db.ref(`sessions/${SID}/emoji`);
+
+  const chat = game.chat ? Object.entries(game.chat).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0)) : [];
+
+  useEffect(() => {
+    const el = chatListRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    if (!nearBottom) return;
+    const t = setTimeout(() => { if (chatListRef.current) chatListRef.current.scrollTop = chatListRef.current.scrollHeight; }, 60);
+    return () => clearTimeout(t);
+  }, [chat.length]);
+
+  const nuevaCarta = async () => {
+    const item = emojiPickItem(game.history);
+    const history = [...(game.history || []), item.titulo].slice(-12);
+    await ref().update({ gameState: 'playing', currentItem: item, roundStartTime: Date.now(), history, chat: null, solvedBy: null, result: null });
+  };
+
+  const terminarRonda = async (winnerUid, winnerName, near, skipped) => {
+    const pts = EMOJI_POINTS[currentItem?.dificultad] || 10;
+    const newScores = Object.assign({}, scores);
+    let result;
+    if (winnerUid) {
+      newScores[winnerUid] = (newScores[winnerUid] || 0) + pts;
+      result = { tone: 'win', winnerUid, winnerName: winnerName || users[winnerUid]?.name || 'Alguien', titulo: currentItem?.titulo, emojis: currentItem?.emojis, near: !!near, pts, ts: Date.now(), ms: 4000 };
+    } else if (skipped) {
+      result = { tone: 'skip', titulo: currentItem?.titulo, emojis: currentItem?.emojis, ts: Date.now(), ms: 4000 };
+    } else {
+      result = { tone: 'timeout', titulo: currentItem?.titulo, emojis: currentItem?.emojis, ts: Date.now(), ms: 4000 };
+    }
+    await ref().update({ gameState: 'reveal', scores: newScores, result, roundStartTime: null });
+  };
+
+  // Sólo un cliente adjudica: se gana con un lock por transacción.
+  const resolver = async (winnerUid, winnerName, near) => {
+    const token = `${winnerUid || 'x'}|${Date.now()}|${Math.random()}`;
+    const lock = await ref().child('solvedBy').transaction((cur) => cur || token);
+    if (!lock.committed || lock.snapshot.val() !== token) return;
+    await terminarRonda(winnerUid, winnerName, near, false);
+  };
+
+  const saltar = async () => {
+    const token = `skip|${Date.now()}|${Math.random()}`;
+    const lock = await ref().child('solvedBy').transaction((cur) => cur || token);
+    if (!lock.committed || lock.snapshot.val() !== token) return;
+    await terminarRonda(null, null, false, true);
+  };
+
+  const finalizar = async () => { await saveGameHistory(SID, scores, users); await ref().update({ gameState: 'finished', result: null }); };
+
+  const cerrar = async () => {
+    if (onClose) onClose();
+    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    await db.ref(`sessions/${SID}/emoji`).remove();
+  };
+
+  const enviarGuess = () => {
+    const t = chatText.trim();
+    if (!t || !SID || gState !== 'playing') return;
+    const me = users[myId] || {};
+    db.ref(`sessions/${SID}/emoji/chat`).push({ uid: myId, name: me.name || 'Anon', avatar: me.avatar || '👤', color: me.color || '#8b5cf6', text: t, ts: Date.now() }).catch(() => {});
+    setChatText('');
+  };
+
+  // Detección automática de respuesta exacta.
+  useEffect(() => {
+    if (gState !== 'playing' || !currentItem) return;
+    const last = chat[chat.length - 1];
+    if (!last || last.id === lastCheckedRef.current) return;
+    lastCheckedRef.current = last.id;
+    if (pictabNormalize(last.text) === pictabNormalize(currentItem.titulo)) resolver(last.uid, last.name, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat.length, gState, currentItem?.titulo]);
+
+  // Al acabarse el tiempo: gana quien se acercó al 60%+, o queda sin ganador.
+  useEffect(() => {
+    if (gState !== 'playing' || !over || !game.roundStartTime || !currentItem) return;
+    if (timeoutFiredRef.current === game.roundStartTime) return;
+    timeoutFiredRef.current = game.roundStartTime;
+    let best = null;
+    chat.forEach((m) => { const r = pictabWordMatchRatio(currentItem.titulo, m.text); if (r >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || r > best.ratio)) best = { ratio: r, m }; });
+    if (best) resolver(best.m.uid, best.m.name, true);
+    else resolver(null, null, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gState, over, game.roundStartTime]);
+
+  const myZone = effectiveZone(users[myId]);
+  if (myZone !== 'juegos' && !isAdmin) return null;
+
+  const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+  const headerBar = h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
+    h('span', { style: { fontSize: 22 } }, '🧩'),
+    h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Adivina el Emoji'),
+    isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
+  );
+  const overlay = h(EmojiResultOverlay, { result: game.result, users });
+  const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' } })).sort((a, b) => b.pts - a.pts);
+
+  /* ── Resultados finales ── */
+  if (gState === 'finished') {
+    return h('div', { style: wrapStyle },
+      headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
+        h(Confetti, null),
+        h('div', { style: { fontSize: 54 } }, '🏆'),
+        h('h2', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 30, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '.06em', margin: 0, textAlign: 'center' } }, '¡Adivina el Emoji — Resultados!'),
+        ranking.length === 0 ? h('div', { style: { color: 'var(--muted)', fontSize: 14 } }, 'No hubo puntajes esta vez.') : h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 } },
+          ranking.map((r, i) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: i === 0 ? 'linear-gradient(135deg,rgba(139,92,246,.22),rgba(139,92,246,.05))' : 'rgba(10,14,46,.04)', border: i === 0 ? '2px solid #8b5cf6' : '1px solid rgba(10,14,46,.1)' } },
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: i === 0 ? '#6d28d9' : '#0a0e2e', width: 36, textAlign: 'center' } }, i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`),
+            h(AvatarBubble, { profile: r.user, size: 40 }),
+            h('div', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 18, color: '#0a0e2e' } }, r.user.name),
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: '#6d28d9' } }, r.pts, ' pts'),
+          )),
+        ),
+        isAdmin ? h('button', { onClick: cerrar, style: { marginTop: 14, background: '#8b5cf6', border: 'none', borderRadius: 14, padding: '14px 32px', color: '#fff', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer' } }, 'Cerrar juego') : null,
+      ),
+    );
+  }
+
+  /* ── Lobby / entre cartas (idle o reveal) ── */
+  if (!gState || gState === 'idle' || gState === 'reveal') {
+    const empezado = gState === 'reveal' || ranking.length > 0 || !!game.history;
+    return h('div', { style: wrapStyle },
+      headerBar, h(EmojiRoster, { juegosUsers, scores, myId }), overlay,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16, overflowY: 'auto' } },
+        gState === 'reveal' && game.result ? h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 18, padding: '14px 22px', boxShadow: '0 10px 26px rgba(10,14,46,.08)' } },
+          h('span', { style: { fontSize: 34, letterSpacing: 2 } }, game.result.emojis || '❓'),
+          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.14em' } }, 'Era'),
+          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: '#0a0e2e' } }, game.result.titulo || '—'),
+        ) : h('div', { style: { fontSize: 46 } }, '🧩'),
+        !empezado ? h('p', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13.5, maxWidth: 360, lineHeight: 1.5 } }, 'Aparece una tarjeta de emojis que representa un lugar, personaje, historia, objeto o acción bíblica. ¡Escribe tu respuesta en el chat! El primero que acierte gana los puntos.') : null,
+        ranking.length > 0 ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 6 } },
+          ranking.map((r) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 12, background: 'rgba(10,14,46,.04)' } },
+            h(AvatarBubble, { profile: r.user, size: 28 }),
+            h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 14, color: '#0a0e2e' } }, r.user.name),
+            h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 14, color: '#6d28d9' } }, r.pts),
+          )),
+        ) : null,
+        isAdmin ? h('div', { style: { width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10 } },
+          h('button', { onClick: nuevaCarta, style: { padding: '15px 20px', background: '#8b5cf6', border: 'none', borderRadius: 14, color: '#fff', fontWeight: 900, fontSize: 15, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 10px 24px rgba(139,92,246,.35)' } }, empezado ? '▶ Siguiente carta' : '▶ Comenzar juego'),
+          ranking.length > 0 ? h('button', { onClick: finalizar, style: { background: 'rgba(139,92,246,.14)', border: '1px solid rgba(139,92,246,.4)', borderRadius: 14, padding: '12px', color: '#6d28d9', fontWeight: 800, fontSize: 13, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏆 Terminar y ver resultados') : null,
+        ) : h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 14, maxWidth: 300 } }, gState === 'reveal' ? 'Esperando la siguiente carta… ' : 'Esperando que el admin comience… ', h(Spinner, { size: 22 })),
+      ),
+    );
+  }
+
+  /* ── Jugando: tarjeta de emojis + chat ── */
+  const timeColor = over ? '#dc2626' : remaining < 20 ? '#c2410c' : '#6d28d9';
+  return h('div', { style: wrapStyle },
+    headerBar, h(EmojiRoster, { juegosUsers, scores, myId }), overlay,
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', flexWrap: 'wrap', flexShrink: 0 } },
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 32, color: timeColor, lineHeight: 1, minWidth: 64 } }, formatTime(Math.max(0, remaining))),
+      over ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', background: 'rgba(239,68,68,.1)', padding: '5px 12px', borderRadius: 20 } }, '⏱ Tiempo terminado') : h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '¡Escribe tu respuesta en el chat!'),
+    ),
+    h('div', { style: { flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, padding: '4px 16px 16px', overflow: 'auto', minHeight: 0 } },
+      h('div', { style: { flex: isMobile ? 'none' : 2, display: 'flex', flexDirection: 'column', gap: 14, minHeight: 0 } },
+        h(EmojiCard, { item: currentItem, dim: over }),
+        isAdmin ? h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
+          h('button', { onClick: saltar, style: { flex: 1, minWidth: 130, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '11px', color: '#0a0e2e', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar / revelar'),
+          h('button', { onClick: finalizar, style: { flex: 1, minWidth: 130, background: 'rgba(139,92,246,.14)', border: '1px solid rgba(139,92,246,.4)', borderRadius: 12, padding: '11px', color: '#6d28d9', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏁 Terminar juego'),
+        ) : null,
+        isAdmin && juegosUsers.length > 0 ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 10 } },
+          h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, '¿Adivinaron en voz alta? Toca quién fue (el chat ya detecta las respuestas escritas):'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
+            juegosUsers.map((u) => h('button', { key: u.uid, onClick: () => resolver(u.uid, u.name, false), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '5px 10px 5px 5px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12.5, color: '#0a0e2e' } },
+              h(AvatarBubble, { profile: u, size: 22 }), u.name,
+            )),
+          ),
+        ) : null,
+      ),
+      h('div', { style: { flex: isMobile ? 'none' : '0 0 320px', display: 'flex', flexDirection: 'column', flexShrink: 0, height: isMobile ? 260 : 'auto', background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden' } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
+          h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '💬 Adivina aquí'),
+        ),
+        h('div', { ref: chatListRef, style: { flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 } },
+          chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá — como en la tarjeta (no importan tildes ni mayúsculas).') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
+            h(AvatarBubble, { profile: m, size: 20 }),
+            h('div', null,
+              h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11.5, color: m.color || '#0a0e2e' } }, m.name, ' '),
+              h('span', { style: { fontSize: 13, color: '#0a0e2e' } }, m.text),
+            ),
+          )),
+        ),
+        h('div', { style: { display: 'flex', gap: 6, padding: 8, borderTop: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
+          h('input', {
+            value: chatText, onChange: (e) => setChatText(e.target.value),
+            onKeyDown: (e) => { if (e.key === 'Enter') enviarGuess(); },
+            placeholder: over ? 'Tiempo terminado…' : 'Escribe tu respuesta…',
+            disabled: over,
+            style: { flex: 1, border: '1px solid rgba(10,14,46,.15)', borderRadius: 20, padding: '8px 14px', fontSize: 13.5, fontFamily: 'inherit' }
+          }),
+          h('button', { onClick: enviarGuess, disabled: over, style: { border: 'none', background: over ? 'rgba(139,92,246,.3)' : '#8b5cf6', color: '#fff', borderRadius: 20, padding: '8px 16px', fontWeight: 800, fontSize: 13, cursor: over ? 'not-allowed' : 'pointer' } }, 'Enviar'),
+        ),
+      ),
+    ),
+  );
+}
+
 
 /* ── CountdownTimer  (19838-19871) ── */
 function CountdownTimer({
@@ -19162,6 +19815,7 @@ class Component extends React.Component {
       if (sess.quiensoy?.active) return h(QuienSoyController, Object.assign({}, cp, { onEndQuienSoy: () => db.ref(`sessions/${this.SID}/quiensoy`).remove() }));
       if (sess.dibuja?.active)   return h(DibujaController, Object.assign({}, cp, { onEndDibuja: () => db.ref(`sessions/${this.SID}/dibuja`).remove() }));
       if (sess.pictonary?.active) return h(PictonaryController, Object.assign({}, cp, { onEndPictonary: () => db.ref(`sessions/${this.SID}/pictonary`).remove() }));
+      if (sess.emoji?.active) return h(EmojiController, Object.assign({}, cp, { onEndEmoji: () => db.ref(`sessions/${this.SID}/emoji`).remove() }));
       return h(KahootController, Object.assign({}, cp, {
         gameHistory: this.state.gameHistory || {},
         onEndJuegos: () => this._endRoomActivity('juegos')
