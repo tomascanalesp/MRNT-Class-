@@ -18910,7 +18910,8 @@ function GuideModal({ onClose }) {
 }
 
 function LoginScreen({ onSignedIn }) {
-  const [mode, setMode] = React.useState('signin');
+  // 'choose' = pantalla inicial con dos botones; luego 'signin' o 'signup'.
+  const [mode, setMode] = React.useState('choose');
   // Signin: un solo campo que acepta correo O apodo.
   const [loginId, setLoginId] = React.useState('');
   // Signup: nombre completo + apodo son obligatorios, el correo es opcional.
@@ -19026,8 +19027,13 @@ function LoginScreen({ onSignedIn }) {
           h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 9, letterSpacing: '.2em', color: 'var(--ink-soft)' } }, 'IGLESIA ADVENTISTA · LAS CONDES')
         )
       ),
-      h('div', { style: { fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--ink)', marginBottom: 4 } }, mode === 'signin' ? 'Inicia sesión' : 'Crea tu cuenta'),
-      h('div', { style: { fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 } }, mode === 'signin' ? 'Entra a la sala 3D con tu correo o apodo y tu contraseña.' : 'Una sola cuenta para todas las clases. El correo es opcional.'),
+      h('div', { style: { fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--ink)', marginBottom: 4 } }, mode === 'choose' ? '¡Te damos la bienvenida!' : mode === 'signin' ? 'Inicia sesión' : 'Crea tu cuenta'),
+      h('div', { style: { fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 } }, mode === 'choose' ? '¿Ya tienes una cuenta o es tu primera vez aquí?' : mode === 'signin' ? 'Entra a la sala 3D con tu correo o apodo y tu contraseña.' : 'Una sola cuenta para todas las clases. El correo es opcional.'),
+      mode === 'choose' ? h(React.Fragment, null,
+        h('button', { type: 'button', onClick: () => { setMode('signin'); setErr(''); setInfo(''); }, style: { width: '100%', padding: 14, marginBottom: 10, borderRadius: 'var(--r-pill)', border: 'none', background: 'var(--yellow)', color: 'var(--navy-900)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '.05em', textTransform: 'uppercase', boxShadow: '0 0 24px rgba(255,208,0,.35)' } }, 'Ya tengo cuenta · Entrar →'),
+        h('button', { type: 'button', onClick: () => { setMode('signup'); setErr(''); setInfo(''); }, style: { width: '100%', padding: 14, borderRadius: 'var(--r-pill)', border: '2px solid #fb923c', background: 'rgba(251,146,60,.08)', color: '#c2410c', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '.05em', textTransform: 'uppercase' } }, '✨ Crear cuenta nueva'),
+        h('div', { style: { fontSize: 12, color: 'var(--ink-soft)', marginTop: 14, textAlign: 'center', lineHeight: 1.5 } }, 'Si es tu primera vez en la sala, primero debes ', h('strong', { style: { color: '#c2410c' } }, 'crear una cuenta'), '.')
+      ) : null,
       mode === 'signup' ? h('div', { style: { marginBottom: 14 } },
         h('label', { style: labelStyle }, 'Tu grupo'),
         h('div', { style: { display: 'flex', gap: 8 } },
@@ -19035,7 +19041,7 @@ function LoginScreen({ onSignedIn }) {
           h('button', { type: 'button', onClick: () => setKlass('ja'), style: { flex: 1, padding: 10, borderRadius: 'var(--r-sm)', border: klass === 'ja' ? '2px solid var(--yellow)' : '1px solid rgba(10,14,46,.12)', background: klass === 'ja' ? 'rgba(255,208,0,.12)' : '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', color: 'var(--ink)' } }, '🔥 JA')
         )
       ) : null,
-      mode === 'signup' ? h(React.Fragment, null,
+      mode === 'choose' ? null : mode === 'signup' ? h(React.Fragment, null,
         h('label', { style: labelStyle }, 'Nombre completo'),
         h('input', { type: 'text', value: fullName, required: true, autoComplete: 'name', onChange: (e) => setFullName(e.target.value), style: fieldStyle }),
         h('label', { style: labelStyle }, 'Apodo'),
@@ -19048,13 +19054,13 @@ function LoginScreen({ onSignedIn }) {
         h('label', { style: labelStyle }, 'Correo o apodo'),
         h('input', { type: 'text', value: loginId, required: true, autoComplete: 'username', onChange: (e) => setLoginId(e.target.value), style: fieldStyle })
       ),
-      h('label', { style: labelStyle }, 'Contraseña'),
-      h('input', { type: 'password', value: pwd, required: true, autoComplete: mode === 'signin' ? 'current-password' : 'new-password', onChange: (e) => setPwd(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 14, boxSizing: 'border-box' } }),
+      mode !== 'choose' ? h('label', { style: labelStyle }, 'Contraseña') : null,
+      mode !== 'choose' ? h('input', { type: 'password', value: pwd, required: true, autoComplete: mode === 'signin' ? 'current-password' : 'new-password', onChange: (e) => setPwd(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 14, boxSizing: 'border-box' } }) : null,
       err ? h('div', { style: { background: 'rgba(239,68,68,.1)', color: '#dc2626', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 } }, '⚠️ ' + err) : null,
       info ? h('div', { style: { background: 'rgba(16,185,129,.1)', color: '#047857', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, lineHeight: 1.4 } }, '✉️ ' + info) : null,
-      h('button', { type: 'submit', disabled: busy, style: { width: '100%', padding: 13, borderRadius: 'var(--r-pill)', border: 'none', background: busy ? 'var(--cream-300)' : 'var(--yellow)', color: 'var(--navy-900)', cursor: busy ? 'default' : 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '.06em', textTransform: 'uppercase', boxShadow: busy ? 'none' : '0 0 24px rgba(255,208,0,.35)' } }, busy ? 'Un momento…' : (mode === 'signin' ? 'Entrar →' : 'Crear cuenta →')),
+      mode !== 'choose' ? h('button', { type: 'submit', disabled: busy, style: { width: '100%', padding: 13, borderRadius: 'var(--r-pill)', border: 'none', background: busy ? 'var(--cream-300)' : 'var(--yellow)', color: 'var(--navy-900)', cursor: busy ? 'default' : 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '.06em', textTransform: 'uppercase', boxShadow: busy ? 'none' : '0 0 24px rgba(255,208,0,.35)' } }, busy ? 'Un momento…' : (mode === 'signin' ? 'Entrar →' : 'Crear cuenta →')) : null,
       mode === 'signin' ? h('button', { type: 'button', onClick: resetPwd, disabled: busy, style: { width: '100%', marginTop: 8, padding: 8, border: 'none', background: 'transparent', cursor: busy ? 'default' : 'pointer', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '.04em', textTransform: 'uppercase', textDecoration: 'underline', textUnderlineOffset: 3 } }, '¿Olvidaste tu contraseña?') : null,
-      h('button', { type: 'button', onClick: () => { setMode(mode === 'signin' ? 'signup' : 'signin'); setErr(''); setInfo(''); }, style: { width: '100%', marginTop: 10, padding: 9, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: '.04em', textTransform: 'uppercase' } }, mode === 'signin' ? 'No tengo cuenta · Crear una' : 'Ya tengo cuenta · Entrar')
+      mode !== 'choose' ? h('button', { type: 'button', onClick: () => { setMode('choose'); setErr(''); setInfo(''); }, style: { width: '100%', marginTop: 10, padding: 9, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: '.04em', textTransform: 'uppercase' } }, '← Volver') : null
     )
   );
 }
