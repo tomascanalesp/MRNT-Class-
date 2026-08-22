@@ -18104,7 +18104,7 @@ function EmojiRoster({ juegosUsers, scores, myId }) {
 
 // Modal central para TODOS: quién ganó (o se acabó el tiempo / carta saltada) +
 // la tarjeta que había que adivinar. Se auto-cierra a los 4s y tiene botón ✕.
-function EmojiResultOverlay({ result, users }) {
+function EmojiResultOverlay({ result }) {
   const [visible, setVisible] = useState(false);
   const seen = useRef(null);
   useEffect(() => {
@@ -18117,7 +18117,7 @@ function EmojiResultOverlay({ result, users }) {
   }, [result && result.ts]);
   if (!visible || !result) return null;
   const tone = result.tone;
-  const winner = result.winnerUid ? (users[result.winnerUid] || { name: result.winnerName || 'Alguien', avatar: '👤', color: '#8b5cf6' }) : null;
+  const winner = result.winnerUid ? { name: result.winnerName || 'Alguien', avatar: result.winnerAvatar || '👤', color: result.winnerColor || '#8b5cf6' } : null;
   const accent = tone === 'win' ? '#15803d' : tone === 'skip' ? '#a16207' : '#dc2626';
   const bgGrad = tone === 'win' ? 'linear-gradient(135deg,rgba(34,197,94,.16),rgba(255,255,255,.98))' : 'linear-gradient(135deg,rgba(10,14,46,.05),rgba(255,255,255,.98))';
   const heading = tone === 'win' ? '🎉 ¡Correcto!' : tone === 'skip' ? '⏭ Carta saltada' : '⏱ ¡Se acabó el tiempo!';
@@ -18188,6 +18188,23 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
   const ref = () => db.ref(`sessions/${SID}/emoji`);
 
   const chat = game.chat ? Object.entries(game.chat).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0)) : [];
+  const players = game.players || {};
+
+  // Identidad robusta: primero lo guardado en players/ (se persiste al ganar),
+  // luego el diccionario de presencia, y por último un genérico. Así los nombres
+  // salen bien aunque la presencia de alguien no haya sincronizado.
+  const idOf = (uid) => players[uid] || users[uid] || { name: 'Jugador', avatar: '👤', color: '#8b5cf6' };
+
+  // Participantes elegibles para puntos: los de la zona de juegos + cualquiera
+  // que haya escrito en el chat (prueba de que está jugando) + los que ya tienen
+  // puntaje. No depende de que la presencia haya sincronizado en este cliente.
+  const participants = (() => {
+    const map = {};
+    juegosUsers.forEach((u) => { map[u.uid] = { uid: u.uid, name: u.name, avatar: u.avatar, color: u.color }; });
+    chat.forEach((m) => { if (m.uid && !map[m.uid]) map[m.uid] = { uid: m.uid, name: m.name || 'Jugador', avatar: m.avatar || '👤', color: m.color || '#8b5cf6' }; });
+    Object.keys(scores).forEach((uid) => { if (!map[uid]) { const p = idOf(uid); map[uid] = { uid, name: p.name, avatar: p.avatar, color: p.color }; } });
+    return Object.values(map);
+  })();
 
   useEffect(() => {
     const el = chatListRef.current;
@@ -18206,37 +18223,44 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
 
   const revelarPista = () => ref().update({ hintShown: true });
 
-  const terminarRonda = async (winnerUid, winnerName, near, skipped) => {
+  // winner = { uid, name, avatar, color } | null. Guarda la identidad del
+  // ganador en players/ para que los resultados no dependan de la presencia.
+  const terminarRonda = async (winner, near, skipped) => {
     const pts = EMOJI_POINTS[currentItem?.dificultad] || 10;
     const newScores = Object.assign({}, scores);
+    const updates = { gameState: 'reveal', roundStartTime: null };
     let result;
-    if (winnerUid) {
-      newScores[winnerUid] = (newScores[winnerUid] || 0) + pts;
-      result = { tone: 'win', winnerUid, winnerName: winnerName || users[winnerUid]?.name || 'Alguien', titulo: currentItem?.titulo, emojis: currentItem?.emojis, near: !!near, pts, ts: Date.now(), ms: 4000 };
+    if (winner && winner.uid) {
+      newScores[winner.uid] = (newScores[winner.uid] || 0) + pts;
+      const prof = { name: winner.name || 'Jugador', avatar: winner.avatar || '👤', color: winner.color || '#8b5cf6' };
+      updates['players/' + winner.uid] = prof;
+      result = { tone: 'win', winnerUid: winner.uid, winnerName: prof.name, winnerAvatar: prof.avatar, winnerColor: prof.color, titulo: currentItem?.titulo, emojis: currentItem?.emojis, near: !!near, pts, ts: Date.now(), ms: 4000 };
     } else if (skipped) {
       result = { tone: 'skip', titulo: currentItem?.titulo, emojis: currentItem?.emojis, ts: Date.now(), ms: 4000 };
     } else {
       result = { tone: 'timeout', titulo: currentItem?.titulo, emojis: currentItem?.emojis, ts: Date.now(), ms: 4000 };
     }
-    await ref().update({ gameState: 'reveal', scores: newScores, result, roundStartTime: null });
+    updates.scores = newScores;
+    updates.result = result;
+    await ref().update(updates);
   };
 
   // Sólo un cliente adjudica: se gana con un lock por transacción.
-  const resolver = async (winnerUid, winnerName, near) => {
-    const token = `${winnerUid || 'x'}|${Date.now()}|${Math.random()}`;
+  const resolver = async (winner, near) => {
+    const token = `${(winner && winner.uid) || 'x'}|${Date.now()}|${Math.random()}`;
     const lock = await ref().child('solvedBy').transaction((cur) => cur || token);
     if (!lock.committed || lock.snapshot.val() !== token) return;
-    await terminarRonda(winnerUid, winnerName, near, false);
+    await terminarRonda(winner, near, false);
   };
 
   const saltar = async () => {
     const token = `skip|${Date.now()}|${Math.random()}`;
     const lock = await ref().child('solvedBy').transaction((cur) => cur || token);
     if (!lock.committed || lock.snapshot.val() !== token) return;
-    await terminarRonda(null, null, false, true);
+    await terminarRonda(null, false, true);
   };
 
-  const finalizar = async () => { await saveGameHistory(SID, scores, users); await ref().update({ gameState: 'finished', result: null }); };
+  const finalizar = async () => { await saveGameHistory(SID, scores, Object.assign({}, users, players)); await ref().update({ gameState: 'finished', result: null }); };
 
   const cerrar = async () => {
     if (onClose) onClose();
@@ -18258,7 +18282,7 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
     const last = chat[chat.length - 1];
     if (!last || last.id === lastCheckedRef.current) return;
     lastCheckedRef.current = last.id;
-    if (pictabNormalize(last.text) === pictabNormalize(currentItem.titulo)) resolver(last.uid, last.name, false);
+    if (pictabNormalize(last.text) === pictabNormalize(currentItem.titulo)) resolver({ uid: last.uid, name: last.name, avatar: last.avatar, color: last.color }, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat.length, gState, currentItem?.titulo]);
 
@@ -18272,8 +18296,8 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
     timeoutFiredRef.current = game.roundStartTime;
     let best = null;
     chat.forEach((m) => { const r = pictabWordMatchRatio(currentItem.titulo, m.text); if (r >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || r > best.ratio)) best = { ratio: r, m }; });
-    if (best) resolver(best.m.uid, best.m.name, true);
-    else resolver(null, null, false);
+    if (best) resolver({ uid: best.m.uid, name: best.m.name, avatar: best.m.avatar, color: best.m.color }, true);
+    else resolver(null, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gState, over, game.roundStartTime]);
 
@@ -18286,8 +18310,8 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
     h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Adivina el Emoji'),
     isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
   );
-  const overlay = h(EmojiResultOverlay, { result: game.result, users });
-  const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: users[uid] || { name: '?', avatar: '👤', color: '#8b5cf6' } })).sort((a, b) => b.pts - a.pts);
+  const overlay = h(EmojiResultOverlay, { result: game.result });
+  const ranking = Object.entries(scores).map(([uid, pts]) => ({ uid, pts, user: idOf(uid) })).sort((a, b) => b.pts - a.pts);
 
   /* ── Resultados finales ── */
   if (gState === 'finished') {
@@ -18314,7 +18338,7 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
   if (!gState || gState === 'idle' || gState === 'reveal') {
     const empezado = gState === 'reveal' || ranking.length > 0 || !!game.history;
     return h('div', { style: wrapStyle },
-      headerBar, h(EmojiRoster, { juegosUsers, scores, myId }), overlay,
+      headerBar, h(EmojiRoster, { juegosUsers: participants, scores, myId }), overlay,
       h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16, overflowY: 'auto' } },
         gState === 'reveal' && game.result ? h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 18, padding: '14px 22px', boxShadow: '0 10px 26px rgba(10,14,46,.08)' } },
           h('span', { style: { fontSize: 34, letterSpacing: 2 } }, game.result.emojis || '❓'),
@@ -18360,10 +18384,10 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
           h('button', { onClick: saltar, style: { flex: 1, minWidth: 130, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '11px', color: '#0a0e2e', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar / revelar'),
           h('button', { onClick: finalizar, style: { flex: 1, minWidth: 130, background: 'rgba(139,92,246,.14)', border: '1px solid rgba(139,92,246,.4)', borderRadius: 12, padding: '11px', color: '#6d28d9', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏁 Terminar juego'),
         ) : null,
-        isAdmin && juegosUsers.length > 0 ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 10 } },
+        isAdmin && participants.length > 0 ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 10 } },
           h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, '¿Adivinaron en voz alta? Toca quién fue (el chat ya detecta las respuestas escritas):'),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
-            juegosUsers.map((u) => h('button', { key: u.uid, onClick: () => resolver(u.uid, u.name, false), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '5px 10px 5px 5px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12.5, color: '#0a0e2e' } },
+            participants.map((u) => h('button', { key: u.uid, onClick: () => resolver({ uid: u.uid, name: u.name, avatar: u.avatar, color: u.color }, false), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '5px 10px 5px 5px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12.5, color: '#0a0e2e' } },
               h(AvatarBubble, { profile: u, size: 22 }), u.name,
             )),
           ),
@@ -19157,6 +19181,23 @@ class Component extends React.Component {
         name: merged.name,
         email: user.email || ''
       }).catch((e) => { console.error('[MRNT] No se pudo marcar asistencia:', e); });
+    }).catch((e) => {
+      // Si falla leer el perfil, igual registramos una presencia mínima para
+      // que el usuario aparezca en la sala (si no, otros no lo verían nunca).
+      console.error('[MRNT] No se pudo leer profiles/' + this.uid + ' — registro presencia mínima:', e);
+      if (this.screenMode) return;
+      const myMe = this.state.chars.find((c) => c.id === 'me') || {};
+      const minimal = {
+        id: this.uid, name: user.email?.split('@')[0] || 'Anon',
+        emoji: myMe.emoji || '🌟', color: myMe.color || '#ffd000',
+        bodyColor: myMe.bodyColor || '#ffd000', armColor: myMe.armColor || '#ffd000',
+        legColor: myMe.legColor || '#2a2f52', accessory: myMe.accessory || 'none',
+        photo: myMe.photo || null, x: myMe.x ?? 8, y: myMe.y ?? 6.5, room: null
+      };
+      meRef.set({ ...minimal, joinedAt: firebase.database.ServerValue.TIMESTAMP }).catch((err) => {
+        console.error('[MRNT] No se pudo registrar la presencia mínima en users/' + this.SID + '/' + this.uid + ':', err);
+      });
+      meRef.onDisconnect().remove();
     });
     // Listener: usuarios en la sesión → state.chars (mantiene a 'me' como id local).
     this._usersRef = window.db.ref(`users/${this.SID}`);
