@@ -18829,6 +18829,12 @@ const AUTH_ERRORS = {
   'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos',
   'auth/invalid-credential': 'Correo, apodo o contraseña incorrectos',
   'auth/network-request-failed': 'Sin conexión. Revisa tu internet',
+  'auth/operation-not-allowed': 'La creación de cuentas con correo/contraseña está deshabilitada en Firebase. Avísale al admin.',
+  'auth/admin-restricted-operation': 'No se pueden crear cuentas ahora mismo. Avísale al admin.',
+  'auth/missing-password': 'Escribe una contraseña (mínimo 6 caracteres)',
+  'auth/missing-email': 'Escribe un correo válido',
+  'auth/internal-error': 'Error interno de Firebase. Intenta de nuevo en un momento.',
+  'PERMISSION_DENIED': 'Permiso denegado por la base de datos. Avísale al admin (reglas de Firebase).',
   'mrnt/nickname-not-found': 'No existe una cuenta con ese apodo',
   'mrnt/nickname-taken': 'Ese apodo ya está en uso, elige otro',
   'mrnt/missing-fields': 'Completa tu nombre completo y tu apodo'
@@ -18939,6 +18945,7 @@ function LoginScreen({ onSignedIn }) {
         const trimmedApodo = apodo.trim();
         const trimmedEmail = email.trim();
         if (!trimmedFullName || !trimmedApodo) throw { code: 'mrnt/missing-fields' };
+        if (!pwd || pwd.length < 6) throw { code: 'auth/weak-password' };
         const normApodoKey = normalizeApodo(trimmedApodo);
         const nickRef = window.db.ref(`nicknames/${normApodoKey}`);
         // Reserva atómica del apodo: si ya existe, la transacción no se compromete.
@@ -18965,10 +18972,16 @@ function LoginScreen({ onSignedIn }) {
       }
       onSignedIn && onSignedIn();
     } catch (e) {
+      // Log completo en consola para diagnosticar el motivo real.
+      try { console.error('[MRNT] Error en ' + mode + ':', e, '| code:', e && e.code, '| message:', e && e.message); } catch (_) {}
       if (reservedApodoKey) {
         try { await window.db.ref(`nicknames/${reservedApodoKey}`).remove(); } catch (_) {}
       }
-      setErr(getErr(e.code || ''));
+      const code = (e && e.code) || '';
+      // Si Firebase no dio un código conocido, mostramos el mensaje real para
+      // no dejar al usuario con un genérico "algo salió mal" sin pistas.
+      const friendly = AUTH_ERRORS[code];
+      setErr(friendly || (code ? `Error: ${code}` : (e && e.message ? `Algo salió mal: ${e.message}` : 'Algo salió mal')));
       setBusy(false);
     }
   };
