@@ -18190,7 +18190,12 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
   const lastCheckedRef = useRef(null);
   const timeoutFiredRef = useRef(null);
   const isMobile = useIsMobile();
+  // Ver la respuesta SOLO en el celular del admin (nunca se transmite a nadie).
+  const [showAnswer, setShowAnswer] = useState(false);
   const ref = () => db.ref(`sessions/${SID}/emoji`);
+
+  // Por defecto oculta: cada carta nueva vuelve a esconder la respuesta.
+  useEffect(() => { setShowAnswer(false); }, [game.roundStartTime]);
 
   const chat = game.chat ? Object.entries(game.chat).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0)) : [];
   const players = game.players || {};
@@ -18389,7 +18394,15 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
             h('span', { style: { fontSize: 14, color: '#0a0e2e' } }, currentItem.pista),
           ),
         ) : null,
+        isAdmin && showAnswer && currentItem ? h('div', { style: { width: '100%', maxWidth: 520, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg,rgba(139,92,246,.16),rgba(255,255,255,.95))', border: '2px dashed #8b5cf6', borderRadius: 14, padding: '10px 16px' } },
+          h('span', { style: { fontSize: 20 } }, '🔑'),
+          h('div', null,
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 10.5, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '.14em' } }, 'Respuesta · solo la ves tú'),
+            h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 22, color: '#0a0e2e' } }, currentItem.titulo),
+          ),
+        ) : null,
         isAdmin ? h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
+          h('button', { onClick: () => setShowAnswer((v) => !v), style: { flex: 1, minWidth: 130, background: showAnswer ? 'rgba(139,92,246,.2)' : 'rgba(139,92,246,.1)', border: '1px solid rgba(139,92,246,.4)', borderRadius: 12, padding: '11px', color: '#6d28d9', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, showAnswer ? '🙈 Ocultar respuesta' : '👁️ Ver respuesta'),
           !game.hintShown ? h('button', { onClick: revelarPista, style: { flex: 1, minWidth: 130, background: 'rgba(255,208,0,.18)', border: '1px solid rgba(161,98,7,.4)', borderRadius: 12, padding: '11px', color: '#a16207', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '💡 Revelar pista') : h('div', { style: { flex: 1, minWidth: 130, textAlign: 'center', color: '#a16207', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', padding: '11px' } }, '💡 Pista revelada'),
           h('button', { onClick: saltar, style: { flex: 1, minWidth: 130, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '11px', color: '#0a0e2e', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar / revelar'),
           h('button', { onClick: finalizar, style: { flex: 1, minWidth: 130, background: 'rgba(139,92,246,.14)', border: '1px solid rgba(139,92,246,.4)', borderRadius: 12, padding: '11px', color: '#6d28d9', fontWeight: 800, fontSize: 12.5, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏁 Terminar juego'),
