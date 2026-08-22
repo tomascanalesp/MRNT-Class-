@@ -17988,6 +17988,18 @@ const normalizeEmail = (email) => {
   }
   return `${local}@${domain === 'googlemail.com' ? 'gmail.com' : domain}`;
 };
+// Normaliza un apodo para usarlo como llave de búsqueda (login sin correo).
+const normalizeApodo = (s) => (s || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+// Convierte un apodo en un slug apto para el local-part de un correo interno.
+const slugifyApodo = (s) => {
+  const noAccents = (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const slug = noAccents.replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '');
+  return slug || 'user';
+};
+// Cuentas creadas solo con apodo (sin correo real) usan un correo interno
+// invisible para Firebase Auth, que exige siempre un email. No se muestra
+// ni se usa para enviar nada — solo identifica la cuenta puertas adentro.
+const INTERNAL_EMAIL_DOMAIN = 'mrnt.local';
 const isAdminEmail = (email) => {
   const norm = normalizeEmail(email);
   return !!norm && ADMIN_EMAILS.some((a) => normalizeEmail(a) === norm);
@@ -17996,14 +18008,17 @@ const isAdminEmail = (email) => {
 const getSID = () => new Date().toISOString().slice(0, 10);
 // Mensajes de error de Firebase Auth en castellano.
 const AUTH_ERRORS = {
-  'auth/user-not-found': 'No existe una cuenta con ese correo',
+  'auth/user-not-found': 'No existe una cuenta con ese correo o apodo',
   'auth/wrong-password': 'Contraseña incorrecta',
   'auth/email-already-in-use': 'Ese correo ya tiene una cuenta',
   'auth/invalid-email': 'El correo no es válido',
   'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
   'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos',
-  'auth/invalid-credential': 'Correo o contraseña incorrectos',
-  'auth/network-request-failed': 'Sin conexión. Revisa tu internet'
+  'auth/invalid-credential': 'Correo, apodo o contraseña incorrectos',
+  'auth/network-request-failed': 'Sin conexión. Revisa tu internet',
+  'mrnt/nickname-not-found': 'No existe una cuenta con ese apodo',
+  'mrnt/nickname-taken': 'Ese apodo ya está en uso, elige otro',
+  'mrnt/missing-fields': 'Completa tu nombre completo y tu apodo'
 };
 const getErr = (code) => AUTH_ERRORS[code] || (code ? `Error: ${code}` : 'Algo salió mal');
 // Construye un link a BibleGateway (NVI por defecto) para una referencia.
@@ -18077,33 +18092,78 @@ function GuideModal({ onClose }) {
 
 function LoginScreen({ onSignedIn }) {
   const [mode, setMode] = React.useState('signin');
+  // Signin: un solo campo que acepta correo O apodo.
+  const [loginId, setLoginId] = React.useState('');
+  // Signup: nombre completo + apodo son obligatorios, el correo es opcional.
+  const [fullName, setFullName] = React.useState('');
+  const [apodo, setApodo] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [pwd, setPwd] = React.useState('');
   const [klass, setKlass] = React.useState('gteen');
   const [err, setErr] = React.useState('');
   const [info, setInfo] = React.useState('');
   const [busy, setBusy] = React.useState(false);
+  const labelStyle = { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 };
+  const fieldStyle = { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 12, boxSizing: 'border-box' };
   const submit = async (e) => {
     e.preventDefault();
     setErr(''); setInfo(''); setBusy(true);
+    let reservedApodoKey = null;
     try {
-      if (mode === 'signin') await window.auth.signInWithEmailAndPassword(email.trim(), pwd);
-      else {
-        const cred = await window.auth.createUserWithEmailAndPassword(email.trim(), pwd);
-        if (cred?.user?.uid) {
-          try { await window.db.ref(`profiles/${cred.user.uid}`).update({ class: klass, email: email.trim() }); } catch (_) {}
+      if (mode === 'signin') {
+        const idRaw = loginId.trim();
+        let signInEmail = idRaw;
+        if (idRaw.indexOf('@') < 0) {
+          // No trae "@" → lo tratamos como apodo y buscamos su correo asociado.
+          const snap = await window.db.ref(`nicknames/${normalizeApodo(idRaw)}`).get();
+          const rec = snap.val();
+          if (!rec || !rec.email) throw { code: 'mrnt/nickname-not-found' };
+          signInEmail = rec.email;
+        }
+        await window.auth.signInWithEmailAndPassword(signInEmail, pwd);
+      } else {
+        const trimmedFullName = fullName.trim();
+        const trimmedApodo = apodo.trim();
+        const trimmedEmail = email.trim();
+        if (!trimmedFullName || !trimmedApodo) throw { code: 'mrnt/missing-fields' };
+        const normApodoKey = normalizeApodo(trimmedApodo);
+        const nickRef = window.db.ref(`nicknames/${normApodoKey}`);
+        // Reserva atómica del apodo: si ya existe, la transacción no se compromete.
+        const tx = await nickRef.transaction((curr) => (curr ? undefined : { reserved: true }));
+        if (!tx.committed) throw { code: 'mrnt/nickname-taken' };
+        reservedApodoKey = normApodoKey;
+        // Sin correo real: Firebase Auth igual exige un email, así que usamos
+        // uno interno invisible (no se muestra ni se usa para enviar nada).
+        const authEmail = trimmedEmail || `${slugifyApodo(trimmedApodo)}.${Date.now().toString(36)}${Math.floor(Math.random() * 10000)}@${INTERNAL_EMAIL_DOMAIN}`;
+        const cred = await window.auth.createUserWithEmailAndPassword(authEmail, pwd);
+        const uid = cred?.user?.uid;
+        if (uid) {
+          try { await nickRef.set({ uid, email: authEmail }); } catch (_) {}
+          try {
+            await window.db.ref(`profiles/${uid}`).update({
+              class: klass,
+              name: trimmedApodo,
+              fullName: trimmedFullName,
+              email: trimmedEmail || '',
+              hasEmail: !!trimmedEmail
+            });
+          } catch (_) {}
         }
       }
       onSignedIn && onSignedIn();
     } catch (e) {
+      if (reservedApodoKey) {
+        try { await window.db.ref(`nicknames/${reservedApodoKey}`).remove(); } catch (_) {}
+      }
       setErr(getErr(e.code || ''));
       setBusy(false);
     }
   };
   const resetPwd = async () => {
     setErr(''); setInfo('');
-    const target = email.trim();
+    const target = loginId.trim();
     if (!target) { setErr('Escribe tu correo arriba y vuelve a tocar “¿Olvidaste tu contraseña?”'); return; }
+    if (target.indexOf('@') < 0) { setErr('La recuperación funciona solo con correo. Si entras con apodo, pide ayuda al admin para cambiar tu contraseña.'); return; }
     setBusy(true);
     try {
       await window.auth.sendPasswordResetEmail(target);
@@ -18123,17 +18183,28 @@ function LoginScreen({ onSignedIn }) {
         )
       ),
       h('div', { style: { fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--ink)', marginBottom: 4 } }, mode === 'signin' ? 'Inicia sesión' : 'Crea tu cuenta'),
-      h('div', { style: { fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 } }, mode === 'signin' ? 'Entra a la sala 3D con tu correo y contraseña.' : 'Una sola cuenta para todas las clases. Elige tu grupo abajo.'),
+      h('div', { style: { fontSize: 13, color: 'var(--ink-soft)', marginBottom: 18 } }, mode === 'signin' ? 'Entra a la sala 3D con tu correo o apodo y tu contraseña.' : 'Una sola cuenta para todas las clases. El correo es opcional.'),
       mode === 'signup' ? h('div', { style: { marginBottom: 14 } },
-        h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Tu grupo'),
+        h('label', { style: labelStyle }, 'Tu grupo'),
         h('div', { style: { display: 'flex', gap: 8 } },
           h('button', { type: 'button', onClick: () => setKlass('gteen'), style: { flex: 1, padding: 10, borderRadius: 'var(--r-sm)', border: klass === 'gteen' ? '2px solid var(--yellow)' : '1px solid rgba(10,14,46,.12)', background: klass === 'gteen' ? 'rgba(255,208,0,.12)' : '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', color: 'var(--ink)' } }, '🌱 Gteen'),
           h('button', { type: 'button', onClick: () => setKlass('ja'), style: { flex: 1, padding: 10, borderRadius: 'var(--r-sm)', border: klass === 'ja' ? '2px solid var(--yellow)' : '1px solid rgba(10,14,46,.12)', background: klass === 'ja' ? 'rgba(255,208,0,.12)' : '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer', color: 'var(--ink)' } }, '🔥 JA')
         )
       ) : null,
-      h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Correo'),
-      h('input', { type: 'email', value: email, required: true, autoComplete: 'email', onChange: (e) => setEmail(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 12, boxSizing: 'border-box' } }),
-      h('label', { style: { fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 } }, 'Contraseña'),
+      mode === 'signup' ? h(React.Fragment, null,
+        h('label', { style: labelStyle }, 'Nombre completo'),
+        h('input', { type: 'text', value: fullName, required: true, autoComplete: 'name', onChange: (e) => setFullName(e.target.value), style: fieldStyle }),
+        h('label', { style: labelStyle }, 'Apodo'),
+        h('input', { type: 'text', value: apodo, required: true, autoComplete: 'nickname', onChange: (e) => setApodo(e.target.value), style: fieldStyle }),
+        h('div', { style: { fontSize: 11, color: 'var(--ink-soft)', marginTop: -6, marginBottom: 12 } }, 'Así te van a ver los demás en la sala.'),
+        h('label', { style: labelStyle }, 'Correo (opcional)'),
+        h('input', { type: 'email', value: email, autoComplete: 'email', onChange: (e) => setEmail(e.target.value), style: fieldStyle }),
+        h('div', { style: { fontSize: 11, color: 'var(--ink-soft)', marginTop: -6, marginBottom: 12 } }, 'Solo para recuperar tu contraseña si la olvidas.')
+      ) : h(React.Fragment, null,
+        h('label', { style: labelStyle }, 'Correo o apodo'),
+        h('input', { type: 'text', value: loginId, required: true, autoComplete: 'username', onChange: (e) => setLoginId(e.target.value), style: fieldStyle })
+      ),
+      h('label', { style: labelStyle }, 'Contraseña'),
       h('input', { type: 'password', value: pwd, required: true, autoComplete: mode === 'signin' ? 'current-password' : 'new-password', onChange: (e) => setPwd(e.target.value), style: { width: '100%', padding: '11px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-on-light, rgba(10,14,46,.12))', background: '#fff', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink)', marginBottom: 14, boxSizing: 'border-box' } }),
       err ? h('div', { style: { background: 'rgba(239,68,68,.1)', color: '#dc2626', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 } }, '⚠️ ' + err) : null,
       info ? h('div', { style: { background: 'rgba(16,185,129,.1)', color: '#047857', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, lineHeight: 1.4 } }, '✉️ ' + info) : null,
