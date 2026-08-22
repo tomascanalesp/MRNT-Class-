@@ -18262,7 +18262,12 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
     const token = `skip|${Date.now()}|${Math.random()}`;
     const lock = await ref().child('solvedBy').transaction((cur) => cur || token);
     if (!lock.committed || lock.snapshot.val() !== token) return;
-    await terminarRonda(null, false, true);
+    // Mismo criterio que al acabarse el tiempo: gana quien más se acercó (60%+
+    // de las palabras clave en un mensaje). Si nadie se acercó, no gana nadie.
+    let best = null;
+    chat.forEach((m) => { const r = pictabWordMatchRatio(currentItem?.titulo || '', m.text); if (r >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || r > best.ratio)) best = { ratio: r, m }; });
+    if (best) await terminarRonda({ uid: best.m.uid, name: best.m.name, avatar: best.m.avatar, color: best.m.color }, true, false);
+    else await terminarRonda(null, false, true);
   };
 
   const finalizar = async () => { await saveGameHistory(SID, scores, Object.assign({}, users, players)); await ref().update({ gameState: 'finished', result: null }); };
