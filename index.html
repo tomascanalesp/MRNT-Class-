@@ -18948,17 +18948,35 @@ function LoginScreen({ onSignedIn }) {
         if (!pwd || pwd.length < 6) throw { code: 'auth/weak-password' };
         const normApodoKey = normalizeApodo(trimmedApodo);
         const nickRef = window.db.ref(`nicknames/${normApodoKey}`);
-        // Reserva atómica del apodo: si ya existe, la transacción no se compromete.
-        const tx = await nickRef.transaction((curr) => (curr ? undefined : { reserved: true }));
-        if (!tx.committed) throw { code: 'mrnt/nickname-taken' };
-        reservedApodoKey = normApodoKey;
+        // Pre-chequeo (lectura pública): si el apodo ya existe, avisamos antes
+        // de crear la cuenta. Si la lectura falla, la transacción decide luego.
+        try {
+          const existing = await nickRef.get();
+          if (existing.exists()) throw { code: 'mrnt/nickname-taken' };
+        } catch (e) {
+          if (e && e.code === 'mrnt/nickname-taken') throw e;
+        }
         // Sin correo real: Firebase Auth igual exige un email, así que usamos
         // uno interno invisible (no se muestra ni se usa para enviar nada).
         const authEmail = trimmedEmail || `${slugifyApodo(trimmedApodo)}.${Date.now().toString(36)}${Math.floor(Math.random() * 10000)}@${INTERNAL_EMAIL_DOMAIN}`;
+        // Creamos la cuenta PRIMERO: así las escrituras a la base de datos van
+        // autenticadas (las reglas de Firebase exigen auth != null para escribir;
+        // reservar el apodo antes de esto daba permission_denied).
         const cred = await window.auth.createUserWithEmailAndPassword(authEmail, pwd);
         const uid = cred?.user?.uid;
+        // Reserva atómica del apodo, ya autenticado.
+        let tx;
+        try {
+          tx = await nickRef.transaction((curr) => (curr && curr.uid && curr.uid !== uid ? undefined : { uid, email: authEmail }));
+        } catch (txErr) {
+          try { await cred.user.delete(); } catch (_) {}
+          throw txErr;
+        }
+        if (!tx.committed) {
+          try { await cred.user.delete(); } catch (_) {}
+          throw { code: 'mrnt/nickname-taken' };
+        }
         if (uid) {
-          try { await nickRef.set({ uid, email: authEmail }); } catch (_) {}
           try {
             await window.db.ref(`profiles/${uid}`).update({
               class: klass,
