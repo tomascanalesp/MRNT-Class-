@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <meta name="theme-color" content="#07091f">
+<!-- Evita que los navegadores sirvan una versión vieja en caché (así todos
+     los jugadores reciben las últimas funciones al recargar). -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Sala Maranata 3D · Las Condes</title>
 
 <!-- Webfonts must be imported before any other rules -->
@@ -18364,7 +18369,7 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
   /* ── Jugando: tarjeta de emojis + chat ── */
   const timeColor = over ? '#dc2626' : remaining < 20 ? '#c2410c' : '#6d28d9';
   return h('div', { style: wrapStyle },
-    headerBar, h(EmojiRoster, { juegosUsers, scores, myId }), overlay,
+    headerBar, h(EmojiRoster, { juegosUsers: participants, scores, myId }), overlay,
     h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', flexWrap: 'wrap', flexShrink: 0 } },
       h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 32, color: timeColor, lineHeight: 1, minWidth: 64 } }, formatTime(Math.max(0, remaining))),
       over ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', background: 'rgba(239,68,68,.1)', padding: '5px 12px', borderRadius: 20 } }, '⏱ Tiempo terminado') : h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '¡Escribe tu respuesta en el chat!'),
