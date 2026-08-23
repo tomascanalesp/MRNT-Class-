@@ -18965,28 +18965,20 @@ function LoginScreen({ onSignedIn }) {
         // reservar el apodo antes de esto daba permission_denied).
         const cred = await window.auth.createUserWithEmailAndPassword(authEmail, pwd);
         const uid = cred?.user?.uid;
-        // Reserva atómica del apodo, ya autenticado.
-        let tx;
-        try {
-          tx = await nickRef.transaction((curr) => (curr && curr.uid && curr.uid !== uid ? undefined : { uid, email: authEmail }));
-        } catch (txErr) {
-          try { await cred.user.delete(); } catch (_) {}
-          throw txErr;
-        }
-        if (!tx.committed) {
-          try { await cred.user.delete(); } catch (_) {}
-          throw { code: 'mrnt/nickname-taken' };
-        }
+        // Guardamos apodo y perfil best-effort, ya autenticado. NO bloqueamos ni
+        // borramos la cuenta si fallan: el usuario ya quedó dentro. Si fallan por
+        // reglas de Firebase, hay que ajustar las reglas de la base de datos
+        // (ver README/ayuda), pero al menos no se desconecta de forma confusa.
         if (uid) {
-          try {
-            await window.db.ref(`profiles/${uid}`).update({
-              class: klass,
-              name: trimmedApodo,
-              fullName: trimmedFullName,
-              email: trimmedEmail || '',
-              hasEmail: !!trimmedEmail
-            });
-          } catch (_) {}
+          nickRef.transaction((curr) => (curr && curr.uid && curr.uid !== uid ? undefined : { uid, email: authEmail }))
+            .catch((e) => { try { console.error('[MRNT] No se pudo guardar el apodo (¿reglas de Firebase?):', e); } catch (_) {} });
+          window.db.ref(`profiles/${uid}`).update({
+            class: klass,
+            name: trimmedApodo,
+            fullName: trimmedFullName,
+            email: trimmedEmail || '',
+            hasEmail: !!trimmedEmail
+          }).catch((e) => { try { console.error('[MRNT] No se pudo guardar el perfil (¿reglas de Firebase?):', e); } catch (_) {} });
         }
       }
       onSignedIn && onSignedIn();
