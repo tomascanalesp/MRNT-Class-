@@ -19216,7 +19216,7 @@ class Component extends React.Component {
     // (los navegadores SIEMPRE permiten autoplay muteado) y recién curse el
     // audio real cuando la persona toca 🔊 — un gesto de usuario real, que
     // es lo que hace falta para que el navegador deje sonar audio remoto.
-    micOn: false, speakerMuted: true, voiceUsers: {},
+    micOn: false, speakerMuted: true, voiceUsers: {}, voiceError: null,
   };
 
   componentDidMount() {
@@ -19447,7 +19447,8 @@ class Component extends React.Component {
     // Chat de voz: estado de mic de todos (micOn propio + mutedByAdmin, que
     // solo el admin puede escribir). El modo proyección no participa.
     if (!this.screenMode) {
-      window.db.ref(`sessions/${this.SID}/voice/${this.uid}`).set({ micOn: false, mutedByAdmin: false }).catch(() => {});
+      window.db.ref(`sessions/${this.SID}/voice/${this.uid}`).set({ micOn: false, mutedByAdmin: false })
+        .catch((e) => this._reportVoiceError('No se pudo registrar tu estado de voz (permisos de Firebase en sessions/voice)', e));
       window.db.ref(`sessions/${this.SID}/voice/${this.uid}`).onDisconnect().remove();
     }
     this._voiceRef = window.db.ref(`sessions/${this.SID}/voice`);
@@ -19462,7 +19463,7 @@ class Component extends React.Component {
         this.setState({ micOn: false });
       }
       this.setState({ voiceUsers });
-    });
+    }, (e) => this._reportVoiceError('No se pudo leer sessions/voice — revisá las reglas de Firebase', e));
   }
 
   componentWillUnmount() {
@@ -19845,6 +19846,16 @@ class Component extends React.Component {
      más tarde, solo hace falta `replaceTrack` — sin renegociar SDP de nuevo.
      Quién ofrece y quién contesta se decide comparando los uid (el menor
      ofrece), para que ambos lados nunca intenten armar la conexión a la vez. */
+  // Antes estos fallos quedaban en un .catch(()=>{}) mudo — si las reglas de
+  // Firebase no dejaban escribir/leer sessions/voice o sessions/voicePeers
+  // (rutas nuevas que este feature agregó), el chat de voz se quedaba
+  // "andando" en apariencia pero sin señalizar nada, en silencio total. Con
+  // esto queda un aviso en pantalla (una sola vez) + el error real en la
+  // consola, para poder diagnosticarlo sin adivinar.
+  _reportVoiceError = (msg, err) => {
+    console.error('[MRNT] Voz:', msg, err);
+    if (!this.state.voiceError) this.setState({ voiceError: `${msg}${err && err.code ? ` (${err.code})` : ''}` });
+  };
   _syncVoicePeers = (presentUids) => {
     if (this.screenMode || !this.uid) return;
     const present = new Set(presentUids);
@@ -19871,12 +19882,45 @@ class Component extends React.Component {
     this._peers[otherUid] = peer;
     const myIceField = isInitiator ? 'iceInit' : 'iceAns';
     const theirIceField = isInitiator ? 'iceAns' : 'iceInit';
-    pc.onicecandidate = (e) => { if (e.candidate) signalRef.child(myIceField).push(e.candidate.toJSON()).catch(() => {}); };
-    pc.ontrack = (e) => this._attachRemoteAudio(otherUid, e.streams[0]);
-    const transceiver = pc.addTransceiver('audio', { direction: 'sendrecv' });
-    if (this._localStream) {
-      const track = this._localStream.getAudioTracks()[0];
-      if (track) transceiver.sender.replaceTrack(track).catch(() => {});
+    pc.onicecandidate = (e) => {
+      if (e.candidate) signalRef.child(myIceField).push(e.candidate.toJSON())
+        .catch((err) => this._reportVoiceError('No se pudo enviar un candidato ICE (permisos de Firebase en sessions/voicePeers)', err));
+    };
+    // Diagnóstico: si la conexión nunca llega a "connected"/"completed" y
+    // termina en "failed", algo bloqueó el tráfico de audio entre las dos
+    // personas (red muy restrictiva sin TURN, por ejemplo) — se avisa en
+    // pantalla en vez de quedar en silencio sin explicación.
+    pc.oniceconnectionstatechange = () => {
+      console.info('[MRNT] Voz: ICE con', otherUid, '→', pc.iceConnectionState);
+      if (pc.iceConnectionState === 'failed') {
+        this._reportVoiceError(`No se pudo conectar el audio con ${otherUid} (red muy restrictiva, sin servidor TURN)`, { code: 'ice-failed' });
+      }
+    };
+    pc.ontrack = (e) => {
+      // Como la conexión se arma ANTES de que nadie tenga el mic prendido,
+      // la oferta sale sin "msid" (todavía no hay track real) — en ese caso
+      // Chrome entrega e.streams vacío, y si no lo cubrimos acá el <audio>
+      // se queda sin srcObject para siempre (ontrack no vuelve a disparar
+      // cuando más tarde se hace replaceTrack). Armamos el stream a mano
+      // con el track del evento para no depender de e.streams.
+      const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+      this._attachRemoteAudio(otherUid, stream);
+    };
+    // OJO: el transceiver "vacío" (sendrecv, sin track) solo se crea acá de
+    // entrada para quien OFRECE — es lo único que le permite armar un
+    // m-line de audio antes de tener mic. El que CONTESTA no debe crearlo a
+    // mano: setRemoteDescription(offer) ya se lo crea, asociado al m-line
+    // real que llegó — si lo creamos nosotros antes, quedan DOS
+    // transceivers de audio en la conexión (el nuestro, suelto, sin
+    // asociar a ningún m-line negociado, + el que arma la oferta), y
+    // replaceTrack() puede terminar aplicado al que no sirve: el otro lado
+    // nunca recibe nada aunque acá parezca que “se prendió el mic” bien.
+    if (isInitiator) {
+      const transceiver = pc.addTransceiver('audio', { direction: 'sendrecv' });
+      if (this._localStream) {
+        const track = this._localStream.getAudioTracks()[0];
+        if (track) transceiver.sender.replaceTrack(track).catch(() => {});
+      }
     }
     const seenIce = new Set();
     signalRef.on('value', async (snap) => {
@@ -19892,9 +19936,24 @@ class Component extends React.Component {
           await pc.setRemoteDescription(new RTCSessionDescription(v.offer));
           peer.pendingRemoteCandidates.forEach((c) => pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {}));
           peer.pendingRemoteCandidates = [];
+          // Recién ahora existe el sender real (lo creó setRemoteDescription):
+          // si ya tenía el mic prendido antes de que llegara la oferta, hay
+          // que engancharlo acá.
+          this._attachLocalTrackToPeer(peer);
+          // Clave: si en este momento todavía NO tengo track (nunca prendí
+          // el mic), Chrome arma la respuesta en "recvonly" en vez de
+          // "sendrecv" — y como acá nunca se renegocia de nuevo, esa
+          // dirección queda fija PARA SIEMPRE: aunque más tarde prenda el
+          // mic y haga replaceTrack(), el audio nunca sale porque la sesión
+          // quedó negociada como "solo recibir". Forzando sendrecv acá
+          // (antes de contestar) me aseguro de poder mandar audio más
+          // adelante sin tener que volver a negociar nada.
+          const t = pc.getTransceivers()[0];
+          if (t) t.direction = 'sendrecv';
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
-          signalRef.child('answer').set({ type: answer.type, sdp: answer.sdp }).catch(() => {});
+          signalRef.child('answer').set({ type: answer.type, sdp: answer.sdp })
+            .catch((err) => this._reportVoiceError('No se pudo enviar la respuesta de conexión (permisos de Firebase en sessions/voicePeers)', err));
         }
         const theirIce = v[theirIceField] || {};
         Object.entries(theirIce).forEach(([cid, cand]) => {
@@ -19906,16 +19965,30 @@ class Component extends React.Component {
       } catch (err) {
         console.error('[MRNT] Voz: fallo de señalización con', otherUid, err);
       }
-    });
+    }, (err) => this._reportVoiceError('No se pudo leer sessions/voicePeers — revisá las reglas de Firebase', err));
     if (isInitiator) {
       // Al ofrecer, limpiar answer + ICE del otro lado por si quedó basura
       // de un intento anterior con esta misma persona (p.ej. recargó la
       // página) — si no, este RTCPeerConnection nuevo podría toparse con un
       // answer viejo que ya no le corresponde.
       pc.createOffer().then((offer) => pc.setLocalDescription(offer).then(() => {
-        signalRef.update({ offer: { type: offer.type, sdp: offer.sdp }, answer: null, [theirIceField]: null }).catch(() => {});
-      })).catch(() => {});
+        signalRef.update({ offer: { type: offer.type, sdp: offer.sdp }, answer: null, [theirIceField]: null })
+          .catch((err) => this._reportVoiceError('No se pudo enviar la oferta de conexión (permisos de Firebase en sessions/voicePeers)', err));
+      })).catch((err) => this._reportVoiceError('No se pudo crear la oferta de audio', err));
     }
+  };
+  // Engancha mi mic (si ya lo tengo) al sender vacío de esta conexión.
+  // Devuelve true si lo pudo enganchar. Si todavía no hay sender (soy quien
+  // contesta y la oferta no llegó), no hace nada — se reintenta más tarde
+  // desde el propio _createVoicePeer en cuanto llega la oferta.
+  _attachLocalTrackToPeer = (peer) => {
+    if (!this._localStream) return false;
+    const track = this._localStream.getAudioTracks()[0];
+    if (!track) return false;
+    const sender = peer.pc.getSenders().find((s) => s.track === null);
+    if (!sender) return false;
+    sender.replaceTrack(track).catch((err) => this._reportVoiceError('No se pudo enviar tu audio a alguien de la sala', err));
+    return true;
   };
   _teardownVoicePeer = (otherUid) => {
     const peer = this._peers[otherUid];
@@ -19976,18 +20049,16 @@ class Component extends React.Component {
         alert('No se pudo activar el micrófono. Revisá los permisos del navegador.');
         return;
       }
-      const track = this._localStream.getAudioTracks()[0];
-      // Todas las conexiones ya armadas tienen un transceiver de audio sin
-      // track propio todavía (se creó vacío) — le insertamos el track ahí,
-      // sin renegociar SDP de nuevo.
-      Object.values(this._peers).forEach((peer) => {
-        const sender = peer.pc.getSenders().find((s) => s.track === null);
-        if (sender) sender.replaceTrack(track).catch(() => {});
-      });
+      // Conexiones donde ya hay sender armado (yo ofrecí, o el otro ya
+      // contestó) se enganchan ahora mismo, sin renegociar SDP de nuevo. Las
+      // que todavía esperan la oferta (soy quien contesta) se enganchan
+      // solas apenas llegue, desde _createVoicePeer.
+      Object.values(this._peers).forEach((peer) => this._attachLocalTrackToPeer(peer));
     }
     this._setMicEnabled(next);
     this.setState({ micOn: next });
-    window.db.ref(`sessions/${this.SID}/voice/${this.uid}/micOn`).set(next).catch(() => {});
+    window.db.ref(`sessions/${this.SID}/voice/${this.uid}/micOn`).set(next)
+      .catch((err) => this._reportVoiceError('No se pudo avisar que prendiste el micrófono (permisos de Firebase en sessions/voice)', err));
   };
   // Botón 🔊 del usuario: solo local, no le apaga el mic a nadie — deja de
   // reproducir lo que llega de los demás.
@@ -20823,7 +20894,24 @@ class Component extends React.Component {
         ? h(ChatFab, { onClick: () => this.setState({ activity: 'repaso' }), count: (st.msgs || []).length })
         : null,
       // Toast de bienvenida cuando alguien se une (solo participantes).
-      !screen ? h(AttNotifyToast, null) : null
+      !screen ? h(AttNotifyToast, null) : null,
+      // Aviso de error del chat de voz — antes estos fallos quedaban mudos
+      // (permisos de Firebase, ICE que no conecta, etc.); ahora se ven.
+      !screen && st.voiceError ? h('div', {
+        style: {
+          position: 'fixed', left: '50%', bottom: 90, transform: 'translateX(-50%)', zIndex: 9995,
+          maxWidth: '92vw', width: 420, background: '#fff', border: '2px solid #ef4444', borderRadius: 14,
+          padding: '12px 14px', boxShadow: '0 10px 30px rgba(10,14,46,.3)',
+          display: 'flex', alignItems: 'flex-start', gap: 10
+        }
+      },
+        h('span', { style: { fontSize: 20, lineHeight: 1 } }, '🎙️⚠️'),
+        h('div', { style: { flex: 1, fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--ink)', lineHeight: 1.4 } },
+          h('div', { style: { fontWeight: 800, marginBottom: 2, fontFamily: 'var(--font-display)', letterSpacing: '.02em', color: '#dc2626', fontSize: 12, textTransform: 'uppercase' } }, 'Chat de voz con problemas'),
+          st.voiceError
+        ),
+        h('button', { onClick: () => this.setState({ voiceError: null }), style: { border: 'none', background: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 16, padding: 2 } }, '×'),
+      ) : null
     );
   }
 }
