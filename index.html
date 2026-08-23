@@ -133,21 +133,24 @@ const FURN = [
 ];
 const MOODS = ['🔥', '🙏', '😊', '📖', '😴', '🎉', '💛', '🤔'];
 const REACT_EMOJIS = ['❤️', '🙏', '👍', '😊', '😢', '🎉'];
-// Chat de voz (WebRTC malla, señalización por Firebase). Base STUN público
-// — se usa como respaldo si por lo que sea no se pudo traer el TURN de
-// Metered (ver fetchVoiceIceServers) o mientras esa consulta está en curso.
+// Chat de voz (WebRTC malla, señalización por Firebase). Incluye STUN
+// público + un servidor TURN propio (Metered.ca, plan gratis 500MB/mes)
+// para que el audio conecte también entre redes distintas (wifi + datos
+// móviles, por ejemplo), donde el STUN solo no alcanza. Credencial fija
+// generada a mano desde el dashboard de Metered — este sitio es estático
+// (sin backend), así que queda visible en el código; si algún día hace
+// falta invalidarla, se borra/regenera desde ahí y se actualiza acá.
+// Si en algún momento se agota la cuota de 500MB del mes, el TURN deja de
+// responder y el chat de voz vuelve a depender solo del STUN (funciona
+// entre personas en la misma red, no entre redes distintas) hasta que
+// renueve el mes o se suba de plan.
 const VOICE_ICE_SERVERS = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  { urls: 'turn:global.relay.metered.ca:80', username: '5ad081a66e3ea9489380f306', credential: 'o+sSH0tiw0cGiOas' },
+  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '5ad081a66e3ea9489380f306', credential: 'o+sSH0tiw0cGiOas' },
+  { urls: 'turn:global.relay.metered.ca:443', username: '5ad081a66e3ea9489380f306', credential: 'o+sSH0tiw0cGiOas' },
+  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '5ad081a66e3ea9489380f306', credential: 'o+sSH0tiw0cGiOas' },
 ];
-// Credenciales TURN de Metered.ca (plan gratis) — necesarias para que el
-// audio conecte entre redes distintas (wifi + datos móviles, por ejemplo),
-// donde el STUN solo no alcanza. Es una API key pública de un sitio
-// estático sin backend, así que queda visible en el código — Metered emite
-// credenciales de usuario/contraseña TEMPORALES a partir de ella (no es la
-// key en sí la que se usa para conectar), así que el riesgo de abuso es
-// bajo aun estando a la vista.
-const VOICE_TURN_CREDENTIALS_URL = 'https://mrntclass.metered.live/api/v1/turn/credentials?apiKey=W99mp0KEbpFjIFJ-R55eGz34n3oi2YOwXehHp1UCqPBK3tsq';
 // Un solo nodo de señalización por par de usuarios (sin importar quién lo
 // mire primero): siempre ordenado para que ambos lados escriban/lean el
 // mismo path.
@@ -19170,13 +19173,6 @@ class Component extends React.Component {
   // que se activa el mic.
   _peers = {};
   _localStream = null;
-  // Lista de ICE servers a usar (STUN de respaldo hasta que llegue el TURN
-  // real de Metered). `_iceServersReady` se pone en true recién cuando la
-  // consulta terminó (bien o mal) — así ninguna conexión arranca sin haber
-  // esperado, como mínimo, ese primer intento.
-  _iceServers = VOICE_ICE_SERVERS;
-  _iceServersReady = false;
-  _lastPresentUids = null;
 
   state = {
     isMobile: typeof window !== 'undefined' && window.innerWidth < 640,
@@ -19375,13 +19371,8 @@ class Component extends React.Component {
         }
       }
       // Chat de voz: arma/cierra la malla de conexiones P2P según quién está
-      // presente ahora (sin importar dónde esté parado su avatar). Se
-      // guarda siempre la lista — si todavía no llegaron los ICE servers
-      // (TURN incluido), _fetchVoiceIceServers hace el primer sync apenas
-      // estén listos.
-      const presentUids = Object.keys(data).filter((uid) => uid !== this.uid);
-      this._lastPresentUids = presentUids;
-      if (this._iceServersReady) this._syncVoicePeers(presentUids);
+      // presente ahora (sin importar dónde esté parado su avatar).
+      this._syncVoicePeers(Object.keys(data).filter((uid) => uid !== this.uid));
     }, (e) => {
       console.error('[MRNT] No se pudo leer users/' + this.SID + ' — no vas a ver a los demás en la sala:', e);
     });
@@ -19483,32 +19474,7 @@ class Component extends React.Component {
       }
       this.setState({ voiceUsers });
     }, (e) => this._reportVoiceError('No se pudo leer sessions/voice — revisá las reglas de Firebase', e));
-    if (!this.screenMode) this._fetchVoiceIceServers();
   }
-  // Trae las credenciales TURN de Metered (válidas ~1 día) antes de armar
-  // cualquier conexión de voz — sin esto, dos personas en redes distintas
-  // (wifi + datos móviles, por ejemplo) casi nunca logran conectar el
-  // audio directo. Si la consulta falla o tarda demasiado, sigue igual con
-  // el STUN de respaldo — mejor eso que dejar el chat de voz sin arrancar.
-  _fetchVoiceIceServers = () => {
-    const timeout = new Promise((resolve) => setTimeout(resolve, 4000, null));
-    Promise.race([
-      fetch(VOICE_TURN_CREDENTIALS_URL).then((r) => r.json()).catch(() => null),
-      timeout,
-    ]).then((servers) => {
-      if (Array.isArray(servers) && servers.length) {
-        this._iceServers = servers;
-      } else {
-        this._reportVoiceError('No se pudo obtener el servidor TURN (Metered) — el audio va a depender solo de STUN y puede fallar entre redes distintas', { code: 'turn-fetch-failed' });
-      }
-    }).finally(() => {
-      this._iceServersReady = true;
-      // Si ya había gente presente antes de que esto terminara, recién
-      // ahora se arman las conexiones de voz con la lista de ICE servers ya
-      // lista (con o sin TURN).
-      if (this._lastPresentUids) this._syncVoicePeers(this._lastPresentUids);
-    });
-  };
 
   componentWillUnmount() {
     window.removeEventListener('resize', this._onResize);
@@ -19913,7 +19879,7 @@ class Component extends React.Component {
     const isInitiator = this.uid < otherUid;
     const pairKey = voicePairKey(this.uid, otherUid);
     const signalRef = window.db.ref(`sessions/${this.SID}/voicePeers/${pairKey}`);
-    const pc = new RTCPeerConnection({ iceServers: this._iceServers });
+    const pc = new RTCPeerConnection({ iceServers: VOICE_ICE_SERVERS });
     const audioEl = document.createElement('audio');
     audioEl.autoplay = true;
     audioEl.playsInline = true;
