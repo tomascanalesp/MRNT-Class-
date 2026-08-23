@@ -19878,7 +19878,7 @@ class Component extends React.Component {
     // navegadores no reproducen de forma confiable un <audio> que nunca se
     // insertó en la página.
     this._voiceAudioContainer().appendChild(audioEl);
-    const peer = { pc, audioEl, pairKey, isInitiator, signalRef, pendingRemoteCandidates: [], gotRemoteDesc: false };
+    const peer = { pc, audioEl, pairKey, isInitiator, signalRef, pendingRemoteCandidates: [], gotRemoteDesc: false, iceWatchdog: null };
     this._peers[otherUid] = peer;
     const myIceField = isInitiator ? 'iceInit' : 'iceAns';
     const theirIceField = isInitiator ? 'iceAns' : 'iceInit';
@@ -19886,14 +19886,26 @@ class Component extends React.Component {
       if (e.candidate) signalRef.child(myIceField).push(e.candidate.toJSON())
         .catch((err) => this._reportVoiceError('No se pudo enviar un candidato ICE (permisos de Firebase en sessions/voicePeers)', err));
     };
-    // Diagnóstico: si la conexión nunca llega a "connected"/"completed" y
-    // termina en "failed", algo bloqueó el tráfico de audio entre las dos
-    // personas (red muy restrictiva sin TURN, por ejemplo) — se avisa en
-    // pantalla en vez de quedar en silencio sin explicación.
+    // Diagnóstico: si la conexión nunca llega a "connected"/"completed",
+    // algo bloqueó el tráfico de audio entre las dos personas — casi
+    // siempre una red muy restrictiva sin servidor TURN propio (wifi con
+    // aislamiento de clientes, redes móviles con NAT muy cerrado, etc.).
+    // Chrome no siempre pasa por "failed": a veces se queda pegado en
+    // "checking" para siempre sin avisar nada — por eso además de escuchar
+    // el evento hay un timeout de respaldo.
+    const otherName = this._displayNameFor(otherUid);
+    peer.iceWatchdog = setTimeout(() => {
+      if (!['connected', 'completed'].includes(pc.iceConnectionState)) {
+        this._reportVoiceError(`No se pudo conectar el audio con ${otherName} — probablemente la red de alguno de los dos bloquea la conexión directa (hace falta un servidor TURN)`, { code: 'ice-timeout' });
+      }
+    }, 9000);
     pc.oniceconnectionstatechange = () => {
       console.info('[MRNT] Voz: ICE con', otherUid, '→', pc.iceConnectionState);
-      if (pc.iceConnectionState === 'failed') {
-        this._reportVoiceError(`No se pudo conectar el audio con ${otherUid} (red muy restrictiva, sin servidor TURN)`, { code: 'ice-failed' });
+      if (['connected', 'completed'].includes(pc.iceConnectionState)) {
+        clearTimeout(peer.iceWatchdog);
+      } else if (pc.iceConnectionState === 'failed') {
+        clearTimeout(peer.iceWatchdog);
+        this._reportVoiceError(`No se pudo conectar el audio con ${otherName} (red muy restrictiva, sin servidor TURN)`, { code: 'ice-failed' });
       }
     };
     pc.ontrack = (e) => {
@@ -19990,9 +20002,15 @@ class Component extends React.Component {
     sender.replaceTrack(track).catch((err) => this._reportVoiceError('No se pudo enviar tu audio a alguien de la sala', err));
     return true;
   };
+  // Nombre para mostrar en avisos de error (mejor que un uid pelado).
+  _displayNameFor = (uid) => {
+    const c = this.state.chars.find((c) => (c.id === 'me' ? this.uid : c.id) === uid);
+    return (c && c.name) || 'alguien de la sala';
+  };
   _teardownVoicePeer = (otherUid) => {
     const peer = this._peers[otherUid];
     if (!peer) return;
+    if (peer.iceWatchdog) clearTimeout(peer.iceWatchdog);
     try { peer.signalRef.off(); } catch (_) {}
     try { peer.pc.close(); } catch (_) {}
     try { peer.audioEl.srcObject = null; } catch (_) {}
