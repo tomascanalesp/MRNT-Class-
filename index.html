@@ -8516,7 +8516,9 @@ function AdminPanel({
   onResetSession,
   onOpenDownload,
   onOpenSurveyResults,
-  surveyResponses
+  surveyResponses,
+  allowExit,
+  onToggleAllowExit
 }) {
   const [open, setOpen] = useState(false);
   const [wcQ, setWcQ] = useState('');
@@ -8589,7 +8591,31 @@ function AdminPanel({
       borderRadius: 20,
       border: `1px solid ${phaseColor}44`
     }
-  }, phase.toUpperCase())), /*#__PURE__*/React.createElement("div", {
+  }, phase.toUpperCase())), /*#__PURE__*/React.createElement("button", {
+    onClick: () => onToggleAllowExit && onToggleAllowExit(),
+    title: allowExit ? 'Todos pueden volver a la pantalla de las 4 salas' : 'Nadie puede salir de Repaso hasta que lo habilites acá',
+    style: {
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      background: allowExit ? 'rgba(16,185,129,.12)' : 'rgba(10,14,46,.05)',
+      border: `1px solid ${allowExit ? 'rgba(16,185,129,.4)' : 'rgba(10,14,46,.15)'}`,
+      borderRadius: 10,
+      padding: '9px 12px',
+      marginBottom: 12,
+      color: allowExit ? '#10b981' : 'var(--ink)',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.03em',
+      textTransform: 'uppercase',
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("span", null, allowExit ? '🔓 Salir de Repaso: habilitado' : '🔒 Salir de Repaso: bloqueado'), /*#__PURE__*/React.createElement("span", {
+    style: { fontSize: 10, opacity: .8 }
+  }, allowExit ? 'Tocar para bloquear' : 'Tocar para habilitar')), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr',
@@ -8742,16 +8768,15 @@ function AdminPanel({
     }
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
-      onStartMision && onStartMision(misionUsers, 'commitments');
+      onStartMision && onStartMision(allUsers, 'commitments');
       setOpen(false);
     },
-    disabled: misionUsers.length === 0,
     style: {
-      background: misionUsers.length ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'var(--muted2)',
+      background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
       border: 'none',
       borderRadius: 10,
       padding: '10px 6px',
-      color: misionUsers.length ? 'white' : 'var(--muted)',
+      color: 'white',
       fontWeight: 800,
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -8766,16 +8791,15 @@ function AdminPanel({
     }
   }, "✍️"), "M · Compromiso"), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
-      onStartMision && onStartMision(misionUsers, 'projects');
+      onStartMision && onStartMision(allUsers, 'projects');
       setOpen(false);
     },
-    disabled: misionUsers.length === 0,
     style: {
-      background: misionUsers.length ? 'linear-gradient(135deg,#1d4ed8,#3730a3)' : 'var(--muted2)',
+      background: 'linear-gradient(135deg,#1d4ed8,#3730a3)',
       border: 'none',
       borderRadius: 10,
       padding: '10px 6px',
-      color: misionUsers.length ? 'white' : 'var(--muted)',
+      color: 'white',
       fontWeight: 800,
       fontSize: 11,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -8790,16 +8814,15 @@ function AdminPanel({
     }
   }, "🌍"), "M · Proyectos")), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
-      onStartConfra(confraUsers);
+      onStartConfra(allUsers);
       setOpen(false);
     },
-    disabled: confraUsers.length === 0,
     style: {
-      background: confraUsers.length ? 'linear-gradient(135deg,#eab308,#a16207)' : 'var(--muted2)',
+      background: 'linear-gradient(135deg,#eab308,#a16207)',
       border: 'none',
       borderRadius: 10,
       padding: '10px',
-      color: confraUsers.length ? '#0a0e2e' : 'var(--muted)',
+      color: '#0a0e2e',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -8817,18 +8840,17 @@ function AdminPanel({
       fontSize: 11,
       lineHeight: '18px'
     }
-  }, "R"), "Confraternización ", confraUsers.length > 0 ? `(${confraUsers.length})` : '— sin personas'), /*#__PURE__*/React.createElement("button", {
+  }, "R"), "Confraternización ", allUsers.length > 0 ? `(${allUsers.length})` : '— sin personas'), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
-      onStartRepaso(repasoUsers);
+      onStartRepaso(allUsers);
       setOpen(false);
     },
-    disabled: repasoUsers.length === 0,
     style: {
-      background: repasoUsers.length ? 'linear-gradient(135deg,#fb923c,#c2410c)' : 'var(--muted2)',
+      background: 'linear-gradient(135deg,#fb923c,#c2410c)',
       border: 'none',
       borderRadius: 10,
       padding: '10px',
-      color: repasoUsers.length ? 'white' : 'var(--muted)',
+      color: 'white',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -8846,18 +8868,17 @@ function AdminPanel({
       fontSize: 11,
       lineHeight: '18px'
     }
-  }, "N"), "Repaso Bíblico ", repasoUsers.length > 0 ? `(${repasoUsers.length})` : '— sin personas'), /*#__PURE__*/React.createElement("button", {
+  }, "N"), "Repaso Bíblico ", allUsers.length > 0 ? `(${allUsers.length})` : '— sin personas'), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       onStartJuegos();
       setOpen(false);
     },
-    disabled: juegosUsers.length === 0,
     style: {
-      background: juegosUsers.length ? 'linear-gradient(135deg,#fdba74,#ea580c)' : 'var(--muted2)',
+      background: 'linear-gradient(135deg,#fdba74,#ea580c)',
       border: 'none',
       borderRadius: 10,
       padding: '10px',
-      color: juegosUsers.length ? '#0a0e2e' : 'var(--muted)',
+      color: '#0a0e2e',
       fontWeight: 800,
       fontSize: 12,
       fontFamily: 'Barlow Condensed,sans-serif',
@@ -8875,7 +8896,7 @@ function AdminPanel({
       fontSize: 11,
       lineHeight: '18px'
     }
-  }, "N"), "Juegos ", juegosUsers.length > 0 ? `(${juegosUsers.length})` : '— sin personas'), /*#__PURE__*/React.createElement("button", {
+  }, "N"), "Juegos ", allUsers.length > 0 ? `(${allUsers.length})` : '— sin personas'), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       onStartTemplo && onStartTemplo();
       setOpen(false);
@@ -8936,7 +8957,16 @@ function AdminPanel({
       letterSpacing: '.04em',
       textTransform: 'uppercase'
     }
-  }, "✓ Finalizar confra")), phase === 'repaso' && /*#__PURE__*/React.createElement("div", {
+  }, "✓ Finalizar confra")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: 'var(--muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.08em',
+      fontWeight: 800,
+      marginBottom: -2
+    }
+  }, "🎛️ Herramientas · siempre disponibles"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -9042,7 +9072,7 @@ function AdminPanel({
       letterSpacing: '.04em',
       textTransform: 'uppercase'
     }
-  }, session?.wordcloud?.active ? '☁️ Cerrar Nube' : '☁️ Iniciar Nube de Palabras'), /*#__PURE__*/React.createElement("button", {
+  }, session?.wordcloud?.active ? '☁️ Cerrar Nube' : '☁️ Iniciar Nube de Palabras'), phase === 'repaso' && /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       onEndRepaso();
       setOpen(false);
@@ -19118,12 +19148,17 @@ class Component extends React.Component {
 
   state = {
     isMobile: typeof window !== 'undefined' && window.innerWidth < 640,
-    view: 'lobby', currentRoom: null,
+    // Repaso es la sala de entrada permanente: todos llegan ahí directo y
+    // no hay lobby de bienvenida — solo se ve el lobby (4 salas) si el
+    // admin habilita la salida (ver `allowExit` en session) y la persona
+    // toca "← Salas".
+    view: 'room', currentRoom: 'repaso',
     roomNames: { mision: 'Misión Joven', confra: 'Confraternización', repaso: 'Repaso', templo: 'Templo · Adoración' },
-    started: { mision: false, confra: false, repaso: false, templo: false },
+    // Repaso siempre cuenta como abierta — nadie puede "cerrarla".
+    started: { mision: false, confra: false, repaso: true, templo: false },
     avatarEditing: false,
     chars: [
-      { id: 'me', name: 'Tú', emoji: '🌟', color: '#ffd000', bodyColor: '#ffd000', armColor: '#ffd000', legColor: '#2a2f52', accessory: 'none', photo: null, x: 8, y: 6.5, status: '', mood: '', room: null }
+      { id: 'me', name: 'Tú', emoji: '🌟', color: '#ffd000', bodyColor: '#ffd000', armColor: '#ffd000', legColor: '#2a2f52', accessory: 'none', photo: null, x: 8, y: 6.5, status: '', mood: '', room: 'repaso' }
     ],
     // Las 4 salas arrancan con el mismo layout: mesa vertical en el centro,
     // sillones a los costados, sillas en las cabezas y plantas en las esquinas.
@@ -19215,7 +19250,8 @@ class Component extends React.Component {
         klass: p.class || 'gteen',
         x: myMe.x ?? 8, y: myMe.y ?? 6.5,
         status: p.status || '', mood: p.mood || '',
-        room: null
+        // Todos entran siempre a Repaso — es la sala de entrada permanente.
+        room: 'repaso'
       };
       if (this.screenMode) return; // solo observador
       // Actualiza al "me" local con datos del perfil.
@@ -19244,7 +19280,7 @@ class Component extends React.Component {
         emoji: myMe.emoji || '🌟', color: myMe.color || '#ffd000',
         bodyColor: myMe.bodyColor || '#ffd000', armColor: myMe.armColor || '#ffd000',
         legColor: myMe.legColor || '#2a2f52', accessory: myMe.accessory || 'none',
-        photo: myMe.photo || null, x: myMe.x ?? 8, y: myMe.y ?? 6.5, room: null
+        photo: myMe.photo || null, x: myMe.x ?? 8, y: myMe.y ?? 6.5, room: 'repaso'
       };
       meRef.set({ ...minimal, joinedAt: firebase.database.ServerValue.TIMESTAMP }).catch((err) => {
         console.error('[MRNT] No se pudo registrar la presencia mínima en users/' + this.SID + '/' + this.uid + ':', err);
@@ -19279,14 +19315,16 @@ class Component extends React.Component {
         return { chars: meMerged ? [meMerged, ...others] : others };
       }, () => this._maybeOpenGamesActivity());
       // Confra activa: el admin agrega automáticamente a la queue los uids
-      // que ingresan a la sala confra después de que ya empezó.
+      // que se conectan después de que ya empezó. Como todos están fijos en
+      // Repaso, "recién llegado" es cualquiera presente que aún no esté en
+      // la cola (ya no depende de pararse en una sala "confra" aparte).
       if (this.isAdmin && this.state.session?.confra?.active) {
         const conf = this.state.session.confra;
         const rawQ = conf.queue || {};
         const queue = Array.isArray(rawQ) ? rawQ : Object.values(rawQ);
         const inQueue = new Set(queue);
         const inConfraNow = Object.entries(data)
-          .filter(([uid, u]) => uid !== this.uid && u && u.room === 'confra')
+          .filter(([uid, u]) => uid !== this.uid && u && u.room === 'repaso')
           .map(([uid]) => uid);
         const newcomers = inConfraNow.filter((uid) => !inQueue.has(uid));
         if (newcomers.length) {
@@ -19310,12 +19348,11 @@ class Component extends React.Component {
         let activity = s.activity;
         const phase = v.phase;
         if (phase && phase !== 'waiting') {
-          // La zona "Juegos" vive dentro de Repaso: sólo se abre la pantalla
-          // de juegos para quien esté físicamente parado en ese rincón (o el
-          // admin, que siempre puede supervisar/gestionar el juego).
-          const me = s.chars.find((c) => c.id === 'me');
-          const inGamesZone = this.isAdmin || (me && this._isInGamesZone(me.x || 0, me.y || 0));
-          const inMyRoom = this.screenMode || (s.currentRoom === phase) || (s.currentRoom === 'repaso' && phase === 'juegos' && inGamesZone);
+          // Todos están fijos en Repaso (no hay que pararse en ninguna zona
+          // ni rincón puntual): cualquier actividad que el admin active desde
+          // el engranaje se abre para todo el mundo que esté en Repaso, sin
+          // depender de dónde esté parado su avatar.
+          const inMyRoom = this.screenMode || (s.currentRoom === phase) || s.currentRoom === 'repaso';
           // Repaso es opcional: nadie ve el chat auto. Aparece sólo si tocan el FAB 💬.
           // Las demás fases sí abren su pantalla cuando estás en la sala.
           if (inMyRoom && !s.activity && phase !== 'repaso') activity = phase;
@@ -19330,7 +19367,8 @@ class Component extends React.Component {
         if (v.wordcloud?.active && !s.activity && (s.currentRoom === 'repaso' || this.screenMode || this.isAdmin)) activity = 'wordcloud';
         return {
           session: v,
-          started: { mision: !!op.mision, confra: !!op.confra, repaso: !!op.repaso, templo: !!op.templo },
+          // Repaso siempre está abierta, sin importar lo que diga openRooms.
+          started: { mision: !!op.mision, confra: !!op.confra, repaso: true, templo: !!op.templo },
           roomNames: { ...s.roomNames, ...(v.roomNames || {}) },
           activity
         };
@@ -19431,7 +19469,12 @@ class Component extends React.Component {
     this._saveMe({ room: key, x: 8, y: 7 });
     this.setState((s) => ({ view: 'room', currentRoom: key, selectedId: null, selFurn: null, placeMode: null, activity: null, userScale: 1, pan: { x: 0, y: 0 }, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: key, x: 8, y: 7 } : c) }));
   };
+  // Nadie puede salir de Repaso salvo que el admin haya habilitado la salida
+  // (sessions/${SID}/allowExit) — el admin sí puede salir siempre, para
+  // poder abrir/gestionar el resto de las salas.
+  canExit = () => this.isAdmin || !!this.state.session?.allowExit;
   exitRoom = () => {
+    if (!this.canExit()) return;
     this._saveMe({ room: null });
     this.setState((s) => ({ view: 'lobby', currentRoom: null, selectedId: null, selFurn: null, placeMode: null, activity: null, userScale: 1, pan: { x: 0, y: 0 }, chars: s.chars.map((c) => c.id === 'me' ? { ...c, room: null } : c) }));
   };
@@ -19932,11 +19975,15 @@ class Component extends React.Component {
     const out = {};
     for (const c of this.state.chars) {
       const uid = c.id === 'me' ? (this.uid || 'me') : c.id;
-      // Mapeo del nuevo modelo (room) al viejo (zone). Dentro de Repaso, el
-      // rincón "Juegos" (GAMES_ZONE) se mapea a zone:'juegos' para que los
-      // controladores de juegos (Tabú/¿Quién soy?/Dibuja/Kahoot/Pictonary) los
-      // detecten como jugadores activos.
-      const zone = (c.room === 'repaso' && this._isInGamesZone(c.x || 0, c.y || 0)) ? 'juegos' : (c.room || 'entrada');
+      // Mapeo del nuevo modelo (room) al viejo (zone). Mientras la fase
+      // "juegos" esté activa, todo el mundo dentro de Repaso cuenta como
+      // zone:'juegos' (jugador activo) sin importar dónde esté parado su
+      // avatar — así los controladores de juegos (Tabú/¿Quién soy?/Dibuja/
+      // Kahoot/Pictonary) los detectan a todos, no solo a quien esté en el
+      // rincón. Fuera de esa fase, se mantiene la detección por rincón por
+      // si se usa de forma decorativa.
+      const inJuegosPhase = this.state.session?.phase === 'juegos';
+      const zone = (c.room === 'repaso' && (inJuegosPhase || this._isInGamesZone(c.x || 0, c.y || 0))) ? 'juegos' : (c.room || 'entrada');
       out[uid] = {
         name: c.name, color: c.color, avatar: c.emoji, photo: c.photo,
         bodyColor: c.bodyColor, armsColor: c.armColor, armColor: c.armColor,
@@ -19950,16 +19997,15 @@ class Component extends React.Component {
     }
     return out;
   }
-  // Si el juego de la sala Repaso ya está activo y me acabo de mover al
-  // rincón "Juegos" (o soy admin), abro la pantalla de juegos para mí.
-  // Cubre el caso de entrar tarde a un juego ya iniciado.
+  // Si el juego de la sala Repaso ya está activo, abro la pantalla de
+  // juegos para mí (todos en Repaso son elegibles, sin importar dónde
+  // esté parado su avatar). Cubre el caso de entrar tarde a un juego ya
+  // iniciado.
   _maybeOpenGamesActivity = () => {
     const s = this.state;
     if (s.activity || s.currentRoom !== 'repaso') return;
     if (s.session?.phase !== 'juegos') return;
-    const me = s.chars.find((c) => c.id === 'me');
-    const eligible = this.isAdmin || (me && this._isInGamesZone(me.x || 0, me.y || 0));
-    if (eligible) this.setState({ activity: 'juegos' });
+    this.setState({ activity: 'juegos' });
   };
   _commonProps() {
     return {
@@ -20214,12 +20260,16 @@ class Component extends React.Component {
     const roomCards = this.ROOMS.map((r) => {
       const members = st.chars.filter((c) => c.room === r.key);
       const started = st.started[r.key];
+      const isPermanent = r.key === 'repaso';
       const textC = r.key === 'confra' ? '#0a0e2e' : '#fff';
       // No-admins no pueden entrar a una sala cerrada; los admins sí (para preparar).
       const canEnter = started || this.isAdmin;
       return {
         key: r.key, mrnt: r.mrnt, letter: r.letter, name: st.roomNames[r.key],
-        statusText: started
+        isPermanent,
+        statusText: isPermanent
+          ? `● Siempre abierta · ${members.length === 1 ? '1 persona' : members.length + ' personas'}`
+          : started
           ? `● En vivo · ${members.length === 1 ? '1 persona' : members.length + ' personas'}`
           : '○ Sala cerrada',
         members: members.slice(0, 5).map((c) => ({ emoji: c.emoji, photo: c.photo, style: { width: 30, height: 30, borderRadius: '50%', background: '#fff', border: `2px solid ${c.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, boxShadow: '0 2px 6px rgba(10,14,46,.18)', overflow: 'hidden' } })),
@@ -20227,7 +20277,7 @@ class Component extends React.Component {
         enterDisabled: !canEnter,
         enterLabel: canEnter ? 'Entrar →' : '🔒 Sala cerrada',
         onEnter: canEnter ? () => this.enterRoom(r.key) : undefined,
-        onToggleStart: () => this.toggleStart(r.key),
+        onToggleStart: isPermanent ? undefined : () => this.toggleStart(r.key),
         onRename: () => this.renameRoom(r.key),
         cardStyle: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 18, border: `2px solid ${started ? r.color : 'rgba(10,14,46,.12)'}`, boxShadow: started ? `0 12px 30px ${r.color}26` : '0 6px 18px rgba(10,14,46,.06)', overflow: 'hidden', opacity: started ? 1 : .92 },
         bandStyle: { position: 'relative', height: 80, background: started ? `linear-gradient(150deg, ${r.color}, ${r.dark})` : 'linear-gradient(150deg,#c7c2b6,#a39d8f)', padding: 13, display: 'flex', alignItems: 'flex-end', overflow: 'hidden', filter: started ? 'none' : 'saturate(.4)' },
@@ -20249,6 +20299,7 @@ class Component extends React.Component {
       subtitle: inRoom ? `${room.mrnt} · ${st.started[room.key] ? 'EN VIVO' : 'SALA ABIERTA'}` : 'ELIGE UNA SALA PARA ENTRAR',
       count: inRoom ? st.chars.filter((c) => c.room === st.currentRoom).length : st.chars.length,
       onBack: this.exitRoom,
+      canExit: this.canExit(),
       onMyStatus: () => this.setState({ selectedId: 'me', editing: true }),
       furnitureItems: inRoom ? this.FURN.map((f) => ({ icon: f.icon, label: f.label, style: btn(st.placeMode === f.type), onClick: () => this.togglePlace(f.type) })) : [],
       roomCards,
@@ -20286,7 +20337,21 @@ class Component extends React.Component {
         ),
       ),
       h('div', { style: { display: 'flex', alignItems: 'center', gap: isMobile ? 5 : 9, flexShrink: 0 } },
-        v.inRoom ? h('button', { onClick: v.onBack, title: 'Volver al lobby', style: { display: 'flex', alignItems: 'center', gap: 5, background: 'var(--cream-100)', color: 'var(--ink)', border: '1.5px solid var(--ink)', borderRadius: 'var(--r-pill)', padding: isMobile ? '6px 12px' : '7px 15px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase' } }, '← Salas') : null,
+        v.inRoom ? h('button', {
+          onClick: v.onBack,
+          disabled: !v.canExit,
+          title: v.canExit ? 'Volver al lobby' : 'El admin no habilitó salir de la sala todavía',
+          style: {
+            display: 'flex', alignItems: 'center', gap: 5,
+            background: v.canExit ? 'var(--cream-100)' : 'rgba(10,14,46,.04)',
+            color: v.canExit ? 'var(--ink)' : 'var(--ink-soft)',
+            border: v.canExit ? '1.5px solid var(--ink)' : '1.5px solid var(--border-on-light)',
+            borderRadius: 'var(--r-pill)', padding: isMobile ? '6px 12px' : '7px 15px',
+            cursor: v.canExit ? 'pointer' : 'not-allowed',
+            opacity: v.canExit ? 1 : .65,
+            fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase'
+          }
+        }, v.canExit ? '← Salas' : '🔒 Salas') : null,
         h('button', { onClick: () => this.setState({ avatarEditing: true }), title: 'Editar mi avatar', style: { display: 'flex', alignItems: 'center', gap: isMobile ? 0 : 7, background: '#fff', border: '1px solid var(--border-on-light)', borderRadius: 'var(--r-pill)', padding: isMobile ? 3 : '4px 14px 4px 4px', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--ink)' } },
           h('span', { style: { width: isMobile ? 26 : 30, height: isMobile ? 26 : 30, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(circle at 35% 35%, ${(me.color || '#ffd000')}33, ${(me.color || '#ffd000')}11)`, border: `2px solid ${me.color || '#ffd000'}`, fontSize: 14 } }, me.photo ? h('img', { src: me.photo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover' } }) : (me.emoji || '🌟')),
           isMobile ? null : 'Avatar'),
@@ -20315,7 +20380,7 @@ class Component extends React.Component {
         h('div', { style: r.statusStyle }, r.statusText),
         h('button', { onClick: r.onEnter, disabled: r.enterDisabled, style: r.enterStyle }, r.enterLabel),
         this.isAdmin ? h('div', { style: { display: 'flex', gap: 8 } },
-          h('button', { onClick: r.onToggleStart, title: 'Admin: cambiar estado de la sala', style: r.startStyle }, r.startLabel),
+          r.isPermanent ? null : h('button', { onClick: r.onToggleStart, title: 'Admin: cambiar estado de la sala', style: r.startStyle }, r.startLabel),
           h('button', { onClick: r.onRename, title: 'Renombrar sala', style: r.renameStyle }, '✎'),
         ) : null,
       ),
@@ -20455,7 +20520,9 @@ class Component extends React.Component {
         onResetSession: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', confra: null, repaso: null, juegos: null, mision: null, templo: null, presentation: null, video: null, wordcloud: null, tabu: null, quiensoy: null, dibuja: null, pictonary: null }),
         onOpenDownload: () => this.setState({ activity: 'download' }),
         onOpenSurveyResults: () => this.setState({ activity: 'survey-results' }),
-        surveyResponses: st.surveyResponses || {}
+        surveyResponses: st.surveyResponses || {},
+        allowExit: !!st.session?.allowExit,
+        onToggleAllowExit: () => db.ref(`sessions/${this.SID}/allowExit`).set(!st.session?.allowExit)
       }) : null,
       // Menús auxiliares (admin)
       !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slide: 0, startTime: Date.now() }); this.setState({ activity: 'presenta' }); } }) : null,
