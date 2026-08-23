@@ -19211,7 +19211,12 @@ class Component extends React.Component {
     },
     // Chat de voz: mi mic (local) + el estado de mic de todos (para el badge
     // 🎤 sobre el avatar y para que el admin sepa a quién mutear).
-    micOn: false, speakerMuted: false, voiceUsers: {},
+    // speakerMuted arranca en true (parlante apagado): además de ser lo que
+    // se pidió, esto hace que el <audio> de cada conexión arranque muteado
+    // (los navegadores SIEMPRE permiten autoplay muteado) y recién curse el
+    // audio real cuando la persona toca 🔊 — un gesto de usuario real, que
+    // es lo que hace falta para que el navegador deje sonar audio remoto.
+    micOn: false, speakerMuted: true, voiceUsers: {},
   };
 
   componentDidMount() {
@@ -19856,7 +19861,12 @@ class Component extends React.Component {
     const pc = new RTCPeerConnection({ iceServers: VOICE_ICE_SERVERS });
     const audioEl = document.createElement('audio');
     audioEl.autoplay = true;
+    audioEl.playsInline = true;
     audioEl.muted = this.state.speakerMuted;
+    // Se cuelga del DOM (oculto) en vez de quedar suelto en memoria: algunos
+    // navegadores no reproducen de forma confiable un <audio> que nunca se
+    // insertó en la página.
+    this._voiceAudioContainer().appendChild(audioEl);
     const peer = { pc, audioEl, pairKey, isInitiator, signalRef, pendingRemoteCandidates: [], gotRemoteDesc: false };
     this._peers[otherUid] = peer;
     const myIceField = isInitiator ? 'iceInit' : 'iceAns';
@@ -19913,17 +19923,34 @@ class Component extends React.Component {
     try { peer.signalRef.off(); } catch (_) {}
     try { peer.pc.close(); } catch (_) {}
     try { peer.audioEl.srcObject = null; } catch (_) {}
+    try { peer.audioEl.remove(); } catch (_) {}
     delete this._peers[otherUid];
   };
   _closeAllVoicePeers = () => {
     Object.keys(this._peers).forEach((uid) => this._teardownVoicePeer(uid));
     if (this._localStream) { this._localStream.getTracks().forEach((t) => t.stop()); this._localStream = null; }
   };
+  // Contenedor invisible donde viven todos los <audio> remotos — se crea
+  // una sola vez.
+  _voiceAudioContainer = () => {
+    if (!this._voiceAudioEl) {
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;width:0;height:0;overflow:hidden;';
+      el.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(el);
+      this._voiceAudioEl = el;
+    }
+    return this._voiceAudioEl;
+  };
   _attachRemoteAudio = (otherUid, stream) => {
     const peer = this._peers[otherUid];
     if (!peer) return;
     peer.audioEl.srcObject = stream;
-    peer.audioEl.play().catch(() => {}); // autoplay puede pedir un gesto del usuario — se reintenta en el toggle del mic/parlante
+    // Arranca muteado (speakerMuted default true), así que este play()
+    // siempre lo permite el navegador — el audio real recién se escucha
+    // cuando la persona toca 🔊 (ahí sí hay un gesto de usuario, y ese
+    // toggle vuelve a llamar play()/reintenta si hiciera falta).
+    peer.audioEl.play().catch((err) => console.error('[MRNT] Voz: no se pudo reproducir audio de', otherUid, err));
   };
   // Prende/apaga el envío real de audio. El mismo MediaStreamTrack se
   // reutiliza (por referencia) en todas las conexiones, así que basta con
@@ -19969,7 +19996,10 @@ class Component extends React.Component {
     this.setState({ speakerMuted: next });
     Object.values(this._peers).forEach((peer) => {
       peer.audioEl.muted = next;
-      if (!next) peer.audioEl.play().catch(() => {});
+      // Este click es un gesto real del usuario, así que acá el navegador
+      // sí debería dejar sonar el audio aunque el primer intento (mudo,
+      // automático, al llegar el track) hubiese quedado bloqueado.
+      if (!next) peer.audioEl.play().catch((err) => console.error('[MRNT] Voz: play() rechazado al activar parlante', err));
     });
   };
   // Admin: mutear/desmutear el mic de otra persona. Nadie más puede tocar esto.
@@ -20584,7 +20614,7 @@ class Component extends React.Component {
             })
           }, mutedByAdmin ? '🔇' : (micOn ? '🎙️' : '🎤'));
         })(),
-        h('button', { onClick: this.toggleSpeaker, title: this.state.speakerMuted ? 'Volver a escuchar a los demás' : 'Silenciar a todos (solo para vos)', style: iconBtn(this.state.speakerMuted ? { background: 'rgba(239,68,68,.1)', color: '#dc2626', borderColor: 'rgba(239,68,68,.3)' } : {}) }, this.state.speakerMuted ? '🔇' : '🔊'),
+        h('button', { onClick: this.toggleSpeaker, title: this.state.speakerMuted ? 'Activar audio — vas a escuchar a quien prenda su micrófono' : 'Silenciar a todos (solo para vos)', style: iconBtn(this.state.speakerMuted ? { background: 'rgba(239,68,68,.1)', color: '#dc2626', borderColor: 'rgba(239,68,68,.3)' } : {}) }, this.state.speakerMuted ? '🔇' : '🔊'),
         h('button', { onClick: () => this.setState({ activity: 'asistencia' }), title: 'Mi asistencia', style: iconBtn() }, '📅'),
         this.isAdmin ? h('button', { onClick: () => this.setState((s) => ({ showQR: !s.showQR })), title: 'Mostrar QR', style: iconBtn() }, '📲') : null,
         this.isAdmin && !isMobile ? h('button', { onClick: () => { const u = new URL(window.location.href); u.searchParams.set('screen', '1'); window.open(u.toString(), '_blank', 'noopener'); }, title: 'Abrir vista para proyección', style: iconBtn() }, '📺') : null,
