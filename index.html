@@ -20568,9 +20568,9 @@ class Component extends React.Component {
         isMobile ? null : h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: 'var(--navy-900)', color: 'var(--yellow)', borderRadius: 'var(--r-pill)', padding: '6px 14px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
           h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: 'var(--yellow)' } }), `${v.count} en línea`),
         (() => {
-          const voiceMe = st.voiceUsers[this.uid] || {};
+          const voiceMe = this.state.voiceUsers[this.uid] || {};
           const mutedByAdmin = !!voiceMe.mutedByAdmin;
-          const micOn = st.micOn;
+          const micOn = this.state.micOn;
           return h('button', {
             onClick: this.toggleMic,
             disabled: mutedByAdmin,
@@ -20584,7 +20584,7 @@ class Component extends React.Component {
             })
           }, mutedByAdmin ? '🔇' : (micOn ? '🎙️' : '🎤'));
         })(),
-        h('button', { onClick: this.toggleSpeaker, title: st.speakerMuted ? 'Volver a escuchar a los demás' : 'Silenciar a todos (solo para vos)', style: iconBtn(st.speakerMuted ? { background: 'rgba(239,68,68,.1)', color: '#dc2626', borderColor: 'rgba(239,68,68,.3)' } : {}) }, st.speakerMuted ? '🔇' : '🔊'),
+        h('button', { onClick: this.toggleSpeaker, title: this.state.speakerMuted ? 'Volver a escuchar a los demás' : 'Silenciar a todos (solo para vos)', style: iconBtn(this.state.speakerMuted ? { background: 'rgba(239,68,68,.1)', color: '#dc2626', borderColor: 'rgba(239,68,68,.3)' } : {}) }, this.state.speakerMuted ? '🔇' : '🔊'),
         h('button', { onClick: () => this.setState({ activity: 'asistencia' }), title: 'Mi asistencia', style: iconBtn() }, '📅'),
         this.isAdmin ? h('button', { onClick: () => this.setState((s) => ({ showQR: !s.showQR })), title: 'Mostrar QR', style: iconBtn() }, '📲') : null,
         this.isAdmin && !isMobile ? h('button', { onClick: () => { const u = new URL(window.location.href); u.searchParams.set('screen', '1'); window.open(u.toString(), '_blank', 'noopener'); }, title: 'Abrir vista para proyección', style: iconBtn() }, '📺') : null,
