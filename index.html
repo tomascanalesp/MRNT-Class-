@@ -133,6 +133,18 @@ const FURN = [
 ];
 const MOODS = ['🔥', '🙏', '😊', '📖', '😴', '🎉', '💛', '🤔'];
 const REACT_EMOJIS = ['❤️', '🙏', '👍', '😊', '😢', '🎉'];
+// Chat de voz (WebRTC malla, señalización por Firebase). Solo STUN público —
+// sin servidor TURN propio, así que en redes muy restrictivas (algunos wifis
+// corporativos/colegio) la conexión de audio entre dos personas puntuales
+// puede fallar; para la gran mayoría de redes domésticas/móviles funciona bien.
+const VOICE_ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+];
+// Un solo nodo de señalización por par de usuarios (sin importar quién lo
+// mire primero): siempre ordenado para que ambos lados escriban/lean el
+// mismo path.
+const voicePairKey = (a, b) => (a < b ? `${a}__${b}` : `${b}__${a}`);
 // Activities live INSIDE each room — admin starts them from the rail.
 const ACTS = [
   { key: 'confra',   icon: '🤝', label: 'Confraternización', color: '#eab308', dark: '#a16207' },
@@ -19145,6 +19157,12 @@ class Component extends React.Component {
   // grilla (COLS×ROWS). Quien mueva su avatar ahí entra a la zona de juegos.
   GAMES_ZONE = { x1: 11, y1: 8 };
   _isInGamesZone = (x, y) => x >= this.GAMES_ZONE.x1 && y >= this.GAMES_ZONE.y1;
+  // Chat de voz: uid del otro → { pc: RTCPeerConnection, audioEl, pairKey,
+  // isInitiator, signalRef, pendingRemoteCandidates }. `_localStream` es el
+  // MediaStream del micrófono propio — se pide una sola vez, la primera vez
+  // que se activa el mic.
+  _peers = {};
+  _localStream = null;
 
   state = {
     isMobile: typeof window !== 'undefined' && window.innerWidth < 640,
@@ -19191,6 +19209,9 @@ class Component extends React.Component {
       others: [],
       prompt: null, dismissed: null, lastSeg: 0
     },
+    // Chat de voz: mi mic (local) + el estado de mic de todos (para el badge
+    // 🎤 sobre el avatar y para que el admin sepa a quién mutear).
+    micOn: false, speakerMuted: false, voiceUsers: {},
   };
 
   componentDidMount() {
@@ -19334,6 +19355,9 @@ class Component extends React.Component {
           window.db.ref(`sessions/${this.SID}/confra/queue`).set(obj).catch(() => {});
         }
       }
+      // Chat de voz: arma/cierra la malla de conexiones P2P según quién está
+      // presente ahora (sin importar dónde esté parado su avatar).
+      this._syncVoicePeers(Object.keys(data).filter((uid) => uid !== this.uid));
     }, (e) => {
       console.error('[MRNT] No se pudo leer users/' + this.SID + ' — no vas a ver a los demás en la sala:', e);
     });
@@ -19415,6 +19439,25 @@ class Component extends React.Component {
     });
     this._chatRxRef = window.db.ref(`sessions/${this.SID}/chatReactions`);
     this._chatRxRef.on('value', (snap) => this.setState({ chatReactions: snap.val() || {} }));
+    // Chat de voz: estado de mic de todos (micOn propio + mutedByAdmin, que
+    // solo el admin puede escribir). El modo proyección no participa.
+    if (!this.screenMode) {
+      window.db.ref(`sessions/${this.SID}/voice/${this.uid}`).set({ micOn: false, mutedByAdmin: false }).catch(() => {});
+      window.db.ref(`sessions/${this.SID}/voice/${this.uid}`).onDisconnect().remove();
+    }
+    this._voiceRef = window.db.ref(`sessions/${this.SID}/voice`);
+    this._voiceRef.on('value', (snap) => {
+      const voiceUsers = snap.val() || {};
+      // Si el admin me muteó, se apaga mi mic de verdad (no solo visualmente)
+      // y hay que avisarle al usuario — no puede reactivarlo él mismo hasta
+      // que el admin lo desmutee; ahí sí tiene que volver a tocar el botón.
+      const mine = this.uid ? voiceUsers[this.uid] : null;
+      if (mine?.mutedByAdmin && this.state.micOn) {
+        this._setMicEnabled(false);
+        this.setState({ micOn: false });
+      }
+      this.setState({ voiceUsers });
+    });
   }
 
   componentWillUnmount() {
@@ -19430,8 +19473,11 @@ class Component extends React.Component {
     if (this._myAttRef)     this._myAttRef.off();
     if (this._msgsRef)      this._msgsRef.off();
     if (this._chatRxRef)    this._chatRxRef.off();
+    if (this._voiceRef)     this._voiceRef.off();
+    this._closeAllVoicePeers();
     if (this.uid && this.SID && window.db && !this.screenMode) {
       window.db.ref(`users/${this.SID}/${this.uid}`).remove().catch(() => {});
+      window.db.ref(`sessions/${this.SID}/voice/${this.uid}`).remove().catch(() => {});
     }
   }
 
@@ -19787,6 +19833,151 @@ class Component extends React.Component {
     window.db.ref(`users/${this.SID}/${uid}/hand`).set(false).catch(() => {});
   };
 
+  /* ════════ CHAT DE VOZ (WebRTC malla + señalización por Firebase) ════════
+     Un RTCPeerConnection por par de personas presentes, creado apenas se ven
+     (sin importar si alguno tiene el mic prendido) y con un solo transceiver
+     de audio "sendrecv" desde el arranque: así, cuando alguien prende su mic
+     más tarde, solo hace falta `replaceTrack` — sin renegociar SDP de nuevo.
+     Quién ofrece y quién contesta se decide comparando los uid (el menor
+     ofrece), para que ambos lados nunca intenten armar la conexión a la vez. */
+  _syncVoicePeers = (presentUids) => {
+    if (this.screenMode || !this.uid) return;
+    const present = new Set(presentUids);
+    // Nuevo: alguien presente que todavía no tiene conexión de voz armada.
+    present.forEach((uid) => { if (!this._peers[uid]) this._createVoicePeer(uid); });
+    // Se fue: cerrar y limpiar su conexión.
+    Object.keys(this._peers).forEach((uid) => { if (!present.has(uid)) this._teardownVoicePeer(uid); });
+  };
+  _createVoicePeer = (otherUid) => {
+    if (!window.db || this._peers[otherUid]) return;
+    const isInitiator = this.uid < otherUid;
+    const pairKey = voicePairKey(this.uid, otherUid);
+    const signalRef = window.db.ref(`sessions/${this.SID}/voicePeers/${pairKey}`);
+    const pc = new RTCPeerConnection({ iceServers: VOICE_ICE_SERVERS });
+    const audioEl = document.createElement('audio');
+    audioEl.autoplay = true;
+    audioEl.muted = this.state.speakerMuted;
+    const peer = { pc, audioEl, pairKey, isInitiator, signalRef, pendingRemoteCandidates: [], gotRemoteDesc: false };
+    this._peers[otherUid] = peer;
+    const myIceField = isInitiator ? 'iceInit' : 'iceAns';
+    const theirIceField = isInitiator ? 'iceAns' : 'iceInit';
+    pc.onicecandidate = (e) => { if (e.candidate) signalRef.child(myIceField).push(e.candidate.toJSON()).catch(() => {}); };
+    pc.ontrack = (e) => this._attachRemoteAudio(otherUid, e.streams[0]);
+    const transceiver = pc.addTransceiver('audio', { direction: 'sendrecv' });
+    if (this._localStream) {
+      const track = this._localStream.getAudioTracks()[0];
+      if (track) transceiver.sender.replaceTrack(track).catch(() => {});
+    }
+    const seenIce = new Set();
+    signalRef.on('value', async (snap) => {
+      const v = snap.val() || {};
+      try {
+        if (isInitiator && v.answer && !peer.gotRemoteDesc) {
+          peer.gotRemoteDesc = true;
+          await pc.setRemoteDescription(new RTCSessionDescription(v.answer));
+          peer.pendingRemoteCandidates.forEach((c) => pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {}));
+          peer.pendingRemoteCandidates = [];
+        } else if (!isInitiator && v.offer && !peer.gotRemoteDesc) {
+          peer.gotRemoteDesc = true;
+          await pc.setRemoteDescription(new RTCSessionDescription(v.offer));
+          peer.pendingRemoteCandidates.forEach((c) => pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {}));
+          peer.pendingRemoteCandidates = [];
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          signalRef.child('answer').set({ type: answer.type, sdp: answer.sdp }).catch(() => {});
+        }
+        const theirIce = v[theirIceField] || {};
+        Object.entries(theirIce).forEach(([cid, cand]) => {
+          if (seenIce.has(cid)) return;
+          seenIce.add(cid);
+          if (peer.gotRemoteDesc) pc.addIceCandidate(new RTCIceCandidate(cand)).catch(() => {});
+          else peer.pendingRemoteCandidates.push(cand);
+        });
+      } catch (err) {
+        console.error('[MRNT] Voz: fallo de señalización con', otherUid, err);
+      }
+    });
+    if (isInitiator) {
+      // Al ofrecer, limpiar answer + ICE del otro lado por si quedó basura
+      // de un intento anterior con esta misma persona (p.ej. recargó la
+      // página) — si no, este RTCPeerConnection nuevo podría toparse con un
+      // answer viejo que ya no le corresponde.
+      pc.createOffer().then((offer) => pc.setLocalDescription(offer).then(() => {
+        signalRef.update({ offer: { type: offer.type, sdp: offer.sdp }, answer: null, [theirIceField]: null }).catch(() => {});
+      })).catch(() => {});
+    }
+  };
+  _teardownVoicePeer = (otherUid) => {
+    const peer = this._peers[otherUid];
+    if (!peer) return;
+    try { peer.signalRef.off(); } catch (_) {}
+    try { peer.pc.close(); } catch (_) {}
+    try { peer.audioEl.srcObject = null; } catch (_) {}
+    delete this._peers[otherUid];
+  };
+  _closeAllVoicePeers = () => {
+    Object.keys(this._peers).forEach((uid) => this._teardownVoicePeer(uid));
+    if (this._localStream) { this._localStream.getTracks().forEach((t) => t.stop()); this._localStream = null; }
+  };
+  _attachRemoteAudio = (otherUid, stream) => {
+    const peer = this._peers[otherUid];
+    if (!peer) return;
+    peer.audioEl.srcObject = stream;
+    peer.audioEl.play().catch(() => {}); // autoplay puede pedir un gesto del usuario — se reintenta en el toggle del mic/parlante
+  };
+  // Prende/apaga el envío real de audio. El mismo MediaStreamTrack se
+  // reutiliza (por referencia) en todas las conexiones, así que basta con
+  // tocar esta única propiedad para que se calle/hable en todas a la vez.
+  _setMicEnabled = (enabled) => {
+    if (this._localStream) {
+      const track = this._localStream.getAudioTracks()[0];
+      if (track) track.enabled = enabled;
+    }
+  };
+  // Botón 🎤 del usuario: pide permiso de mic la primera vez, después solo
+  // prende/apaga el track ya armado en cada conexión (sin renegociar).
+  toggleMic = async () => {
+    if (!this.uid || !this.SID || !window.db) return;
+    const voiceMe = this.state.voiceUsers[this.uid] || {};
+    if (voiceMe.mutedByAdmin) return; // el admin lo bloqueó — no se puede pisar desde acá
+    const next = !this.state.micOn;
+    if (next && !this._localStream) {
+      try {
+        this._localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        console.error('[MRNT] No se pudo acceder al micrófono:', e);
+        alert('No se pudo activar el micrófono. Revisá los permisos del navegador.');
+        return;
+      }
+      const track = this._localStream.getAudioTracks()[0];
+      // Todas las conexiones ya armadas tienen un transceiver de audio sin
+      // track propio todavía (se creó vacío) — le insertamos el track ahí,
+      // sin renegociar SDP de nuevo.
+      Object.values(this._peers).forEach((peer) => {
+        const sender = peer.pc.getSenders().find((s) => s.track === null);
+        if (sender) sender.replaceTrack(track).catch(() => {});
+      });
+    }
+    this._setMicEnabled(next);
+    this.setState({ micOn: next });
+    window.db.ref(`sessions/${this.SID}/voice/${this.uid}/micOn`).set(next).catch(() => {});
+  };
+  // Botón 🔊 del usuario: solo local, no le apaga el mic a nadie — deja de
+  // reproducir lo que llega de los demás.
+  toggleSpeaker = () => {
+    const next = !this.state.speakerMuted;
+    this.setState({ speakerMuted: next });
+    Object.values(this._peers).forEach((peer) => {
+      peer.audioEl.muted = next;
+      if (!next) peer.audioEl.play().catch(() => {});
+    });
+  };
+  // Admin: mutear/desmutear el mic de otra persona. Nadie más puede tocar esto.
+  adminSetVoiceMuted = (uid, muted) => {
+    if (!this.isAdmin || !uid || !this.SID || !window.db) return;
+    window.db.ref(`sessions/${this.SID}/voice/${uid}`).update({ mutedByAdmin: muted, micOn: muted ? false : (this.state.voiceUsers[uid]?.micOn || false) }).catch(() => {});
+  };
+
   /* ════════ 3D PIECES ════════ */
   Box3D(w, d, hh, topC, frontC, sideC, radius = 6) {
     return h('div', { style: { position: 'relative', width: w, height: d + hh } },
@@ -19898,11 +20089,17 @@ class Component extends React.Component {
     const uidKey = c.id === 'me' ? this.uid : c.id;
     const pop = uidKey ? popReacts[uidKey] : null;
     const emoji = pop ? this.RID_EMOJI[pop.rid] : null;
+    const voice = uidKey ? (this.state.voiceUsers[uidKey] || {}) : {};
+    const speaking = voice.micOn && !voice.mutedByAdmin;
     return h(React.Fragment, null,
       // Pop animado hacia arriba.
       pop && emoji ? h('span', { key: 'pop' + pop.ts, style: { position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', fontSize: 30, animation: 'mr-reactFloat 1.4s ease-out forwards', pointerEvents: 'none', zIndex: 999, textShadow: '0 2px 6px rgba(0,0,0,.25)' } }, emoji) : null,
       // Mano levantada — emoji al lado de la cabeza, con leve bamboleo.
       c.hand ? h('span', { style: { position: 'absolute', top: -10, right: -16, fontSize: 28, animation: 'mr-pulse 1.2s ease-in-out infinite', pointerEvents: 'none', zIndex: 998, transform: 'rotate(-10deg)' } }, '✋') : null,
+      // Mic prendido — badge verde pulsante junto a la cabeza.
+      speaking ? h('span', { title: 'Micrófono prendido', style: { position: 'absolute', top: -6, left: -14, width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#10b981,#047857)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#fff', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(16,185,129,.55)', animation: 'mr-pulse 1.2s ease-in-out infinite', pointerEvents: 'none', zIndex: 998 } }, '🎤') : null,
+      // Muteado por el admin — badge para que todos sepan por qué no habla.
+      voice.mutedByAdmin ? h('span', { title: 'Muteado por el admin', style: { position: 'absolute', top: -6, left: -14, width: 22, height: 22, borderRadius: '50%', background: 'rgba(239,68,68,.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#fff', border: '2px solid #fff', pointerEvents: 'none', zIndex: 998 } }, '🔇') : null,
     );
   }
   renderChar(c) {
@@ -19945,6 +20142,19 @@ class Component extends React.Component {
         isMe ? h('button', { onClick: (e) => { e.stopPropagation(); this.setState({ editing: true }); }, style: { marginTop: 9, width: '100%', padding: 8, border: 'none', borderRadius: 'var(--r-pill)', cursor: 'pointer', background: 'var(--ink)', color: 'var(--cream-50)', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase' } }, '✎ Editar estado') : null,
         // Admin: si el avatar tocado tiene la mano levantada, ofrecer bajársela.
         (!isMe && this.isAdmin && c.hand) ? h('button', { onClick: (e) => { e.stopPropagation(); this.lowerHandOf(c.id); this.setState({ selectedId: null }); }, style: { marginTop: 9, width: '100%', padding: 8, border: 'none', borderRadius: 'var(--r-pill)', cursor: 'pointer', background: 'linear-gradient(135deg,#fbbf24,#f59e0b)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', boxShadow: '0 4px 14px rgba(245,158,11,.45)' } }, '✋ Bajar mano') : null,
+        // Admin: mutear/desmutear el micrófono de esta persona. Único que puede.
+        (!isMe && this.isAdmin) ? (() => {
+          const muted = !!(this.state.voiceUsers[c.id] || {}).mutedByAdmin;
+          return h('button', {
+            onClick: (e) => { e.stopPropagation(); this.adminSetVoiceMuted(c.id, !muted); },
+            style: {
+              marginTop: 9, width: '100%', padding: 8, border: 'none', borderRadius: 'var(--r-pill)', cursor: 'pointer',
+              background: muted ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.1)',
+              color: muted ? '#10b981' : '#dc2626',
+              fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase'
+            }
+          }, muted ? '🔊 Permitir micrófono' : '🔇 Mutear micrófono');
+        })() : null,
         h('span', { style: { position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%) rotate(45deg)', width: 14, height: 14, background: '#fff', borderRight: `2px solid ${c.color}`, borderBottom: `2px solid ${c.color}` } }),
       ),
     );
@@ -20357,6 +20567,24 @@ class Component extends React.Component {
           isMobile ? null : 'Avatar'),
         isMobile ? null : h('div', { style: { display: 'flex', alignItems: 'center', gap: 7, background: 'var(--navy-900)', color: 'var(--yellow)', borderRadius: 'var(--r-pill)', padding: '6px 14px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase' } },
           h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: 'var(--yellow)' } }), `${v.count} en línea`),
+        (() => {
+          const voiceMe = st.voiceUsers[this.uid] || {};
+          const mutedByAdmin = !!voiceMe.mutedByAdmin;
+          const micOn = st.micOn;
+          return h('button', {
+            onClick: this.toggleMic,
+            disabled: mutedByAdmin,
+            title: mutedByAdmin ? 'El admin te muteó el micrófono' : (micOn ? 'Apagar mi micrófono' : 'Prender mi micrófono — todos te van a escuchar'),
+            style: iconBtn({
+              background: mutedByAdmin ? 'rgba(239,68,68,.12)' : (micOn ? 'linear-gradient(135deg,#10b981,#047857)' : undefined),
+              color: mutedByAdmin ? '#dc2626' : (micOn ? '#fff' : undefined),
+              borderColor: mutedByAdmin ? 'rgba(239,68,68,.35)' : undefined,
+              cursor: mutedByAdmin ? 'not-allowed' : 'pointer',
+              opacity: mutedByAdmin ? .85 : 1
+            })
+          }, mutedByAdmin ? '🔇' : (micOn ? '🎙️' : '🎤'));
+        })(),
+        h('button', { onClick: this.toggleSpeaker, title: st.speakerMuted ? 'Volver a escuchar a los demás' : 'Silenciar a todos (solo para vos)', style: iconBtn(st.speakerMuted ? { background: 'rgba(239,68,68,.1)', color: '#dc2626', borderColor: 'rgba(239,68,68,.3)' } : {}) }, st.speakerMuted ? '🔇' : '🔊'),
         h('button', { onClick: () => this.setState({ activity: 'asistencia' }), title: 'Mi asistencia', style: iconBtn() }, '📅'),
         this.isAdmin ? h('button', { onClick: () => this.setState((s) => ({ showQR: !s.showQR })), title: 'Mostrar QR', style: iconBtn() }, '📲') : null,
         this.isAdmin && !isMobile ? h('button', { onClick: () => { const u = new URL(window.location.href); u.searchParams.set('screen', '1'); window.open(u.toString(), '_blank', 'noopener'); }, title: 'Abrir vista para proyección', style: iconBtn() }, '📺') : null,
