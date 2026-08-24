@@ -8528,6 +8528,7 @@ function AdminPanel({
   onOpenVideoMenu,
   onEndVideo,
   onStartJuegos,
+  onOpenJuegosList,
   onEndJuegos,
   onStartMision,
   onEndMision,
@@ -9111,7 +9112,23 @@ function AdminPanel({
       letterSpacing: '.04em',
       textTransform: 'uppercase'
     }
-  }, "⏹ Finalizar Repaso")), phase === 'juegos' && /*#__PURE__*/React.createElement("button", {
+  }, "⏹ Finalizar Repaso")), phase === 'juegos' && /*#__PURE__*/React.createElement(React.Fragment, null, !session?.juegos?.listOpen && /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      onOpenJuegosList();
+    },
+    style: {
+      background: 'linear-gradient(135deg,#fdba74,#ea580c)',
+      border: 'none',
+      borderRadius: 10,
+      padding: '10px',
+      color: '#0a0e2e',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.04em',
+      textTransform: 'uppercase'
+    }
+  }, "🎮 Abrir lista de juegos"), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       onEndJuegos();
       setOpen(false);
@@ -9128,7 +9145,7 @@ function AdminPanel({
       letterSpacing: '.04em',
       textTransform: 'uppercase'
     }
-  }, "⏹ Finalizar Juegos"), phase === 'mision' && /*#__PURE__*/React.createElement("button", {
+  }, "⏹ Finalizar Juegos")), phase === 'mision' && /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       onEndMision && onEndMision();
       setOpen(false);
@@ -19167,6 +19184,12 @@ class Component extends React.Component {
   // grilla (COLS×ROWS). Quien mueva su avatar ahí entra a la zona de juegos.
   GAMES_ZONE = { x1: 11, y1: 8 };
   _isInGamesZone = (x, y) => x >= this.GAMES_ZONE.x1 && y >= this.GAMES_ZONE.y1;
+  // Barandas de la zona de juegos: mientras el admin no active la fase
+  // "juegos" quedan cerradas (bloquean el paso). Se bajan apenas activa
+  // — recién ahí la gente puede entrar caminando al rincón — y el admin
+  // decide después, con otro botón, cuándo mostrarle a todos la lista de
+  // juegos (ver onOpenJuegosList).
+  _gamesZoneOpen = () => this.state.session?.phase === 'juegos';
   // Chat de voz: uid del otro → { pc: RTCPeerConnection, audioEl, pairKey,
   // isInitiator, signalRef, pendingRemoteCandidates }. `_localStream` es el
   // MediaStream del micrófono propio — se pide una sola vez, la primera vez
@@ -19406,7 +19429,11 @@ class Component extends React.Component {
           const inMyRoom = this.screenMode || (s.currentRoom === phase) || s.currentRoom === 'repaso';
           // Repaso es opcional: nadie ve el chat auto. Aparece sólo si tocan el FAB 💬.
           // Las demás fases sí abren su pantalla cuando estás en la sala.
-          if (inMyRoom && !s.activity && phase !== 'repaso') activity = phase;
+          // Juegos es un caso especial: activar la fase solo baja la baranda
+          // del rincón — la lista de juegos recién se abre para todos cuando
+          // el admin toca "Abrir lista de juegos" (juegos.listOpen).
+          const gamesListReady = phase !== 'juegos' || !!v.juegos?.listOpen;
+          if (inMyRoom && !s.activity && phase !== 'repaso' && gamesListReady) activity = phase;
           // Si la fase termina, cerrar la actividad asociada.
         } else if (phase === 'waiting' && ['confra','repaso','juegos','mision','templo'].includes(s.activity)) {
           activity = null;
@@ -19738,6 +19765,15 @@ class Component extends React.Component {
   _moveMe = (e) => {
     let { x, y } = this._evToTile(e);
     x = this.clamp(x, 0.4, this.COLS - 0.4); y = this.clamp(y, 0.4, this.ROWS - 0.4);
+    // Baranda cerrada: no deja entrar al rincón de juegos. Frena al
+    // avatar justo en el borde por el que venía entrando (el eje que
+    // todavía no había cruzado), como si chocara con la reja.
+    if (this.state.currentRoom === 'repaso' && !this._gamesZoneOpen() && this._isInGamesZone(x, y)) {
+      const me = this.state.chars.find((c) => c.id === 'me') || {};
+      const prevX = me.x ?? 0;
+      if (prevX < this.GAMES_ZONE.x1 - 0.05) x = this.GAMES_ZONE.x1 - 0.45;
+      else y = this.GAMES_ZONE.y1 - 0.45;
+    }
     this._pending = { x, y };
     if (!this._raf) this._raf = requestAnimationFrame(() => {
       this._raf = null;
@@ -20386,6 +20422,7 @@ class Component extends React.Component {
     const s = this.state;
     if (s.activity || s.currentRoom !== 'repaso') return;
     if (s.session?.phase !== 'juegos') return;
+    if (!s.session?.juegos?.listOpen) return;
     this.setState({ activity: 'juegos' });
   };
   _commonProps() {
@@ -20603,6 +20640,46 @@ class Component extends React.Component {
     const wallTitle = h('div', { style: { position: 'absolute', left: a.left, top: a.top - H, width: rb.left - a.left, height: H, transform: 'skewY(26.565deg)', transformOrigin: 'left top', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 3, padding: '0 40px', boxSizing: 'border-box' } },
       h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 32, letterSpacing: '.03em', textTransform: 'uppercase', color: room.dark, opacity: .9, textAlign: 'center', lineHeight: 1, textShadow: '0 1px 0 rgba(255,255,255,.4)' } }, st.roomNames[room.key]),
     );
+    // Logo MRNT (las 4 letras del plan, con sus colores) pintado en la
+    // pared izquierda — la misma pared plana que antes quedaba vacía.
+    // Usa el mismo truco de skewY que wallTitle, pero espejado (-26.565°)
+    // porque esta pared se aleja hacia la izquierda en vez de la derecha.
+    const wallLogo = h('div', { style: { position: 'absolute', left: lb.left, top: lb.top - H, width: a.left - lb.left, height: H, transform: 'skewY(-26.565deg)', transformOrigin: 'left top', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 3 } },
+      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 } },
+        h('div', { style: { display: 'flex', gap: 5 } },
+          this.ROOMS.map((r) => h('span', { key: r.key, style: { width: 26, height: 26, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 14, color: '#fff', background: `linear-gradient(150deg, ${r.color}, ${r.dark})`, boxShadow: `0 3px 8px ${r.dark}55, inset 0 -2px 0 rgba(0,0,0,.18)` } }, r.letter)),
+        ),
+        h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--ink-soft)', opacity: .75 } }, 'Maranata Class'),
+      ),
+    );
+    // Barandas de la zona "Juegos": una reja en L sobre los dos bordes del
+    // rincón (borde superior + borde izquierdo del GAMES_ZONE), pintada
+    // como líneas dentro del mismo <svg> del piso/paredes. Se "bajan"
+    // (colapsan hacia el piso) apenas el admin activa la fase juegos.
+    const gamesZoneFence = (room.key === 'repaso') ? (() => {
+      const open = this._gamesZoneOpen();
+      const gz = this.GAMES_ZONE, FH = 15;
+      const corner = this.iso(gz.x1, gz.y1);
+      const post = (x, y, key) => { const p = this.iso(x, y); return h('line', { key, x1: p.left, y1: p.top, x2: p.left, y2: p.top - FH, stroke: '#9a3412', strokeWidth: 2.5, strokeLinecap: 'round' }); };
+      const rail = (x0, y0, x1, y1, dy, key) => { const p0 = this.iso(x0, y0), p1 = this.iso(x1, y1); return h('line', { key, x1: p0.left, y1: p0.top - dy, x2: p1.left, y2: p1.top - dy, stroke: '#f97316', strokeWidth: 3, strokeLinecap: 'round' }); };
+      const posts = [];
+      for (let x = gz.x1; x <= this.COLS; x++) posts.push(post(x, gz.y1, `fpt${x}`));
+      for (let y = gz.y1; y <= this.ROWS; y++) posts.push(post(gz.x1, y, `fpl${y}`));
+      return h('g', {
+        style: {
+          transition: 'opacity .5s ease, transform .5s ease',
+          transformOrigin: `${corner.left}px ${corner.top}px`,
+          transform: open ? 'scaleY(0)' : 'scaleY(1)',
+          opacity: open ? 0 : 1,
+        }
+      },
+        rail(gz.x1, gz.y1, this.COLS, gz.y1, FH, 'frt'),
+        rail(gz.x1, gz.y1, this.COLS, gz.y1, FH * 0.45, 'frm'),
+        rail(gz.x1, gz.y1, gz.x1, this.ROWS, FH, 'flt'),
+        rail(gz.x1, gz.y1, gz.x1, this.ROWS, FH * 0.45, 'flm'),
+        posts,
+      );
+    })() : null;
 
     const furniture = st.furniture[room.key] || [];
     const chars = st.chars.filter((c) => c.room === room.key);
@@ -20612,8 +20689,9 @@ class Component extends React.Component {
 
     return h('div', { key: 'stage', ref: this.setStage, style: { position: 'relative', flex: 1, overflow: 'hidden', background: `radial-gradient(ellipse at 50% 26%, #fffdf8, ${room.color}0c 75%, var(--cream-50))`, cursor: st.placeMode ? 'copy' : 'default', touchAction: 'none' } },
       h('div', { ref: (el) => { this.layerEl = el; }, onPointerDown: this.onLayerDown, onPointerMove: this.onLayerMove, onPointerUp: this.onLayerUp, onPointerCancel: this.onLayerUp, onClick: this.onLayerClick, style: { position: 'absolute', left: '50%', top: '50%', width: this.LW, height: this.LH, transform: `translate(calc(-50% + ${st.pan.x}px), calc(-50% + ${st.pan.y}px)) scale(${st.scale * st.userScale})`, transformOrigin: 'center center', transition: (st.panning || st.dragging) ? 'none' : 'transform .2s ease' } },
-        h('svg', { width: this.LW, height: this.LH, style: { position: 'absolute', left: 0, top: 0, overflow: 'visible' } }, walls, tiles),
+        h('svg', { width: this.LW, height: this.LH, style: { position: 'absolute', left: 0, top: 0, overflow: 'visible' } }, walls, tiles, gamesZoneFence),
         wallTitle,
+        wallLogo,
         gamesZoneLabel,
         furniture.map((f) => h(React.Fragment, { key: f.id }, this.renderFurn(f))),
         chars.map((c) => this.renderChar(c)),
@@ -20912,7 +20990,11 @@ class Component extends React.Component {
         onEndPresentation: () => db.ref(`sessions/${this.SID}/presentation`).remove(),
         onOpenVideoMenu: () => this.setState({ activity: 'videos-menu' }),
         onEndVideo: () => db.ref(`sessions/${this.SID}/video`).remove(),
-        onStartJuegos: () => db.ref(`sessions/${this.SID}`).update({ phase: 'juegos', juegos: { active: true, startTime: Date.now() } }),
+        // Activar juegos solo baja la baranda del rincón (fase 'juegos',
+        // listOpen:false) — todavía no muestra la lista de juegos a nadie,
+        // así el admin puede ver cómo la gente camina hacia la zona.
+        onStartJuegos: () => db.ref(`sessions/${this.SID}`).update({ phase: 'juegos', juegos: { active: true, startTime: Date.now(), listOpen: false } }),
+        onOpenJuegosList: () => db.ref(`sessions/${this.SID}/juegos`).update({ listOpen: true }),
         onEndJuegos: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', juegos: null }),
         onStartMision: (us, mode) => db.ref(`sessions/${this.SID}`).update({ phase: 'mision', mision: { active: true, mode: mode || 'projects', startTime: Date.now() } }),
         onEndMision: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', mision: null }),
