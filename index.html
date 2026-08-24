@@ -20637,21 +20637,13 @@ class Component extends React.Component {
       h('polygon', { points: `${a.left},${a.top} ${rb.left},${rb.top} ${rb.left},${rb.top - H} ${a.left},${a.top - H}`, fill: `${room.color}26`, stroke: 'rgba(10,14,46,.08)', strokeWidth: 1 }),
       h('polygon', { points: `${a.left},${a.top} ${rb.left},${rb.top} ${rb.left},${rb.top - 7} ${a.left},${a.top - 7}`, fill: room.dark, opacity: .25 }),
     );
+    // Pared derecha: "MRNT class" fijo (marca del proyecto), no el nombre
+    // de la sala — Repaso es la única sala y ya no hace falta rotularla.
     const wallTitle = h('div', { style: { position: 'absolute', left: a.left, top: a.top - H, width: rb.left - a.left, height: H, transform: 'skewY(26.565deg)', transformOrigin: 'left top', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 3, padding: '0 40px', boxSizing: 'border-box' } },
-      h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 32, letterSpacing: '.03em', textTransform: 'uppercase', color: room.dark, opacity: .9, textAlign: 'center', lineHeight: 1, textShadow: '0 1px 0 rgba(255,255,255,.4)' } }, st.roomNames[room.key]),
+      h('div', { style: { fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 32, letterSpacing: '.03em', textTransform: 'uppercase', color: room.dark, opacity: .9, textAlign: 'center', lineHeight: 1, textShadow: '0 1px 0 rgba(255,255,255,.4)' } }, 'MRNT class'),
     );
-    // Logo MRNT (las 4 letras del plan, con sus colores) pintado en la
-    // pared izquierda — la misma pared plana que antes quedaba vacía.
-    // Usa el mismo truco de skewY que wallTitle, pero espejado (-26.565°)
-    // porque esta pared se aleja hacia la izquierda en vez de la derecha.
-    const wallLogo = h('div', { style: { position: 'absolute', left: lb.left, top: lb.top - H, width: a.left - lb.left, height: H, transform: 'skewY(-26.565deg)', transformOrigin: 'left top', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 3 } },
-      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 } },
-        h('div', { style: { display: 'flex', gap: 5 } },
-          this.ROOMS.map((r) => h('span', { key: r.key, style: { width: 26, height: 26, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 14, color: '#fff', background: `linear-gradient(150deg, ${r.color}, ${r.dark})`, boxShadow: `0 3px 8px ${r.dark}55, inset 0 -2px 0 rgba(0,0,0,.18)` } }, r.letter)),
-        ),
-        h('span', { style: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--ink-soft)', opacity: .75 } }, 'Maranata Class'),
-      ),
-    );
+    // Pared izquierda: por ahora sin nada (antes tenía el logo MRNT; se
+    // sacó a pedido — queda lista para lo que se decida más adelante).
     // Barandas de la zona "Juegos": una reja en L sobre los dos bordes del
     // rincón (borde superior + borde izquierdo del GAMES_ZONE), pintada
     // como líneas dentro del mismo <svg> del piso/paredes. Se "bajan"
@@ -20691,7 +20683,6 @@ class Component extends React.Component {
       h('div', { ref: (el) => { this.layerEl = el; }, onPointerDown: this.onLayerDown, onPointerMove: this.onLayerMove, onPointerUp: this.onLayerUp, onPointerCancel: this.onLayerUp, onClick: this.onLayerClick, style: { position: 'absolute', left: '50%', top: '50%', width: this.LW, height: this.LH, transform: `translate(calc(-50% + ${st.pan.x}px), calc(-50% + ${st.pan.y}px)) scale(${st.scale * st.userScale})`, transformOrigin: 'center center', transition: (st.panning || st.dragging) ? 'none' : 'transform .2s ease' } },
         h('svg', { width: this.LW, height: this.LH, style: { position: 'absolute', left: 0, top: 0, overflow: 'visible' } }, walls, tiles, gamesZoneFence),
         wallTitle,
-        wallLogo,
         gamesZoneLabel,
         furniture.map((f) => h(React.Fragment, { key: f.id }, this.renderFurn(f))),
         chars.map((c) => this.renderChar(c)),
