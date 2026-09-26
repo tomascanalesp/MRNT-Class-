@@ -68,6 +68,9 @@
 @keyframes mr-slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mr-cardUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mr-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes mr-sRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mr-sPop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+@keyframes mr-sWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(0)}}
 html,body{margin:0;height:100%}
 #root{height:100%}
 </style>
@@ -2728,13 +2731,27 @@ const BIBLE_VERSES = {
   '1 Tesalonicenses 4:16': [
     { n: 16, t: 'El Señor mismo descenderá del cielo con voz de mando, con voz de arcángel y con trompeta de Dios, y los muertos en Cristo resucitarán primero.' },
   ],
+  '2 Corintios 11:23-28': [
+    { n: 23, t: '¿Son servidores de Cristo? ¡Qué locura! Yo lo soy más que ellos. He trabajado más arduamente, he sido encarcelado más veces, he recibido los azotes más severos, he estado en peligro de muerte repetidas veces.' },
+    { n: 24, t: 'Cinco veces recibí de los judíos los treinta y nueve azotes.' },
+    { n: 25, t: 'Tres veces me golpearon con varas, una vez me apedrearon, tres veces naufragué, y pasé un día y una noche como náufrago en alta mar.' },
+    { n: 26, t: 'Mi vida ha sido un continuo ir y venir de un sitio a otro; en peligros de ríos, peligros de bandidos, peligros de parte de mis compatriotas, peligros a manos de los gentiles, peligros en la ciudad, peligros en el campo, peligros en el mar y peligros de parte de falsos hermanos.' },
+    { n: 27, t: 'He pasado muchos trabajos y fatigas, y muchas veces me he quedado sin dormir; he sufrido hambre y sed, y muchas veces me he quedado en ayunas; he sufrido frío y desnudez.' },
+    { n: 28, t: 'Y como si fuera poco, cada día pesa sobre mí la preocupación por todas las iglesias.' },
+  ],
   '2 Corintios 5:14': [
     { n: 14, t: 'El amor de Cristo nos obliga, porque estamos convencidos de que uno murió por todos, y por consiguiente todos murieron.' },
+  ],
+  '2 Tesalonicenses 3:13': [
+    { n: 13, t: 'Ustedes, hermanos, no se cansen de hacer el bien.' },
   ],
   '2 Timoteo 3:15-17': [
     { n: 15, t: 'Desde tu niñez conoces las Sagradas Escrituras, que pueden darte la sabiduría necesaria para la salvación mediante la fe en Cristo Jesús.' },
     { n: 16, t: 'Toda la Escritura es inspirada por Dios y útil para enseñar, para reprender, para corregir y para instruir en la justicia,' },
     { n: 17, t: 'a fin de que el siervo de Dios esté enteramente capacitado para toda buena obra.' },
+  ],
+  '2 Timoteo 4:8': [
+    { n: 8, t: 'Por lo demás me espera la corona de justicia que el Señor, el juez justo, me otorgará en aquel día; y no sólo a mí, sino también a todos los que con amor hayan esperado su venida.' },
   ],
   'Apocalipsis 12:11': [
     { n: 11, t: 'Ellos lo han vencido por medio de la sangre del Cordero y por el mensaje del cual dieron testimonio; no valoraron tanto su vida como para evitar la muerte.' },
@@ -2861,6 +2878,9 @@ const BIBLE_VERSES = {
   'Efesios 5:27': [
     { n: 27, t: 'para presentársela a sí mismo como una iglesia radiante, sin mancha ni arruga ni ninguna otra imperfección, sino santa e intachable.' },
   ],
+  'Filipenses 1:21': [
+    { n: 21, t: 'Porque para mí el vivir es Cristo y el morir es ganancia.' },
+  ],
   'Filipenses 2:5-8': [
     { n: 5, t: 'La actitud de ustedes debe ser como la de Cristo Jesús,' },
     { n: 6, t: 'quien, siendo por naturaleza Dios, no consideró el ser igual a Dios como algo a qué aferrarse.' },
@@ -2870,6 +2890,12 @@ const BIBLE_VERSES = {
   'Filipenses 3:20-21': [
     { n: 20, t: 'En cambio, nosotros somos ciudadanos del cielo, de donde anhelamos recibir al Salvador, el Señor Jesucristo.' },
     { n: 21, t: 'Él transformará nuestro cuerpo miserable para que sea como su cuerpo glorioso, mediante el poder con que somete a sí mismo todas las cosas.' },
+  ],
+  'Gálatas 1:10': [
+    { n: 10, t: '¿Qué busco con esto: ganarme la aprobación humana o la de Dios? ¿Piensan que procuro agradar a los demás? Si yo buscara agradar a otros, no sería siervo de Cristo.' },
+  ],
+  'Gálatas 6:9': [
+    { n: 9, t: 'No nos cansemos de hacer el bien, porque a su debido tiempo cosecharemos si no nos damos por vencidos.' },
   ],
   'Génesis 2:16-17': [
     { n: 16, t: 'y le dio este mandato: «Puedes comer de todos los árboles del jardín,' },
@@ -2893,11 +2919,17 @@ const BIBLE_VERSES = {
   'Hebreos 13:5': [
     { n: 5, t: 'Manténganse libres del amor al dinero, y conténtense con lo que tienen, porque Dios ha dicho: «Nunca te dejaré; jamás te abandonaré.»' },
   ],
+  'Hebreos 1:14': [
+    { n: 14, t: '¿No son todos los ángeles espíritus dedicados al servicio divino, enviados para ayudar a los que han de heredar la salvación?' },
+  ],
   'Hechos 1:8': [
     { n: 8, t: 'Pero cuando venga el Espíritu Santo sobre ustedes, recibirán poder y serán mis testigos tanto en Jerusalén como en toda Judea y Samaria, y hasta los confines de la tierra.' },
   ],
   'Hechos 20:21': [
     { n: 21, t: 'A judíos y a griegos les he instado a convertirse a Dios y a creer en nuestro Señor Jesús.' },
+  ],
+  'Hechos 20:35': [
+    { n: 35, t: 'Con mi ejemplo les he mostrado que es preciso trabajar duro para ayudar a los necesitados, recordando las palabras del Señor Jesús: “Hay más dicha en dar que en recibir.” »' },
   ],
   'Hechos 4:13': [
     { n: 13, t: 'Los gobernantes, al ver la osadía con que hablaban Pedro y Juan, y al darse cuenta de que eran gente sin estudios ni preparación, quedaron asombrados y reconocieron que habían estado con Jesús.' },
@@ -3231,6 +3263,9 @@ const BIBLE_VERSES = {
     { n: 41, t: '—Marta, Marta —le contestó Jesús—, estás inquieta y preocupada por muchas cosas,' },
     { n: 42, t: 'pero sólo una es necesaria. María ha escogido la mejor, y nadie se la quitará.' },
   ],
+  'Lucas 17:10': [
+    { n: 10, t: 'Así también ustedes, cuando hayan hecho todo lo que se les ha mandado, deben decir: “Somos siervos inútiles; no hemos hecho más que cumplir con nuestro deber.”' },
+  ],
   'Lucas 18:13': [
     { n: 13, t: 'En cambio, el recaudador de impuestos, que se había quedado a cierta distancia, ni siquiera se atrevía a alzar la vista al cielo, sino que se golpeaba el pecho y decía: “¡Oh Dios, ten compasión de mí, que soy pecador!”' },
   ],
@@ -3264,6 +3299,24 @@ const BIBLE_VERSES = {
     { n: 28, t: '»Vengan a mí todos ustedes que están cansados y agobiados, y yo les daré descanso.' },
     { n: 29, t: 'Carguen con mi yugo y aprendan de mí, pues yo soy apacible y humilde de corazón, y encontrarán descanso para su alma.' },
     { n: 30, t: 'Porque mi yugo es suave y mi carga es liviana.»' },
+  ],
+  'Mateo 20:1-16': [
+    { n: 1, t: '»Así mismo el reino de los cielos se parece a un propietario que salió de madrugada a contratar obreros para su viñedo.' },
+    { n: 2, t: 'Acordó darles la paga de un día de trabajo y los envió a su viñedo.' },
+    { n: 3, t: 'Cerca de las nueve de la mañana, salió y vio a otros que estaban desocupados en la plaza.' },
+    { n: 4, t: 'Les dijo: “Vayan también ustedes a trabajar en mi viñedo, y les pagaré lo que sea justo.”' },
+    { n: 5, t: 'Así que fueron. Salió de nuevo a eso del mediodía y a la media tarde, e hizo lo mismo.' },
+    { n: 6, t: 'Alrededor de las cinco de la tarde, salió y encontró a otros más que estaban sin trabajo. Les preguntó: “¿Por qué han estado aquí desocupados todo el día?”' },
+    { n: 7, t: '“Porque nadie nos ha contratado”, contestaron. Él les dijo: “Vayan también ustedes a trabajar en mi viñedo.”' },
+    { n: 8, t: '»Al atardecer, el dueño del viñedo le ordenó a su capataz: “Llama a los obreros y págales su jornal, comenzando por los últimos contratados hasta llegar a los primeros.”' },
+    { n: 9, t: 'Se presentaron los obreros que habían sido contratados cerca de las cinco de la tarde, y cada uno recibió la paga de un día.' },
+    { n: 10, t: 'Por eso cuando llegaron los que fueron contratados primero, esperaban que recibirían más. Pero cada uno de ellos recibió también la paga de un día.' },
+    { n: 11, t: 'Al recibirla, comenzaron a murmurar contra el propietario.' },
+    { n: 12, t: '“Estos que fueron los últimos en ser contratados trabajaron una sola hora —dijeron—, y usted los ha tratado como a nosotros que hemos soportado el peso del trabajo y el calor del día.”' },
+    { n: 13, t: 'Pero él le contestó a uno de ellos: “Amigo, no estoy cometiendo ninguna injusticia contigo. ¿Acaso no aceptaste trabajar por esa paga?' },
+    { n: 14, t: 'Tómala y vete. Quiero darle al último obrero contratado lo mismo que te di a ti.' },
+    { n: 15, t: '¿Es que no tengo derecho a hacer lo que quiera con mi dinero? ¿O te da envidia de que yo sea generoso?”' },
+    { n: 16, t: '»Así que los últimos serán primeros, y los primeros, últimos.' },
   ],
   'Mateo 22:1-14': [
     { n: 1, t: 'Jesús volvió a hablarles en parábolas, y les dijo:' },
@@ -3370,6 +3423,12 @@ const BIBLE_VERSES = {
   ],
   'Romanos 10:3': [
     { n: 3, t: 'No conociendo la justicia que proviene de Dios, y procurando establecer la suya propia, no se sometieron a la justicia de Dios.' },
+  ],
+  'Romanos 14:8': [
+    { n: 8, t: 'Si vivimos, para el Señor vivimos; y si morimos, para el Señor morimos. Así pues, sea que vivamos o que muramos, del Señor somos.' },
+  ],
+  'Romanos 1:14': [
+    { n: 14, t: 'Estoy en deuda con todos, sean cultos o incultos, instruidos o ignorantes.' },
   ],
   'Romanos 5:8': [
     { n: 8, t: 'Pero Dios demuestra su amor por nosotros en esto: en que cuando todavía éramos pecadores, Cristo murió por nosotros.' },
@@ -3485,6 +3544,401 @@ const BIBLE_VERSES = {
     { n: 7, t: 'que mantiene su amor hasta mil generaciones después, y que perdona la iniquidad, la rebelión y el pecado; pero que no deja sin castigo al culpable, sino que castiga la maldad de los padres en los hijos y en los nietos, hasta la tercera y la cuarta generación.' },
   ],
 };
+
+/* ════════════════════════ SERMONES: LÁMINAS ════════════════════════ */
+/* Tema oscuro (noche + dorado) para los sermones, y tema "papel" para las
+   láminas de citas de autores. */
+
+/* ── SERMON_T ── */
+const SERMON_T = {
+  bg: 'radial-gradient(ellipse at 18% 0%,rgba(80,72,170,.55) 0%,rgba(80,72,170,0) 55%),radial-gradient(ellipse at 100% 100%,rgba(245,185,66,.16) 0%,rgba(245,185,66,0) 50%),linear-gradient(150deg,#0c0f2c 0%,#161a45 55%,#231a3d 100%)',
+  ink: '#f7f3eb',
+  inkSoft: 'rgba(247,243,235,.62)',
+  cardLead: '#ffffff',
+  cardBody: 'rgba(247,243,235,.88)',
+  accent: '#f5b942',
+  accentDark: '#f5b942',
+  heading: '#ffffff',
+  headingShadow: 'none',
+  plainLead: '#ffffff',
+  plainBody: 'rgba(247,243,235,.88)',
+  plainShadow: 'none',
+  accentSoft: 'rgba(245,185,66,.16)',
+  accent2: '#a78bfa',
+  panel: 'rgba(255,255,255,.06)',
+  panelAlt: 'rgba(255,255,255,.1)',
+  coverPanel: 'rgba(255,255,255,.08)',
+  shadow: '0 10px 30px rgba(0,0,0,.35)',
+  dotInactive: 'rgba(247,243,235,.22)',
+  glow: 'radial-gradient(ellipse at center,rgba(245,185,66,.10),rgba(245,185,66,0) 60%)'
+};
+/* ── SERMON_PAPER_T (citas de autores) ── */
+const SERMON_PAPER_T = Object.assign({}, SERMON_T, {
+  bg: 'radial-gradient(ellipse at 85% 10%,rgba(255,255,255,.7) 0%,rgba(255,255,255,0) 45%),linear-gradient(160deg,#fbf7ee 0%,#f3ead8 60%,#e9dcc0 100%)',
+  ink: '#2a2118',
+  inkSoft: 'rgba(42,33,24,.55)',
+  cardLead: '#2a2118',
+  cardBody: '#3a2f22',
+  accent: '#b8862b',
+  accentDark: '#8a6219',
+  heading: '#2a2118',
+  dotInactive: 'rgba(42,33,24,.2)',
+  glow: null
+});
+
+/* Expande las láminas "por pasos": cada paso es una lámina más del deck, así
+   el avance se sincroniza con todos igual que una lámina normal. Cada copia
+   lleva `step` (1..n) y `_k` (índice de la lámina original, para que React no
+   vuelva a animar lo que ya estaba a la vista). */
+
+/* ── sermonSteps ── */
+function sermonSteps(slides) {
+  const count = s => {
+    if (s.build === false) return 1;
+    const items = (s.items || []).length;
+    if (s.type === 's-points') return Math.max(1, items);
+    if (s.type === 's-quiz') return items * 2;
+    if (s.type === 's-timeline') return items + (s.reveal ? 1 : 0);
+    if (s.type === 's-vote') return s.answer != null ? 2 : 1;
+    if (s.type === 's-ask') return (items || 1) + (s.reveal ? 1 : 0);
+    return 1;
+  };
+  const out = [];
+  slides.forEach((s, i) => {
+    const n = count(s);
+    for (let k = 1; k <= n; k++) out.push(Object.assign({}, s, { step: n > 1 ? k : 99, _k: i }));
+  });
+  return out;
+}
+
+/* Texto con **resaltados** en dorado y saltos de línea respetados. */
+
+/* ── SermonRich ── */
+function SermonRich({ text, color }) {
+  const parts = String(text || '').split(/\*\*(.+?)\*\*/g);
+  return React.createElement(React.Fragment, null, parts.map((p, i) => i % 2
+    ? React.createElement("span", { key: i, style: { color: color || __ST.accent, fontWeight: 800 } }, p)
+    : React.createElement(React.Fragment, { key: i }, p)));
+}
+
+/* Render de las láminas de sermón (tipos 's-…'). */
+
+/* ── SermonSlide ── */
+function SermonSlide({ slide, index, total, footer, onVerseClick, isAdmin, onAskCloud, wcActive }) {
+  const h = React.createElement;
+  const paper = slide.type === 's-author';
+  const T = paper ? SERMON_PAPER_T : SERMON_T;
+  __ST = T;
+  const st = slide.step || 99;
+  const cond = 'Barlow Condensed,sans-serif';
+  const serif = 'Fraunces,Georgia,serif';
+  const anim = (d = 0) => ({ animation: `mr-sRise .55s cubic-bezier(.2,.8,.2,1) ${d}s both` });
+
+  const kick = (children, center) => h("div", {
+    style: { display: 'flex', alignItems: 'center', justifyContent: center ? 'center' : 'flex-start', gap: 10,
+      fontFamily: cond, fontWeight: 800, fontSize: 'clamp(11px,1.3vw,15px)', color: T.accent,
+      letterSpacing: '.24em', textTransform: 'uppercase' }
+  }, h("span", { style: { width: 28, height: 2, background: T.accent, borderRadius: 2 } }), children,
+    center ? h("span", { style: { width: 28, height: 2, background: T.accent, borderRadius: 2 } }) : null);
+
+  const title = (children, size, align) => h("h1", {
+    style: { margin: 0, fontFamily: cond, fontWeight: 900, fontSize: size || 'clamp(30px,5.2vw,64px)',
+      lineHeight: 1.02, color: T.heading, letterSpacing: '.01em', textAlign: align || 'center', textWrap: 'balance', whiteSpace: 'pre-line' }
+  }, h(SermonRich, { text: children }));
+
+  const sub = (children, d, key) => h("div", {
+    key,
+    style: Object.assign({ fontFamily: 'Barlow,sans-serif', fontWeight: 500, fontSize: 'clamp(15px,2vw,24px)',
+      color: T.cardBody, lineHeight: 1.45, textAlign: 'center', maxWidth: 860, margin: '0 auto', textWrap: 'pretty', whiteSpace: 'pre-line' }, anim(d || .12))
+  }, h(SermonRich, { text: children }));
+
+  const chip = (r) => h("button", {
+    key: r,
+    onClick: () => BIBLE_VERSES[r] && onVerseClick
+      ? onVerseClick(r)
+      : window.open(bibleGatewayUrl(r), '_blank', 'noopener,noreferrer'),
+    style: { display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: cond, fontWeight: 800,
+      fontSize: 'clamp(12px,1.4vw,16px)', letterSpacing: '.1em', textTransform: 'uppercase', color: T.accent,
+      background: T.accentSoft, border: `1px solid ${T.accent}66`, borderRadius: 999, padding: '5px 14px', cursor: 'pointer' }
+  }, '📖 ', r);
+
+  // Botón para abrir la nube de palabras con la pregunta de la lámina.
+  const cloud = (q) => {
+    if (!q) return null;
+    if (isAdmin && onAskCloud) return h("button", {
+      onClick: () => onAskCloud(q),
+      style: Object.assign({ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: cond, fontWeight: 800,
+        fontSize: 'clamp(12px,1.4vw,15px)', letterSpacing: '.12em', textTransform: 'uppercase', cursor: 'pointer',
+        color: wcActive ? '#10b981' : '#0c0f2c', background: wcActive ? 'rgba(16,185,129,.14)' : T.accent,
+        border: wcActive ? '1px solid rgba(16,185,129,.6)' : 'none', borderRadius: 999, padding: '9px 18px',
+        boxShadow: wcActive ? 'none' : '0 6px 22px rgba(245,185,66,.35)' }, anim(.3))
+    }, wcActive ? '☁️ Cerrar nube de palabras' : '☁️ Abrir nube: ¡respondan!');
+    return h("div", {
+      style: Object.assign({ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: cond, fontWeight: 700,
+        fontSize: 'clamp(11px,1.3vw,14px)', letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkSoft,
+        border: `1px dashed ${T.inkSoft}`, borderRadius: 999, padding: '7px 16px' }, anim(.3))
+    }, '☁️ Responde desde tu celular');
+  };
+
+  const note = () => isAdmin && slide.note ? h("div", {
+    style: { marginTop: 14, fontFamily: 'Barlow,sans-serif', fontSize: 12.5, fontStyle: 'italic', color: T.inkSoft,
+      borderTop: `1px dashed ${T.inkSoft}`, paddingTop: 8, textAlign: 'left' }
+  }, '🎤 Nota (solo tú la ves): ', slide.note) : null;
+
+  const Body = (children, opts = {}) => h(SlideShell, { index, total, footer, T },
+    h("div", {
+      key: slide._k,
+      style: Object.assign({ minHeight: 'min(58vh,560px)', display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', gap: 'clamp(14px,2.2vw,26px)', padding: 'clamp(4px,1.4vw,18px) clamp(0px,1.6vw,20px)' }, opts)
+    }, children, note()));
+
+  // ── Portada ──
+  if (slide.type === 's-cover') {
+    return Body([
+      h("div", { key: 'k', style: anim(0) }, kick(slide.kicker, true)),
+      h("h1", { key: 't', style: Object.assign({ margin: 0, textAlign: 'center', fontFamily: cond, fontWeight: 900,
+        fontSize: 'clamp(48px,10vw,128px)', lineHeight: .92, letterSpacing: '.01em', textTransform: 'uppercase',
+        background: 'linear-gradient(180deg,#fff 0%,#fff 45%,#f5b942 100%)', WebkitBackgroundClip: 'text',
+        backgroundClip: 'text', color: 'transparent', filter: 'drop-shadow(0 6px 30px rgba(245,185,66,.25))' }, anim(.1)) }, slide.title),
+      sub(slide.subtitle, .25, 's'),
+      h("div", { key: 'r', style: Object.assign({ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }, anim(.4)) },
+        (slide.verses || []).map(r => chip(r))),
+      h("div", { key: 'b', style: Object.assign({ display: 'flex', justifyContent: 'center' }, anim(.5)) }, h(SlideBrand, { T: MRNT_T }))
+    ], { alignItems: 'stretch' });
+  }
+
+  // ── Separador de sección ──
+  if (slide.type === 's-section') {
+    return Body([
+      h("div", { key: 'n', style: Object.assign({ textAlign: 'center', fontFamily: cond, fontWeight: 900,
+        fontSize: 'clamp(60px,11vw,140px)', lineHeight: .85, color: 'transparent',
+        WebkitTextStroke: `2px ${T.accent}` }, anim(0)) }, slide.num),
+      h("div", { key: 't', style: anim(.12) }, title(slide.title)),
+      slide.subtitle ? sub(slide.subtitle, .24, 's') : null,
+      slide.verses ? h("div", { key: 'r', style: Object.assign({ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }, anim(.34)) },
+        slide.verses.map(r => chip(r))) : null
+    ]);
+  }
+
+  // ── Frase grande ──
+  if (slide.type === 's-big') {
+    return Body([
+      slide.kicker ? h("div", { key: 'k', style: anim(0) }, kick(slide.kicker, true)) : null,
+      slide.emoji ? h("div", { key: 'e', style: Object.assign({ textAlign: 'center', fontSize: 'clamp(40px,6vw,72px)', lineHeight: 1 }, anim(.05)) }, slide.emoji) : null,
+      h("div", { key: 't', style: anim(.1) }, title(slide.text, slide.small ? 'clamp(24px,3.8vw,46px)' : undefined)),
+      slide.sub ? sub(slide.sub, .25, 's') : null,
+      slide.verses ? h("div", { key: 'r', style: Object.assign({ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }, anim(.35)) },
+        slide.verses.map(r => chip(r))) : null
+    ]);
+  }
+
+  // ── Pregunta al público (con nube de palabras y respuesta opcional) ──
+  if (slide.type === 's-ask') {
+    const items = slide.items || null;
+    const shown = items ? Math.min(st, items.length) : 0;
+    const revealAt = (items ? items.length : 1) + 1;
+    return Body([
+      h("div", { key: 'k', style: anim(0) }, kick(slide.kicker || 'Pregunta', true)),
+      h("div", { key: 'e', style: { textAlign: 'center', fontSize: 'clamp(38px,5.4vw,64px)', lineHeight: 1,
+        animation: 'mr-sWiggle 2.4s ease-in-out infinite' } }, slide.emoji || '🙋'),
+      slide.question ? h("div", { key: 'q', style: anim(.08) }, title(slide.question, slide.small ? 'clamp(24px,3.8vw,46px)' : undefined)) : null,
+      items ? h("div", { key: 'i', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px,1.4vw,14px)' } },
+        items.slice(0, shown).map((q, i) => h("div", { key: i, style: Object.assign({ fontFamily: cond, fontWeight: 900,
+          fontSize: 'clamp(24px,4vw,50px)', lineHeight: 1.05, textAlign: 'center',
+          color: i === shown - 1 ? T.heading : T.inkSoft, transition: 'color .4s' }, anim(0)) }, h(SermonRich, { text: q })))) : null,
+      slide.sub ? sub(slide.sub, 0, 's') : null,
+      slide.reveal && st >= revealAt ? h("div", { key: 'a', style: { display: 'flex', justifyContent: 'center' } },
+        h("div", { style: { fontFamily: cond, fontWeight: 900, fontSize: 'clamp(30px,5.4vw,70px)', color: '#0c0f2c',
+          background: T.accent, borderRadius: 18, padding: '6px 28px', letterSpacing: '.04em',
+          boxShadow: '0 10px 40px rgba(245,185,66,.45)', animation: 'mr-sPop .6s cubic-bezier(.2,1.4,.4,1) both' } },
+          h(SermonRich, { text: slide.reveal, color: '#0c0f2c' }))) : null,
+      slide.cloud ? h("div", { key: 'c', style: { display: 'flex', justifyContent: 'center' } }, cloud(slide.cloud)) : null
+    ]);
+  }
+
+  // ── Votación a mano alzada, con respuesta revelada en el paso 2 ──
+  if (slide.type === 's-vote') {
+    const revealed = slide.answer != null && st >= 2;
+    return Body([
+      h("div", { key: 'k', style: anim(0) }, kick(slide.kicker || 'Vota levantando la mano ✋', true)),
+      h("div", { key: 'q', style: anim(.06) }, title(slide.question, 'clamp(24px,4.2vw,52px)')),
+      h("div", { key: 'o', style: { display: 'grid', gridTemplateColumns: `repeat(auto-fit,minmax(${slide.options.length > 2 ? 180 : 240}px,1fr))`,
+        gap: 'clamp(10px,1.8vw,20px)', marginTop: 6 } },
+        slide.options.map((o, i) => {
+          const win = revealed && i === slide.answer;
+          const lose = revealed && i !== slide.answer;
+          return h("div", { key: i, style: Object.assign({ position: 'relative', borderRadius: 20, padding: 'clamp(14px,2.2vw,26px)',
+            textAlign: 'center', background: win ? 'rgba(245,185,66,.16)' : T.panel,
+            border: `2px solid ${win ? T.accent : 'rgba(247,243,235,.14)'}`, opacity: lose ? .38 : 1,
+            transform: win ? 'scale(1.03)' : 'none', transition: 'all .5s cubic-bezier(.2,.8,.2,1)',
+            boxShadow: win ? '0 12px 40px rgba(245,185,66,.3)' : 'none' }, anim(.12 + i * .1)) },
+            h("div", { style: { fontSize: 'clamp(34px,5vw,60px)', lineHeight: 1.1 } }, o.emoji),
+            h("div", { style: { fontFamily: cond, fontWeight: 800, fontSize: 'clamp(17px,2.4vw,30px)', color: T.heading,
+              lineHeight: 1.15, marginTop: 8 } }, h(SermonRich, { text: o.label })),
+            o.detail ? h("div", { style: { fontFamily: 'Barlow,sans-serif', fontSize: 'clamp(12px,1.4vw,16px)', color: T.inkSoft, marginTop: 6 } }, o.detail) : null,
+            revealed && o.mark ? h("div", { style: { position: 'absolute', top: -14, right: -10, width: 42, height: 42, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 22,
+              background: win ? '#10b981' : '#ef4444', color: '#fff', animation: 'mr-sPop .5s cubic-bezier(.2,1.4,.4,1) both' } }, o.mark) : null);
+        })),
+      revealed && slide.answerText ? sub(slide.answerText, .15, 'a') : null
+    ]);
+  }
+
+  // ── Ideas que aparecen una a una ──
+  if (slide.type === 's-points') {
+    const shown = Math.min(st, slide.items.length);
+    return Body([
+      slide.kicker ? h("div", { key: 'k', style: anim(0) }, kick(slide.kicker)) : null,
+      slide.title ? h("div", { key: 't', style: anim(.05) }, title(slide.title, 'clamp(28px,4.6vw,56px)', 'left')) : null,
+      h("div", { key: 'i', style: { display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.6vw,16px)' } },
+        slide.items.slice(0, shown).map((it, i) => {
+          const cur = i === shown - 1 && slide.step !== 99;
+          return h("div", { key: i, style: Object.assign({ display: 'flex', alignItems: 'flex-start', gap: 14,
+            background: cur ? 'rgba(245,185,66,.1)' : T.panel, border: `1px solid ${cur ? T.accent + '88' : 'rgba(247,243,235,.1)'}`,
+            borderRadius: 16, padding: 'clamp(12px,1.8vw,18px) clamp(14px,2vw,22px)', transition: 'all .4s' }, anim(0)) },
+            h("div", { style: { flexShrink: 0, width: 'clamp(30px,3.4vw,40px)', height: 'clamp(30px,3.4vw,40px)', borderRadius: '50%',
+              background: cur ? T.accent : 'rgba(247,243,235,.12)', color: cur ? '#0c0f2c' : T.ink, display: 'flex',
+              alignItems: 'center', justifyContent: 'center', fontFamily: cond, fontWeight: 900, fontSize: 'clamp(15px,1.8vw,20px)' } },
+              (typeof it === 'object' && it.emoji) || i + 1),
+            h("div", { style: { fontFamily: 'Barlow,sans-serif', fontWeight: 600, fontSize: 'clamp(16px,2.2vw,27px)',
+              color: cur || slide.step === 99 ? T.heading : T.cardBody, lineHeight: 1.35, paddingTop: 2 } },
+              h(SermonRich, { text: typeof it === 'object' ? it.text : it })));
+        })),
+      slide.verses ? h("div", { key: 'r', style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, slide.verses.map(r => chip(r))) : null
+    ]);
+  }
+
+  // ── Quiz: pregunta → respuesta, una a una ──
+  if (slide.type === 's-quiz') {
+    const qShown = Math.min(Math.ceil(st / 2), slide.items.length);
+    return Body([
+      h("div", { key: 'k', style: anim(0) }, kick(slide.kicker || 'Quiz rápido')),
+      slide.title ? h("div", { key: 't', style: anim(.05) }, title(slide.title, 'clamp(24px,3.8vw,46px)', 'left')) : null,
+      h("div", { key: 'i', style: { display: 'flex', flexDirection: 'column', gap: 'clamp(10px,1.6vw,16px)' } },
+        slide.items.slice(0, qShown).map((it, i) => {
+          const ans = st >= (i + 1) * 2;
+          return h("div", { key: i, style: Object.assign({ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', alignItems: 'center',
+            gap: 14, background: T.panel, border: '1px solid rgba(247,243,235,.1)', borderRadius: 16,
+            padding: 'clamp(12px,1.8vw,18px) clamp(14px,2vw,22px)' }, anim(0)) },
+            h("div", { style: { fontFamily: 'Barlow,sans-serif', fontWeight: 600, fontSize: 'clamp(15px,2vw,24px)', color: T.heading, lineHeight: 1.3 } },
+              h("span", { style: { color: T.accent, fontFamily: cond, fontWeight: 900, marginRight: 8 } }, `${i + 1}.`), it.q),
+            ans
+              ? h("div", { style: { fontFamily: cond, fontWeight: 900, fontSize: 'clamp(18px,2.6vw,32px)', color: '#0c0f2c', background: T.accent,
+                borderRadius: 12, padding: '4px 16px', textTransform: 'uppercase', letterSpacing: '.04em', textAlign: 'center', maxWidth: 360,
+                animation: 'mr-sPop .5s cubic-bezier(.2,1.4,.4,1) both' } }, it.a)
+              : h("div", { style: { fontFamily: cond, fontWeight: 900, fontSize: 'clamp(22px,3vw,36px)', color: T.accent,
+                animation: 'mr-pulse 1.2s ease-in-out infinite' } }, '¿ ?'));
+        })),
+      slide.after && st >= slide.items.length * 2 ? sub(slide.after, .2, 'a') : null
+    ]);
+  }
+
+  // ── Línea de tiempo (parábola de los obreros) ──
+  if (slide.type === 's-timeline') {
+    const shown = Math.min(st, slide.items.length);
+    const revealed = slide.reveal && st > slide.items.length;
+    return Body([
+      h("div", { key: 'k', style: anim(0) }, kick(slide.kicker, true)),
+      h("div", { key: 't', style: anim(.05) }, title(revealed ? slide.reveal.title : slide.title, 'clamp(24px,4vw,48px)')),
+      h("div", { key: 'i', style: { display: 'grid', gridTemplateColumns: `repeat(${slide.items.length},minmax(0,1fr))`, gap: 'clamp(6px,1.2vw,14px)', position: 'relative' } },
+        slide.items.map((it, i) => h("div", { key: i, style: { textAlign: 'center', opacity: i < shown ? 1 : .12, transition: 'opacity .5s',
+          background: T.panel, borderRadius: 16, border: `1px solid ${revealed ? T.accent + '99' : 'rgba(247,243,235,.12)'}`,
+          padding: 'clamp(10px,1.6vw,18px) 6px' } },
+          h("div", { style: { fontSize: 'clamp(22px,3.4vw,40px)' } }, it.emoji || '🧑‍🌾'),
+          h("div", { style: { fontFamily: cond, fontWeight: 900, fontSize: 'clamp(18px,2.8vw,34px)', color: T.accent, lineHeight: 1 } }, it.time),
+          h("div", { style: { fontFamily: 'Barlow,sans-serif', fontWeight: 600, fontSize: 'clamp(10px,1.3vw,15px)', color: T.cardBody, marginTop: 4 } }, it.label),
+          h("div", { style: { marginTop: 8, fontFamily: cond, fontWeight: 800, fontSize: 'clamp(11px,1.5vw,17px)', letterSpacing: '.04em',
+            color: revealed ? '#0c0f2c' : T.inkSoft, background: revealed ? T.accent : 'transparent', borderRadius: 999, padding: '3px 6px',
+            animation: revealed ? `mr-sPop .5s cubic-bezier(.2,1.4,.4,1) ${i * .12}s both` : 'none' } },
+            revealed ? slide.reveal.pay : '¿ ?')))),
+      revealed && slide.reveal.text ? sub(slide.reveal.text, .7, 's') : (slide.sub ? sub(slide.sub, 0, 's') : null),
+      slide.verses ? h("div", { key: 'r', style: { display: 'flex', justifyContent: 'center', gap: 10 } }, slide.verses.map(r => chip(r))) : null
+    ]);
+  }
+
+  // ── Comparación en dos columnas ──
+  if (slide.type === 's-compare') {
+    return Body([
+      slide.kicker ? h("div", { key: 'k', style: anim(0) }, kick(slide.kicker, true)) : null,
+      slide.title ? h("div", { key: 't', style: anim(.05) }, title(slide.title, 'clamp(24px,4vw,48px)')) : null,
+      h("div", { key: 'c', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 'clamp(12px,2vw,24px)', alignItems: 'stretch' } },
+        slide.columns.map((c, i) => h("div", { key: i, style: Object.assign({ borderRadius: 20, padding: 'clamp(16px,2.4vw,28px)',
+          background: c.hi ? 'rgba(245,185,66,.12)' : T.panel, border: `2px solid ${c.hi ? T.accent : 'rgba(247,243,235,.12)'}`,
+          boxShadow: c.hi ? '0 12px 40px rgba(245,185,66,.22)' : 'none' }, anim(.15 + i * .25)) },
+          h("div", { style: { fontSize: 'clamp(30px,4.4vw,50px)', lineHeight: 1 } }, c.emoji),
+          h("div", { style: { fontFamily: cond, fontWeight: 800, fontSize: 'clamp(11px,1.3vw,14px)', color: T.inkSoft, letterSpacing: '.2em',
+            textTransform: 'uppercase', marginTop: 10 } }, c.who),
+          h("div", { style: { fontFamily: cond, fontWeight: 900, fontSize: 'clamp(22px,3.4vw,40px)', color: c.hi ? T.accent : T.heading, lineHeight: 1.05, marginTop: 4 } }, c.title),
+          h("div", { style: { fontFamily: 'Barlow,sans-serif', fontWeight: 500, fontSize: 'clamp(14px,1.9vw,22px)', color: T.cardBody, lineHeight: 1.4, marginTop: 10 } },
+            h(SermonRich, { text: c.text }))))),
+      slide.sub ? sub(slide.sub, .7, 's') : null
+    ]);
+  }
+
+  // ── Texto bíblico (NVI local, BIBLE_VERSES) ──
+  if (slide.type === 's-scripture') {
+    const refs = slide.verses || [];
+    const len = refs.reduce((a, r) => a + (BIBLE_VERSES[r] || []).reduce((b, v) => b + v.t.length, 0), 0);
+    const fs = len > 700 ? 'clamp(15px,1.9vw,24px)' : len > 380 ? 'clamp(15px,2vw,25px)' : len > 200 ? 'clamp(18px,2.6vw,32px)' : 'clamp(22px,3.4vw,42px)';
+    const mark = (t) => {
+      const hl = slide.highlight || [];
+      let out = t;
+      hl.forEach(x => { out = out.split(x).join(`**${x}**`); });
+      return out;
+    };
+    return Body([
+      slide.kicker ? h("div", { key: 'k', style: anim(0) }, kick(slide.kicker, refs.length === 1)) : null,
+      h("div", { key: 'v', style: { display: 'flex', flexDirection: 'column', gap: 'clamp(14px,2.2vw,26px)' } },
+        refs.map((r, ri) => h("div", { key: r, style: Object.assign({ position: 'relative', textAlign: refs.length === 1 ? 'center' : 'left',
+          borderLeft: refs.length > 1 ? `3px solid ${T.accent}` : 'none', paddingLeft: refs.length > 1 ? 'clamp(12px,2vw,22px)' : 0 }, anim(.08 + ri * .18)) },
+          h("div", { style: { fontFamily: serif, fontWeight: 400, fontStyle: 'italic', fontSize: fs, color: T.heading, lineHeight: 1.45, textWrap: 'pretty' } },
+            (BIBLE_VERSES[r] || [{ t: '(Texto no disponible: ábrelo en la Biblia)' }]).map((v, i) => h("span", { key: i },
+              v.n != null && (BIBLE_VERSES[r] || []).length > 1 ? h("sup", { style: { fontFamily: cond, fontStyle: 'normal', fontWeight: 800,
+                color: T.accent, fontSize: '.55em', marginRight: 3 } }, v.n) : null,
+              h(SermonRich, { text: mark(v.t) }), ' '))),
+          h("div", { style: { marginTop: 10, display: 'flex', justifyContent: refs.length === 1 ? 'center' : 'flex-start' } }, chip(r))))),
+      slide.context ? sub(slide.context, .4, 'c') : null
+    ]);
+  }
+
+  // ── Cita de autor (lámina "papel", estética) ──
+  if (slide.type === 's-author') {
+    const paras = Array.isArray(slide.text) ? slide.text : [slide.text];
+    const len = paras.join(' ').length;
+    const fs = len > 520 ? 'clamp(16px,2.1vw,26px)' : len > 260 ? 'clamp(19px,2.7vw,34px)' : 'clamp(24px,3.8vw,48px)';
+    return Body([
+      h("div", { key: 'q', style: { position: 'relative', padding: 'clamp(8px,2vw,24px) clamp(8px,4vw,56px)' } },
+        h("div", { style: { position: 'absolute', left: 'clamp(-6px,-1vw,0px)', top: 'clamp(-40px,-4vw,-20px)', fontFamily: serif, fontWeight: 600,
+          fontSize: 'clamp(110px,16vw,200px)', lineHeight: 1, color: T.accent, opacity: .28, pointerEvents: 'none' } }, '“'),
+        paras.map((p, i) => h("p", { key: i, style: Object.assign({ position: 'relative', margin: i ? '0.7em 0 0' : 0, fontFamily: serif, fontWeight: 400,
+          fontStyle: 'italic', fontSize: fs, lineHeight: 1.42, color: T.heading, textAlign: 'center', textWrap: 'pretty' }, anim(.1 + i * .15)) },
+          h(SermonRich, { text: p, color: T.accentDark })))),
+      h("div", { key: 'a', style: Object.assign({ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }, anim(.2 + paras.length * .15)) },
+        h("div", { style: { width: 60, height: 2, background: T.accent } }),
+        h("div", { style: { fontFamily: cond, fontWeight: 900, fontSize: 'clamp(18px,2.6vw,30px)', color: T.heading, letterSpacing: '.2em', textTransform: 'uppercase' } }, slide.author),
+        slide.work ? h("div", { style: { fontFamily: serif, fontStyle: 'italic', fontSize: 'clamp(12px,1.5vw,17px)', color: T.inkSoft } }, slide.work) : null)
+    ]);
+  }
+
+  // ── Desafío / llamado final ──
+  if (slide.type === 's-call') {
+    return Body([
+      h("div", { key: 'k', style: anim(0) }, kick(slide.kicker, true)),
+      slide.emoji ? h("div", { key: 'e', style: Object.assign({ textAlign: 'center', fontSize: 'clamp(40px,6vw,72px)', lineHeight: 1 }, anim(.05)) }, slide.emoji) : null,
+      h("div", { key: 't', style: anim(.1) }, title(slide.title, 'clamp(26px,4.4vw,54px)')),
+      slide.items ? h("div", { key: 'i', style: { display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 820, margin: '0 auto', width: '100%' } },
+        slide.items.map((it, i) => h("div", { key: i, style: Object.assign({ display: 'flex', alignItems: 'center', gap: 12, background: T.panel,
+          borderRadius: 14, padding: '10px 16px', border: '1px solid rgba(247,243,235,.12)' }, anim(.25 + i * .15)) },
+          h("span", { style: { fontSize: 'clamp(20px,2.6vw,30px)' } }, it.emoji),
+          h("span", { style: { fontFamily: 'Barlow,sans-serif', fontWeight: 600, fontSize: 'clamp(15px,2vw,24px)', color: T.heading, lineHeight: 1.35 } },
+            h(SermonRich, { text: it.text }))))) : null,
+      slide.sub ? sub(slide.sub, .5, 's') : null,
+      slide.cloud ? h("div", { key: 'c', style: { display: 'flex', justifyContent: 'center' } }, cloud(slide.cloud)) : null
+    ]);
+  }
+
+  return Body(title(slide.text || slide.title || '', undefined));
+}
 
 /* Una slide por cada día del repaso de la semana — Mateo 5–7. */
 /* Presentaciones disponibles para el repaso. Cada una se etiqueta con su
@@ -4691,6 +5145,398 @@ const PRESENTATIONS = [{
     }],
     people: ['Makarina Valdivia F. — Ilustración, Resumen y Edición', 'Daniela Garcés B. — Ilustración, Resumen y Edición']
   }]
+}, {
+  id: 'sermon-a-quien-sirves',
+  week: 'Sermón',
+  weekLong: 'Sermón · Cotidianamente',
+  title: '¿A quién sirves?',
+  subtitle: '¿A quién sirves? · Hechos 20:35',
+  icon: '🙌',
+  folder: 'Sermones',
+  theme: 'sermon',
+  slides: sermonSteps([{
+    type: 's-cover',
+    kicker: 'Cotidianamente',
+    title: '¿A quién sirves?',
+    subtitle: 'Hay más dicha en dar que en recibir… ¿de verdad?',
+    verses: ['Hechos 20:35']
+  }, {
+    type: 's-big',
+    kicker: 'Para empezar',
+    emoji: '👶',
+    text: 'Desde niños somos configurados para ser **autorreferentes**.',
+    note: 'Mostrar el video de la hija que no quiere compartir su comida con el papá.'
+  }, {
+    type: 's-ask',
+    kicker: 'Levanten la mano',
+    emoji: '🍪',
+    question: '¿A quién le costaba **compartir** cuando era niño?',
+    sub: 'A los niños no les gusta compartir… y a los grandes, tampoco tanto.',
+    note: 'Tirar con el ejemplo de que a los niños no les gusta compartir.'
+  }, {
+    type: 's-big',
+    emoji: '🤔',
+    text: '¿Dónde está la **gracia** de compartir?',
+    sub: 'Esa es una realidad aplastante.'
+  }, {
+    type: 's-scripture',
+    kicker: 'Pablo se despide de los ancianos de Éfeso',
+    verses: ['Hechos 20:35'],
+    highlight: ['Hay más dicha en dar que en recibir.'],
+    context: 'Pablo hace referencia a Jesús: debemos **ayudar a los necesitados**.'
+  }, {
+    type: 's-ask',
+    kicker: 'La pregunta es',
+    emoji: '🤨',
+    items: ['¿Seguro, Pablo?', '¿Por qué yo **no lo siento**?']
+  }, {
+    type: 's-vote',
+    kicker: 'Vota levantando la mano ✋',
+    question: 'Yo tengo un iPhone 📱. Si te lo regalo… **¿quién es más feliz?**',
+    options: [{
+      emoji: '🎁',
+      label: 'Yo, que **lo regalo**',
+      mark: '✓'
+    }, {
+      emoji: '🙌',
+      label: 'Tú, que **lo recibes**'
+    }],
+    answer: 0,
+    answerText: 'Según Jesús: **el que da**.'
+  }, {
+    type: 's-big',
+    kicker: 'Imagínate la paradoja',
+    emoji: '🪐',
+    text: '¿En qué planeta soy **más feliz** cuando **doy** y cuando **sirvo**?'
+  }, {
+    type: 's-author',
+    author: 'Elena G. de White',
+    work: 'El Deseado de todas las gentes, p. 12',
+    text: ['Fuera del egoísta corazón humano, **no hay nada que viva para sí**. No hay ningún pájaro que surca el aire, ningún animal que se mueve en el suelo, que no sirva a alguna otra vida. No hay siquiera una hoja del bosque, ni una humilde brizna de hierba que no tenga su utilidad.',
+      'El océano, origen de todos nuestros manantiales y fuentes, recibe las corrientes de todas las tierras, pero **recibe para dar**. Las neblinas que ascienden de su seno, riegan la tierra, para que produzca y florezca.']
+  }, {
+    type: 's-author',
+    author: 'Elena G. de White',
+    work: 'El Deseado de todas las gentes, pp. 12-13',
+    text: ['**Los ángeles de gloria hallan su gozo en dar**, dar amor y cuidado incansable a las almas que están caídas y destituidas de santidad.',
+      'Esta ley fue quebrantada en el cielo mismo. **El pecado tuvo su origen en el egoísmo.** Lucifer, el querubín protector, deseó ser el primero en el cielo.']
+  }, {
+    type: 's-points',
+    kicker: 'Hay una civilización diferente',
+    title: 'El cielo funciona al revés',
+    items: [{
+      emoji: '✨',
+      text: 'Todo el cielo **disfruta en servir**.'
+    }, {
+      emoji: '👼',
+      text: 'La **esencia de los ángeles** es esa.'
+    }, {
+      emoji: '💬',
+      text: 'Es como si un ángel se apareciera y me dijera: **«¿En qué te puedo ayudar?»**'
+    }]
+  }, {
+    type: 's-scripture',
+    kicker: 'Así son los ángeles',
+    verses: ['Hebreos 1:14'],
+    highlight: ['dedicados al servicio divino', 'enviados para ayudar']
+  }, {
+    type: 's-big',
+    emoji: '🌍',
+    text: 'El único ser egoísta en el universo **está aquí**.',
+    sub: 'Cuando servimos, nos estamos **conectando con nuestra familia celestial**.'
+  }, {
+    type: 's-ask',
+    kicker: 'Seamos honestos',
+    emoji: '👀',
+    question: 'Solemos mirar al que está al lado para ver **quién hace menos**.',
+    sub: 'Juzgamos y nos comparamos… como para **librarnos de la culpa**.'
+  }, {
+    type: 's-section',
+    num: '2000',
+    title: 'Esto era así hace **2000 años**',
+    subtitle: 'La parábola de los obreros de la viña',
+    verses: ['Mateo 20:1-16']
+  }, {
+    type: 's-timeline',
+    kicker: 'Mateo 20 · Los obreros de la viña',
+    title: 'Todos trabajan… ¿cuánto debería recibir cada uno?',
+    items: [{ time: '6:00', label: 'Todo el día', emoji: '🌅' },
+      { time: '9:00', label: 'Media mañana', emoji: '☀️' },
+      { time: '12:00', label: 'Mediodía', emoji: '🌞' },
+      { time: '15:00', label: 'Media tarde', emoji: '🌤️' },
+      { time: '17:00', label: '¡Una hora!', emoji: '🌇' }],
+    reveal: {
+      title: '¡Todos reciben **lo mismo**!',
+      pay: '1 denario 🪙',
+      text: '«¿O te da envidia de que yo sea **generoso**?» (Mateo 20:15)'
+    },
+    verses: ['Mateo 20:1-16'],
+    note: 'Paso a paso: preguntar cuánto debería recibir cada grupo antes de revelar.'
+  }, {
+    type: 's-vote',
+    kicker: 'Sé sincero ✋',
+    question: 'Si fueras de los que trabajaron **desde las 6:00**… ¿te parecería justo?',
+    options: [{ emoji: '👍', label: 'Sí, es justo' }, { emoji: '😤', label: 'No, ¡no es justo!' }],
+    note: 'Dejar que voten. Luego: murmuraban.'
+  }, {
+    type: 's-points',
+    kicker: 'Mateo 20:11-12',
+    title: 'Lo que hicieron los primeros',
+    items: [{
+      emoji: '🗣️',
+      text: '**Murmuraban** contra el propietario.'
+    }, {
+      emoji: '⚖️',
+      text: 'La solución de ellos: **que me dé más a mí**… o **que les dé menos a ellos**.'
+    }]
+  }, {
+    type: 's-big',
+    emoji: '🧐',
+    text: 'Es una parábola **rara**…',
+    sub: 'porque en nuestros corazones occidentales es algo que **no es justo**.'
+  }, {
+    type: 's-big',
+    kicker: 'Lo que la parábola quiere enseñar',
+    text: 'La salvación **no es «justa»**:\nno es una **transacción comercial**.',
+    sub: '…y nos cuesta mucho entenderlo.'
+  }, {
+    type: 's-quiz',
+    kicker: 'Pensemos',
+    title: 'Sabemos que la salvación es por la fe… pero',
+    items: [{
+      q: '¿Es como un «para algo tenemos que hacer»?',
+      a: '¡No!'
+    }, {
+      q: 'Sí, justificado por la fe… pero ¿nada? ¿Nada de lo que hago sirve?',
+      a: 'Es gracia, no paga'
+    }]
+  }, {
+    type: 's-author',
+    author: 'Elena G. de White',
+    work: '(idea, en paráfrasis)',
+    text: ['Entender esto representa **la base de la teología correcta**.',
+      'Toda la teología pagana se basa en la **salvación por las obras**.']
+  }, {
+    type: 's-big',
+    kicker: 'Hay una sola cosa en el cristianismo',
+    emoji: '🎁',
+    text: '«Tú no tienes nada,\ny yo te lo **entrego todo**».'
+  }, {
+    type: 's-compare',
+    kicker: 'Dos tipos de justicia',
+    title: 'Usar la parábola para reforzar la idea',
+    columns: [{
+      emoji: '🧾',
+      who: 'El ser humano',
+      title: 'Justicia retributiva',
+      text: 'Estamos hechos para ella: **si doy X, recibo X**.'
+    }, {
+      emoji: '🎁',
+      who: 'Dios',
+      title: 'Justicia distributiva',
+      text: 'La reparte por **el milagro de la gracia**.',
+      hi: true
+    }]
+  }, {
+    type: 's-ask',
+    kicker: 'Para pensar juntos',
+    emoji: '💭',
+    small: true,
+    question: '¿Qué tendría que cambiar para que nuestra actitud fuese **alegrarnos de que el otro recibe más**, estar dispuestos a dar… y alegrarnos por eso?',
+    cloud: '¿Qué tendría que cambiar en mí para alegrarme cuando el otro recibe más?'
+  }, {
+    type: 's-big',
+    kicker: 'Imagínate',
+    emoji: '⏰',
+    text: 'Despertar por la mañana y decir:\n**«¡¿A quién voy a ayudar hoy?!»**',
+    sub: '**Entrenémonos para dar.** 💪'
+  }, {
+    type: 's-ask',
+    kicker: 'Nube de palabras',
+    emoji: '😮‍💨',
+    question: '¿Por qué la gente **se cansa** de compartir, de dar, de ser generosa?',
+    cloud: '¿Por qué nos cansamos de dar y de servir?'
+  }, {
+    type: 's-points',
+    kicker: 'Mi historia',
+    title: '¿Por qué nos cansamos?',
+    items: [{
+      emoji: '🧒',
+      text: 'Cuando era niño me daba **mucha alegría** poder dar dinero.'
+    }, {
+      emoji: '💸',
+      text: 'Ahora es más difícil, porque el dinero se transforma en algo **muy importante** en nuestras vidas.'
+    }, {
+      emoji: '🔁',
+      text: 'Alguien podría decir que se cansa porque: «oye, **doy, doy y doy**… y no recibo nada a cambio».'
+    }]
+  }, {
+    type: 's-big',
+    small: true,
+    emoji: '💔',
+    text: '«Si tu servicio depende de la **gratitud** con la que seas tratado, la ilusión **no te durará mucho tiempo**».',
+    sub: '…y por eso **dejamos de servir**.'
+  }, {
+    type: 's-big',
+    text: 'El mundo es así.\nLa iglesia también.',
+    sub: '**Pensemos en Jesús.**'
+  }, {
+    type: 's-quiz',
+    kicker: 'Quiz rápido · ¡respondan en voz alta!',
+    items: [{
+      q: '¿Qué llamado a la lucha hizo Jesús para resolver la opresión?',
+      a: 'Ninguno'
+    }, {
+      q: 'Dime un héroe de la fe que luchara por sus derechos.',
+      a: 'Ninguno'
+    }, {
+      q: '¿Un mártir defendiendo sus propios intereses?',
+      a: 'Todos se entregaban'
+    }],
+    after: 'Todos se esforzaban por **entregarse** a otros.'
+  }, {
+    type: 's-big',
+    small: true,
+    emoji: '🎯',
+    text: 'Nos han enseñado que luchar por nuestros intereses es la mejor causa… **y no es cierto**.',
+    sub: 'Nos han puesto en el centro: **eres la causa que hay que defender**.'
+  }, {
+    type: 's-author',
+    author: 'Oscar Wilde',
+    text: 'En este mundo sólo hay dos tragedias: una, no conseguir lo que se desea; otra, conseguirlo. **Esta última es la verdadera tragedia.**'
+  }, {
+    type: 's-big',
+    emoji: '🕳️',
+    text: 'Porque cuando lo consigues…\nconsigues **la nada**.'
+  }, {
+    type: 's-big',
+    emoji: '🔥',
+    text: 'Y sí… hay gente que **no se cansa de servir**.'
+  }, {
+    type: 's-vote',
+    kicker: 'Preguntas personales · respóndelas en tu corazón',
+    question: 'La respuesta a esto **determina el resto de tu vida**',
+    options: [{
+      emoji: '🧾',
+      label: '¿Sientes que **la vida te debe algo**?',
+      mark: '✗'
+    }, {
+      emoji: '🙏',
+      label: '¿Sientes que **estás en deuda** con Dios, con la humanidad y con todo lo que te rodea?',
+      mark: '✓'
+    }],
+    answer: 1,
+    answerText: 'Pablo lo tenía claro.'
+  }, {
+    type: 's-scripture',
+    kicker: 'Pablo lo tenía claro',
+    verses: ['Romanos 1:14'],
+    highlight: ['Estoy en deuda con todos'],
+    context: 'A **todos** (los de ese entonces).'
+  }, {
+    type: 's-scripture',
+    kicker: 'Y eso que le costó caro…',
+    verses: ['2 Corintios 11:23-28']
+  }, {
+    type: 's-ask',
+    kicker: 'Respóndete a ti mismo',
+    emoji: '🪞',
+    items: ['¿Para quién haces lo que haces?', '¿A **quién** sirves?', '¿Para quién estudias?', '¿Para quién **vienes aquí**?'],
+    cloud: '¿A quién sirves?'
+  }, {
+    type: 's-ask',
+    kicker: 'Pablo, después de servir…',
+    emoji: '✉️',
+    question: '¿Qué esperas del **ser humano**?',
+    reveal: 'NADA'
+  }, {
+    type: 's-scripture',
+    kicker: 'Lo que Pablo sí esperaba',
+    verses: ['Filipenses 1:21', 'Romanos 14:8', '2 Timoteo 4:8'],
+    highlight: ['el vivir es Cristo', 'del Señor somos', 'la corona de justicia']
+  }, {
+    type: 's-compare',
+    kicker: 'La trampa',
+    title: 'Está en esperar la corona…',
+    columns: [{
+      emoji: '⏳',
+      who: 'Trampa 1',
+      title: 'Antes de tiempo',
+      text: 'Queremos la recompensa **ya**.'
+    }, {
+      emoji: '👏',
+      who: 'Trampa 2',
+      title: 'La corona de los hombres',
+      text: 'Servir **para que los demás lo valoren**.'
+    }]
+  }, {
+    type: 's-scripture',
+    kicker: '¿A quién busco agradar?',
+    verses: ['Gálatas 1:10'],
+    highlight: ['no sería siervo de Cristo']
+  }, {
+    type: 's-scripture',
+    kicker: 'La actitud del siervo',
+    verses: ['Lucas 17:10'],
+    highlight: ['Somos siervos inútiles']
+  }, {
+    type: 's-big',
+    emoji: '🤍',
+    text: 'Esto se trata de resolverlo **íntimamente con Jesús**.',
+    sub: 'Dedícale a Él tu servicio… **y sigue adelante**.'
+  }, {
+    type: 's-points',
+    kicker: 'Falta algo importante',
+    title: 'Intimidad con Jesús',
+    items: [{
+      emoji: '🔒',
+      text: 'Si no, esto sería solo un **sermón de autoayuda**.'
+    }, {
+      emoji: '🔄',
+      text: 'Solo ahí puedes **cerrar el ciclo del servicio**.'
+    }, {
+      emoji: '🙈',
+      text: 'Sin aplausos, sin reconocimiento de los humanos.'
+    }]
+  }, {
+    type: 's-scripture',
+    kicker: 'No te canses',
+    verses: ['Gálatas 6:9', '2 Tesalonicenses 3:13'],
+    highlight: ['No nos cansemos de hacer el bien', 'no se cansen de hacer el bien']
+  }, {
+    type: 's-big',
+    kicker: 'El resumen de esta mañana',
+    text: '«No se trata **de ti**».',
+    sub: 'No somos el centro del universo.'
+  }, {
+    type: 's-big',
+    emoji: '🕊️',
+    small: true,
+    text: 'Si se te han acabado las ganas de servir, el **Espíritu Santo** puede renovarte las ganas…',
+    sub: '…recalibrando nuestras **expectativas**.'
+  }, {
+    type: 's-call',
+    kicker: 'Desafío de la semana',
+    emoji: '🦋',
+    title: 'Despertémonos con **cosquillitas en la guata**',
+    items: [{
+      emoji: '🌅',
+      text: 'Cada mañana: pensar **cómo** y **a quién** vamos a servir.'
+    }, {
+      emoji: '🌙',
+      text: 'Al final del día, con **cero aplausos** y **cero reconocimientos**…'
+    }, {
+      emoji: '😉',
+      text: '…volcar el corazón a Jesús y decir: **«Aquí está vuestro siervo inútil»** *guiño, guiño*.'
+    }]
+  }, {
+    type: 's-call',
+    kicker: 'Llamado',
+    emoji: '🙌',
+    title: 'Reconstruir y **reconsagrar** el servicio al Señor',
+    sub: '¿A quién vas a servir esta semana?',
+    cloud: '¿A quién vas a servir esta semana?'
+  }])
 }];
 
 /* Busca un deck por id; si no existe devuelve el primero (fallback seguro). */
@@ -4933,7 +5779,7 @@ function SlideShell({
       bottom: '-30%',
       width: '70%',
       height: '120%',
-      background: 'radial-gradient(ellipse at center,rgba(255,255,255,.35),rgba(255,255,255,0) 60%)'
+      background: T.glow || 'radial-gradient(ellipse at center,rgba(255,255,255,.35),rgba(255,255,255,0) 60%)'
     }
   })), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4964,7 +5810,15 @@ function SlideShell({
       alignItems: 'center',
       flexShrink: 0
     }
-  }, Array.from({
+  }, total > 24 ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'Barlow Condensed,sans-serif',
+      fontWeight: 800,
+      fontSize: 'clamp(10px,1.2vw,13px)',
+      color: T.inkSoft,
+      letterSpacing: '.12em'
+    }
+  }, index + 1, " / ", total) : Array.from({
     length: total
   }).map((_, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
@@ -4987,9 +5841,16 @@ function SlideView({
   total,
   footer,
   T = SLIDE_T,
-  onVerseClick
+  onVerseClick,
+  isAdmin,
+  onAskCloud,
+  wcActive
 }) {
   __ST = T; // fija el tema activo para los componentes auxiliares de esta slide
+  // ── Láminas de sermón (tipos 's-…', tema propio) ──
+  if (String(slide.type).startsWith('s-')) return /*#__PURE__*/React.createElement(SermonSlide, {
+    slide, index, total, footer, onVerseClick, isAdmin, onAskCloud, wcActive
+  });
   // ── Portada ──
   if (slide.type === 'cover') {
     return /*#__PURE__*/React.createElement(SlideShell, {
@@ -5853,7 +6714,11 @@ function PresentationOverlay({
     total: total,
     footer: footer,
     T: (deck.id === 'semana12' || deck.theme === 'mrnt') ? MRNT_T : SLIDE_T,
-    onVerseClick: onVerseClick
+    onVerseClick: onVerseClick,
+    isAdmin: isAdmin,
+    wcActive: wcActive,
+    // Láminas con pregunta: el admin abre (o cierra) la nube con esa pregunta.
+    onAskCloud: onToggleWordCloud ? q => wcActive ? onToggleWordCloud('', true) : onToggleWordCloud(q) : null
   }), isAdmin ? /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
