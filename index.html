@@ -19665,6 +19665,7 @@ class Component extends React.Component {
           started: { mision: !!op.mision, confra: !!op.confra, repaso: true, templo: !!op.templo },
           roomNames: { ...s.roomNames, ...(v.roomNames || {}) },
           activity,
+          wcHidden: v.wordcloud?.active ? s.wcHidden : false,
           micOn: v.voiceAllowed ? s.micOn : false,
           speakerMuted: v.voiceAllowed ? s.speakerMuted : true
         };
@@ -20104,6 +20105,27 @@ class Component extends React.Component {
     this.setState({ activity: key, placeMode: null, selectedId: null, selFurn: null });
   };
   closeActivity = () => this.setState({ activity: null });
+  // Activa/desactiva la nube de palabras. `q` es la pregunta opcional que
+  // escribe el admin; se guarda para que todos la vean arriba de la nube.
+  _toggleWordCloud = (q) => {
+    const a = !!this.state.session?.wordcloud?.active;
+    if (a) db.ref(`sessions/${this.SID}/wordcloud/active`).set(false);
+    else   db.ref(`sessions/${this.SID}/wordcloud`).set({ active: true, words: [], question: (typeof q === 'string' ? q : '') || '' });
+    this.setState({ wcHidden: false });
+  };
+  // Nube de palabras encima de una presentación o video: la actividad
+  // principal sigue siendo la presentación, y la nube se superpone (zIndex
+  // mayor). Al cerrarla se vuelve a la presentación sin terminarla.
+  _renderWordCloudOver() {
+    const wc = this.state.session?.wordcloud;
+    if (!wc?.active || this.state.wcHidden) return null;
+    if (!(this.state.currentRoom === 'repaso' || this.screenMode || this.isAdmin)) return null;
+    return h(WordCloudActivity, Object.assign({}, this._commonProps(), {
+      wordcloud: wc,
+      question: wc.question || '',
+      onClose: () => this.setState({ wcHidden: true })
+    }));
+  }
   // Tabla: id (rid) -> emoji para mapear lo que viene de Firebase.
   RID_EMOJI = { heart: '❤️', pray: '🙏', thumbs: '👍', smile: '😊', cry: '😢', party: '🎉' };
   fireReaction = (emoji) => {
@@ -20765,26 +20787,22 @@ class Component extends React.Component {
       const total = (deck.slides || []).length;
       const curIdx = Math.max(0, Math.min(total - 1, pres?.slide || 0));
       const setSlide = (i) => db.ref(`sessions/${this.SID}/presentation/slide`).set(Math.max(0, Math.min(total - 1, i)));
-      return h(PresentationOverlay, Object.assign({}, cp, {
+      return h(React.Fragment, null, h(PresentationOverlay, Object.assign({}, cp, {
         onPrev: () => setSlide(curIdx - 1),
         onNext: () => setSlide(curIdx + 1),
         onEnd: () => { db.ref(`sessions/${this.SID}/presentation`).remove(); this.closeActivity(); },
         onEndPresentation: () => { db.ref(`sessions/${this.SID}/presentation`).remove(); this.closeActivity(); },
-        onToggleWordCloud: () => {
-          const a = !!this.state.session?.wordcloud?.active;
-          if (a) db.ref(`sessions/${this.SID}/wordcloud/active`).set(false);
-          else   db.ref(`sessions/${this.SID}/wordcloud`).set({ active: true, words: [] });
-        },
+        onToggleWordCloud: this._toggleWordCloud,
         onToggleQR: () => this.setState((s) => ({ showQR: !s.showQR })),
         qrOn: !!this.state.showQR,
         onVerseClick: (ref) => this.setState({ verseRef: ref })
-      }));
+      })), this._renderWordCloudOver());
     }
-    if (k === 'videos')   return h(VideoOverlay, Object.assign({}, cp, {
+    if (k === 'videos')   return h(React.Fragment, null, h(VideoOverlay, Object.assign({}, cp, {
       SID: this.SID,
       onEnd: () => { db.ref(`sessions/${this.SID}/video`).remove(); this.closeActivity(); },
       onEndVideo: () => { db.ref(`sessions/${this.SID}/video`).remove(); this.closeActivity(); }
-    }));
+    })), this._renderWordCloudOver());
     if (k === 'encuesta') {
       const me = this.state.chars.find((c) => c.id === 'me') || {};
       const responses = this.state.surveyResponses || {};
@@ -21239,11 +21257,7 @@ class Component extends React.Component {
         onStartTemplo: () => db.ref(`sessions/${this.SID}`).update({ phase: 'templo', templo: { active: true, startTime: Date.now() }, survey: { active: true } }),
         onEndTemplo: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', templo: null, survey: null }),
         onOpenStats: () => this.setState({ activity: 'admin-stats' }),
-        onToggleWordCloud: () => {
-          const a = !!this.state.session?.wordcloud?.active;
-          if (a) db.ref(`sessions/${this.SID}/wordcloud/active`).set(false);
-          else   db.ref(`sessions/${this.SID}/wordcloud`).set({ active: true, words: [] });
-        },
+        onToggleWordCloud: this._toggleWordCloud,
         onResetSession: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', confra: null, repaso: null, juegos: null, mision: null, templo: null, presentation: null, video: null, wordcloud: null, tabu: null, quiensoy: null, dibuja: null, pictonary: null }),
         onOpenDownload: () => this.setState({ activity: 'download' }),
         onOpenSurveyResults: () => this.setState({ activity: 'survey-results' }),
