@@ -2663,25 +2663,25 @@ const MRNT_T = {
    (síncrono), y los componentes auxiliares lo toman por defecto. */
 let __ST = SLIDE_T;
 
-/* ════════════════════════ BIBLIA LOCAL (TCP · sin derechos de autor) ════════════════════════ */
+/* ════════════════════════ BIBLIA LOCAL (NVI) ════════════════════════ */
 /*
- * Texto de los versículos guardado DENTRO del repositorio para que se lea
- * sin conexión a internet. Versión: «Santa Biblia TCP» (sin derechos de autor)
- * — extraída del PDF que el equipo subió a Drive.
+ * Texto de los versículos que usan las slides, guardado aquí para que se lea
+ * sin conexión a internet. Versión: Nueva Versión Internacional (NVI).
  *
- * Antes usábamos la Reina-Valera 1909 (dominio público); ahora migramos a TCP
- * para que el texto luzca en español contemporáneo.
+ * La NVI tiene derechos de autor: aquí van SOLO los pasajes citados en las
+ * presentaciones (permitido citando la versión). La Biblia completa nunca se
+ * sube al repositorio (es público).
  *
- * Para reemplazar el texto: edita cada entrada manteniendo la misma clave (debe
- * coincidir EXACTAMENTE con la referencia escrita en el array `verses` de la
- * slide) y, si quieres, cambia BIBLE_VERSION al nombre de tu versión.
+ * NO editar a mano: BIBLE_VERSES se genera con `python3 tools/biblia.py
+ * actualizar`, que lee la Biblia desde biblia/biblia.txt (local, ignorado por
+ * git) y toma las referencias de los arrays `verses` de las slides.
  *
  * Estructura: clave = referencia tal como aparece en la slide → array de
  * versículos { n: número, t: texto }.
  */
 
 /* ── BIBLE_VERSION  (líneas 2826-2826) ── */
-const BIBLE_VERSION = 'TCP';
+const BIBLE_VERSION = 'NVI';
 
 /* ── BIBLE_VERSES  (líneas 2827-3109) ── */
 const BIBLE_VERSES = {
