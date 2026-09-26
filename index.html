@@ -3703,7 +3703,10 @@ function SermonSlide({ slide, index, total, footer, onVerseClick, isAdmin, onAsk
       sub(slide.subtitle, .25, 's'),
       h("div", { key: 'r', style: Object.assign({ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }, anim(.4)) },
         (slide.verses || []).map(r => chip(r))),
-      h("div", { key: 'b', style: Object.assign({ display: 'flex', justifyContent: 'center' }, anim(.5)) }, h(SlideBrand, { T: MRNT_T }))
+      h("div", { key: 'b', style: Object.assign({ display: 'flex', justifyContent: 'center' }, anim(.5)) }, h(SlideBrand, { T: MRNT_T })),
+      slide.credit ? h("a", { key: 'cr', href: slide.creditUrl, target: '_blank', rel: 'noopener noreferrer',
+        style: Object.assign({ textAlign: 'center', fontFamily: 'Barlow,sans-serif', fontStyle: 'italic',
+          fontSize: 'clamp(11px,1.3vw,14px)', color: T.inkSoft, textDecoration: 'none' }, anim(.6)) }, slide.credit, slide.creditUrl ? ' ▶' : '') : null
     ], { alignItems: 'stretch' });
   }
 
@@ -5159,7 +5162,9 @@ const PRESENTATIONS = [{
     kicker: 'Cotidianamente',
     title: '¿A quién sirves?',
     subtitle: 'Hay más dicha en dar que en recibir… ¿de verdad?',
-    verses: ['Hechos 20:35']
+    verses: ['Hechos 20:35'],
+    credit: 'Basado en el sermón «Cotidianamente – ¿A quién sirves?» del Pr. Daniel Bosqued',
+    creditUrl: 'https://www.youtube.com/live/zg2ZiJ-k-TQ'
   }, {
     type: 's-big',
     kicker: 'Para empezar',
