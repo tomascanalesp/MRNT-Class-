@@ -7099,12 +7099,38 @@ function VerseOverlay({
   }, "El anfitrión está mostrando este versículo")));
 }
 
+/* Miniatura de una lámina: la dibuja al ancho real de la presentación y la
+   escala al ancho de la caja (para la vista previa de la lámina siguiente). */
+function NextSlideThumb({ children }) {
+  const boxRef = useRef(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const upd = () => setW(el.clientWidth);
+    upd();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(upd) : null;
+    ro && ro.observe(el);
+    window.addEventListener('resize', upd);
+    return () => { ro && ro.disconnect(); window.removeEventListener('resize', upd); };
+  }, []);
+  const full = Math.min(window.innerWidth * 0.96, 1180);
+  const k = w ? w / full : 0;
+  return React.createElement("div", {
+    ref: boxRef,
+    style: { position: 'relative', width: '100%', height: w ? Math.round(w * 0.62) : 120, overflow: 'hidden', borderRadius: 8, background: '#ece6db' }
+  }, k ? React.createElement("div", {
+    style: { position: 'absolute', left: 0, top: 0, width: full, transform: `scale(${k})`, transformOrigin: 'top left', pointerEvents: 'none' }
+  }, children) : null);
+}
+
 /* Overlay de presentación sincronizada: todos ven la slide; el admin avanza. */
 
 /* ── PresentationOverlay  (líneas 4913-5366) ── */
 function PresentationOverlay({
   session,
   isAdmin,
+  myId,
   onPrev,
   onNext,
   onEnd,
@@ -7117,6 +7143,15 @@ function PresentationOverlay({
   const wcActive = !!session?.wordcloud?.active;
   const [moreOpen, setMoreOpen] = useState(false);
   const [wcPrompt, setWcPrompt] = useState(false); // pedir la pregunta antes de abrir la nube
+  // Vista previa de la lámina siguiente: solo en el dispositivo de quien
+  // inició la presentación (estado local, no se comparte por Firebase).
+  const [showNext, setShowNext] = useState(() => {
+    try { return localStorage.getItem('mrnt-pres-next') === '1'; } catch (_) { return false; }
+  });
+  const toggleNext = () => setShowNext(v => {
+    try { localStorage.setItem('mrnt-pres-next', v ? '0' : '1'); } catch (_) {}
+    return !v;
+  });
   const [wcQuestion, setWcQuestion] = useState('');
   const overlayRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -7165,7 +7200,31 @@ function PresentationOverlay({
   if (!pres?.active) return null;
   const slide = slides[idx];
   const footer = `${deck.week} · ${deck.subtitle}`;
-  return /*#__PURE__*/React.createElement("div", {
+  const isPresenter = isAdmin && !isScreenMode() && (!pres.by || pres.by === myId);
+  const nextSlide = idx < total - 1 ? slides[idx + 1] : null;
+  const nextPreview = isPresenter && showNext ? React.createElement("div", {
+    onClick: nextSlide ? onNext : undefined,
+    title: nextSlide ? 'Tocar para avanzar' : '',
+    style: { position: 'fixed', top: 'max(10px, env(safe-area-inset-top))', right: 10, zIndex: 165,
+      width: 'min(44vw, 340px)', background: '#0a0e2e', borderRadius: 14, padding: 8,
+      boxShadow: '0 14px 36px rgba(10,14,46,.4)', cursor: nextSlide ? 'pointer' : 'default' }
+  }, React.createElement("div", {
+    style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6,
+      fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11, letterSpacing: '.12em',
+      textTransform: 'uppercase', color: '#fbbf24' }
+  }, React.createElement("span", { style: { whiteSpace: 'nowrap' } }, nextSlide ? `Siguiente · ${idx + 2}/${total}` : 'Última lámina'),
+    React.createElement("span", { style: { whiteSpace: 'nowrap', color: 'rgba(255,255,255,.55)' } }, '🔒 Solo tú')),
+  nextSlide ? (nextSlide.type === 's-image'
+    ? React.createElement("img", { src: nextSlide.src, alt: nextSlide.alt || '', draggable: false,
+        style: { display: 'block', width: '100%', aspectRatio: nextSlide.ratio || '16 / 9', objectFit: 'contain', borderRadius: 8, background: '#fff' } })
+    : React.createElement(NextSlideThumb, null, React.createElement(SlideView, {
+            slide: Object.assign({}, nextSlide, { note: null }),
+            index: idx + 1, total, footer,
+            T: (deck.id === 'semana12' || deck.theme === 'mrnt') ? MRNT_T : SLIDE_T,
+            isAdmin: false
+          })))
+    : React.createElement("div", { style: { padding: '14px 6px', textAlign: 'center', color: 'rgba(255,255,255,.75)', fontFamily: 'Barlow,sans-serif', fontSize: 13 } }, 'No hay más láminas.')) : null;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, nextPreview, /*#__PURE__*/React.createElement("div", {
     ref: overlayRef,
     style: {
       position: 'fixed',
@@ -7264,7 +7323,25 @@ function PresentationOverlay({
       color: idx === total - 1 ? 'rgba(10,14,46,.3)' : '#ffffff',
       fontSize: 18
     }
-  }, "▶"), (onToggleWordCloud || onToggleQR) && /*#__PURE__*/React.createElement("div", {
+  }, "▶"), isPresenter && /*#__PURE__*/React.createElement("button", {
+    onClick: toggleNext,
+    title: showNext ? 'Ocultar la lámina siguiente' : 'Ver la lámina siguiente (solo tú)',
+    style: {
+      marginLeft: 4,
+      padding: '0 12px',
+      height: 42,
+      borderRadius: 12,
+      cursor: 'pointer',
+      border: `1px solid ${showNext ? 'rgba(251,191,36,.7)' : 'rgba(10,14,46,.15)'}`,
+      background: showNext ? 'rgba(251,191,36,.22)' : 'rgba(10,14,46,.06)',
+      color: showNext ? '#a16207' : '#0a0e2e',
+      fontWeight: 800,
+      fontSize: 12,
+      fontFamily: 'Barlow Condensed,sans-serif',
+      letterSpacing: '.05em',
+      textTransform: 'uppercase'
+    }
+  }, showNext ? '🙈 Ocultar siguiente' : '👁 Ver siguiente'), (onToggleWordCloud || onToggleQR) && /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative'
     }
@@ -7561,7 +7638,7 @@ function PresentationOverlay({
       textTransform: 'uppercase',
       boxShadow: '0 8px 22px rgba(59,130,246,.33)'
     }
-  }, "Abrir nube")))));
+  }, "Abrir nube"))))));
 }
 
 /* Menú de presentaciones disponibles — el admin elige cuál proyectar. */
@@ -22649,7 +22726,7 @@ class Component extends React.Component {
         onToggleVoiceAllowed: () => db.ref(`sessions/${this.SID}/voiceAllowed`).set(!st.session?.voiceAllowed)
       }) : null,
       // Menús auxiliares (admin)
-      !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slide: 0, startTime: Date.now() }); this.setState({ activity: 'presenta' }); } }) : null,
+      !screen && st.activity === 'presenta-menu' ? h(PresentationMenu, { onClose: this.closeActivity, onSelect: (id) => { db.ref(`sessions/${this.SID}/presentation`).set({ id, active: true, slide: 0, startTime: Date.now(), by: this.uid || null }); this.setState({ activity: 'presenta' }); } }) : null,
       !screen && st.activity === 'videos-menu' ? h(VideoMenu, { onClose: this.closeActivity, onSelect: (id) => { const v = VIDEOS.find((x) => x.id === id); db.ref(`sessions/${this.SID}/video`).set({ catalogId: id, videoId: v?.youtubeId || null, active: true, state: 'playing', position: 0, updatedAt: Date.now() }); this.setState({ activity: 'videos' }); } }) : null,
       !screen && st.activity === 'download' ? h(DataDownloadModal, Object.assign({}, this._commonProps(), { onClose: this.closeActivity })) : null,
       !screen && st.activity === 'survey-results' ? h(AdminSurveyModal, Object.assign({}, this._commonProps(), { responses: st.surveyResponses || {}, onClose: this.closeActivity })) : null,
