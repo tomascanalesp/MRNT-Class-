@@ -22,6 +22,7 @@ App de una sola página (`index.html`, React sin build) publicada en GitHub Page
 - Consultar un pasaje: `python3 tools/biblia.py "Juan 3:16"`.
 
 ## Bachillerato bíblico (juego)
+- Al agregar un juego nuevo, subir `APP_BUILD` y anotarlo en `sessions/<SID>/build` al iniciarlo (recarga las páginas viejas abiertas).
 - Código en `index.html` (`BachiController`, constantes `BACHI_*`); estado en `sessions/<SID>/bachi`.
 - Valida palabras con `bachillerato-dic.txt` (español + chilenismos) y `bachillerato-biblia.txt`
   (vocabulario de la Biblia: palabras sueltas, no el texto). Se regeneran con
