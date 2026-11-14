@@ -20,3 +20,10 @@ App de una sola página (`index.html`, React sin build) publicada en GitHub Page
   Esa carpeta está en `.gitignore`: la NVI tiene derechos de autor y el repo es público,
   así que el texto completo **nunca** se sube a este repositorio.
 - Consultar un pasaje: `python3 tools/biblia.py "Juan 3:16"`.
+
+## Bachillerato bíblico (juego)
+- Código en `index.html` (`BachiController`, constantes `BACHI_*`); estado en `sessions/<SID>/bachi`.
+- Valida palabras con `bachillerato-dic.txt` (español + chilenismos) y `bachillerato-biblia.txt`
+  (vocabulario de la Biblia: palabras sueltas, no el texto). Se regeneran con
+  `python3 tools/bachillerato.py` (necesita `biblia/biblia.txt` para el segundo).
+- Las listas cortas (personajes, lugares, animales, comidas, chilenismos) están a mano en `index.html`.
