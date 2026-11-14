@@ -12711,6 +12711,7 @@ function GameSelectMenu({
   onStartDibuja,
   onStartPictonary,
   onStartEmoji,
+  onStartBachi,
   onCancel
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -13126,7 +13127,15 @@ function GameSelectMenu({
       color: '#8b5cf6',
       opacity: .6
     }
-  }, "›")), /*#__PURE__*/React.createElement("button", {
+  }, "›")), h("button", {
+    onClick: onStartBachi,
+    style: { width: '100%', maxWidth: 380, background: '#ffffff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 20, padding: '16px 20px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 12px 30px rgba(10,14,46,.1)' }
+  }, h("div", { style: { width: 4, alignSelf: 'stretch', borderRadius: 4, background: '#0d9488', flexShrink: 0 } }),
+    h("div", { style: { flex: 1 } },
+      h("div", { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 20, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '.05em' } }, "Bachillerato Bíblico"),
+      h("div", { style: { fontFamily: 'Barlow,sans-serif', fontSize: 13, color: '#0a0e2e', marginTop: 3, lineHeight: 1.4 } }, "Una letra, una palabra por categoría… ¡y STOP!"),
+      h("div", { style: { fontSize: 11, color: 'var(--muted)', marginTop: 5, display: 'flex', gap: 10 } }, h("span", null, "6 categorías"), h("span", null, "Letra a elección o al azar"))),
+    h("span", { style: { fontSize: 20, color: '#0d9488', opacity: .6 } }, "›")), /*#__PURE__*/React.createElement("button", {
     onClick: onCreateNew,
     style: {
       width: '100%',
@@ -13605,6 +13614,12 @@ function KahootController({
           active: true,
           gameState: 'idle',
           scores: {}
+        });
+      },
+      onStartBachi: async () => {
+        await db.ref(`sessions/${SID}/bachi`).set({
+          active: true,
+          gameState: 'idle'
         });
       },
       onCancel: () => {
@@ -20369,6 +20384,455 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
 }
 
 
+/* ═══ BACHILLERATO BÍBLICO ═══ */
+/* Una letra, una palabra por categoría. El primero que completa dice STOP.
+   Estado en sessions/<SID>/bachi:
+     gameState: 'idle' | 'spin' | 'playing' | 'finished'
+     cur: id de la ronda en juego · spin: { startTs, chooser }
+     rounds/<rid>: { letter, startTs, stopBy, answers/<uid>/<i>, pts/<uid>/<i> }
+   Los puntos se calculan solos (bachiAutoPts) y cada jugador puede corregir
+   los suyos: lo corregido queda en rounds/<rid>/pts/<uid>/<i>. */
+const BACHI_CATS = [
+  { key: 'personaje', label: 'Personaje bíblico', icon: '🧔' },
+  { key: 'lugar', label: 'Lugar bíblico', icon: '🗺️' },
+  { key: 'animal', label: 'Animal', icon: '🐑' },
+  { key: 'comida', label: 'Fruta o comida', icon: '🍇' },
+  { key: 'cosa', label: 'Cosa', icon: '📦' },
+  { key: 'biblia', label: 'Palabra de la Biblia', icon: '📖' },
+];
+const BACHI_LETTERS = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
+const BACHI_SPIN_MS = 170;   // ritmo de decir el abecedario mentalmente
+const BACHI_COLOR = '#0d9488', BACHI_DARK = '#0f766e';
+
+// minúsculas, sin tildes (la ñ se conserva) y solo letras
+const bachiNorm = (s) => String(s || '').toLowerCase().replace(/ñ/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'ñ').replace(/[^a-zñ]/g, '');
+const bachiSet = (txt) => new Set(txt.split(/[,\n]/).map(bachiNorm).filter(Boolean));
+
+const BACHI_PERSONAJES = bachiSet(`Aarón, Abdías, Abed-nego, Abel, Abiatar, Abigail, Abimelec, Abisag, Abisai, Abner, Abraham, Abram, Absalón, Acab, Acán, Acaz, Adán, Adonías, Agar, Ágabo, Agripa, Ahimelec, Ahitofel, Amán, Amasías, Amnón, Amós, Ana, Ananías, Anás, Andrés, Apolos, Aquila, Aquis, Artajerjes, Asa, Asaf, Aser, Asuero, Atalía, Balaam, Balac, Barac, Barrabás, Bartimeo, Bartolomé, Baruc, Belsasar, Benaía, Benjamín, Bernabé, Betsabé, Bildad, Booz, Caifás, Caín, Caleb, Cam, Ciro, Cleofas, Cornelio, Coré, Crispo, Dalila, Dan, Daniel, Darío, David, Débora, Demas, Demetrio, Dimas, Dina, Dorcas, Efraín, Elcana, Eleazar, Elí, Eliab, Elías, Eliezer, Elifaz, Elimelec, Elisabet, Eliseo, Eliú, Enoc, Epafrodito, Esaú, Esdras, Esteban, Ester, Eutico, Eva, Ezequías, Ezequiel, Faraón, Febe, Felipe, Félix, Festo, Filemón, Finees, Gabriel, Gad, Gamaliel, Gayo, Gedeón, Giezi, Goliat, Gomer, Habacuc, Hageo, Hazael, Herodes, Herodías, Hiram, Hulda, Hur, Icabod, Isaac, Isacar, Isaí, Isaías, Ismael, Israel, Jabes, Jacob, Jacobo, Jael, Jafet, Jairo, Jasón, Jefté, Jehú, Jeremías, Jeroboam, Jesús, Jetro, Jezabel, Joab, Joaquín, Joás, Job, Jocabed, Joel, Jonás, Jonatán, Joram, Josafat, José, Josías, Josué, Jotam, Juan, Juan el Bautista, Juana, Judá, Judas, Judit, Julia, Labán, Lamec, Lázaro, Lea, Leví, Lidia, Lot, Lucas, Lucifer, Malaquías, Malco, Manasés, Manoa, Marcos, Mardoqueo, María, María Magdalena, Marta, Mateo, Matías, Matusalén, Mefiboset, Melquisedec, Mesac, Mical, Miguel, Miqueas, Miriam, Moisés, Naamán, Nabal, Nabot, Nabucodonosor, Nadab, Nahúm, Natán, Natanael, Neftalí, Nehemías, Nicodemo, Noé, Noemí, Obed, Onésimo, Oseas, Otoniel, Pablo, Pedro, Pilato, Poncio Pilato, Potifar, Priscila, Rahab, Raquel, Rebeca, Roboam, Rode, Rubén, Rut, Safira, Salomé, Salomón, Samuel, Sansón, Sara, Sarai, Saúl, Saulo, Sedequías, Sem, Senaquerib, Set, Sadrac, Silas, Simeón, Simón, Sísara, Sofonías, Susana, Tabita, Tadeo, Tamar, Teófilo, Timoteo, Tito, Tomás, Uriel, Urías, Uzías, Vasti, Zabulón, Zacarías, Zaqueo, Zebedeo, Séfora, Zorobabel, Zofar, Zimri, Zilpa, Bilha, Quis, Quedorlaomer, Querubín, Nimrod, Nicolás, Nicanor, Orfa, Og, Onán, Otniel, Ozías, Urbano, Uza, Uzi, Hananías, Hadasa, Hofni, Herodes Antipas, Ehud, Eglón, Enós, Epafras, Erasto, Eunice, Loida, Lemuel, Fineas, Filólogo, Fortunato, Trófimo, Tíquico, Tértulo, Tubal, Tubal-Caín, Yubal, Yafet, Yair, Volfango`);
+const BACHI_LUGARES = bachiSet(`Acaya, Ai, Antioquía, Ararat, Arabia, Aram, Areópago, Arimatea, Armagedón, Asdod, Asia, Asiria, Ascalón, Atenas, Babel, Babilonia, Basán, Beerseba, Belén, Berea, Betania, Betel, Betesda, Betfagé, Betsaida, Bet-semes, Cades, Caldea, Calvario, Caná, Canaán, Capernaúm, Capadocia, Carmelo, Cedrón, Cesarea, Chipre, Cilicia, Cirene, Colosas, Corinto, Creta, Damasco, Dan, Decápolis, Derbe, Dotán, Ebenezer, Edén, Edom, Éfeso, Egipto, Elat, Elim, Emaús, Endor, Escol, España, Etiopía, Éufrates, Fenicia, Filadelfia, Filipos, Filistea, Frigia, Gabaón, Gadara, Galacia, Galaad, Galilea, Gat, Gaza, Genesaret, Gerar, Getsemaní, Gilgal, Gólgota, Gomorra, Gosén, Grecia, Harán, Hebrón, Hermón, Hierápolis, Horeb, Iconio, Idumea, Israel, Italia, Jabes, Jaboc, Jericó, Jerusalén, Jezreel, Jope, Jordán, Judá, Judea, Laodicea, Líbano, Libia, Lida, Listra, Macedonia, Madián, Magdala, Malta, Mara, Mar Rojo, Mar Muerto, Mar de Galilea, Media, Meguido, Mesopotamia, Mileto, Mizpa, Moab, Moriah, Monte Sinaí, Monte de los Olivos, Monte Carmelo, Naín, Nazaret, Nebo, Neguev, Nilo, Nínive, Nod, Ofir, Olivos, Padan-aram, Palestina, Panfilia, Patmos, Peniel, Pérgamo, Persia, Petra, Pisidia, Ponto, Ramá, Ramot, Refidim, Roma, Sabá, Salem, Samaria, Sardis, Sarepta, Sarón, Seir, Sidón, Silo, Siloé, Sinaí, Sinar, Sion, Siquem, Siria, Sodoma, Sucot, Susa, Tabor, Tarsis, Tarso, Tesalónica, Tiatira, Tiberias, Tigris, Tiro, Troas, Ur, Uz, Zoar, Zarepta, Esmirna, Quebar, Queila, Quiriat-jearim, Hai, Horma, Hor, Ur de los caldeos, Valle de Josafat, Valle de Elá, Yavé-jiré`);
+const BACHI_ANIMALES = bachiSet(`abeja, abejorro, águila, aguilucho, alacrán, albatros, alce, alpaca, anaconda, anchoa, anguila, antílope, araña, ardilla, armadillo, asno, atún, avestruz, avispa, babuino, bacalao, bagre, ballena, becerro, bisonte, boa, borrego, buey, búfalo, búho, buitre, burro, caballo, cabra, cabrito, cacatúa, cachalote, cachorro, caimán, calamar, camaleón, camarón, camello, canario, cangrejo, canguro, caracol, carnero, castor, cebra, cerdo, chacal, chancho, chimpancé, chinche, chincol, chinita, chivo, choroy, cigarra, cigüeña, ciempiés, ciervo, cisne, coatí, cobra, cocodrilo, codorniz, coipo, colibrí, comadreja, cóndor, conejo, congrio, cordero, corvina, cotorra, coyote, cucaracha, cuervo, culebra, cuncuna, cururo, delfín, degú, dinosaurio, dragón, dromedario, elefante, emú, erizo, escarabajo, escorpión, estrella de mar, faisán, flamenco, foca, gacela, gallina, gallo, gamo, ganso, garrapata, garza, gato, gavilán, gaviota, golondrina, gorila, gorrión, grillo, guacamayo, guanaco, guepardo, güiña, gusano, halcón, hámster, hiena, hipopótamo, hormiga, huemul, huillín, hurón, ibis, iguana, impala, jabalí, jaguar, jaiba, jilguero, jirafa, jote, jurel, kiwi, koala, krill, lagartija, lagarto, langosta, lechuza, lémur, león, leona, leopardo, libélula, liebre, lince, llama, lobo, lobo marino, loica, lombriz, loro, luciérnaga, macaco, mamut, manatí, mandril, mangosta, mantarraya, mantis, mapache, mariposa, mariquita, marmota, marsopa, medusa, merluza, mono, morsa, mosca, mosquito, mula, murciélago, narval, nutria, ñandú, ñu, oca, ocelote, orangután, orca, oruga, oso, ostra, oveja, pájaro, paloma, panda, pantera, papagayo, pato, pavo, pavo real, pejerrey, pelícano, perdiz, perezoso, perico, perro, pez, picaflor, pingüino, piojo, piraña, polilla, pollo, potro, pudú, pulga, pulpo, puma, queltehue, quetzal, quirquincho, quiltro, rana, rata, ratón, raya, reno, rinoceronte, róbalo, ruiseñor, salamandra, salmón, saltamontes, sanguijuela, sapo, sardina, serpiente, suricata, tábano, tapir, tarántula, tejón, termita, ternero, tiburón, tigre, tiuque, topo, toro, tórtola, tortuga, treile, trucha, tucán, tucúquere, urogallo, urraca, vaca, vampiro, venado, víbora, vicuña, vinchuca, vizcacha, wallaby, xoloitzcuintle, yacaré, yak, yegua, zancudo, zarigüeya, zorro, zorzal, zopilote, zángano, behemot, leviatán, onagro, áspid, langostino, erizo de mar, loco, macha, choro, almeja, ostión, centolla, reineta, albacora, cochinilla, chanchito de tierra, matapiojos, peuco, bandurria, cernícalo, carpintero, chucao, diuca, tenca, tordo, huairavo, pidén, tagua, yeco, lile, piquero, pilpilén, cisne de cuello negro, monito del monte, yaca, quique, chungungo, coyhaique`);
+const BACHI_COMIDAS = bachiSet(`aceite, aceituna, acelga, achicoria, ajo, ají, albahaca, albóndiga, alcachofa, alcayota, alfajor, almendra, apio, arándano, arepa, arroz, arveja, asado, atún, avellana, avena, azúcar, banana, banano, berenjena, berlín, betarraga, bistec, brócoli, budín, burrito, cacao, café, calabaza, caldo, calzones rotos, camote, canela, caqui, carbonada, carne, castaña, cazuela, cebada, cebolla, cebollín, cerdo, cereal, cereza, ceviche, champiñón, charqui, charquicán, chancho en piedra, chirimoya, chocolate, choclo, chorizo, chorrillana, chuleta, churrasco, churro, chumbeque, cilantro, ciruela, coco, cochayuyo, codorniz, col, coliflor, completo, cordero, crema, curanto, damasco, dátil, digüeñe, dona, durazno, dulce, dulce de leche, empanada, endivia, eneldo, ensalada, espárrago, espinaca, estofado, fideos, flan, frambuesa, frejol, frijol, frutilla, fresa, galleta, garbanzo, gelatina, granada, grosella, guanábana, guayaba, guinda, guiso, haba, hallulla, hamburguesa, harina, helado, higo, hinojo, hongo, huevo, huesillo, humita, jaiba, jalea, jamón, jengibre, jugo, kétchup, kiwi, kuchen, lasaña, leche, lechuga, lenteja, lentejas, lima, limón, longaniza, lúcuma, maíz, maná, mandarina, mango, maní, manjar, mantequilla, manzana, maqui, maracuyá, marraqueta, mayonesa, melón, membrillo, menta, merengue, mermelada, miel, mora, mostaza, mote, mote con huesillo, murta, nabo, naranja, nata, nectarín, níspero, nogada, nuez, ñame, ñoqui, ñoquis, oliva, orégano, ostión, paila marina, palta, pan, pan amasado, panqueque, pantruca, papa, papas fritas, papaya, pasa, pasta, pastel, pastel de choclo, pavo, pebre, pepino, pera, perejil, pescado, picarón, pimentón, pimienta, pimiento, piña, piñón, pizza, plátano, pollo, pomelo, porotos, poroto, porotos granados, porotos verdes, postre, puerro, puré, queque, quesillo, queso, quínoa, rabanito, rábano, repollo, romero, rúcula, sal, salame, salchicha, salmón, salsa, sandía, sándwich, sémola, sopa, sopaipilla, taco, tallarines, tamarindo, té, tomate, tomillo, toronja, torta, tortilla, trigo, trufa, tuna, turrón, uva, uvas, vainilla, vainita, verdura, vinagre, vienesa, wafle, yogur, yuca, zanahoria, zapallo, zapallo italiano, zarzamora, zumo, lentejas rojas, pan sin levadura, pan ázimo, codornices, higos, uvas pasas, aceitunas, cordero asado, pescado asado, panes, peces, leche y miel, hierbas amargas, vino, mosto, levadura, torta de higos, algarroba, pepinos, puerros, ajos, cebollas, melones, almendras, nueces, pistacho, pistachos, anticucho, barros luco, calugas, calzone, cabritas, chaparrita, chapalele, milcao, chupe, coyac, cuchuflí, charqui, italiano, leche asada, lomito, luche, mariscal, merquén, mechada, navegado, ñachi, ulpo, harina tostada, tortilla de rescoldo, sopaipilla pasada, terremoto, pernil, plateada, prieta, queso de cabra, sopa de pollo, pantrucas, empolvado, chilenito, alfajores, cocadas, dobladita`);
+const BACHI_CHILENISMOS = bachiSet(`polera, polerón, guagua, zapatilla, micro, luca, parka, bototo, chala, hawaiana, jockey, estuche, plumón, scotch, corchetera, confort, frazada, guatero, chauchera, volantín, emboque, ampolleta, citófono, velador, clóset, tineta, chupalla, trutruca, kultrún, ojota, lienza, pichanga, cototo, cahuín, carrete, cuea, chapa, combo, pucho, copete, yapa, ñeque, zapallo, bombilla, pituto, tuto, cuneta, liebre, colectivo, auto, celu, notebook, pendrive, tablet, wifi, lolo, cabro, pololo, polola, quiltro, huincha, chaleco, calcetín, cintillo, colet, pinche, chupete, mamadera, coche, andador, living, kiosko, quiosco, kayak, karate, kilo, kimono, wáter, whisky, xilófono, yoyó, yoyo, zíper, zunga, cierre, marraqueta, tecito, once, choclo, guata, pilucho, huaso, cueca, rodeo, fonda, ramada, ruca, toqui, kuchen, completo`);
+const BACHI_STOP = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'en', 'con', 'san', 'santa']);
+
+// Listas grandes: se cargan al abrir el juego (ver tools/bachillerato.py).
+const BACHI_DATA = { state: 'idle', dic: null, bib: null, proper: null, subs: new Set() };
+const bachiCache = new Map(), bachiIdx = new Map();
+function bachiLoad() {
+  if (BACHI_DATA.state !== 'idle') return;
+  BACHI_DATA.state = 'loading';
+  const get = (f) => fetch(f).then((r) => { if (!r.ok) throw new Error(f); return r.text(); });
+  Promise.all([get('bachillerato-dic.txt'), get('bachillerato-biblia.txt')]).then(([d, b]) => {
+    BACHI_DATA.dic = new Set(d.split('\n').filter(Boolean));
+    const bib = new Set(), proper = new Set();
+    b.split('\n').forEach((w) => { if (!w) return; if (w[0] === '*') proper.add(w.slice(1)); else bib.add(w); });
+    BACHI_DATA.bib = bib; BACHI_DATA.proper = proper; BACHI_DATA.state = 'ready';
+  }).catch(() => { BACHI_DATA.state = 'error'; }).then(() => { bachiCache.clear(); BACHI_DATA.subs.forEach((f) => f()); });
+}
+function useBachiData() {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const f = () => bump((n) => n + 1);
+    BACHI_DATA.subs.add(f); bachiLoad();
+    return () => { BACHI_DATA.subs.delete(f); };
+  }, []);
+  return BACHI_DATA.state;
+}
+
+// ¿a y b difieren en a lo más una letra (cambiada, de más o de menos)?
+function bachiNear1(a, b) {
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 1) return false;
+  let i = 0;
+  while (i < la && i < lb && a[i] === b[i]) i++;
+  if (la === lb) return a.slice(i + 1) === b.slice(i + 1);
+  return la > lb ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+}
+// Misma palabra aunque tenga un error chico de ortografía, tilde o plural.
+function bachiSame(a, b) {
+  const x = bachiNorm(a), y = bachiNorm(b);
+  if (!x || !y) return false;
+  if (x === y || x + 's' === y || y + 's' === x || x + 'es' === y || y + 'es' === x) return true;
+  if (Math.min(x.length, y.length) < 6) return false;
+  if (bachiNear1(x, y)) return true;
+  if (Math.min(x.length, y.length) < 9 || Math.abs(x.length - y.length) > 2) return false;
+  // palabras largas: hasta 2 errores (distancia de edición)
+  let prev = Array.from({ length: y.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= x.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= y.length; j++) row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (x[i - 1] === y[j - 1] ? 0 : 1));
+    prev = row;
+  }
+  return prev[y.length] <= 2;
+}
+// ¿Está en la lista? Acepta plural y un error chico (palabras de 5+ letras).
+function bachiHas(set, n) {
+  if (!set || !n) return false;
+  if (set.has(n)) return true;
+  if (n.length > 3 && n.endsWith('s') && set.has(n.slice(0, -1))) return true;
+  if (n.length > 4 && n.endsWith('es') && set.has(n.slice(0, -2))) return true;
+  if (n.length < 5) return false;
+  let idx = bachiIdx.get(set);
+  if (!idx) { idx = {}; set.forEach((w) => { (idx[w[0]] = idx[w[0]] || []).push(w); }); bachiIdx.set(set, idx); }
+  const list = idx[n[0]] || [];
+  for (let i = 0; i < list.length; i++) if (bachiNear1(list[i], n)) return true;
+  return false;
+}
+// ¿Vale la palabra para esa categoría y esa letra?
+function bachiValid(cat, text, letter) {
+  const n = bachiNorm(text), L = bachiNorm(letter);
+  if (n.length < 2 || n[0] !== L) return false;
+  const key = cat + '|' + n;
+  if (bachiCache.has(key)) return bachiCache.get(key);
+  const toks = String(text).split(/[\s-]+/).map(bachiNorm).filter((t) => t.length >= 2 && !BACHI_STOP.has(t));
+  const D = BACHI_DATA, ready = D.state === 'ready';
+  const proper = () => ready && (bachiHas(D.proper, n) || toks.some((t) => t.length >= 3 && D.proper.has(t)));
+  let ok = false;
+  if (cat === 'personaje') ok = bachiHas(BACHI_PERSONAJES, n) || (!BACHI_LUGARES.has(n) && proper());
+  else if (cat === 'lugar') ok = bachiHas(BACHI_LUGARES, n) || (!BACHI_PERSONAJES.has(n) && proper());
+  else if (cat === 'animal') ok = bachiHas(BACHI_ANIMALES, n);
+  else if (cat === 'comida') ok = bachiHas(BACHI_COMIDAS, n);
+  else if (cat === 'cosa') ok = bachiHas(BACHI_CHILENISMOS, n) || (ready ? bachiHas(D.dic, n) || D.bib.has(n) || (toks.length > 1 && D.dic.has(toks[0])) : true);
+  else ok = BACHI_PERSONAJES.has(n) || BACHI_LUGARES.has(n) || (ready ? bachiHas(D.bib, n) || proper() || (toks.length > 1 && toks.every((t) => D.bib.has(t) || D.proper.has(t))) : true);
+  bachiCache.set(key, ok);
+  return ok;
+}
+const bachiAns = (round, uid, i) => { const a = round && round.answers && round.answers[uid]; return (a && a[i]) || ''; };
+// 100 = válida y distinta a la del que dijo STOP · 50 = válida pero igual · 0 = no vale.
+// Al que dijo STOP le baja a 50 si alguien repitió su palabra.
+function bachiAutoPts(round, uid, i) {
+  const w = bachiAns(round, uid, i);
+  if (!bachiValid(BACHI_CATS[i].key, w, round.letter)) return 0;
+  const st = round.stopBy;
+  if (!st) return 100;
+  if (uid !== st) return bachiSame(w, bachiAns(round, st, i)) ? 50 : 100;
+  return Object.keys(round.answers || {}).some((o) => o !== st && bachiSame(w, bachiAns(round, o, i))) ? 50 : 100;
+}
+function bachiPts(round, uid, i) {
+  const o = round.pts && round.pts[uid] && round.pts[uid][i];
+  return typeof o === 'number' ? o : bachiAutoPts(round, uid, i);
+}
+const bachiRoundTotal = (round, uid) => BACHI_CATS.reduce((s, _, i) => s + bachiPts(round, uid, i), 0);
+const bachiBlank = () => BACHI_CATS.map(() => '');
+
+function BachiController({ session, users, myId, isAdmin, SID, onClose }) {
+  const game = session?.bachi || {};
+  const gState = game.gameState || 'idle';
+  const ref = () => db.ref(`sessions/${SID}/bachi`);
+  const isMobile = useIsMobile();
+  const dataState = useBachiData();
+  const rounds = Object.entries(game.rounds || {}).map(([id, r]) => ({ id, ...r })).sort((a, b) => (a.startTs || 0) - (b.startTs || 0));
+  const curRound = rounds.find((r) => r.id === game.cur) || null;
+  const live = gState === 'playing' && !!curRound && !curRound.stopBy;
+  const done = rounds.filter((r) => r.stopBy);
+  const lastDone = done[done.length - 1] || null;
+  const players = game.players || {};
+  const idOf = (uid) => players[uid] || users[uid] || { name: 'Jugador', avatar: '👤', color: BACHI_COLOR };
+  const me = users[myId] || {};
+
+  const [vals, setVals] = useState(() => { const a = curRound && curRound.answers && curRound.answers[myId]; return BACHI_CATS.map((_, i) => (a && a[i]) || ''); });
+  const [bigLetter, setBigLetter] = useState(null);
+  const [stopMsg, setStopMsg] = useState(null);
+  const [showAll, setShowAll] = useState(false);
+  const [, setTick] = useState(0);
+  const valsRef = useRef(vals); valsRef.current = vals;
+  const inputRefs = useRef([]);
+  const stopBtnRef = useRef(null);
+  const sheetRef = useRef(null);
+  const seenRound = useRef(game.cur || null);
+  const seenStop = useRef(curRound && curRound.stopBy ? curRound.id : null);
+  const spinLocal = useRef(null);
+
+  // Guarda mi identidad para que los resultados no dependan de la presencia.
+  useEffect(() => {
+    if (!SID || !myId || !me.name) return;
+    ref().child('players/' + myId).set({ name: me.name, avatar: me.avatar || '👤', color: me.color || BACHI_COLOR, photo: me.photo || null }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [SID, myId, me.name]);
+
+  // Letra nueva: aparece en grande 2 s y después queda en la fila a jugar.
+  useEffect(() => {
+    if (!game.cur || game.cur === seenRound.current || !curRound) return;
+    seenRound.current = game.cur;
+    setVals(bachiBlank());
+    setBigLetter(curRound.letter);
+    const t = setTimeout(() => {
+      setBigLetter(null);
+      if (sheetRef.current) sheetRef.current.scrollTop = sheetRef.current.scrollHeight;
+      setTimeout(() => { const el = inputRefs.current[0]; if (el) el.focus(); }, 60);
+    }, 2000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.cur]);
+
+  // Alguien dijo STOP: aviso de 3 s a todos y se guarda lo que cada uno alcanzó a escribir.
+  const stopBy = curRound && curRound.stopBy;
+  useEffect(() => {
+    if (!stopBy || !curRound || seenStop.current === curRound.id) return;
+    seenStop.current = curRound.id;
+    if (stopBy !== myId) ref().child(`rounds/${curRound.id}/answers/${myId}`).set(Object.assign({}, valsRef.current)).catch(() => {});
+    setBigLetter(null);
+    setStopMsg({ uid: stopBy });
+    const t = setTimeout(() => setStopMsg(null), 3000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopBy, game.cur]);
+
+  // Ruleta: el abecedario corre (oculto) desde que este cliente la vio partir.
+  const spinTs = gState === 'spin' && game.spin ? game.spin.startTs : null;
+  useEffect(() => {
+    if (!spinTs) { spinLocal.current = null; return; }
+    spinLocal.current = Date.now();
+    const iv = setInterval(() => setTick((n) => n + 1), BACHI_SPIN_MS);
+    return () => clearInterval(iv);
+  }, [spinTs]);
+
+  const startRound = (letter) => {
+    const rid = 'r' + Date.now();
+    return ref().update({ gameState: 'playing', cur: rid, spin: null, ['rounds/' + rid]: { letter, startTs: Date.now() } });
+  };
+  const startSpin = (uid) => ref().update({ gameState: 'spin', spin: { startTs: Date.now(), chooser: uid } });
+  const stopSpin = async () => {
+    if (gState !== 'spin' || !game.spin) return;
+    const idx = Math.floor(Math.max(0, Date.now() - (spinLocal.current || Date.now())) / BACHI_SPIN_MS) % BACHI_LETTERS.length;
+    const token = `${myId}|${Date.now()}|${Math.random()}`;
+    const lock = await ref().child('spin').transaction((cur) => (cur && !cur.lock ? Object.assign({}, cur, { lock: token }) : undefined));
+    if (!lock.committed || !lock.snapshot.val() || lock.snapshot.val().lock !== token) return;
+    await startRound(BACHI_LETTERS[idx]);
+  };
+  const cancelSpin = () => ref().update({ gameState: 'idle', spin: null });
+
+  const saveCell = (i) => { if (live) ref().child(`rounds/${curRound.id}/answers/${myId}/${i}`).set(valsRef.current[i] || '').catch(() => {}); };
+  const decirStop = async () => {
+    if (!live) return;
+    const rid = curRound.id;
+    await ref().child(`rounds/${rid}/answers/${myId}`).set(Object.assign({}, valsRef.current));
+    await ref().child(`rounds/${rid}/stopBy`).transaction((cur) => cur || myId);
+  };
+  const cyclePts = (round, i) => {
+    const p = bachiPts(round, myId, i);
+    ref().child(`rounds/${round.id}/pts/${myId}/${i}`).set(p === 100 ? 50 : p === 50 ? 0 : 100).catch(() => {});
+  };
+
+  // Participantes: zona de juegos + cualquiera que haya escrito algo.
+  const juegosUsers = Object.entries(users || {}).filter(([uid, u]) => effectiveZone(u) === 'juegos' || (isAdmin && uid === myId)).map(([uid]) => uid);
+  const partSet = new Set(juegosUsers);
+  rounds.forEach((r) => Object.keys(r.answers || {}).forEach((uid) => partSet.add(uid)));
+  const participants = Array.from(partSet).map((uid) => Object.assign({ uid }, idOf(uid)));
+  const scores = {};
+  participants.forEach((p) => { scores[p.uid] = done.reduce((s, r) => s + bachiRoundTotal(r, p.uid), 0); });
+  const ranking = participants.map((p) => ({ uid: p.uid, user: p, pts: scores[p.uid] || 0 })).sort((a, b) => b.pts - a.pts);
+
+  const finalizar = async () => {
+    const fin = {};
+    Object.keys(scores).forEach((uid) => { if (rounds.some((r) => r.answers && r.answers[uid])) fin[uid] = scores[uid]; });
+    await saveGameHistory(SID, fin, Object.assign({}, users, players));
+    await ref().update({ gameState: 'finished', spin: null, finalScores: fin });
+  };
+  const cerrar = async () => {
+    if (onClose) onClose();
+    await db.ref(`sessions/${SID}`).update({ phase: 'waiting' });
+    await db.ref(`sessions/${SID}/bachi`).remove();
+  };
+
+  const myZone = effectiveZone(users[myId]);
+  if (myZone !== 'juegos' && !isAdmin) return null;
+
+  const F = 'Barlow Condensed,sans-serif';
+  const wrapStyle = { position: 'fixed', inset: 0, zIndex: 250, background: '#f8f5ef', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+  const headerBar = h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
+    h('span', { style: { fontSize: 22 } }, '📝'),
+    h('span', { style: { fontFamily: F, fontWeight: 900, fontSize: 18, color: BACHI_DARK, textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 } }, 'Bachillerato Bíblico'),
+    isAdmin ? h('button', { onClick: cerrar, title: 'Cerrar juego', style: { border: 'none', background: 'rgba(239,68,68,.12)', color: '#dc2626', borderRadius: 20, padding: '6px 14px', fontWeight: 800, fontSize: 12, fontFamily: F, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✕ Cerrar') : null,
+  );
+
+  /* ── Resultados finales ── */
+  if (gState === 'finished') {
+    const fin = game.finalScores || {};
+    const rk = Object.entries(fin).map(([uid, pts]) => ({ uid, pts, user: idOf(uid) })).sort((a, b) => b.pts - a.pts);
+    return h('div', { style: wrapStyle },
+      headerBar,
+      h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 24, gap: 14, overflowY: 'auto' } },
+        h(Confetti, null),
+        h('div', { style: { fontSize: 54 } }, '🏆'),
+        h('h2', { style: { fontFamily: F, fontWeight: 900, fontSize: 30, color: BACHI_DARK, textTransform: 'uppercase', letterSpacing: '.06em', margin: 0, textAlign: 'center' } }, 'Bachillerato Bíblico — Resultados'),
+        rk.length === 0 ? h('div', { style: { color: 'var(--muted)', fontSize: 14 } }, 'No hubo puntajes esta vez.') : h('div', { style: { width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 } },
+          rk.map((r, i) => h('div', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: i === 0 ? 'linear-gradient(135deg,rgba(13,148,136,.22),rgba(13,148,136,.05))' : 'rgba(10,14,46,.04)', border: i === 0 ? `2px solid ${BACHI_COLOR}` : '1px solid rgba(10,14,46,.1)' } },
+            h('div', { style: { fontFamily: F, fontWeight: 900, fontSize: 24, color: i === 0 ? BACHI_DARK : '#0a0e2e', width: 36, textAlign: 'center' } }, i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`),
+            h(AvatarBubble, { profile: r.user, size: 40 }),
+            h('div', { style: { flex: 1, fontFamily: F, fontWeight: 700, fontSize: 18, color: '#0a0e2e' } }, r.user.name),
+            h('div', { style: { fontFamily: F, fontWeight: 900, fontSize: 22, color: BACHI_DARK } }, r.pts, ' pts'),
+          )),
+        ),
+        isAdmin ? h('button', { onClick: cerrar, style: { marginTop: 14, background: BACHI_COLOR, border: 'none', borderRadius: 14, padding: '14px 32px', color: '#fff', fontWeight: 900, fontSize: 14, fontFamily: F, letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer' } }, 'Cerrar juego') : null,
+      ),
+    );
+  }
+
+  const ptsStyle = (p) => ({ border: 'none', borderRadius: 10, padding: '2px 8px', fontFamily: F, fontWeight: 900, fontSize: 13, cursor: 'pointer', flexShrink: 0, color: p === 100 ? '#166534' : p === 50 ? '#a16207' : '#64748b', background: p === 100 ? 'rgba(34,197,94,.18)' : p === 50 ? 'rgba(234,179,8,.22)' : 'rgba(100,116,139,.15)' });
+  const label = (t) => h('div', { style: { fontFamily: F, fontWeight: 800, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, t);
+  const card = { background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, padding: 12, boxShadow: '0 8px 22px rgba(10,14,46,.06)' };
+  const gridCols = `46px repeat(${BACHI_CATS.length}, minmax(${isMobile ? 124 : 130}px, 1fr)) 62px`;
+  const minW = 46 + BACHI_CATS.length * (isMobile ? 124 : 130) + 62;
+  const cell = { padding: '7px 8px', borderRight: '1px solid rgba(10,14,46,.08)', borderBottom: '1px solid rgba(10,14,46,.08)', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, fontSize: 14, color: '#0a0e2e' };
+  const letterCell = (l, hot, k) => h('div', { key: k, style: Object.assign({}, cell, { justifyContent: 'center', fontFamily: F, fontWeight: 900, fontSize: 22, color: hot ? '#fff' : BACHI_DARK, background: hot ? BACHI_COLOR : '#e3f2f0', position: 'sticky', left: 0, zIndex: 1 }) }, l);
+  const headRow = (first) => [h('div', { key: 'l', style: Object.assign({}, cell, { justifyContent: 'center', fontFamily: F, fontWeight: 800, fontSize: 11, color: '#fff', background: BACHI_DARK, textTransform: 'uppercase', position: 'sticky', left: 0, zIndex: 1 }) }, first)]
+    .concat(BACHI_CATS.map((c) => h('div', { key: c.key, style: Object.assign({}, cell, { fontFamily: F, fontWeight: 800, fontSize: 12.5, color: '#fff', background: BACHI_DARK, textTransform: 'uppercase', letterSpacing: '.04em' }) }, c.icon, ' ', c.label)))
+    .concat([h('div', { key: 't', style: Object.assign({}, cell, { justifyContent: 'center', fontFamily: F, fontWeight: 800, fontSize: 12, color: '#fff', background: BACHI_DARK, textTransform: 'uppercase', borderRight: 'none' }) }, 'Pts')]);
+
+  /* ── Mi hoja: una fila por letra, la nueva se agrega abajo ── */
+  const allFilled = vals.every((v) => v.trim());
+  const sheetRows = rounds.map((r) => {
+    if (!r.stopBy) {
+      const canType = r.id === game.cur && live && !bigLetter;
+      return [letterCell(r.letter, true, r.id)].concat(BACHI_CATS.map((c, i) => h('div', { key: r.id + c.key, style: Object.assign({}, cell, { padding: 4, background: 'rgba(13,148,136,.06)' }) },
+        h('input', {
+          ref: (el) => { if (r.id === game.cur) inputRefs.current[i] = el; },
+          value: r.id === game.cur ? vals[i] : bachiAns(r, myId, i),
+          disabled: !canType, maxLength: 40, autoComplete: 'off', autoCapitalize: 'words', spellCheck: false,
+          enterKeyHint: i < BACHI_CATS.length - 1 ? 'next' : 'done',
+          placeholder: canType ? r.letter + '…' : '',
+          onChange: (e) => { const v = e.target.value; setVals((old) => old.map((o, j) => (j === i ? v : o))); },
+          onBlur: () => saveCell(i),
+          onFocus: (e) => { try { e.target.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (err) {} },
+          onKeyDown: (e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault(); saveCell(i);
+            const next = inputRefs.current[i + 1];
+            if (i < BACHI_CATS.length - 1 && next) next.focus();
+            else { e.target.blur(); if (stopBtnRef.current) { stopBtnRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); stopBtnRef.current.focus(); } }
+          },
+          style: { width: '100%', minWidth: 0, border: `1.5px solid ${canType ? BACHI_COLOR : 'rgba(10,14,46,.12)'}`, borderRadius: 8, padding: '8px 9px', fontSize: 16, fontFamily: 'inherit', background: canType ? '#fff' : 'rgba(10,14,46,.04)', color: '#0a0e2e', boxSizing: 'border-box' }
+        }))),
+      ).concat([h('div', { key: r.id + 't', style: Object.assign({}, cell, { justifyContent: 'center', borderRight: 'none', color: 'var(--muted)' }) }, '—')]);
+    }
+    return [letterCell(r.letter, false, r.id)].concat(BACHI_CATS.map((c, i) => {
+      const w = bachiAns(r, myId, i), p = bachiPts(r, myId, i);
+      return h('div', { key: r.id + c.key, style: Object.assign({}, cell, { justifyContent: 'space-between' }) },
+        h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: w ? '#0a0e2e' : 'var(--muted)', textDecoration: w && p === 0 ? 'line-through' : 'none' } }, w || '—'),
+        h('button', { onClick: () => cyclePts(r, i), title: 'Toca para corregir tus puntos', style: ptsStyle(p) }, p),
+      );
+    })).concat([h('div', { key: r.id + 't', style: Object.assign({}, cell, { justifyContent: 'center', borderRight: 'none', fontFamily: F, fontWeight: 900, fontSize: 16, color: BACHI_DARK }) }, bachiRoundTotal(r, myId))]);
+  });
+  const sheet = h('div', { style: Object.assign({}, card, { padding: 0, overflow: 'hidden' }) },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px' } },
+      h('div', { style: { flex: 1 } }, label('Mi hoja')),
+      h('span', { style: { fontFamily: F, fontWeight: 900, fontSize: 18, color: BACHI_DARK } }, 'Total: ', scores[myId] || 0),
+    ),
+    h('div', { ref: sheetRef, style: { overflowX: 'auto', borderTop: '1px solid rgba(10,14,46,.08)' } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: gridCols, minWidth: minW } },
+        headRow('Letra'),
+        rounds.length === 0 ? h('div', { style: { gridColumn: '1 / -1', padding: '18px 12px', textAlign: 'center', color: 'var(--muted)', fontSize: 13.5 } }, 'Aquí se va llenando tu hoja: una fila por cada letra.') : sheetRows,
+      ),
+    ),
+    done.length > 0 ? h('div', { style: { padding: '8px 12px', fontSize: 12, color: 'var(--muted)', lineHeight: 1.4 } }, '100 = válida y distinta a la del que dijo STOP · 50 = igual a la suya · 0 = no vale. Toca el puntaje de una palabra para corregirlo.') : null,
+  );
+
+  /* ── STOP ── */
+  const stopZone = live ? h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
+    h('button', { ref: stopBtnRef, onClick: decirStop, disabled: !allFilled || !!bigLetter, style: { width: '100%', maxWidth: 420, padding: '16px 20px', background: allFilled ? '#dc2626' : 'rgba(220,38,38,.3)', border: 'none', borderRadius: 16, color: '#fff', fontWeight: 900, fontSize: 24, fontFamily: F, letterSpacing: '.1em', cursor: allFilled ? 'pointer' : 'not-allowed', boxShadow: allFilled ? '0 12px 28px rgba(220,38,38,.4)' : 'none' } }, '✋ ¡STOP!'),
+    !allFilled ? h('div', { style: { fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' } }, 'Completa todas las columnas para decir STOP. Enter pasa a la siguiente.') : null,
+    isAdmin ? h('button', { onClick: decirStop, style: { background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px 16px', color: '#0a0e2e', fontWeight: 800, fontSize: 12.5, fontFamily: F, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏹ Cortar la ronda (admin)') : null,
+  ) : null;
+
+  /* ── Respuestas del que dijo STOP (para todos) ── */
+  const stopper = lastDone ? idOf(lastDone.stopBy) : null;
+  const stopPanel = lastDone && !stopMsg ? h('div', { style: Object.assign({}, card, { border: '2px solid #dc2626' }) },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 } },
+      h(AvatarBubble, { profile: stopper, size: 34 }),
+      h('div', { style: { flex: 1, minWidth: 0 } },
+        h('div', { style: { fontFamily: F, fontWeight: 900, fontSize: 18, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.04em' } }, '✋ ', stopper.name, ' dijo STOP'),
+        h('div', { style: { fontSize: 12.5, color: 'var(--muted)' } }, 'Sus respuestas con la letra ', h('b', null, lastDone.letter)),
+      ),
+      h('div', { style: { fontFamily: F, fontWeight: 900, fontSize: 40, color: BACHI_DARK, lineHeight: 1 } }, lastDone.letter),
+    ),
+    h('div', { style: { display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 8 } },
+      BACHI_CATS.map((c, i) => {
+        const w = bachiAns(lastDone, lastDone.stopBy, i), ok = bachiValid(c.key, w, lastDone.letter);
+        const same = lastDone.stopBy !== myId && bachiSame(w, bachiAns(lastDone, myId, i));
+        return h('div', { key: c.key, style: { background: ok ? 'rgba(34,197,94,.1)' : 'rgba(100,116,139,.1)', border: `1px solid ${ok ? 'rgba(34,197,94,.4)' : 'rgba(100,116,139,.3)'}`, borderRadius: 12, padding: '8px 10px', minWidth: 0 } },
+          h('div', { style: { fontFamily: F, fontWeight: 800, fontSize: 10.5, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' } }, c.icon, ' ', c.label),
+          h('div', { style: { fontFamily: F, fontWeight: 900, fontSize: 19, color: '#0a0e2e', overflow: 'hidden', textOverflow: 'ellipsis' } }, w || '—', w ? (ok ? ' ✓' : ' ✗') : ''),
+          same ? h('div', { style: { fontSize: 11.5, color: '#a16207', fontWeight: 700 } }, 'Igual a la tuya → 50') : null,
+        );
+      }),
+    ),
+    h('button', { onClick: () => setShowAll((v) => !v), style: { marginTop: 10, background: 'none', border: 'none', color: BACHI_DARK, fontFamily: F, fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.05em', cursor: 'pointer', padding: 0 } }, showAll ? '▾ Ocultar respuestas de todos' : '▸ Ver respuestas de todos'),
+    showAll ? h('div', { style: { overflowX: 'auto', marginTop: 8, border: '1px solid rgba(10,14,46,.1)', borderRadius: 10 } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: `120px repeat(${BACHI_CATS.length}, minmax(110px, 1fr)) 56px`, minWidth: 120 + BACHI_CATS.length * 110 + 56 } },
+        headRow('Jugador'),
+        participants.filter((p) => lastDone.answers && lastDone.answers[p.uid]).map((p) => [
+          h('div', { key: p.uid, style: Object.assign({}, cell, { fontFamily: F, fontWeight: 800, fontSize: 13, background: '#fff', position: 'sticky', left: 0, zIndex: 1 }) }, h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, p.uid === lastDone.stopBy ? '✋ ' : '', p.name)),
+        ].concat(BACHI_CATS.map((c, i) => {
+          const w = bachiAns(lastDone, p.uid, i), pt = bachiPts(lastDone, p.uid, i);
+          return h('div', { key: p.uid + c.key, style: Object.assign({}, cell, { justifyContent: 'space-between', fontSize: 13 }) },
+            h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: w ? '#0a0e2e' : 'var(--muted)' } }, w || '—'),
+            h('span', { style: Object.assign({}, ptsStyle(pt), { cursor: 'default', fontSize: 11.5 }) }, pt));
+        })).concat([h('div', { key: p.uid + 't', style: Object.assign({}, cell, { justifyContent: 'center', borderRight: 'none', fontFamily: F, fontWeight: 900, color: BACHI_DARK }) }, bachiRoundTotal(lastDone, p.uid))])),
+      ),
+    ) : null,
+  ) : null;
+
+  /* ── Ruleta en marcha ── */
+  const spin = gState === 'spin' && game.spin ? game.spin : null;
+  const chooser = spin ? idOf(spin.chooser) : null;
+  const beat = spin ? Math.floor(Math.max(0, Date.now() - (spinLocal.current || Date.now())) / BACHI_SPIN_MS) : 0;
+  const spinPanel = spin ? h('div', { style: Object.assign({}, card, { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 20, textAlign: 'center' }) },
+    h('div', { style: { fontSize: 44 } }, '🤫'),
+    h('div', { style: { fontFamily: F, fontWeight: 900, fontSize: 22, color: BACHI_DARK, textTransform: 'uppercase', letterSpacing: '.05em' } }, 'El abecedario va corriendo…'),
+    h('div', { style: { display: 'flex', gap: 6 } }, [0, 1, 2, 3, 4, 5, 6].map((d) => h('span', { key: d, style: { width: 12, height: 12, borderRadius: '50%', background: beat % 7 === d ? BACHI_COLOR : 'rgba(13,148,136,.2)', transform: beat % 7 === d ? 'scale(1.5)' : 'none', transition: 'all .1s' } }))),
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, color: '#0a0e2e' } }, h(AvatarBubble, { profile: chooser, size: 30 }), h('span', null, h('b', null, spin.chooser === myId ? 'Tú dices' : chooser.name + ' dice'), ' STOP cuando quiera')),
+    spin.chooser === myId ? h('button', { onClick: stopSpin, style: { width: '100%', maxWidth: 360, padding: '18px 20px', background: '#dc2626', border: 'none', borderRadius: 16, color: '#fff', fontWeight: 900, fontSize: 28, fontFamily: F, letterSpacing: '.1em', cursor: 'pointer', boxShadow: '0 12px 28px rgba(220,38,38,.4)' } }, '✋ ¡STOP!') : null,
+    isAdmin ? h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
+      spin.chooser !== myId ? h('button', { onClick: stopSpin, style: { background: 'rgba(220,38,38,.12)', border: '1px solid rgba(220,38,38,.4)', borderRadius: 12, padding: '10px 16px', color: '#dc2626', fontWeight: 800, fontSize: 13, fontFamily: F, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '✋ Decir STOP yo (admin)') : null,
+      h('button', { onClick: cancelSpin, style: { background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '10px 16px', color: '#0a0e2e', fontWeight: 800, fontSize: 13, fontFamily: F, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, 'Cancelar'),
+    ) : null,
+  ) : null;
+
+  /* ── Admin: tirar letra ── */
+  const used = new Set(rounds.map((r) => r.letter));
+  const adminPanel = isAdmin && !live && !spin ? h('div', { style: Object.assign({}, card, { display: 'flex', flexDirection: 'column', gap: 10 }) },
+    label(rounds.length ? 'Siguiente letra — elige una' : 'Tira la primera letra — elige una'),
+    h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
+      BACHI_LETTERS.map((l) => h('button', { key: l, onClick: () => startRound(l), title: used.has(l) ? 'Ya se jugó' : 'Jugar con ' + l, style: { width: 42, height: 42, border: `1.5px solid ${used.has(l) ? 'rgba(10,14,46,.12)' : BACHI_COLOR}`, borderRadius: 10, background: used.has(l) ? 'rgba(10,14,46,.05)' : '#fff', color: used.has(l) ? 'rgba(10,14,46,.35)' : BACHI_DARK, fontFamily: F, fontWeight: 900, fontSize: 20, cursor: 'pointer', padding: 0 } }, l)),
+    ),
+    label('…o que corra el abecedario: elige quién dice STOP'),
+    h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
+      participants.map((u) => h('button', { key: u.uid, onClick: () => startSpin(u.uid), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.15)', borderRadius: 20, padding: '5px 12px 5px 5px', cursor: 'pointer', fontFamily: F, fontWeight: 700, fontSize: 14, color: '#0a0e2e' } }, h(AvatarBubble, { profile: u, size: 24 }), u.uid === myId ? 'Yo' : u.name)),
+    ),
+    done.length > 0 ? h('button', { onClick: finalizar, style: { background: 'rgba(13,148,136,.14)', border: '1px solid rgba(13,148,136,.4)', borderRadius: 14, padding: '12px', color: BACHI_DARK, fontWeight: 800, fontSize: 13, fontFamily: F, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🏆 Terminar y ver resultados') : null,
+  ) : null;
+
+  const waiting = !isAdmin && !live && !spin ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 14, lineHeight: 1.5 } },
+    rounds.length === 0 ? 'Te dan una letra y escribes una palabra por categoría que empiece con ella. El primero que termina dice STOP. ' : null,
+    'Esperando la siguiente letra… ', h(Spinner, { size: 20 })) : null;
+
+  const roster = participants.length ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 16px', flexShrink: 0 } },
+    ranking.map((r) => h('span', { key: r.uid, style: { display: 'flex', alignItems: 'center', gap: 5, background: r.uid === myId ? 'rgba(13,148,136,.14)' : 'rgba(10,14,46,.05)', border: r.uid === myId ? `1px solid ${BACHI_COLOR}` : '1px solid rgba(10,14,46,.1)', borderRadius: 20, padding: '3px 10px 3px 4px', fontFamily: F, fontWeight: 700, fontSize: 12, color: '#0a0e2e' } },
+      h(AvatarBubble, { profile: r.user, size: 20 }), r.user.name, h('span', { style: { color: BACHI_DARK, fontWeight: 900, marginLeft: 2 } }, ' · ', r.pts)))) : null;
+
+  const overlayBase = { position: 'fixed', inset: 0, zIndex: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, textAlign: 'center', padding: 20 };
+  return h('div', { style: wrapStyle },
+    headerBar, roster,
+    h('div', { style: { flex: 1, overflowY: 'auto', padding: '4px 16px 24px', minHeight: 0 } },
+      h('div', { style: { maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 } },
+        dataState === 'error' ? h('div', { style: { fontSize: 12.5, color: '#a16207', background: 'rgba(234,179,8,.15)', borderRadius: 10, padding: '8px 12px' } }, 'No se pudo cargar el diccionario: revisen los puntos a mano.') : null,
+        spinPanel, adminPanel, waiting, stopPanel, sheet, stopZone,
+      ),
+    ),
+    bigLetter ? h('div', { style: Object.assign({}, overlayBase, { background: 'rgba(15,118,110,.96)' }) },
+      h('div', { style: { fontFamily: F, fontWeight: 800, fontSize: 20, color: 'rgba(255,255,255,.85)', textTransform: 'uppercase', letterSpacing: '.2em' } }, 'La letra es'),
+      h('div', { key: game.cur, style: { fontFamily: F, fontWeight: 900, fontSize: 'min(62vw, 58vh)', lineHeight: .9, color: '#fff', animation: 'mr-sPop .35s ease-out' } }, bigLetter),
+    ) : null,
+    stopMsg ? h('div', { style: Object.assign({}, overlayBase, { background: 'rgba(220,38,38,.96)' }) },
+      h('div', { style: { fontSize: 80, animation: 'mr-sPop .3s ease-out' } }, '✋'),
+      h('div', { style: { fontFamily: F, fontWeight: 900, fontSize: 'min(22vw, 120px)', lineHeight: 1, color: '#fff', letterSpacing: '.06em' } }, '¡STOP!'),
+      h('div', { style: { fontFamily: F, fontWeight: 800, fontSize: 24, color: '#fff' } }, stopMsg.uid === myId ? 'Tú dijiste STOP' : idOf(stopMsg.uid).name + ' dijo STOP'),
+      h('div', { style: { fontSize: 15, color: 'rgba(255,255,255,.85)' } }, 'Nadie más escribe'),
+    ) : null,
+  );
+}
+
 /* ── CountdownTimer  (19838-19871) ── */
 function CountdownTimer({
   from,
@@ -22517,6 +22981,7 @@ class Component extends React.Component {
       if (sess.dibuja?.active)   return h(DibujaController, Object.assign({}, cp, { onEndDibuja: () => db.ref(`sessions/${this.SID}/dibuja`).remove() }));
       if (sess.pictonary?.active) return h(PictonaryController, Object.assign({}, cp, { onEndPictonary: () => db.ref(`sessions/${this.SID}/pictonary`).remove() }));
       if (sess.emoji?.active) return h(EmojiController, Object.assign({}, cp, { onEndEmoji: () => db.ref(`sessions/${this.SID}/emoji`).remove() }));
+      if (sess.bachi?.active) return h(BachiController, cp);
       return h(KahootController, Object.assign({}, cp, {
         gameHistory: this.state.gameHistory || {},
         onEndJuegos: () => this._endRoomActivity('juegos')
@@ -23002,7 +23467,7 @@ class Component extends React.Component {
         onEndTemplo: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', templo: null, survey: null }),
         onOpenStats: () => this.setState({ activity: 'admin-stats' }),
         onToggleWordCloud: this._toggleWordCloud,
-        onResetSession: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', confra: null, repaso: null, juegos: null, mision: null, templo: null, presentation: null, video: null, wordcloud: null, tabu: null, quiensoy: null, dibuja: null, pictonary: null }),
+        onResetSession: () => db.ref(`sessions/${this.SID}`).update({ phase: 'waiting', confra: null, repaso: null, juegos: null, mision: null, templo: null, presentation: null, video: null, wordcloud: null, tabu: null, quiensoy: null, dibuja: null, pictonary: null, emoji: null, bachi: null }),
         onOpenDownload: () => this.setState({ activity: 'download' }),
         onOpenSurveyResults: () => this.setState({ activity: 'survey-results' }),
         surveyResponses: st.surveyResponses || {},
