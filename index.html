@@ -20528,6 +20528,8 @@ function bachiPts(round, uid, i) {
 }
 const bachiRoundTotal = (round, uid) => BACHI_CATS.reduce((s, _, i) => s + bachiPts(round, uid, i), 0);
 const bachiBlank = () => BACHI_CATS.map(() => '');
+// Para decir STOP: todas las columnas con al menos 2 letras.
+const bachiComplete = (vals) => BACHI_CATS.every((_, i) => bachiNorm(vals[i]).length >= 2);
 
 function BachiController({ session, users, myId, isAdmin, SID, onClose }) {
   const game = session?.bachi || {};
@@ -20617,8 +20619,8 @@ function BachiController({ session, users, myId, isAdmin, SID, onClose }) {
   const cancelSpin = () => ref().update({ gameState: 'idle', spin: null });
 
   const saveCell = (i) => { if (live) ref().child(`rounds/${curRound.id}/answers/${myId}/${i}`).set(valsRef.current[i] || '').catch(() => {}); };
-  const decirStop = async () => {
-    if (!live) return;
+  const decirStop = async (force) => {
+    if (!live || (force !== true && !bachiComplete(valsRef.current))) return;
     const rid = curRound.id;
     await ref().child(`rounds/${rid}/answers/${myId}`).set(Object.assign({}, valsRef.current));
     await ref().child(`rounds/${rid}/stopBy`).transaction((cur) => cur || myId);
@@ -20695,7 +20697,7 @@ function BachiController({ session, users, myId, isAdmin, SID, onClose }) {
     .concat([h('div', { key: 't', style: Object.assign({}, cell, { justifyContent: 'center', fontFamily: F, fontWeight: 800, fontSize: 12, color: '#fff', background: BACHI_DARK, textTransform: 'uppercase', borderRight: 'none' }) }, 'Pts')]);
 
   /* ── Mi hoja: una fila por letra, la nueva se agrega abajo ── */
-  const allFilled = vals.every((v) => v.trim());
+  const allFilled = bachiComplete(vals);
   const sheetRows = rounds.map((r) => {
     if (!r.stopBy) {
       const canType = r.id === game.cur && live && !bigLetter;
@@ -20745,8 +20747,8 @@ function BachiController({ session, users, myId, isAdmin, SID, onClose }) {
   /* ── STOP ── */
   const stopZone = live ? h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
     h('button', { ref: stopBtnRef, onClick: decirStop, disabled: !allFilled || !!bigLetter, style: { width: '100%', maxWidth: 420, padding: '16px 20px', background: allFilled ? '#dc2626' : 'rgba(220,38,38,.3)', border: 'none', borderRadius: 16, color: '#fff', fontWeight: 900, fontSize: 24, fontFamily: F, letterSpacing: '.1em', cursor: allFilled ? 'pointer' : 'not-allowed', boxShadow: allFilled ? '0 12px 28px rgba(220,38,38,.4)' : 'none' } }, '✋ ¡STOP!'),
-    !allFilled ? h('div', { style: { fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' } }, 'Completa todas las columnas para decir STOP. Enter pasa a la siguiente.') : null,
-    isAdmin ? h('button', { onClick: decirStop, style: { background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px 16px', color: '#0a0e2e', fontWeight: 800, fontSize: 12.5, fontFamily: F, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏹ Cortar la ronda (admin)') : null,
+    !allFilled ? h('div', { style: { fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' } }, 'Para decir STOP completa todas las columnas (mínimo 2 letras en cada una). Enter pasa a la siguiente.') : null,
+    isAdmin ? h('button', { onClick: () => decirStop(true), style: { background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px 16px', color: '#0a0e2e', fontWeight: 800, fontSize: 12.5, fontFamily: F, letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏹ Cortar la ronda (admin)') : null,
   ) : null;
 
   /* ── Respuestas del que dijo STOP (para todos) ── */
