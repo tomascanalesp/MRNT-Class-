@@ -68,6 +68,8 @@
 @keyframes mr-slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mr-cardUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mr-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.mr-hot{position:absolute;padding:0;margin:0;border:none;border-radius:6px;cursor:pointer;background:transparent;box-shadow:inset 0 -2px 0 rgba(200,134,42,.6);transition:background .15s,box-shadow .15s}
+.mr-hot:hover,.mr-hot:focus-visible{background:rgba(200,134,42,.2);box-shadow:inset 0 -3px 0 rgba(200,134,42,.95);outline:none}
 @keyframes mr-sRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mr-sPop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
 @keyframes mr-sWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(0)}}
@@ -2688,15 +2690,20 @@ const BIBLE_VERSION = 'NVI';
 
 /* ── BIBLE_VERSES  (líneas 2827-3109) ── */
 const BIBLE_VERSES = {
-  '1 Corintios 10:6-13': [
+  '1 Corintios 10:11': [
+    { n: 11, t: 'Todo eso les sucedió para servir de ejemplo, y quedó escrito para advertencia nuestra, pues a nosotros nos ha llegado el fin de los tiempos.' },
+  ],
+  '1 Corintios 10:12-13': [
+    { n: 12, t: 'Por lo tanto, si alguien piensa que está firme, tenga cuidado de no caer.' },
+    { n: 13, t: 'Ustedes no han sufrido ninguna tentación que no sea común al género humano. Pero Dios es fiel, y no permitirá que ustedes sean tentados más allá de lo que puedan aguantar. Más bien, cuando llegue la tentación, él les dará también una salida a fin de que puedan resistir.' },
+  ],
+  '1 Corintios 10:6-11': [
     { n: 6, t: 'Todo eso sucedió para servirnos de ejemplo, a fin de que no nos apasionemos por lo malo, como lo hicieron ellos.' },
     { n: 7, t: 'No sean idólatras, como lo fueron algunos de ellos, según está escrito: «Se sentó el pueblo a comer y a beber, y se entregó al desenfreno.»' },
     { n: 8, t: 'No cometamos inmoralidad sexual, como algunos lo hicieron, por lo que en un solo día perecieron veintitrés mil.' },
     { n: 9, t: 'Tampoco pongamos a prueba al Señor, como lo hicieron algunos y murieron víctimas de las serpientes.' },
     { n: 10, t: 'Ni murmuren contra Dios, como lo hicieron algunos y sucumbieron a manos del ángel destructor.' },
     { n: 11, t: 'Todo eso les sucedió para servir de ejemplo, y quedó escrito para advertencia nuestra, pues a nosotros nos ha llegado el fin de los tiempos.' },
-    { n: 12, t: 'Por lo tanto, si alguien piensa que está firme, tenga cuidado de no caer.' },
-    { n: 13, t: 'Ustedes no han sufrido ninguna tentación que no sea común al género humano. Pero Dios es fiel, y no permitirá que ustedes sean tentados más allá de lo que puedan aguantar. Más bien, cuando llegue la tentación, él les dará también una salida a fin de que puedan resistir.' },
   ],
   '1 Corintios 11:23-26': [
     { n: 23, t: 'Yo recibí del Señor lo mismo que les transmití a ustedes: Que el Señor Jesús, la noche en que fue traicionado, tomó pan,' },
@@ -2764,11 +2771,10 @@ const BIBLE_VERSES = {
   '2 Crónicas 20:20': [
     { n: 20, t: 'Al día siguiente, madrugaron y fueron al desierto de Tecoa. Mientras avanzaban, Josafat se detuvo y dijo: «Habitantes de Judá y de Jerusalén, escúchenme: ¡Confíen en el SEÑOR, y serán librados! ¡Confíen en sus profetas, y tendrán éxito!»' },
   ],
-  '2 Crónicas 36:11-16': [
-    { n: 11, t: 'Sedequías tenía veintiún años cuando ascendió al trono, y reinó en Jerusalén once años,' },
+  '2 Crónicas 36:12': [
     { n: 12, t: 'pero hizo lo que ofende al SEÑOR su Dios. No se humilló ante el profeta Jeremías, que hablaba en nombre del SEÑOR,' },
-    { n: 13, t: 'y además se rebeló contra el rey Nabucodonosor, a quien había jurado lealtad. Sedequías fue terco y, en su obstinación, no quiso volverse al SEÑOR, Dios de Israel.' },
-    { n: 14, t: 'También los jefes de los sacerdotes y el pueblo aumentaron su maldad, pues siguieron las prácticas detestables de los países vecinos y contaminaron el templo que el SEÑOR había consagrado para sí en Jerusalén.' },
+  ],
+  '2 Crónicas 36:15-16': [
     { n: 15, t: 'Por amor a su pueblo y al lugar donde habita, el SEÑOR, Dios de sus antepasados, con frecuencia les enviaba advertencias por medio de sus mensajeros.' },
     { n: 16, t: 'Pero ellos se burlaban de los mensajeros de Dios, tenían en poco sus palabras, y se mofaban de sus profetas. Por fin, el SEÑOR desató su ira contra el pueblo, y ya no hubo remedio.' },
   ],
@@ -3128,15 +3134,6 @@ const BIBLE_VERSES = {
     { n: 2, t: '«Toma un rollo y escribe en él todas las palabras que desde los tiempos de Josías, desde que comencé a hablarte hasta ahora, te he dicho acerca de Israel, de Judá y de las otras naciones.' },
     { n: 3, t: 'Cuando los de Judá se enteren de todas las calamidades que pienso enviar contra ellos, tal vez abandonen su mal camino y pueda yo perdonarles su iniquidad y su pecado.»' },
   ],
-  'Jeremías 36:20-26': [
-    { n: 20, t: 'Después de dejar el rollo en la sala del cronista Elisama, los jefes se presentaron en el atrio, delante del rey, y lo pusieron al tanto de todo lo ocurrido.' },
-    { n: 21, t: 'El rey envió a Yehudi a buscar el rollo, y Yehudi lo tomó de la sala de Elisama y lo leyó en presencia del rey y de todos los jefes que estaban con él.' },
-    { n: 22, t: 'Era el mes noveno, y por eso el rey estaba en su casa de invierno, sentado junto a un brasero encendido.' },
-    { n: 23, t: 'A medida que Yehudi terminaba de leer tres o cuatro columnas, el rey las cortaba con un estilete de escriba y las echaba al fuego del brasero. Así lo hizo con todo el rollo, hasta que éste se consumió en el fuego.' },
-    { n: 24, t: 'Ni el rey ni los jefes que escucharon todas estas palabras tuvieron temor ni se rasgaron las vestiduras.' },
-    { n: 25, t: 'Esto sucedió a pesar de que Elnatán, Delaías y Guemarías le habían suplicado al rey que no quemara el rollo; pero el rey no les hizo caso.' },
-    { n: 26, t: 'Por el contrario, mandó a Jeramel, su hijo, a Seraías hijo de Azriel, y a Selemías hijo de Abdel que arrestaran al escriba Baruc y al profeta Jeremías. Pero el SEÑOR los había escondido.' },
-  ],
   'Jeremías 36:20-31': [
     { n: 20, t: 'Después de dejar el rollo en la sala del cronista Elisama, los jefes se presentaron en el atrio, delante del rey, y lo pusieron al tanto de todo lo ocurrido.' },
     { n: 21, t: 'El rey envió a Yehudi a buscar el rollo, y Yehudi lo tomó de la sala de Elisama y lo leyó en presencia del rey y de todos los jefes que estaban con él.' },
@@ -3169,13 +3166,18 @@ const BIBLE_VERSES = {
   'Jeremías 36:23': [
     { n: 23, t: 'A medida que Yehudi terminaba de leer tres o cuatro columnas, el rey las cortaba con un estilete de escriba y las echaba al fuego del brasero. Así lo hizo con todo el rollo, hasta que éste se consumió en el fuego.' },
   ],
-  'Jeremías 36:27-32': [
+  'Jeremías 36:23-24': [
+    { n: 23, t: 'A medida que Yehudi terminaba de leer tres o cuatro columnas, el rey las cortaba con un estilete de escriba y las echaba al fuego del brasero. Así lo hizo con todo el rollo, hasta que éste se consumió en el fuego.' },
+    { n: 24, t: 'Ni el rey ni los jefes que escucharon todas estas palabras tuvieron temor ni se rasgaron las vestiduras.' },
+  ],
+  'Jeremías 36:27-28, 32': [
     { n: 27, t: 'Luego que el rey quemó el rollo con las palabras que Jeremías le había dictado a Baruc, la palabra del SEÑOR vino a Jeremías:' },
     { n: 28, t: '«Toma otro rollo, y escribe exactamente lo mismo que estaba escrito en el primer rollo quemado por Joacim, rey de Judá.' },
-    { n: 29, t: 'Y adviértele a Joacim que así dice el SEÑOR: “Tú quemaste aquel rollo, diciendo: ‘¿Por qué has escrito en él que con toda seguridad el rey de Babilonia vendrá a destruir esta tierra, y a borrar de ella a toda persona y animal?’ ”' },
+    { n: 32, t: 'Entonces Jeremías tomó otro rollo y se lo dio al escriba Baruc hijo de Nerías. Baruc escribió en el rollo todo lo que Jeremías le dictó, lo cual era idéntico a lo escrito en el rollo quemado por el rey Joacim. Se agregaron, además, muchas otras cosas semejantes.' },
+  ],
+  'Jeremías 36:30-31': [
     { n: 30, t: 'Por eso, así dice el SEÑOR acerca de Joacim, rey de Judá: “Ninguno de sus descendientes ocupará el trono de David; su cadáver será arrojado, y quedará expuesto al calor del día y a las heladas de la noche.' },
     { n: 31, t: 'Castigaré la iniquidad de él, la de su descendencia y la de sus siervos. Enviaré contra ellos, y contra los habitantes de Jerusalén y de Judá, todas las calamidades con que los amenacé, porque no me hicieron caso.” »' },
-    { n: 32, t: 'Entonces Jeremías tomó otro rollo y se lo dio al escriba Baruc hijo de Nerías. Baruc escribió en el rollo todo lo que Jeremías le dictó, lo cual era idéntico a lo escrito en el rollo quemado por el rey Joacim. Se agregaron, además, muchas otras cosas semejantes.' },
   ],
   'Jeremías 38:4': [
     { n: 4, t: 'Los jefes le dijeron al rey: —Hay que matar a este hombre. Con semejantes discursos está desmoralizando a los soldados y a todo el pueblo que aún quedan en esta ciudad. Este hombre no busca el bien del pueblo, sino su desgracia.' },
@@ -3663,16 +3665,14 @@ const BIBLE_VERSES = {
   'Mateo 9:36': [
     { n: 36, t: 'Al ver a las multitudes, tuvo compasión de ellas, porque estaban agobiadas y desamparadas, como ovejas sin pastor.' },
   ],
-  'Números 13:31-33': [
-    { n: 31, t: 'Pero los que habían ido con él respondieron: —No podremos combatir contra esa gente. ¡Son más fuertes que nosotros!' },
-    { n: 32, t: 'Y comenzaron a esparcir entre los israelitas falsos rumores acerca de la tierra que habían explorado. Decían: —La tierra que hemos explorado se traga a sus habitantes, y los hombres que allí vimos son enormes.' },
-    { n: 33, t: '¡Hasta vimos anaquitas! Comparados con ellos, parecíamos langostas, y así nos veían ellos a nosotros.' },
-  ],
-  'Números 14:1-4': [
-    { n: 1, t: 'Aquella noche toda la comunidad israelita se puso a gritar y a llorar.' },
-    { n: 2, t: 'En sus murmuraciones contra Moisés y Aarón, la comunidad decía: «¡Cómo quisiéramos haber muerto en Egipto! ¡Más nos valdría morir en este desierto!' },
-    { n: 3, t: '¿Para qué nos ha traído el SEÑOR a esta tierra? ¿Para morir atravesados por la espada, y que nuestras esposas y nuestros niños se conviertan en botín de guerra? ¿No sería mejor que volviéramos a Egipto?»' },
-    { n: 4, t: 'Y unos a otros se decían: «¡Escojamos un cabecilla que nos lleve a Egipto!»' },
+  'Números 13:31-14:4': [
+    { n: '13:31', t: 'Pero los que habían ido con él respondieron: —No podremos combatir contra esa gente. ¡Son más fuertes que nosotros!' },
+    { n: '13:32', t: 'Y comenzaron a esparcir entre los israelitas falsos rumores acerca de la tierra que habían explorado. Decían: —La tierra que hemos explorado se traga a sus habitantes, y los hombres que allí vimos son enormes.' },
+    { n: '13:33', t: '¡Hasta vimos anaquitas! Comparados con ellos, parecíamos langostas, y así nos veían ellos a nosotros.' },
+    { n: '14:1', t: 'Aquella noche toda la comunidad israelita se puso a gritar y a llorar.' },
+    { n: '14:2', t: 'En sus murmuraciones contra Moisés y Aarón, la comunidad decía: «¡Cómo quisiéramos haber muerto en Egipto! ¡Más nos valdría morir en este desierto!' },
+    { n: '14:3', t: '¿Para qué nos ha traído el SEÑOR a esta tierra? ¿Para morir atravesados por la espada, y que nuestras esposas y nuestros niños se conviertan en botín de guerra? ¿No sería mejor que volviéramos a Egipto?»' },
+    { n: '14:4', t: 'Y unos a otros se decían: «¡Escojamos un cabecilla que nos lleve a Egipto!»' },
   ],
   'Números 14:10': [
     { n: 10, t: 'Pero como toda la comunidad hablaba de apedrearlos, la gloria del SEÑOR se manifestó en la Tienda, frente a todos los israelitas.' },
@@ -4098,6 +4098,10 @@ function SermonSlide({ slide, index, total, footer, onVerseClick, isAdmin, onAsk
         animation: 'mr-sRise .5s cubic-bezier(.2,.8,.2,1) both' }
     }, h("img", { src: slide.src, alt: slide.alt || '', draggable: false,
         style: { display: 'block', width: '100%', height: '100%', objectFit: 'contain' } }),
+      // Citas clicables en su lugar dentro de la imagen: [ref, x%, y%, ancho%, alto%]
+      slide.hotspots ? slide.hotspots.map(([r, x, y, w, hh], i) => h("button", { key: 'hs' + i, className: 'mr-hot', title: r, 'aria-label': r,
+          onClick: () => BIBLE_VERSES[r] && onVerseClick ? onVerseClick(r) : window.open(bibleGatewayUrl(r), '_blank', 'noopener,noreferrer'),
+          style: { left: x + '%', top: y + '%', width: w + '%', height: hh + '%' } })) :
       slide.verses ? h("div", { style: { position: 'absolute', left: 14, bottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' } },
         slide.verses.map(r => h("button", { key: r,
           onClick: () => BIBLE_VERSES[r] && onVerseClick ? onVerseClick(r) : window.open(bibleGatewayUrl(r), '_blank', 'noopener,noreferrer'),
@@ -5659,51 +5663,51 @@ const PRESENTATIONS = [{
     src: 'presentaciones/4t2026-sem07/01.jpg?v=1',
     alt: 'Semana 7 · ¡Escuchen esto! · Jeremías 36:20-32',
     verses: ['Jeremías 36:20-32'],
-    chipsBelow: true,
+    hotspots: [['Jeremías 36:20-32', 6.667, 57.389, 17.677, 5]],
     note: 'Cómo ha respondido el pueblo de Dios a los mensajes de sus profetas, y qué aprendemos de esa historia.'
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/02.jpg?v=1',
     alt: 'Idea central: ¿Qué hacemos con un mensaje que no queremos oír? Aceptarla, ignorarla o rebelarse.',
     verses: ['Hebreos 11:32-38'],
-    chipsBelow: true
+    hotspots: [['Hebreos 11:32-38', 17.049, 31.962, 12.482, 4.63]]
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/03.jpg?v=1',
     alt: 'Día 1: Ira ante el mensaje de Dios. El pueblo en pánico, Josué y Caleb, Jeremías.',
-    verses: ['Números 13:31-33', 'Números 14:1-4', 'Números 14:8-10', 'Jeremías 1:17-18'],
-    chipsBelow: true
+    verses: ['Números 13:31-14:4', 'Números 14:8-10', 'Jeremías 1:17-18'],
+    hotspots: [['Números 13:31-14:4', 17.633, 52.342, 12.592, 3.889], ['Números 14:8-10', 38.177, 52.342, 10.059, 3.889], ['Jeremías 1:17-18', 69.115, 52.342, 8.765, 3.889]]
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/04.jpg?v=1',
     alt: 'Día 2: Destruyendo el mensaje. Yehudi lee el rollo, el rey lo corta y lo quema.',
-    verses: ['Jeremías 36:20-26', 'Jeremías 36:27-32'],
-    chipsBelow: true
+    verses: ['Jeremías 36:23-24', 'Jeremías 36:27-28, 32', 'Jeremías 36:30-31'],
+    hotspots: [['Jeremías 36:23-24', 4.688, 53.129, 9.897, 4.167], ['Jeremías 36:27-28, 32', 62.342, 57.342, 12.116, 3.889], ['Jeremías 36:30-31', 76.687, 75.305, 9.671, 3.889]]
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/05.jpg?v=1',
     alt: 'Día 3: Una historia de resistencia. Josías, Joacaz, Joacim, Joaquín y Sedequías.',
-    verses: ['2 Crónicas 36:11-16', '2 Pedro 3:9'],
-    chipsBelow: true
+    verses: ['2 Crónicas 36:12', '2 Crónicas 36:15-16', '2 Pedro 3:9'],
+    hotspots: [['2 Crónicas 36:12', 20.524, 61.972, 9.923, 3.889], ['2 Crónicas 36:15-16', 67.922, 61.972, 12.278, 3.889], ['2 Pedro 3:9', 80.269, 61.972, 7.297, 3.889]]
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/06.jpg?v=1',
     alt: 'Día 3: Siempre la misma historia. Moisés, Jeremías, Judá, Jesús, Esteban… ¿y nosotros?',
     verses: ['Números 14:10', 'Jeremías 36:23', '2 Crónicas 36:16', 'Mateo 23:37', 'Hechos 7:52'],
-    chipsBelow: true
+    hotspots: [['Números 14:10', 21.676, 36.578, 8.611, 3.889], ['Jeremías 36:23', 59.507, 32.967, 2.996, 3.889], ['Jeremías 36:23', 44.896, 36.578, 4.644, 3.889], ['2 Crónicas 36:16', 84.436, 34.773, 5.602, 3.889], ['2 Crónicas 36:16', 75.833, 38.384, 4.644, 3.889], ['Mateo 23:37', 23.996, 58.662, 3.77, 3.889], ['Mateo 23:37', 13.958, 62.273, 4.644, 3.889], ['Hechos 7:52', 57.692, 58.662, 4.556, 3.889], ['Hechos 7:52', 44.896, 62.273, 3.738, 3.889]]
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/07.jpg?v=1',
     alt: 'Día 4: Los retos de Jeremías. Un profeta afligido, confrontación intensa, fiel a la Palabra.',
     verses: ['Jeremías 9:1', 'Jeremías 13:17', 'Jeremías 14:17', 'Jeremías 20:14-18', 'Jeremías 15:10', 'Jeremías 26:8-11', 'Jeremías 38:4', 'Jeremías 20:7-9', 'Jeremías 26:2'],
-    chipsBelow: true,
+    hotspots: [['Jeremías 9:1', 6.979, 47.481, 10.553, 4.352], ['Jeremías 13:17', 6.979, 52.833, 12.607, 4.352], ['Jeremías 14:17', 6.979, 58.184, 12.607, 4.352], ['Jeremías 20:14-18', 6.979, 63.536, 15.297, 4.352], ['Jeremías 15:10', 37.917, 47.481, 12.607, 4.352], ['Jeremías 26:8-11', 37.917, 52.833, 14.27, 4.352], ['Jeremías 38:4', 37.917, 58.184, 11.58, 4.352], ['Jeremías 20:7-9', 68.854, 47.481, 13.242, 4.352], ['Jeremías 26:2', 68.854, 52.833, 11.58, 4.352]],
     note: 'Pedir que cada grupo busque una de las tres columnas.'
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/08.jpg?v=1',
     alt: 'Día 5: Para nuestra advertencia (1 Corintios 10:11).',
-    verses: ['1 Corintios 10:6-13', '2 Crónicas 20:20', '3 Juan 1:2', 'Isaías 40:8'],
-    chipsBelow: true
+    verses: ['1 Corintios 10:11', '1 Corintios 10:12-13', '2 Crónicas 20:20', '3 Juan 1:2', 'Isaías 40:8'],
+    hotspots: [['1 Corintios 10:11', 78.58, 27.296, 10.615, 4.63], ['1 Corintios 10:12-13', 25.138, 63.572, 4.631, 3.889], ['1 Corintios 10:12-13', 6.771, 67.183, 6.999, 3.889], ['2 Crónicas 20:20', 53.502, 63.572, 5.602, 3.889], ['2 Crónicas 20:20', 37.708, 67.183, 4.644, 3.889], ['3 Juan 1:2', 42.422, 67.183, 7.565, 3.889], ['Isaías 40:8', 86.902, 63.572, 2.907, 3.889], ['Isaías 40:8', 68.646, 67.183, 3.738, 3.889]]
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/09.jpg?v=1',
@@ -5712,15 +5716,15 @@ const PRESENTATIONS = [{
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/10.jpg?v=1',
     alt: 'Día 7: Para conversar en clase.',
-    verses: ['Jeremías 36:20-31', 'Mateo 23:37', '1 Corintios 10:6-13'],
-    chipsBelow: true,
+    verses: ['Jeremías 36:20-31', 'Mateo 23:37', '1 Corintios 10:6-11', '1 Corintios 10:12-13'],
+    hotspots: [['Jeremías 36:20-31', 18.846, 45.615, 9.972, 4.074], ['Mateo 23:37', 11.668, 65.942, 8.107, 4.074], ['1 Corintios 10:6-11', 49.221, 45.615, 10.725, 4.074], ['1 Corintios 10:12-13', 84.003, 45.615, 4.764, 4.074], ['1 Corintios 10:12-13', 68.646, 49.489, 7.211, 4.074]],
     note: 'Buen momento para abrir la nube de palabras con una de las reflexiones.'
   }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem07/11.jpg?v=1',
     alt: 'Lo que nos llevamos. Para memorizar: tu pasaje favorito de Jeremías 36:20-32.',
     verses: ['Jeremías 36:20-32'],
-    chipsBelow: true
+    hotspots: [['Jeremías 36:20-32', 35.799, 84.722, 15.972, 4.63]]
   }]
 }, {
   id: 'sermon-a-quien-sirves',
