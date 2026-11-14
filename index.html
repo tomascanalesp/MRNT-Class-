@@ -21210,8 +21210,11 @@ class Component extends React.Component {
         console.error('[MRNT] No se pudo registrar la presencia en users/' + this.SID + '/' + this.uid + ' — otros usuarios no te van a ver en la sala:', e);
       });
       meRef.onDisconnect().remove();
+      this._presenceBase = merged;
+      this._presenceReady = true;
+      this._touchOnline();
       // Marca asistencia del día (visible en AttendanceModal).
-      window.db.ref(`attendance/${this.uid}/${this.SID}`).set({
+      window.db.ref(`attendance/${this.uid}/${this.SID}`).update({
         ts: firebase.database.ServerValue.TIMESTAMP,
         name: merged.name,
         email: user.email || ''
@@ -21233,12 +21236,43 @@ class Component extends React.Component {
         console.error('[MRNT] No se pudo registrar la presencia mínima en users/' + this.SID + '/' + this.uid + ':', err);
       });
       meRef.onDisconnect().remove();
+      this._presenceBase = minimal;
+      this._presenceReady = true;
+      this._touchOnline();
     });
+    // ── Presencia robusta ──
+    // Cada vez que se corta la conexión (celular en segundo plano, cambio de
+    // red, o la reconexión forzada al volver a la app) Firebase ejecuta el
+    // onDisconnect().remove() y borra a la persona de users/. Antes nadie la
+    // volvía a escribir: desde su celular seguía viendo todo, pero para los
+    // demás (y para la lista de jugadores) había desaparecido. Ahora:
+    //  1) al reconectar (.info/connected) se vuelve a registrar enseguida;
+    //  2) si el listener de users/ muestra que mi registro no está, se repara;
+    //  3) cada 30 s se revisa que siga ahí y se anota lastSeen.
+    if (!this.screenMode) {
+      this._connRef = window.db.ref('.info/connected');
+      this._connRef.on('value', (snap) => {
+        this._connected = snap.val() === true;
+        if (this._connected && this._presenceReady) this._registerPresence('reconexión');
+      });
+      this._presenceTimer = setInterval(() => {
+        if (!this._connected || !this._presenceReady) return;
+        window.db.ref(`users/${this.SID}/${this.uid}/name`).get().then((snap) => {
+          if (!snap.exists()) this._registerPresence('revisión 30s');
+          else this._touchOnline();
+        }).catch(() => {});
+      }, 30000);
+    }
     // Listener: usuarios en la sesión → state.chars (mantiene a 'me' como id local).
     this._usersRef = window.db.ref(`users/${this.SID}`);
     this._usersRef.on('value', (snap) => {
       const data = snap.val() || {};
       const myFb = this.uid ? data[this.uid] : null;
+      if (!myFb && !this.screenMode && this._presenceReady && this._connected &&
+          Date.now() - (this._lastPresenceHeal || 0) > 3000) {
+        this._lastPresenceHeal = Date.now();
+        this._registerPresence('registro borrado');
+      }
       const others = Object.entries(data)
         .filter(([uid]) => uid !== this.uid)
         .map(([uid, u]) => ({
@@ -21456,11 +21490,44 @@ class Component extends React.Component {
     if (this._chatRxRef)    this._chatRxRef.off();
     if (this._voiceRef)     this._voiceRef.off();
     this._closeAllVoicePeers();
+    this._presenceReady = false;
+    if (this._presenceTimer) clearInterval(this._presenceTimer);
+    if (this._connRef)      this._connRef.off();
     if (this.uid && this.SID && window.db && !this.screenMode) {
       window.db.ref(`users/${this.SID}/${this.uid}`).remove().catch(() => {});
       window.db.ref(`sessions/${this.SID}/voice/${this.uid}`).remove().catch(() => {});
     }
   }
+
+  // Vuelve a escribir mi registro completo en users/ (con update, para no
+  // pisar campos que maneja el admin como `hand`) y re-arma el onDisconnect.
+  _registerPresence = (reason) => {
+    if (!this.uid || !this.SID || !window.db || this.screenMode || !this._presenceReady) return;
+    const me = this.state.chars.find((c) => c.id === 'me') || {};
+    const rec = Object.assign({}, this._presenceBase || {});
+    ['name', 'emoji', 'color', 'bodyColor', 'armColor', 'legColor', 'accessory', 'photo', 'klass',
+      'x', 'y', 'room', 'status', 'mood'].forEach((k) => { if (me[k] !== undefined) rec[k] = me[k]; });
+    Object.keys(rec).forEach((k) => { if (rec[k] === undefined) delete rec[k]; });
+    rec.id = this.uid;
+    const meRef = window.db.ref(`users/${this.SID}/${this.uid}`);
+    meRef.update(rec).then(() => {
+      try { console.info('[MRNT] presencia restaurada (' + reason + ')'); } catch (_) {}
+    }).catch((e) => {
+      console.error('[MRNT] No se pudo restaurar la presencia en users/' + this.SID + '/' + this.uid + ':', e);
+    });
+    meRef.onDisconnect().remove();
+    this._touchOnline();
+  };
+  // Lista persistente de conectados: attendance/{uid}/{SID} guarda, además de
+  // la asistencia, `online` (true/false) y `lastSeen` (último latido, cada
+  // 30 s). Al desconectarse queda online:false con la hora — no se borra.
+  _touchOnline = () => {
+    if (!this.uid || !this.SID || !window.db || this.screenMode) return;
+    const ref = window.db.ref(`attendance/${this.uid}/${this.SID}`);
+    const TS = firebase.database.ServerValue.TIMESTAMP;
+    ref.update({ online: true, lastSeen: TS }).catch(() => {});
+    ref.onDisconnect().update({ online: false, lastSeen: TS }).catch(() => {});
+  };
 
   // Persiste cualquier campo del usuario actual en Firebase (con throttle suave).
   _saveMe = (patch) => {
