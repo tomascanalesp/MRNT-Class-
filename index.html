@@ -20100,7 +20100,7 @@ function EmojiResultOverlay({ result }) {
         h(AvatarBubble, { profile: winner, size: 34 }),
         h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 19, color: '#15803d' } }, winner.name, ' ¡gana', result.pts ? ` +${result.pts}` : '', '!'),
       ) : null,
-      winner && result.near ? h('div', { style: { fontSize: 12, color: 'var(--muted)', fontStyle: 'italic', marginTop: -6 } }, '(se acercó lo suficiente)') : null,
+      winner && result.near ? h('div', { style: { fontSize: 12, color: 'var(--muted)', fontStyle: 'italic', marginTop: -6 } }, '(fue quien estuvo más cerca)') : null,
       h('div', { style: { fontSize: 46, lineHeight: 1.1, letterSpacing: 2 } }, result.emojis || '❓'),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
         h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.16em' } }, 'La tarjeta era'),
@@ -20128,6 +20128,39 @@ function EmojiCard({ item, dim }) {
     h('div', { style: { fontSize: 'clamp(46px, 12vw, 84px)', lineHeight: 1.15, letterSpacing: 4, textAlign: 'center' } }, item.emojis || '❓'),
     h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' } }, '¿Qué representan estos emojis?'),
   );
+}
+
+// Qué tan cerca está un mensaje de la tarjeta (0 a 1). Perdona tildes,
+// plurales y errores chicos de ortografía en cada palabra clave, y también
+// mira el parecido letra a letra de la frase completa.
+function emojiLev(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = row;
+  }
+  return prev[b.length];
+}
+function emojiCloseness(target, candidate) {
+  const t = pictabNormalize(target), c = pictabNormalize(candidate);
+  if (!t || !c) return 0;
+  if (t === c) return 1;
+  const key = (x) => x.split(' ').filter((w) => w && !PICTAB_STOPWORDS.has(w));
+  const tw = key(t), cw = key(c);
+  const hit = tw.filter((w) => cw.some((x) => bachiSame(w, x))).length;
+  const words = tw.length ? hit / tw.length : 0;
+  const a = t.replace(/ /g, ''), b = c.replace(/ /g, '');
+  const chars = 1 - emojiLev(a, b) / Math.max(a.length, b.length);
+  // 1 queda reservado para la respuesta exacta: aquí el tope es 0.99.
+  return Math.min(0.99, Math.max(words, chars));
+}
+const EMOJI_WIN_RATIO = 0.85;    // tan parecido que se da por adivinado al tiro
+const EMOJI_CLOSEST_MIN = 0.34;  // al terminar la carta gana el más cercano (mínimo un tercio)
+function emojiClosest(chat, titulo) {
+  let best = null;
+  chat.forEach((m) => { const r = emojiCloseness(titulo, m.text); if (r >= EMOJI_CLOSEST_MIN && (!best || r > best.ratio)) best = { ratio: r, m }; });
+  return best;
 }
 
 /* ── EmojiController — el juego completo ── */
@@ -20222,8 +20255,7 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
     if (!lock.committed || lock.snapshot.val() !== token) return;
     // Mismo criterio que al acabarse el tiempo: gana quien más se acercó (60%+
     // de las palabras clave en un mensaje). Si nadie se acercó, no gana nadie.
-    let best = null;
-    chat.forEach((m) => { const r = pictabWordMatchRatio(currentItem?.titulo || '', m.text); if (r >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || r > best.ratio)) best = { ratio: r, m }; });
+    const best = emojiClosest(chat, currentItem?.titulo || '');
     if (best) await terminarRonda({ uid: best.m.uid, name: best.m.name, avatar: best.m.avatar, color: best.m.color }, true, false);
     else await terminarRonda(null, false, true);
   };
@@ -20250,7 +20282,8 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
     const last = chat[chat.length - 1];
     if (!last || last.id === lastCheckedRef.current) return;
     lastCheckedRef.current = last.id;
-    if (pictabNormalize(last.text) === pictabNormalize(currentItem.titulo)) resolver({ uid: last.uid, name: last.name, avatar: last.avatar, color: last.color }, false);
+    const closeness = emojiCloseness(currentItem.titulo, last.text);
+    if (closeness >= EMOJI_WIN_RATIO) resolver({ uid: last.uid, name: last.name, avatar: last.avatar, color: last.color }, closeness < 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat.length, gState, currentItem?.titulo]);
 
@@ -20262,8 +20295,7 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
     // no pasó el tiempo (evita disparos prematuros por relojes desfasados).
     if ((Date.now() - game.roundStartTime) / 1000 < EMOJI_ROUND_SECONDS) return;
     timeoutFiredRef.current = game.roundStartTime;
-    let best = null;
-    chat.forEach((m) => { const r = pictabWordMatchRatio(currentItem.titulo, m.text); if (r >= PICTAB_CLOSE_ENOUGH_RATIO && (!best || r > best.ratio)) best = { ratio: r, m }; });
+    const best = emojiClosest(chat, currentItem.titulo);
     if (best) resolver({ uid: best.m.uid, name: best.m.name, avatar: best.m.avatar, color: best.m.color }, true);
     else resolver(null, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -20374,7 +20406,7 @@ function EmojiController({ session, users, myId, isAdmin, SID, onClose }) {
           h('span', { style: { flex: 1, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '💬 Adivina aquí'),
         ),
         h('div', { ref: chatListRef, style: { flex: 1, overflowY: 'auto', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 } },
-          chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá — como en la tarjeta (no importan tildes ni mayúsculas).') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
+          chat.length === 0 ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 12.5, marginTop: 12 } }, 'Escribe tu respuesta acá. No importan tildes, mayúsculas ni un error chico; si nadie acierta, gana quien estuvo más cerca.') : chat.map((m) => h('div', { key: m.id, style: { display: 'flex', gap: 6, alignItems: 'flex-start' } },
             h(AvatarBubble, { profile: m, size: 20 }),
             h('div', null,
               h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11.5, color: m.color || '#0a0e2e' } }, m.name, ' '),
