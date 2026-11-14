@@ -109,6 +109,19 @@ html,body{margin:0;height:100%}
 /* React hooks destructuring (necesario para el bloque legacy). */
 const { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } = React;
 const APP_VERSION = '2026-06-27-sala3d-v15';
+// Número de versión de la app: SUBIRLO al agregar un juego o actividad nueva.
+// Al iniciar un juego el admin lo anota en sessions/<SID>/build y quien tenga
+// la página vieja abierta (número menor) se recarga sola, una vez.
+const APP_BUILD = 2;
+function mrntCheckBuild(build) {
+  if (!(build > APP_BUILD)) return;
+  try {
+    const k = 'mrnt-reload-build';
+    if (window.sessionStorage.getItem(k) === String(build)) return;
+    window.sessionStorage.setItem(k, String(build));
+  } catch (_) { return; }
+  window.location.reload();
+}
 
 /* ============================================================================
    Sala Maranata 3D — real React app (React.createElement, no build step).
@@ -13617,6 +13630,7 @@ function KahootController({
         });
       },
       onStartBachi: async () => {
+        await db.ref(`sessions/${SID}/build`).transaction(b => Math.max(b || 0, APP_BUILD));
         await db.ref(`sessions/${SID}/bachi`).set({
           active: true,
           gameState: 'idle'
@@ -21834,6 +21848,7 @@ class Component extends React.Component {
         if (v.presentation?.active && !s.activity && (s.currentRoom || this.screenMode || this.isAdmin)) activity = 'presenta';
         if (v.video?.active && !s.activity && (s.currentRoom || this.screenMode || this.isAdmin))        activity = 'videos';
         if (v.wordcloud?.active && !s.activity && (s.currentRoom === 'repaso' || this.screenMode || this.isAdmin)) activity = 'wordcloud';
+        mrntCheckBuild(v.build);
         return {
           session: v,
           // Repaso siempre está abierta, sin importar lo que diga openRooms.
