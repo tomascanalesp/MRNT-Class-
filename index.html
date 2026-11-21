@@ -19090,6 +19090,110 @@ function PictonaryCanvas({ SID, canDraw, color, tool, strokes, live, height = 32
   );
 }
 
+/* Sección plegable (para no llenar la pantalla de opciones del admin o del
+   tablero): muestra una barra con título y ▾/▴; el contenido sólo aparece
+   al abrirla. Tiene su propio estado, así no toca los hooks del juego. */
+function PictonaryFoldout({ title, children, defaultOpen = false, maxWidth = 420, accent = '#0a0e2e' }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return h('div', { style: { width: '100%', maxWidth, background: 'rgba(10,14,46,.03)', border: '1px solid rgba(10,14,46,.08)', borderRadius: 14, overflow: 'hidden', flexShrink: 0 } },
+    h('button', {
+      onClick: () => setOpen((v) => !v), 'aria-expanded': open,
+      style: { width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, color: accent, textTransform: 'uppercase', letterSpacing: '.08em', textAlign: 'left' }
+    }, h('span', { style: { flex: 1 } }, title), h('span', { style: { fontSize: 13 } }, open ? '▴' : '▾')),
+    open ? h('div', { style: { padding: '0 10px 10px' } }, children) : null,
+  );
+}
+
+/* Pizarra + herramientas, con botón "⛶ Agrandar" para quien dibuja: abre la
+   pizarra a pantalla completa (capa fija encima del juego).
+   Proporción: los puntos se guardan normalizados 0..1, así que para que nadie
+   vea el dibujo estirado quien dibuja publica la forma de su pizarra en
+   `pictonary/aspect` y todos la muestran con esa misma proporción. Mientras
+   la pizarra está vacía la forma sigue a la pantalla de quien dibuja (si
+   agranda antes de empezar, usa toda la pantalla); con trazos ya hechos se
+   queda fija y la pizarra grande se ajusta a esa forma. */
+function pictonaryFit(boxW, boxH, aspect) {
+  if (!(boxW > 0) || !(boxH > 0)) return { w: 0, h: 0 };
+  if (!(aspect > 0)) return { w: boxW, h: boxH };
+  let w = boxW, hh = boxW / aspect;
+  if (hh > boxH) { hh = boxH; w = boxH * aspect; }
+  return { w: Math.floor(w), h: Math.floor(hh) };
+}
+function PictonaryDrawPanel({ SID, isDrawer, canDraw, strokes, live, height, onClear, timeText, timeColor, item, maxWidth, aspect, onAspect }) {
+  const [color, setColor] = useState(PICTONARY_COLORS[0]);
+  const [tool, setTool] = useState('pen');
+  const [big, setBig] = useState(false);
+  const [area, setArea] = useState({ w: 0, h: 0 });
+  const [inlineW, setInlineW] = useState(0);
+  const inlineRef = useRef(null);
+  const areaRef = useRef(null);
+  const empty = !strokes || Object.keys(strokes).length === 0;
+
+  useEffect(() => { if (!isDrawer) { setTool('pen'); setBig(false); } }, [isDrawer]);
+  useEffect(() => {
+    if (!big) return;
+    const onKey = (e) => { if (e.key === 'Escape') setBig(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [big]);
+  useEffect(() => {
+    const el = big ? areaRef.current : inlineRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      const r = el.getBoundingClientRect();
+      if (big) setArea({ w: r.width, h: r.height }); else setInlineW(r.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [big]);
+  // Quien dibuja publica la forma de su pizarra mientras esté vacía.
+  useEffect(() => {
+    if (!isDrawer || !empty || !onAspect) return;
+    const want = big ? (area.h > 0 ? area.w / area.h : 0) : (inlineW > 0 ? inlineW / height : 0);
+    if (want > 0 && !(aspect > 0 && Math.abs(want - aspect) / aspect < 0.03)) onAspect(Math.round(want * 1000) / 1000);
+  }, [isDrawer, empty, big, area.w, area.h, inlineW, height, aspect]);
+
+  const toolBtn = { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#0a0e2e', whiteSpace: 'nowrap' };
+  const toolbar = (size) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
+    PICTONARY_COLORS.map((c) => h('button', { key: c, onClick: () => { setColor(c); setTool('pen'); }, title: 'Color', style: { width: size, height: size, borderRadius: '50%', background: c, cursor: 'pointer', border: (tool === 'pen' && color === c) ? '3px solid #0a0e2e' : '2px solid rgba(10,14,46,.15)', padding: 0, flexShrink: 0 } })),
+    h('button', { onClick: () => setTool('eraser'), title: 'Goma de borrar', style: Object.assign({}, toolBtn, { border: tool === 'eraser' ? '2px solid #0a0e2e' : '1px solid rgba(10,14,46,.15)', background: tool === 'eraser' ? 'rgba(10,14,46,.08)' : '#fff' }) }, '🧼 Goma'),
+    h('button', { onClick: onClear, title: 'Limpiar toda la pizarra', style: Object.assign({}, toolBtn, { border: '1px solid rgba(239,68,68,.35)', background: 'rgba(239,68,68,.08)', color: '#dc2626' }) }, '🗑️ Limpiar'),
+  );
+
+  if (big && isDrawer) {
+    const size = pictonaryFit(area.w, area.h, empty ? 0 : aspect);
+    return h('div', { style: { position: 'fixed', inset: 0, zIndex: 400, background: '#f8f5ef', display: 'flex', flexDirection: 'column', gap: 8, padding: 'max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom))' } },
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 } },
+        timeText ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 26, color: timeColor || '#a16207', lineHeight: 1 } }, timeText) : null,
+        h('div', { style: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' } },
+          item ? h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 18, color: '#0a0e2e' } }, item.titulo) : null,
+          item && item.pista ? h('span', { style: { fontSize: 12, color: 'var(--muted)', fontStyle: 'italic' } }, '💡 ', item.pista) : null,
+        ),
+        h('button', { onClick: () => setBig(false), title: 'Volver al tamaño normal (Esc)', style: Object.assign({}, toolBtn, { border: 'none', background: '#0a0e2e', color: '#fff', padding: '8px 14px' }) }, '🗗 Achicar'),
+      ),
+      h('div', { ref: areaRef, style: { flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+        size.w > 0 ? h('div', { style: { width: size.w, flexShrink: 0 } },
+          h(PictonaryCanvas, { SID, canDraw, color, tool, strokes, live, height: size.h })) : null,
+      ),
+      h('div', { style: { flexShrink: 0 } }, toolbar(32)),
+    );
+  }
+
+  // Tamaño normal: quien dibuja con la pizarra vacía usa todo el ancho; si no,
+  // se respeta la forma publicada (centrada, sin pasarse del alto previsto).
+  const tallH = aspect > 0 && aspect < 1 && typeof window !== 'undefined' ? Math.max(height, Math.round(window.innerHeight * 0.6)) : height;
+  const inl = (isDrawer && empty) || !(aspect > 0) ? { w: inlineW, h: height } : pictonaryFit(inlineW, tallH, aspect);
+  return h('div', { style: { width: '100%', maxWidth: maxWidth || 'none', display: 'flex', flexDirection: 'column', gap: 8 } },
+    h('div', { ref: inlineRef, style: { width: '100%', display: 'flex', justifyContent: 'center' } },
+      h('div', { style: { position: 'relative', width: inl.w > 0 ? inl.w : '100%' } },
+        h(PictonaryCanvas, { SID, canDraw, color, tool, strokes, live, height: inl.h || height }),
+        isDrawer ? h('button', { onClick: () => setBig(true), title: 'Agrandar la pizarra', style: Object.assign({}, toolBtn, { position: 'absolute', top: 8, right: 8, border: 'none', background: 'rgba(10,14,46,.82)', color: '#fff', padding: '6px 12px', boxShadow: '0 4px 12px rgba(10,14,46,.25)' }) }, '⛶ Agrandar') : null,
+      ),
+    ),
+    isDrawer ? toolbar(28) : null,
+  );
+}
+
 /* ═══ PICTONARY BÍBLICO — TABLERO POR EQUIPOS ═══ */
 // "Pictonary Bíblico" es un juego de tablero por equipos: 2 equipos elegidos
 // al azar (o armados a mano por el admin), capitanes que tiran el dado de
@@ -19580,8 +19684,6 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
   const currentCatMeta = currentCategoryKey ? PICTAB_CATS[currentCategoryKey] : null;
   const scores = game.scores || {};
   const { remaining, over } = useTimer(phase === 'draw' ? game.roundStartTime : null, PICTAB_ROUND_SECONDS);
-  const [color, setColor] = useState(PICTONARY_COLORS[0]);
-  const [tool, setTool] = useState('pen');
   const [chatText, setChatText] = useState('');
   const [chatExpanded, setChatExpanded] = useState(false);
   const chatListRef = useRef(null);
@@ -19600,7 +19702,6 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
     const t = setTimeout(() => { if (chatListRef.current) chatListRef.current.scrollTop = chatListRef.current.scrollHeight; }, 60);
     return () => clearTimeout(t);
   }, [chat.length]);
-  useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
 
   /* Mueve el dado de movimiento: sólo el capitán del equipo en turno (o el admin). */
   const tirarMovimiento = async () => {
@@ -19861,10 +19962,13 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
       phase === 'draw' ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 28, color: timeColor, lineHeight: 1, marginLeft: 'auto' } }, formatTime(Math.max(0, remaining))) : null,
       isAdmin ? h('button', { onClick: finalizar, title: 'Terminar el juego ahora', style: { border: 'none', background: 'rgba(10,14,46,.06)', color: 'var(--muted)', borderRadius: 20, padding: '5px 12px', fontWeight: 700, fontSize: 11, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer', marginLeft: phase === 'draw' ? 0 : 'auto' } }, '🏆 Finalizar') : null,
     ),
-    h('div', { style: { padding: '0 16px 8px', flexShrink: 0 } }, h(PictabRoster, { teams, order, users, myId, isAdmin, onSetCaptain: setCaptain })),
+    h('div', { style: { padding: '0 16px 8px', flexShrink: 0, display: 'flex', justifyContent: 'center' } },
+      phase === 'draw'
+        ? h(PictonaryFoldout, { title: `👥 Equipos · ${order.map((tid) => `${teams[tid]?.avatar || ''} ${teams[tid]?.points || 0}`).join('  —  ')} pts`, maxWidth: 760 }, h(PictabRoster, { teams, order, users, myId, isAdmin, onSetCaptain: setCaptain }))
+        : h(PictabRoster, { teams, order, users, myId, isAdmin, onSetCaptain: setCaptain })),
     h('div', { style: { flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, padding: '0 16px 16px', overflow: 'auto', minHeight: 0 } },
       h('div', { style: { flex: isMobile ? 'none' : 2, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', minHeight: 0 } },
-        h(PictabBoard, { teams, order }),
+        phase === 'draw' ? h(PictonaryFoldout, { title: '🗺️ Ver tablero', maxWidth: 760 }, h('div', { style: { display: 'flex', justifyContent: 'center' } }, h(PictabBoard, { teams, order }))) : h(PictabBoard, { teams, order }),
 
         phase === 'ready' ? h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } },
           (isCaptain || isAdmin) ? h('button', { onClick: tirarMovimiento, style: { padding: '12px 26px', background: turnTeam?.color || '#ffd000', border: 'none', borderRadius: 20, color: '#fff', fontWeight: 900, fontSize: 14, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.05em', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 8px 20px rgba(10,14,46,.2)' } }, '🎲 Tirar dado y avanzar')
@@ -19894,19 +19998,13 @@ function PictabTableroGame({ session, users, myId, isAdmin, SID, onClose }) {
           currentItem.pista ? h('div', { style: { fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic' } }, '💡 ', currentItem.pista) : null,
         ) : null,
 
-        phase === 'draw' ? h(PictonaryCanvas, { SID, canDraw: isDrawer && !over, color, tool, strokes: game.strokes, live: game.live, height: isMobile ? 220 : 320 }) : null,
-        phase === 'draw' && isDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' } },
-          PICTONARY_COLORS.map((c) => h('button', { key: c, onClick: () => { setColor(c); setTool('pen'); }, title: 'Color', style: { width: 26, height: 26, borderRadius: '50%', background: c, cursor: 'pointer', border: (tool === 'pen' && color === c) ? '3px solid #0a0e2e' : '2px solid rgba(10,14,46,.15)', padding: 0 } })),
-          h('button', { onClick: () => setTool('eraser'), title: 'Goma de borrar', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: tool === 'eraser' ? '2px solid #0a0e2e' : '1px solid rgba(10,14,46,.15)', background: tool === 'eraser' ? 'rgba(10,14,46,.08)' : '#fff', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#0a0e2e' } }, '🧼 Goma'),
-          h('button', { onClick: limpiarPizarra, title: 'Limpiar toda la pizarra', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(239,68,68,.35)', background: 'rgba(239,68,68,.08)', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#dc2626' } }, '🗑️ Limpiar todo'),
-        ) : null,
+        phase === 'draw' ? h(PictonaryDrawPanel, { SID, isDrawer, canDraw: isDrawer && !over, strokes: game.strokes, live: game.live, height: isMobile ? 240 : 340, onClear: limpiarPizarra, timeText: formatTime(Math.max(0, remaining)), timeColor, item: currentItem, maxWidth: 760, aspect: game.aspect, onAspect: (a) => ref().update({ aspect: a }) }) : null,
         phase === 'draw' && !isDrawer ? h('div', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: 13, fontStyle: 'italic' } }, currentDrawer ? `${currentDrawer.name} está dibujando — ¡adivina!` : '👀 ¿Qué será?') : null,
 
-        isAdmin && phase === 'draw' && currentDrawer ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'center', background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 8, width: '100%', maxWidth: 420 } },
-          h('span', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' } }, '🎯 Cambiar quién dibuja:'),
+        isAdmin && phase === 'draw' && currentDrawer ? h(PictonaryFoldout, { title: '⚙️ Opciones del admin · cambiar quién dibuja' }, h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'center' } },
           h('button', { onClick: setDrawerRandom, style: { display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(139,92,246,.14)', border: '1px solid rgba(139,92,246,.4)', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 11, color: '#6d28d9' } }, '🎲 Al azar'),
           pictabTeamMemberList(turnTeam, users).map((u) => h('button', { key: u.uid, onClick: () => setDrawerManual(u.uid), style: { display: 'flex', alignItems: 'center', gap: 4, background: u.uid === currentDrawerId ? 'rgba(255,208,0,.25)' : '#fff', border: u.uid === currentDrawerId ? '1px solid #ffd000' : '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '3px 8px 3px 3px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: '#0a0e2e' } }, h(AvatarBubble, { profile: u, size: 18 }), u.name)),
-        ) : null,
+        )) : null,
       ),
       h('div', { style: { flex: isMobile ? 'none' : '0 0 320px', display: 'flex', flexDirection: 'column', flexShrink: 0, height: chatExpanded ? '58vh' : 210, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden', transition: 'height .2s ease' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
@@ -19969,8 +20067,6 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
   const currentItem = game.currentItem;
   const scores = game.scores || {};
   const { remaining, over } = useTimer(gState === 'playing' ? game.roundStartTime : null, PICTONARY_ROUND_SECONDS);
-  const [color, setColor] = useState(PICTONARY_COLORS[0]);
-  const [tool, setTool] = useState('pen');
   const [chatText, setChatText] = useState('');
   const [chatExpanded, setChatExpanded] = useState(false);
   const chatListRef = useRef(null);
@@ -19991,7 +20087,6 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
     const t = setTimeout(() => { if (chatListRef.current) chatListRef.current.scrollTop = chatListRef.current.scrollHeight; }, 60);
     return () => clearTimeout(t);
   }, [chat.length]);
-  useEffect(() => { if (!isDrawer) setTool('pen'); }, [isDrawer, currentDrawerId]);
 
   const nuevaRonda = (uid) => ref().update({
     active: true, gameState: 'rolling', currentDrawer: uid, currentItem: null,
@@ -20213,16 +20308,8 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
     ) : null,
     h('div', { style: { flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, padding: '0 16px 16px', overflow: 'auto', minHeight: 0 } },
       h('div', { style: { flex: isMobile ? 'none' : 2, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 } },
-        h(PictonaryCanvas, { SID, canDraw: isDrawer && !over, color, tool, strokes: game.strokes, live: game.live, height: isMobile ? 220 : 360 }),
-        isDrawer ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
-          PICTONARY_COLORS.map((c) => h('button', {
-            key: c, onClick: () => { setColor(c); setTool('pen'); }, title: 'Color',
-            style: { width: 28, height: 28, borderRadius: '50%', background: c, cursor: 'pointer', border: (tool === 'pen' && color === c) ? '3px solid #0a0e2e' : '2px solid rgba(10,14,46,.15)', padding: 0 }
-          })),
-          h('button', { onClick: () => setTool('eraser'), title: 'Goma de borrar', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: tool === 'eraser' ? '2px solid #0a0e2e' : '1px solid rgba(10,14,46,.15)', background: tool === 'eraser' ? 'rgba(10,14,46,.08)' : '#fff', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#0a0e2e' } }, '🧼 Goma'),
-          h('button', { onClick: limpiarPizarra, title: 'Limpiar toda la pizarra', style: { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(239,68,68,.35)', background: 'rgba(239,68,68,.08)', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', color: '#dc2626', marginLeft: 'auto' } }, '🗑️ Limpiar todo'),
-        ) : null,
-        isAdmin ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(10,14,46,.03)', borderRadius: 14, padding: 10 } },
+        h(PictonaryDrawPanel, { SID, isDrawer, canDraw: isDrawer && !over, strokes: game.strokes, live: game.live, height: isMobile ? 240 : 360, onClear: limpiarPizarra, timeText: formatTime(Math.max(0, remaining)), timeColor, item: currentItem, aspect: game.aspect, onAspect: (a) => ref().update({ aspect: a }) }),
+        isAdmin ? h(PictonaryFoldout, { title: '⚙️ Opciones del admin · voz alta / siguiente turno', maxWidth: 'none' }, h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
           h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.12em' } }, '¿Adivinaron en voz alta? Toca quién fue (el chat ya detecta las respuestas escritas solo):'),
           guessers.length === 0 ? h('div', { style: { fontSize: 12, color: 'var(--muted)' } }, 'Nadie más en la zona de juegos aún.') : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6 } },
             guessers.map((u) => h('button', { key: u.uid, onClick: () => adivinador(u.uid, u.name), style: { display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid rgba(10,14,46,.12)', borderRadius: 20, padding: '5px 10px 5px 5px', cursor: 'pointer', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 12.5, color: '#0a0e2e' } },
@@ -20233,7 +20320,7 @@ function PictabLibreGame({ session, users, myId, isAdmin, SID, onClose }) {
             h('button', { onClick: seleccionarRandom, style: { flex: 1, background: '#15803d', border: 'none', borderRadius: 12, padding: '9px', color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '🎲 Siguiente al azar'),
             h('button', { onClick: skipTurn, style: { flex: 1, background: 'rgba(10,14,46,.06)', border: '1px solid rgba(10,14,46,.15)', borderRadius: 12, padding: '9px', color: '#0a0e2e', fontWeight: 800, fontSize: 12, fontFamily: 'Barlow Condensed,sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', cursor: 'pointer' } }, '⏭ Pasar turno'),
           ) : null,
-        ) : null,
+        )) : null,
       ),
       h('div', { style: { flex: isMobile ? 'none' : '0 0 320px', display: 'flex', flexDirection: 'column', flexShrink: 0, height: chatExpanded ? '58vh' : 210, background: '#fff', border: '1px solid rgba(10,14,46,.1)', borderRadius: 16, overflow: 'hidden', transition: 'height .2s ease' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid rgba(10,14,46,.08)', flexShrink: 0 } },
