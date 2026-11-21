@@ -3092,6 +3092,9 @@ const BIBLE_VERSES = {
   'Hechos 7:52': [
     { n: 52, t: '¿A cuál de los profetas no persiguieron sus antepasados? Ellos mataron a los que de antemano anunciaron la venida del Justo, y ahora a éste lo han traicionado y asesinado' },
   ],
+  'Hechos 8:26': [
+    { n: 26, t: 'Un ángel del Señor le dijo a Felipe: «Ponte en marcha hacia el sur, por el camino del desierto que baja de Jerusalén a Gaza.»' },
+  ],
   'Hechos 8:26-40': [
     { n: 26, t: 'Un ángel del Señor le dijo a Felipe: «Ponte en marcha hacia el sur, por el camino del desierto que baja de Jerusalén a Gaza.»' },
     { n: 27, t: 'Felipe emprendió el viaje, y resulta que se encontró con un etíope eunuco, alto funcionario encargado de todo el tesoro de la Candace, reina de los etíopes. Éste había ido a Jerusalén para adorar' },
@@ -3108,6 +3111,13 @@ const BIBLE_VERSES = {
     { n: 39, t: 'Cuando subieron del agua, el Espíritu del Señor se llevó de repente a Felipe. El eunuco no volvió a verlo, pero siguió alegre su camino.' },
     { n: 40, t: 'En cuanto a Felipe, apareció en Azoto, y se fue predicando el evangelio en todos los pueblos hasta que llegó a Cesarea.' },
   ],
+  'Hechos 8:27-28': [
+    { n: 27, t: 'Felipe emprendió el viaje, y resulta que se encontró con un etíope eunuco, alto funcionario encargado de todo el tesoro de la Candace, reina de los etíopes. Éste había ido a Jerusalén para adorar' },
+    { n: 28, t: 'y, en el viaje de regreso a su país, iba sentado en su carro, leyendo el libro del profeta Isaías.' },
+  ],
+  'Hechos 8:30': [
+    { n: 30, t: 'Felipe se acercó deprisa al carro y, al oír que el hombre leía al profeta Isaías, le preguntó: —¿Acaso entiende usted lo que está leyendo?' },
+  ],
   'Hechos 8:30-31': [
     { n: 30, t: 'Felipe se acercó deprisa al carro y, al oír que el hombre leía al profeta Isaías, le preguntó: —¿Acaso entiende usted lo que está leyendo?' },
     { n: 31, t: '—¿Y cómo voy a entenderlo —contestó— si nadie me lo explica? Así que invitó a Felipe a subir y sentarse con él.' },
@@ -3119,6 +3129,16 @@ const BIBLE_VERSES = {
     { n: 35, t: 'Entonces Felipe, comenzando con ese mismo pasaje de la Escritura, le anunció las buenas nuevas acerca de Jesús.' },
     { n: 36, t: 'Mientras iban por el camino, llegaron a un lugar donde había agua, y dijo el eunuco: —Mire usted, aquí hay agua. ¿Qué impide que yo sea bautizado?' },
     { n: 38, t: 'Entonces mandó parar el carro, y ambos bajaron al agua, y Felipe lo bautizó.' },
+  ],
+  'Hechos 8:35': [
+    { n: 35, t: 'Entonces Felipe, comenzando con ese mismo pasaje de la Escritura, le anunció las buenas nuevas acerca de Jesús.' },
+  ],
+  'Hechos 8:36-38': [
+    { n: 36, t: 'Mientras iban por el camino, llegaron a un lugar donde había agua, y dijo el eunuco: —Mire usted, aquí hay agua. ¿Qué impide que yo sea bautizado?' },
+    { n: 38, t: 'Entonces mandó parar el carro, y ambos bajaron al agua, y Felipe lo bautizó.' },
+  ],
+  'Hechos 8:39': [
+    { n: 39, t: 'Cuando subieron del agua, el Espíritu del Señor se llevó de repente a Felipe. El eunuco no volvió a verlo, pero siguió alegre su camino.' },
   ],
   'Isaías 17:7': [
     { n: 7, t: 'En aquel día buscará el hombre a su Hacedor; fijará la mirada en el Santo de Israel.' },
@@ -5997,6 +6017,21 @@ const PRESENTATIONS = [{
     verses: ['Hechos 8:32-38', 'Mateo 28:20'],
     hotspots: [['Hechos 8:32-38', 4.688, 53.129, 10.557, 4.167], ['Mateo 28:20', 79.36, 75.305, 8.089, 3.889]]
   }, {
+    type: 's-order',
+    kicker: 'Actividad · Día 2',
+    title: 'Ordena la historia de Felipe y el etíope',
+    prompt: 'Arrastra las tarjetas (≡) al orden correcto y toca Enviar',
+    verses: ['Hechos 8:26', 'Hechos 8:27-28', 'Hechos 8:30', 'Hechos 8:35', 'Hechos 8:36-38', 'Hechos 8:39'],
+    items: [
+      { id: 'a', text: 'Un ángel envía a Felipe al camino del desierto', ref: 'Hechos 8:26' },
+      { id: 'b', text: 'El etíope regresa en su carro leyendo a Isaías', ref: 'Hechos 8:27-28' },
+      { id: 'c', text: '«¿Acaso entiende usted lo que está leyendo?»', ref: 'Hechos 8:30' },
+      { id: 'd', text: 'Felipe le anuncia las buenas nuevas de Jesús', ref: 'Hechos 8:35' },
+      { id: 'e', text: '«Aquí hay agua»: el etíope es bautizado', ref: 'Hechos 8:36-38' },
+      { id: 'f', text: 'El etíope sigue alegre su camino', ref: 'Hechos 8:39' }
+    ],
+    note: 'Dar 1–2 minutos para que ordenen en el celular; luego tocar Revelar.'
+  }, {
     type: 's-image',
     src: 'presentaciones/4t2026-sem08/06.jpg?v=1',
     alt: 'Día 3: El contexto cultural e histórico. «Morir a los cien años» (Isaías 65:20) y «un beso santo».',
@@ -7653,8 +7688,172 @@ function NextSlideThumb({ children }) {
 /* Overlay de presentación sincronizada: todos ven la slide; el admin avanza. */
 
 /* ── PresentationOverlay  (líneas 4913-5366) ── */
+// ── Lámina interactiva «Ordena la historia» (tipo 's-order') ──
+// Cada participante ordena tarjetas en su celular y envía su respuesta a
+// sessions/{SID}/slideact/{deck}-{lámina}/{uid}. El proyector y el admin ven
+// en vivo cuántos respondieron y, al revelar, el orden correcto con el % de
+// acierto por tarjeta. El orden correcto es el del array `items`.
+const ORDER_C = { navy: '#2b2542', gold: '#c8862a', gold2: '#e6c387', cream: '#f3efe7', ink: '#1f1b33', muted: '#6b6585', ok: '#2f855a', bad: '#c0392b' };
+function orderShuffle(ids, seed) {
+  let x = 0;
+  for (const ch of String(seed)) x = (x * 31 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; };
+  const a = ids.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  if (a.join() === ids.join()) a.push(a.shift()); // nunca empezar ya ordenado
+  return a;
+}
+function OrderActivity({ slide, deckId, index, total, session, users, myId, isAdmin, SID, onVerseClick }) {
+  const h = React.createElement;
+  const cond = 'Barlow Condensed,sans-serif';
+  const key = `${deckId}-${index}`;
+  const base = `sessions/${SID}/slideact/${key}`;
+  const items = slide.items || [];
+  const byId = Object.fromEntries(items.map((it) => [it.id, it]));
+  const correct = items.map((it) => it.id);
+  const act = (session && session.slideact && session.slideact[key]) || {};
+  const revealed = !!act._reveal;
+  const answers = Object.entries(act).filter(([k, v]) => k !== '_reveal' && v && v.order);
+  const board = isAdmin || isScreenMode();
+  const me = (users && users[myId]) || {};
+  const mine = act[myId];
+  const [order, setOrder] = useState(() => mine && mine.order ? mine.order.split(',') : orderShuffle(correct, myId + key));
+  const [sent, setSent] = useState(!!mine);
+  const [err, setErr] = useState('');
+  const [drag, setDrag] = useState(null); // { id, dy }
+  const refs = useRef({});
+  const dragRef = useRef(null);
+
+  const send = () => {
+    setErr('');
+    window.db.ref(`${base}/${myId}`).set({ order: order.join(','), name: me.name || 'Anon', avatar: me.avatar || '👤', ts: firebase.database.ServerValue.TIMESTAMP })
+      .then(() => setSent(true))
+      .catch((e) => { console.error('[MRNT] No se pudo enviar el orden:', e); setErr('No se pudo enviar. Revisa tu conexión e intenta de nuevo.'); });
+  };
+  const move = (i, d) => {
+    const j = i + d; if (revealed || j < 0 || j >= order.length) return;
+    const a = order.slice(); [a[i], a[j]] = [a[j], a[i]]; setOrder(a); setSent(false);
+  };
+  // Arrastre con el dedo/mouse desde la manilla: reordena al pasar la mitad de otra tarjeta.
+  const orderRef = useRef(order);
+  orderRef.current = order;
+  const onDown = (e, id) => {
+    if (revealed) return;
+    e.preventDefault();
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    dragRef.current = { id, y0: e.clientY, start: order.join(',') };
+    setDrag({ id, dy: 0 });
+  };
+  const onMoveP = (e) => {
+    const d = dragRef.current; if (!d) return;
+    let dy = e.clientY - d.y0;
+    const cur = orderRef.current;
+    const i = cur.indexOf(d.id);
+    const el = refs.current[d.id];
+    if (el) {
+      const hgt = el.getBoundingClientRect().height + 10;
+      let j = i;
+      if (dy > hgt / 2 && i < cur.length - 1) { j = i + 1; d.y0 += hgt; dy -= hgt; }
+      else if (dy < -hgt / 2 && i > 0) { j = i - 1; d.y0 -= hgt; dy += hgt; }
+      if (j !== i) { const a = cur.slice(); [a[i], a[j]] = [a[j], a[i]]; orderRef.current = a; setOrder(a); }
+    }
+    setDrag({ id: d.id, dy });
+  };
+  const onUp = () => {
+    const d = dragRef.current;
+    if (d && d.start !== orderRef.current.join(',')) setSent(false);
+    dragRef.current = null; setDrag(null);
+  };
+
+  const header = (sub) => h('div', { style: { textAlign: 'left' } },
+    h('div', { style: { fontFamily: 'Lato,Barlow,sans-serif', fontWeight: 800, color: ORDER_C.gold, letterSpacing: '.2em', fontSize: 'clamp(11px,1.4vw,15px)', textTransform: 'uppercase' } }, slide.kicker || 'Actividad'),
+    h('div', { style: { fontFamily: "'Fraunces',Georgia,serif", fontWeight: 800, fontSize: 'clamp(26px,4.2vw,50px)', color: ORDER_C.ink, lineHeight: 1.08, marginTop: 6 } }, slide.title || 'Ordena la historia'),
+    sub ? h('div', { style: { fontFamily: 'Barlow,sans-serif', fontSize: 'clamp(14px,1.7vw,19px)', color: ORDER_C.muted, marginTop: 8 } }, sub) : null);
+  const refChip = (r) => r ? h('button', { onClick: (e) => { e.stopPropagation(); onVerseClick && onVerseClick(r); },
+    style: { border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', color: ORDER_C.gold, fontWeight: 700, fontFamily: 'Barlow,sans-serif', fontSize: 'clamp(12px,1.35vw,15px)', textDecoration: 'underline dotted' } }, r) : null;
+  const shell = (children) => h('div', { style: { width: 'min(96vw,1180px)', maxHeight: 'calc(100vh - 110px)', overflowY: 'auto', background: '#fff', borderRadius: 18,
+    boxShadow: '0 26px 70px rgba(10,14,46,.25)', padding: 'clamp(16px,3vw,40px)', display: 'flex', flexDirection: 'column', gap: 'clamp(12px,1.8vw,20px)',
+    animation: 'mr-sRise .5s cubic-bezier(.2,.8,.2,1) both' } }, children);
+
+  // ── Vista del proyector / admin ──
+  if (board) {
+    const n = answers.length;
+    const perfect = answers.filter(([, v]) => v.order === correct.join(',')).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
+    const pct = (id, pos) => n ? Math.round(100 * answers.filter(([, v]) => v.order.split(',')[pos] === id).length / n) : 0;
+    const enSala = Object.keys(users || {}).filter((u) => u !== myId).length;
+    return shell([
+      h('div', { key: 'hd', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' } },
+        header(revealed ? 'Este es el orden correcto' : (slide.prompt || 'Ordénala en tu celular y toca Enviar')),
+        h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } },
+          h('div', { style: { background: ORDER_C.navy, color: '#fff', borderRadius: 14, padding: '10px 18px', textAlign: 'center', fontFamily: cond } },
+            h('div', { style: { fontSize: 'clamp(26px,3.4vw,42px)', fontWeight: 900, lineHeight: 1 } }, n, h('span', { style: { fontSize: '.5em', opacity: .7 } }, enSala ? ' / ' + enSala : '')),
+            h('div', { style: { fontSize: 12, letterSpacing: '.14em', textTransform: 'uppercase', color: ORDER_C.gold2 } }, 'respuestas')),
+          isAdmin ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+            h('button', { onClick: () => window.db.ref(`${base}/_reveal`).set(!revealed),
+              style: { border: 'none', borderRadius: 999, padding: '9px 16px', cursor: 'pointer', fontFamily: cond, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', fontSize: 14, background: ORDER_C.gold, color: '#fff' } }, revealed ? 'Ocultar' : 'Revelar'),
+            h('button', { onClick: () => { if (confirm('¿Borrar todas las respuestas de esta actividad?')) window.db.ref(base).remove(); },
+              style: { border: '1px solid rgba(10,14,46,.18)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: cond, fontWeight: 700, fontSize: 12, background: '#fff', color: ORDER_C.muted } }, 'Reiniciar')) : null)),
+      revealed
+        ? h('div', { key: 'ok', style: { display: 'flex', flexDirection: 'column', gap: 10 } }, correct.map((id, i) => h('div', { key: id,
+            style: { display: 'flex', alignItems: 'center', gap: 14, background: ORDER_C.cream, borderRadius: 14, padding: '12px 16px', animation: `mr-sRise .45s ${i * .08}s both` } },
+            h('div', { style: { flex: 'none', width: 40, height: 40, borderRadius: '50%', background: ORDER_C.gold, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: cond, fontWeight: 900, fontSize: 22 } }, i + 1),
+            h('div', { style: { flex: 1, minWidth: 0 } },
+              h('div', { style: { fontFamily: 'Barlow,sans-serif', fontWeight: 600, fontSize: 'clamp(15px,1.8vw,21px)', color: ORDER_C.ink } }, byId[id].text), refChip(byId[id].ref)),
+            h('div', { style: { flex: 'none', width: 'clamp(90px,14vw,170px)' } },
+              h('div', { style: { height: 10, borderRadius: 6, background: 'rgba(10,14,46,.1)', overflow: 'hidden' } },
+                h('div', { style: { width: pct(id, i) + '%', height: '100%', background: ORDER_C.ok, transition: 'width .6s' } })),
+              h('div', { style: { fontFamily: cond, fontWeight: 700, fontSize: 13, color: ORDER_C.muted, marginTop: 3, textAlign: 'right' } }, pct(id, i) + '% acertó')))))
+        : h('div', { key: 'wait', style: { display: 'flex', flexWrap: 'wrap', gap: 8, minHeight: 60, alignContent: 'flex-start' } },
+            n ? answers.sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0)).map(([uid, v]) => h('div', { key: uid,
+              style: { display: 'flex', alignItems: 'center', gap: 6, background: ORDER_C.cream, borderRadius: 999, padding: '6px 14px 6px 8px', fontFamily: cond, fontWeight: 700, fontSize: 'clamp(14px,1.6vw,18px)', color: ORDER_C.ink, animation: 'mr-sPop .4s both' } },
+              h('span', { style: { fontSize: '1.2em' } }, v.avatar || '👤'), v.name || 'Anon', ' ✓'))
+              : h('div', { style: { fontFamily: 'Barlow,sans-serif', fontStyle: 'italic', color: ORDER_C.muted, fontSize: 'clamp(14px,1.7vw,19px)' } }, 'Esperando respuestas…')),
+      revealed && perfect.length ? h('div', { key: 'pf', style: { background: ORDER_C.navy, color: '#fff', borderRadius: 14, padding: '14px 18px', fontFamily: 'Barlow,sans-serif', fontSize: 'clamp(14px,1.7vw,19px)' } },
+        h('b', { style: { color: ORDER_C.gold2 } }, `🏆 Todo correcto (${perfect.length}): `), perfect.slice(0, 12).map(([, v]) => `${v.avatar || ''} ${v.name}`).join(' · ')) : null,
+      isAdmin && slide.note ? h('div', { key: 'nt', style: { fontFamily: 'Barlow,sans-serif', fontStyle: 'italic', fontSize: 13, color: ORDER_C.muted, borderTop: '1px dashed rgba(10,14,46,.2)', paddingTop: 8 } }, '🎤 Nota (solo tú la ves): ', slide.note) : null
+    ]);
+  }
+
+  // ── Vista del participante (celular) ──
+  const shown = revealed && mine ? mine.order.split(',') : order;
+  const allOk = revealed && mine && mine.order === correct.join(',');
+  return shell([
+    h('div', { key: 'hd' }, header(revealed ? (mine ? (allOk ? '¡Perfecto! Lo ordenaste todo bien 🎉' : 'Mira cuáles quedaron en su lugar') : 'Este era el orden correcto')
+      : (slide.prompt || 'Arrastra las tarjetas (≡) al orden correcto y toca Enviar'))),
+    h('div', { key: 'list', onPointerMove: onMoveP, onPointerUp: onUp, onPointerCancel: onUp, style: { display: 'flex', flexDirection: 'column', gap: 10, touchAction: drag ? 'none' : 'auto' } },
+      (revealed && !mine ? correct : shown).map((id, i) => {
+        const it = byId[id]; if (!it) return null;
+        const okHere = correct[i] === id;
+        const isDrag = drag && drag.id === id;
+        return h('div', { key: id, ref: (el) => { refs.current[id] = el; },
+          style: { display: 'flex', alignItems: 'center', gap: 12, borderRadius: 14, padding: '12px 12px 12px 14px', userSelect: 'none',
+            background: revealed && mine ? (okHere ? 'rgba(47,133,90,.12)' : 'rgba(192,57,43,.1)') : ORDER_C.cream,
+            border: `2px solid ${revealed && mine ? (okHere ? ORDER_C.ok : ORDER_C.bad) : (isDrag ? ORDER_C.gold : 'transparent')}`,
+            transform: isDrag ? `translateY(${drag.dy}px) scale(1.02)` : 'none', boxShadow: isDrag ? '0 12px 30px rgba(10,14,46,.25)' : 'none',
+            position: 'relative', zIndex: isDrag ? 2 : 1, transition: isDrag ? 'none' : 'transform .15s, background .3s' } },
+          h('div', { style: { flex: 'none', width: 34, height: 34, borderRadius: '50%', background: revealed && mine ? (okHere ? ORDER_C.ok : ORDER_C.bad) : ORDER_C.gold, color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: cond, fontWeight: 900, fontSize: 18 } }, revealed && mine ? (okHere ? '✓' : '✗') : i + 1),
+          h('div', { style: { flex: 1, minWidth: 0 } },
+            h('div', { style: { fontFamily: 'Barlow,sans-serif', fontWeight: 600, fontSize: 'clamp(15px,1.9vw,20px)', color: ORDER_C.ink, lineHeight: 1.25 } }, it.text),
+            revealed ? h('div', null, refChip(it.ref), mine && !okHere ? h('span', { style: { fontFamily: cond, fontWeight: 700, fontSize: 13, color: ORDER_C.bad, marginLeft: 8 } }, `va en el n.º ${correct.indexOf(id) + 1}`) : null) : null),
+          !revealed ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 2, flex: 'none' } },
+            h('button', { onClick: () => move(i, -1), disabled: i === 0, 'aria-label': 'Subir', style: { border: 'none', background: 'transparent', fontSize: 18, color: i === 0 ? 'rgba(10,14,46,.2)' : ORDER_C.muted, cursor: 'pointer', padding: '4px 6px' } }, '▲'),
+            h('button', { onClick: () => move(i, 1), disabled: i === order.length - 1, 'aria-label': 'Bajar', style: { border: 'none', background: 'transparent', fontSize: 18, color: i === order.length - 1 ? 'rgba(10,14,46,.2)' : ORDER_C.muted, cursor: 'pointer', padding: '4px 6px' } }, '▼'),
+            h('div', { onPointerDown: (e) => onDown(e, id), 'aria-label': 'Arrastrar', style: { touchAction: 'none', cursor: 'grab', padding: '6px 8px', fontSize: 24, color: ORDER_C.muted, lineHeight: 1 } }, '≡')) : null);
+      })),
+    !revealed ? h('div', { key: 'snd', style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
+      h('button', { onClick: send, disabled: sent,
+        style: { border: 'none', borderRadius: 999, padding: '12px 26px', cursor: sent ? 'default' : 'pointer', fontFamily: cond, fontWeight: 900, letterSpacing: '.1em', textTransform: 'uppercase', fontSize: 17,
+          background: sent ? ORDER_C.ok : ORDER_C.navy, color: '#fff' } }, sent ? '✓ Enviado' : 'Enviar'),
+      h('span', { style: { fontFamily: 'Barlow,sans-serif', fontSize: 14, color: err ? ORDER_C.bad : ORDER_C.muted } },
+        err || (sent ? 'Si cambias algo, vuelve a enviar.' : 'Espera a que el admin revele la respuesta.'))) : null
+  ]);
+}
+
 function PresentationOverlay({
   session,
+  users,
+  SID,
   isAdmin,
   myId,
   onPrev,
@@ -7740,7 +7939,10 @@ function PresentationOverlay({
       textTransform: 'uppercase', color: '#fbbf24' }
   }, React.createElement("span", { style: { whiteSpace: 'nowrap' } }, nextSlide ? `Siguiente · ${idx + 2}/${total}` : 'Última lámina'),
     React.createElement("span", { style: { whiteSpace: 'nowrap', color: 'rgba(255,255,255,.55)' } }, '🔒 Solo tú')),
-  nextSlide ? (nextSlide.type === 's-image'
+  nextSlide ? (nextSlide.type === 's-order'
+    ? React.createElement("div", { style: { background: '#fff', borderRadius: 8, aspectRatio: '16 / 9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: '#2b2542', textAlign: 'center', padding: 8 } },
+        React.createElement("div", { style: { fontSize: 28 } }, '📱'), nextSlide.title || 'Actividad', React.createElement("div", { style: { fontSize: 11, color: '#c8862a', letterSpacing: '.1em', textTransform: 'uppercase' } }, 'Actividad en los celulares'))
+    : nextSlide.type === 's-image'
     ? React.createElement("img", { src: nextSlide.src, alt: nextSlide.alt || '', draggable: false,
         style: { display: 'block', width: '100%', aspectRatio: nextSlide.ratio || '16 / 9', objectFit: 'contain', borderRadius: 8, background: '#fff' } })
     : React.createElement(NextSlideThumb, null, React.createElement(SlideView, {
@@ -7764,7 +7966,10 @@ function PresentationOverlay({
       padding: '14px 12px 78px',
       gap: 0
     }
-  }, /*#__PURE__*/React.createElement(SlideView, {
+  }, slide.type === 's-order' ? React.createElement(OrderActivity, {
+    slide, deckId: deck.id, index: idx, total, session, users, myId, isAdmin,
+    SID: SID || getSID(), onVerseClick
+  }) : /*#__PURE__*/React.createElement(SlideView, {
     slide: slide,
     index: idx,
     total: total,
