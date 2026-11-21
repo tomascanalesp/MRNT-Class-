@@ -21004,7 +21004,13 @@ function CountdownTimer({
   }, "Prepárate"));
 }
 
-/* ── DraggableQR  (6931-7136) ── */
+/* ── DraggableQR ──
+   Tamaños: 'small' (80px) → 'medium' (180px) → 'big' (300px) → 'large'
+   (pantalla completa), más 'min' (minimizado a una pastilla "📲 QR").
+   Botones −/+ para achicar/agrandar, ▁ para minimizar y ✕ para ocultar
+   (solo admin). Tocar el QR lo agranda; se arrastra para moverlo. */
+const QR_SIZES = ['small', 'medium', 'big', 'large'];
+const QR_PX = { small: 80, medium: 180, big: 300 };
 function DraggableQR({
   qrSize,
   setQrSize,
@@ -21013,111 +21019,57 @@ function DraggableQR({
   onHide
 }) {
   const url = window.location.origin + window.location.pathname;
-  const dragRef = useRef({
-    dragging: false,
-    moved: false,
-    offX: 0,
-    offY: 0
-  });
+  const dragRef = useRef({ dragging: false, moved: false, offX: 0, offY: 0 });
+  const lastRef = useRef(qrSize && qrSize !== 'min' ? qrSize : 'medium');
+  if (qrSize && qrSize !== 'min') lastRef.current = qrSize;
   // Z-index alto y fijo para que el QR quede siempre por encima de cualquier
   // sala o pantalla de actividad (juegos, presentaciones, videos, admin, etc.)
   // y así la gente pueda escanearlo estando en cualquier parte de la app.
   const QR_Z = 9990;
+  const idx = Math.max(0, QR_SIZES.indexOf(qrSize));
+  const smaller = () => setQrSize(QR_SIZES[Math.max(0, idx - 1)]);
+  const bigger = () => setQrSize(QR_SIZES[Math.min(QR_SIZES.length - 1, idx + 1)]);
+  const minimize = () => setQrSize('min');
+  const restore = () => setQrSize(lastRef.current || 'medium');
+  const stop = (e) => e.stopPropagation();
+  const ctrlBtn = (label, title, fn, disabled, sz = 24) => h('button', {
+    onMouseDown: stop, onTouchStart: stop,
+    onClick: (e) => { e.stopPropagation(); if (!disabled) fn(); },
+    title, 'aria-label': title, disabled: !!disabled,
+    style: {
+      width: sz, height: sz, borderRadius: '50%', border: '1px solid rgba(10,14,46,.14)', background: '#fff',
+      color: '#0a0e2e', fontSize: sz * 0.55, fontWeight: 900, lineHeight: 1, padding: 0, flexShrink: 0,
+      cursor: disabled ? 'default' : 'pointer', opacity: disabled ? .35 : 1,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(10,14,46,.15)'
+    }
+  }, label);
 
   // Vista grande: overlay centrado (no arrastrable)
   if (qrSize === 'large') {
-    return /*#__PURE__*/React.createElement("div", {
-      onClick: () => setQrSize('small'),
-      style: {
-        position: 'fixed',
-        inset: 0,
-        zIndex: QR_Z + 5,
-        background: 'rgba(10,14,46,.45)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        animation: 'modalIn .25s ease',
-        padding: 24
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'relative',
-        background: '#fff',
-        borderRadius: 24,
-        padding: '28px 28px 22px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 16,
-        boxShadow: '0 24px 60px rgba(10,14,46,.3)',
-        maxWidth: '92vmin'
-      }
-    }, onHide && /*#__PURE__*/React.createElement("button", {
-      onClick: (e) => { e.stopPropagation(); onHide(); },
-      title: "Ocultar QR",
-      style: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        width: 28,
-        height: 28,
-        borderRadius: '50%',
-        border: 'none',
-        background: 'rgba(10,14,46,.06)',
-        color: '#0a0e2e',
-        fontSize: 15,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    }, "✕"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 900,
-        fontSize: 24,
-        color: '#0a0e2e',
-        textTransform: 'uppercase',
-        letterSpacing: '.12em',
-        lineHeight: 1
-      }
-    }, "📲 ¡Únete a la clase!"), /*#__PURE__*/React.createElement("img", {
-      src: `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=0&data=${encodeURIComponent(url)}`,
-      alt: "QR para unirse a la sala",
-      style: {
-        width: 'min(72vmin,640px)',
-        height: 'auto',
-        display: 'block',
-        borderRadius: 12
-      }
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Barlow Condensed,sans-serif',
-        fontWeight: 700,
-        fontSize: 13,
-        color: 'rgba(10,14,46,.6)',
-        letterSpacing: '.1em',
-        textTransform: 'uppercase',
-        lineHeight: 1
-      }
-    }, "Toca para reducir")));
+    return h('div', {
+      onClick: smaller,
+      style: { position: 'fixed', inset: 0, zIndex: QR_Z + 5, background: 'rgba(10,14,46,.45)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', animation: 'modalIn .25s ease', padding: 24 }
+    }, h('div', {
+      style: { position: 'relative', background: '#fff', borderRadius: 24, padding: '28px 28px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, boxShadow: '0 24px 60px rgba(10,14,46,.3)', maxWidth: '92vmin' }
+    },
+      h('div', { style: { position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 } },
+        ctrlBtn('−', 'Achicar QR', smaller, false, 30),
+        ctrlBtn('▁', 'Minimizar QR', minimize, false, 30),
+        onHide ? ctrlBtn('✕', 'Ocultar QR', onHide, false, 30) : null,
+      ),
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 24, color: '#0a0e2e', textTransform: 'uppercase', letterSpacing: '.12em', lineHeight: 1, marginTop: 14 } }, '📲 ¡Únete a la clase!'),
+      h('img', { src: `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=0&data=${encodeURIComponent(url)}`, alt: 'QR para unirse a la sala', style: { width: 'min(72vmin,640px)', height: 'auto', display: 'block', borderRadius: 12 } }),
+      h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 13, color: 'rgba(10,14,46,.6)', letterSpacing: '.1em', textTransform: 'uppercase', lineHeight: 1 } }, 'Toca para achicar'),
+    ));
   }
-  const isMed = qrSize === 'medium';
-  const W = isMed ? 180 : 80;
-  // Posición: si el admin lo arrastró usamos qrPos; si no, anclado arriba a la derecha.
-  const defaultRight = isMed ? 14 : 10,
-    defaultTop = isMed ? 72 : 64;
+
+  const isMin = qrSize === 'min';
+  const isMed = qrSize === 'medium' || qrSize === 'big';
+  const W = QR_PX[qrSize] || QR_PX.small;
   const onDown = e => {
     const pt = e.touches ? e.touches[0] : e;
     const rect = e.currentTarget.getBoundingClientRect();
-    dragRef.current = {
-      dragging: true,
-      moved: false,
-      offX: pt.clientX - rect.left,
-      offY: pt.clientY - rect.top
-    };
+    dragRef.current = { dragging: true, moved: false, offX: pt.clientX - rect.left, offY: pt.clientY - rect.top };
     const move = ev => {
       const p = ev.touches ? ev.touches[0] : ev;
       const d = dragRef.current;
@@ -21127,12 +21079,7 @@ function DraggableQR({
       const margin = 6;
       const maxX = window.innerWidth - rect.width - margin;
       const maxY = window.innerHeight - rect.height - margin;
-      const x = Math.max(margin, Math.min(maxX, p.clientX - d.offX));
-      const y = Math.max(margin, Math.min(maxY, p.clientY - d.offY));
-      setQrPos({
-        x,
-        y
-      });
+      setQrPos({ x: Math.max(margin, Math.min(maxX, p.clientX - d.offX)), y: Math.max(margin, Math.min(maxY, p.clientY - d.offY)) });
     };
     const up = () => {
       dragRef.current.dragging = false;
@@ -21143,119 +21090,52 @@ function DraggableQR({
     };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
-    window.addEventListener('touchmove', move, {
-      passive: false
-    });
+    window.addEventListener('touchmove', move, { passive: false });
     window.addEventListener('touchend', up);
   };
   const onClick = () => {
     // Si hubo arrastre, no cambiar de tamaño (evita el "click fantasma").
-    if (dragRef.current.moved) {
-      dragRef.current.moved = false;
-      return;
-    }
-    setQrSize(s => s === 'small' ? 'medium' : 'large');
+    if (dragRef.current.moved) { dragRef.current.moved = false; return; }
+    if (isMin) restore(); else bigger();
   };
-  const posStyle = qrPos ? {
-    left: qrPos.x,
-    top: qrPos.y
-  } : {
-    right: defaultRight,
-    top: defaultTop
-  };
-  return /*#__PURE__*/React.createElement("div", {
-    onMouseDown: onDown,
-    onTouchStart: onDown,
-    onClick: onClick,
-    title: "Arrastra para mover · toca para agrandar",
+  // Posición: si se arrastró usamos qrPos (ajustado para que no se salga de
+  // la pantalla al crecer); si no, anclado arriba a la derecha.
+  let posStyle = { right: isMed ? 14 : 10, top: isMed ? 72 : 64 };
+  if (qrPos) {
+    const estW = isMin ? 80 : W + (isMed ? 24 : 10);
+    const estH = isMin ? 36 : W + (isMed ? 70 : 40);
+    posStyle = { left: Math.max(6, Math.min(qrPos.x, window.innerWidth - estW - 6)), top: Math.max(6, Math.min(qrPos.y, window.innerHeight - estH - 6)) };
+  }
+
+  if (isMin) {
+    return h('div', {
+      onMouseDown: onDown, onTouchStart: onDown, onClick,
+      title: 'QR minimizado · toca para mostrarlo',
+      style: { position: 'fixed', ...posStyle, zIndex: QR_Z, display: 'flex', alignItems: 'center', gap: 6, background: '#fff', borderRadius: 20, padding: '6px 10px', boxShadow: '0 10px 28px rgba(10,14,46,.28), 0 0 0 2px rgba(255,208,0,.55)', cursor: 'pointer', touchAction: 'none', userSelect: 'none', fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: 13, color: '#0a0e2e', letterSpacing: '.06em' }
+    }, '📲 QR', onHide ? ctrlBtn('✕', 'Ocultar QR', onHide, false, 18) : null);
+  }
+
+  return h('div', {
+    onMouseDown: onDown, onTouchStart: onDown, onClick,
+    title: 'Arrastra para mover · toca para agrandar',
     style: {
-      position: 'fixed',
-      ...posStyle,
-      zIndex: QR_Z,
-      background: '#fff',
-      borderRadius: 14,
-      padding: isMed ? '10px 12px 8px' : '5px 5px 3px',
+      position: 'fixed', ...posStyle, zIndex: QR_Z, background: '#fff', borderRadius: 14,
+      padding: isMed ? '8px 12px 8px' : '5px 5px 3px',
       boxShadow: '0 10px 28px rgba(10,14,46,.28), 0 0 0 2px rgba(255,208,0,.55)',
-      border: 'none',
-      cursor: 'grab',
-      touchAction: 'none',
-      userSelect: 'none',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: isMed ? 5 : 3
+      cursor: 'grab', touchAction: 'none', userSelect: 'none',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMed ? 5 : 3
     }
-  }, onHide && /*#__PURE__*/React.createElement("button", {
-    onMouseDown: (e) => e.stopPropagation(),
-    onTouchStart: (e) => e.stopPropagation(),
-    onClick: (e) => { e.stopPropagation(); onHide(); },
-    title: "Ocultar QR",
-    style: {
-      position: 'absolute',
-      top: -8,
-      right: -8,
-      width: 20,
-      height: 20,
-      borderRadius: '50%',
-      border: '1px solid rgba(10,14,46,.12)',
-      background: '#fff',
-      color: '#0a0e2e',
-      fontSize: 10,
-      lineHeight: 1,
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxShadow: '0 2px 6px rgba(10,14,46,.2)'
-    }
-  }, "✕"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 6,
-      width: '100%',
-      justifyContent: 'center'
-    }
-  }, isMed && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 11,
-      color: 'rgba(10,14,46,.35)'
-    }
-  }, "⠿"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 900,
-      fontSize: isMed ? 13 : 8.5,
-      color: '#0a0e2e',
-      textTransform: 'uppercase',
-      letterSpacing: isMed ? '.12em' : '0',
-      lineHeight: 1.05,
-      textAlign: 'center',
-      whiteSpace: isMed ? 'nowrap' : 'normal'
-    }
-  }, "📲 ¡Únete a la clase!")), /*#__PURE__*/React.createElement("img", {
-    src: `https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=0&data=${encodeURIComponent(url)}`,
-    alt: "QR para unirse a la sala",
-    width: W,
-    height: W,
-    draggable: false,
-    style: {
-      display: 'block',
-      borderRadius: 6,
-      background: '#fff',
-      pointerEvents: 'none'
-    }
-  }), isMed && /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: 'Barlow Condensed,sans-serif',
-      fontWeight: 700,
-      fontSize: 9,
-      color: 'rgba(10,14,46,.55)',
-      letterSpacing: '.1em',
-      textTransform: 'uppercase',
-      lineHeight: 1
-    }
-  }, "Arrastra para mover"));
+  },
+    h('div', { style: { display: 'flex', alignItems: 'center', gap: isMed ? 6 : 3, justifyContent: 'center', width: '100%' } },
+      ctrlBtn('−', 'Achicar QR', smaller, idx === 0, isMed ? 24 : 18),
+      ctrlBtn('+', 'Agrandar QR', bigger, false, isMed ? 24 : 18),
+      ctrlBtn('▁', 'Minimizar QR', minimize, false, isMed ? 24 : 18),
+      onHide ? ctrlBtn('✕', 'Ocultar QR', onHide, false, isMed ? 24 : 18) : null,
+    ),
+    isMed ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 900, fontSize: qrSize === 'big' ? 17 : 13, color: '#0a0e2e', textTransform: 'uppercase', letterSpacing: '.12em', lineHeight: 1.05, whiteSpace: 'nowrap' } }, '📲 ¡Únete a la clase!') : null,
+    h('img', { src: `https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=0&data=${encodeURIComponent(url)}`, alt: 'QR para unirse a la sala', width: W, height: W, draggable: false, style: { display: 'block', borderRadius: 6, background: '#fff', pointerEvents: 'none' } }),
+    isMed ? h('div', { style: { fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 700, fontSize: 9, color: 'rgba(10,14,46,.55)', letterSpacing: '.1em', textTransform: 'uppercase', lineHeight: 1 } }, '⠿ Arrastra para mover') : null,
+  );
 }
 
 /* ════════════════════════ FIN DE ACTIVIDAD ════════════════════════ */
@@ -23631,7 +23511,7 @@ class Component extends React.Component {
       // click → 'large' (overlay a pantalla completa). Click sobre el overlay
       // grande lo vuelve a 'small'. Z-index alto (ver QR_Z) para que se vea por
       // encima de presentaciones, videos y juegos.
-      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 'small'), setQrSize: (v) => this.setState({ qrSize: v }), qrPos: st.qrPos || null, setQrPos: (v) => this.setState({ qrPos: v }), onHide: screen ? null : () => this.setState({ showQR: false }) }) :
+      (screen || (this.isAdmin && st.showQR)) ? h(DraggableQR, { qrSize: st.qrSize || (screen ? 'medium' : 'small'), setQrSize: (v) => this.setState((prev) => ({ qrSize: typeof v === 'function' ? v(prev.qrSize || (screen ? 'medium' : 'small')) : v })), qrPos: st.qrPos || null, setQrPos: (v) => this.setState({ qrPos: v }), onHide: screen ? null : () => this.setState({ showQR: false }) }) :
       // Cuando el QR está oculto, el botón del header (📲) queda tapado por
       // cualquier actividad/juego en pantalla completa (position:fixed con
       // z-index propio) — así que dejamos un disparador siempre alcanzable,
