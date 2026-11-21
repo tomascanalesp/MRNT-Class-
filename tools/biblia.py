@@ -84,10 +84,11 @@ def verses_of(book, ch):
     for s in keep:
         txt = txt[:-1] + s if txt.endswith('-') and not txt.endswith(' -') else (f'{txt} {s}' if txt else s)
     # Corta por números de versículo en orden (admite versículos omitidos, p. ej. Mt 23:14).
-    first = re.search(r'(?<!\d)1(?=[^\d\s.,:;–-])', txt)
+    # El primer versículo puede venir combinado, p. ej. "1-2»Corría…" (Dn 9).
+    first = re.search(r'(?<!\d)1(?:-(\d+))?(?=[^\d\s.,:;–-])', txt)
     if not first:
         return {}
-    vs, cur, start = {}, 1, first.end()
+    vs, cur, start = {}, int(first.group(1) or 1), first.end()
     while True:
         found = None
         for cand in (cur + 1, cur + 2):
@@ -99,7 +100,11 @@ def verses_of(book, ch):
             break
         vs[cur] = txt[start:found[1].start()]
         cur, start = found[0], found[1].end()
-    return {n: re.sub(r'\s+', ' ', t).strip() for n, t in vs.items()}
+    out = {n: re.sub(r'\s+', ' ', t).strip() for n, t in vs.items()}
+    # Versículos combinados al inicio (1-2): todos comparten el mismo texto.
+    for n in range(1, min(out) if out else 1):
+        out[n] = out[min(out)]
+    return dict(sorted(out.items()))
 
 
 def _book_key(name):
