@@ -70,6 +70,13 @@
 @keyframes mr-pulse{0%,100%{opacity:1}50%{opacity:.55}}
 .mr-hot{position:absolute;padding:0;margin:0;border:none;border-radius:6px;cursor:pointer;background:transparent;box-shadow:inset 0 -2px 0 rgba(200,134,42,.6);transition:background .15s,box-shadow .15s}
 .mr-hot:hover,.mr-hot:focus-visible{background:rgba(200,134,42,.2);box-shadow:inset 0 -3px 0 rgba(200,134,42,.95);outline:none}
+@keyframes mr-icFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12%)}}
+@keyframes mr-icWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+@keyframes mr-icNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(20%)}}
+@keyframes mr-icPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.mr-ic{position:absolute;pointer-events:none;user-select:none;animation:2.6s ease-in-out infinite both}
+.mr-ic-float{animation-name:mr-icFloat}.mr-ic-wiggle{animation-name:mr-icWiggle}.mr-ic-nudge{animation-name:mr-icNudge;animation-duration:1.6s}.mr-ic-pulse{animation-name:mr-icPulse}
+@media (prefers-reduced-motion: reduce){.mr-ic{animation:none!important}}
 @keyframes mr-sRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mr-sPop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
 @keyframes mr-sWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(0)}}
@@ -4347,6 +4354,10 @@ function SermonSlide({ slide, index, total, footer, onVerseClick, isAdmin, onAsk
         animation: 'mr-sRise .5s cubic-bezier(.2,.8,.2,1) both' }
     }, h("img", { src: slide.src, alt: slide.alt || '', draggable: false,
         style: { display: 'block', width: '100%', height: '100%', objectFit: 'contain' } }),
+      // Íconos animados sobre la imagen: [src, x%, y%, ancho%, alto%, animación]
+      slide.icons ? slide.icons.map(([src, x, y, w, hh, a], i) => h("img", { key: 'ic' + i, src, alt: '', draggable: false,
+          className: 'mr-ic mr-ic-' + (a || 'float'),
+          style: { left: x + '%', top: y + '%', width: w + '%', height: hh + '%', animationDelay: (i * .35) + 's' } })) : null,
       // Citas clicables en su lugar dentro de la imagen: [ref, x%, y%, ancho%, alto%]
       slide.hotspots ? slide.hotspots.map(([r, x, y, w, hh], i) => h("button", { key: 'hs' + i, className: 'mr-hot', title: r, 'aria-label': r,
           onClick: () => BIBLE_VERSES[r] && onVerseClick ? onVerseClick(r) : window.open(bibleGatewayUrl(r), '_blank', 'noopener,noreferrer'),
@@ -5909,68 +5920,79 @@ const PRESENTATIONS = [{
   theme: 'sermon',
   slides: [{
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/01.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/01.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/01-1.png', 79.505, 65.185, 10.391, 24.259, 'wiggle']],
     alt: 'Semana 7 · ¡Escuchen esto! · Jeremías 36:20-32',
     verses: ['Jeremías 36:20-32'],
     hotspots: [['Jeremías 36:20-32', 6.667, 57.389, 17.677, 5]],
     note: 'Cómo ha respondido el pueblo de Dios a los mensajes de sus profetas, y qué aprendemos de esa historia.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/02.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/02.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/02-1.png', 8.633, 62.127, 3.88, 5.741, 'nudge'], ['presentaciones/4t2026-sem07/ic/02-2.png', 39.896, 62.127, 3.229, 5.741, 'wiggle'], ['presentaciones/4t2026-sem07/ic/02-3.png', 70.996, 62.127, 2.904, 5.741, 'wiggle']],
     alt: 'Idea central: ¿Qué hacemos con un mensaje que no queremos oír? Aceptarla, ignorarla o rebelarse.',
     verses: ['Hebreos 11:32-38'],
     hotspots: [['Hebreos 11:32-38', 17.049, 31.962, 12.482, 4.63]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/03.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/03.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/03-1.png', 8.073, 30.352, 3.75, 5.556, 'float'], ['presentaciones/4t2026-sem07/ic/03-2.png', 39.323, 30.352, 3.125, 5.556, 'wiggle'], ['presentaciones/4t2026-sem07/ic/03-3.png', 70.26, 30.352, 3.125, 5.556, 'float']],
     alt: 'Día 1: Ira ante el mensaje de Dios. El pueblo en pánico, Josué y Caleb, Jeremías.',
     verses: ['Números 13:31-14:4', 'Números 14:8-10', 'Jeremías 1:17-18'],
     hotspots: [['Números 13:31-14:4', 17.633, 52.342, 12.592, 3.889], ['Números 14:8-10', 38.177, 52.342, 10.059, 3.889], ['Jeremías 1:17-18', 69.115, 52.342, 8.765, 3.889]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/04.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/04.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/04-1.png', 9.382, 27.852, 4.258, 6.852, 'float'], ['presentaciones/4t2026-sem07/ic/04-2.png', 18.19, 28.222, 3.177, 6.296, 'nudge'], ['presentaciones/4t2026-sem07/ic/04-3.png', 26.12, 27.852, 3.854, 6.852, 'wiggle'], ['presentaciones/4t2026-sem07/ic/04-4.png', 34.727, 28.222, 3.177, 6.296, 'nudge'], ['presentaciones/4t2026-sem07/ic/04-5.png', 42.858, 27.852, 3.451, 6.852, 'wiggle']],
     alt: 'Día 2: Destruyendo el mensaje. Yehudi lee el rollo, el rey lo corta y lo quema.',
     verses: ['Jeremías 36:23-24', 'Jeremías 36:27-28, 32', 'Jeremías 36:30-31'],
     hotspots: [['Jeremías 36:23-24', 4.688, 53.129, 9.897, 4.167], ['Jeremías 36:27-28, 32', 62.342, 57.342, 12.116, 3.889], ['Jeremías 36:30-31', 76.687, 75.305, 9.671, 3.889]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/05.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/05.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/05-1.png', 12.34, 32.389, 3.32, 5.37, 'float'], ['presentaciones/4t2026-sem07/ic/05-2.png', 30.339, 32.389, 3.32, 5.37, 'float'], ['presentaciones/4t2026-sem07/ic/05-3.png', 48.639, 32.389, 2.721, 5.37, 'wiggle'], ['presentaciones/4t2026-sem07/ic/05-4.png', 66.34, 32.389, 3.32, 5.37, 'float'], ['presentaciones/4t2026-sem07/ic/05-5.png', 84.34, 32.389, 3.32, 5.37, 'float']],
     alt: 'Día 3: Una historia de resistencia. Josías, Joacaz, Joacim, Joaquín y Sedequías.',
     verses: ['2 Crónicas 36:12', '2 Crónicas 36:15-16', '2 Pedro 3:9'],
     hotspots: [['2 Crónicas 36:12', 20.524, 61.972, 9.923, 3.889], ['2 Crónicas 36:15-16', 67.922, 61.972, 12.278, 3.889], ['2 Pedro 3:9', 80.269, 61.972, 7.297, 3.889]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/06.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/06.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/06-1.png', 8.229, 31.74, 3.229, 5.741, 'float'], ['presentaciones/4t2026-sem07/ic/06-2.png', 39.004, 31.74, 3.555, 5.741, 'float'], ['presentaciones/4t2026-sem07/ic/06-3.png', 69.779, 31.74, 3.88, 5.741, 'float'], ['presentaciones/4t2026-sem07/ic/06-4.png', 8.229, 55.629, 3.229, 5.741, 'wiggle'], ['presentaciones/4t2026-sem07/ic/06-5.png', 39.167, 55.629, 3.229, 5.741, 'wiggle'], ['presentaciones/4t2026-sem07/ic/06-6.png', 70.267, 55.629, 2.904, 5.741, 'float']],
     alt: 'Día 3: Siempre la misma historia. Moisés, Jeremías, Judá, Jesús, Esteban… ¿y nosotros?',
     verses: ['Números 14:10', 'Jeremías 36:23', '2 Crónicas 36:16', 'Mateo 23:37', 'Hechos 7:52'],
     hotspots: [['Números 14:10', 21.676, 36.578, 8.611, 3.889], ['Jeremías 36:23', 59.507, 32.967, 2.996, 3.889], ['Jeremías 36:23', 44.896, 36.578, 4.644, 3.889], ['2 Crónicas 36:16', 84.436, 34.773, 5.602, 3.889], ['2 Crónicas 36:16', 75.833, 38.384, 4.644, 3.889], ['Mateo 23:37', 23.996, 58.662, 3.77, 3.889], ['Mateo 23:37', 13.958, 62.273, 4.644, 3.889], ['Hechos 7:52', 57.692, 58.662, 4.556, 3.889], ['Hechos 7:52', 44.896, 62.273, 3.738, 3.889]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/07.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/07.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/07-1.png', 8.906, 36, 2.5, 5.556, 'wiggle'], ['presentaciones/4t2026-sem07/ic/07-2.png', 39.688, 36, 2.813, 5.556, 'wiggle'], ['presentaciones/4t2026-sem07/ic/07-3.png', 70.781, 36, 2.5, 5.556, 'wiggle']],
     alt: 'Día 4: Los retos de Jeremías. Un profeta afligido, confrontación intensa, fiel a la Palabra.',
     verses: ['Jeremías 9:1', 'Jeremías 13:17', 'Jeremías 14:17', 'Jeremías 20:14-18', 'Jeremías 15:10', 'Jeremías 26:8-11', 'Jeremías 38:4', 'Jeremías 20:7-9', 'Jeremías 26:2'],
     hotspots: [['Jeremías 9:1', 6.979, 47.481, 10.553, 4.352], ['Jeremías 13:17', 6.979, 52.833, 12.607, 4.352], ['Jeremías 14:17', 6.979, 58.184, 12.607, 4.352], ['Jeremías 20:14-18', 6.979, 63.536, 15.297, 4.352], ['Jeremías 15:10', 37.917, 47.481, 12.607, 4.352], ['Jeremías 26:8-11', 37.917, 52.833, 14.27, 4.352], ['Jeremías 38:4', 37.917, 58.184, 11.58, 4.352], ['Jeremías 20:7-9', 68.854, 47.481, 13.242, 4.352], ['Jeremías 26:2', 68.854, 52.833, 11.58, 4.352]],
     note: 'Pedir que cada grupo busque una de las tres columnas.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/08.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/08.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/08-1.png', 8.333, 50.702, 2.917, 5.185, 'wiggle'], ['presentaciones/4t2026-sem07/ic/08-2.png', 39.271, 50.702, 2.917, 5.185, 'pulse'], ['presentaciones/4t2026-sem07/ic/08-3.png', 69.922, 50.702, 3.49, 5.185, 'pulse']],
     alt: 'Día 5: Para nuestra advertencia (1 Corintios 10:11).',
     verses: ['1 Corintios 10:11', '1 Corintios 10:12-13', '2 Crónicas 20:20', '3 Juan 1:2', 'Isaías 40:8'],
     hotspots: [['1 Corintios 10:11', 78.58, 27.296, 10.615, 4.63], ['1 Corintios 10:12-13', 25.138, 63.572, 4.631, 3.889], ['1 Corintios 10:12-13', 6.771, 67.183, 6.999, 3.889], ['2 Crónicas 20:20', 53.502, 63.572, 5.602, 3.889], ['2 Crónicas 20:20', 37.708, 67.183, 4.644, 3.889], ['3 Juan 1:2', 42.422, 67.183, 7.565, 3.889], ['Isaías 40:8', 86.902, 63.572, 2.907, 3.889], ['Isaías 40:8', 68.646, 67.183, 3.738, 3.889]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/09.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/09.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/09-1.png', 8.672, 39.796, 3.906, 6.296, 'pulse'], ['presentaciones/4t2026-sem07/ic/09-2.png', 54.896, 39.796, 4.271, 6.296, 'wiggle'], ['presentaciones/4t2026-sem07/ic/09-3.png', 8.854, 69.055, 3.542, 6.296, 'wiggle'], ['presentaciones/4t2026-sem07/ic/09-4.png', 55.078, 69.055, 3.906, 6.296, 'wiggle']],
     alt: 'Día 6: Elena G. de White y sus mensajes: cómo los recibió y cómo los comunicó.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/10.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/10.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/10-1.png', 8.542, 30.444, 3.229, 5.741, 'float'], ['presentaciones/4t2026-sem07/ic/10-2.png', 39.316, 30.444, 3.555, 5.741, 'float'], ['presentaciones/4t2026-sem07/ic/10-3.png', 70.417, 30.444, 3.229, 5.741, 'pulse']],
     alt: 'Día 7: Para conversar en clase.',
     verses: ['Jeremías 36:20-31', 'Mateo 23:37', '1 Corintios 10:6-11', '1 Corintios 10:12-13'],
     hotspots: [['Jeremías 36:20-31', 18.846, 45.615, 9.972, 4.074], ['Mateo 23:37', 11.668, 65.942, 8.107, 4.074], ['1 Corintios 10:6-11', 49.221, 45.615, 10.725, 4.074], ['1 Corintios 10:12-13', 84.003, 45.615, 4.764, 4.074], ['1 Corintios 10:12-13', 68.646, 49.489, 7.211, 4.074]],
     note: 'Buen momento para abrir la nube de palabras con una de las reflexiones.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem07/11.jpg?v=1',
+    src: 'presentaciones/4t2026-sem07/11.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem07/ic/11-1.png', 6.445, 28.315, 3.672, 5.926, 'float'], ['presentaciones/4t2026-sem07/ic/11-2.png', 6.615, 45.166, 3.333, 5.926, 'wiggle'], ['presentaciones/4t2026-sem07/ic/11-3.png', 6.784, 62.018, 2.995, 5.926, 'float']],
     alt: 'Lo que nos llevamos. Para memorizar: tu pasaje favorito de Jeremías 36:20-32.',
     verses: ['Jeremías 36:20-32'],
     hotspots: [['Jeremías 36:20-32', 35.799, 84.722, 15.972, 4.63]]
@@ -5986,36 +6008,12 @@ const PRESENTATIONS = [{
   theme: 'sermon',
   slides: [{
     type: 's-image',
-    src: 'presentaciones/4t2026-sem08/01.jpg?v=1',
+    src: 'presentaciones/4t2026-sem08/01.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/01-1.png', 77.813, 67.037, 12.604, 22.407, 'float']],
     alt: 'Semana 8 · Interpretación de los escritos proféticos · Hechos 8:26-40',
     verses: ['Hechos 8:26-40'],
     hotspots: [['Hechos 8:26-40', 6.667, 59.479, 15.177, 5]],
     note: 'Cómo entender bien la Palabra: con ayuda, en su contexto y dejando que la Biblia se interprete a sí misma.'
-  }, {
-    type: 's-image',
-    src: 'presentaciones/4t2026-sem08/02.jpg?v=1',
-    alt: 'Idea central: «¿Acaso entiende usted lo que está leyendo?» Las palabras, el contexto y la armonía con toda la Escritura.',
-    verses: ['Hechos 8:30-31'],
-    hotspots: [['Hechos 8:30-31', 15.418, 31.406, 12.264, 4.63]]
-  }, {
-    type: 's-image',
-    src: 'presentaciones/4t2026-sem08/03.jpg?v=1',
-    alt: 'Día 1: El significado del texto. Camino a Emaús y «¿Cómo la interpretas tú?».',
-    verses: ['Lucas 24:21', 'Lucas 24:25-27, 32', 'Lucas 10:26', '1 Corintios 13:12'],
-    hotspots: [['Lucas 24:21', 17.555, 48.731, 7.679, 3.889], ['Lucas 24:25-27, 32', 46.691, 52.342, 12.479, 3.889], ['Lucas 10:26', 69.115, 52.342, 7.678, 3.889], ['1 Corintios 13:12', 59.906, 71.277, 10.615, 4.63]]
-  }, {
-    type: 's-image',
-    src: 'presentaciones/4t2026-sem08/04.jpg?v=1',
-    alt: 'Día 1: Versículos fuera de contexto. Mateo 27:5, Lucas 10:37 y Juan 13:27.',
-    verses: ['Mateo 27:5', 'Lucas 10:37', 'Juan 13:27'],
-    hotspots: [['Mateo 27:5', 6.771, 44.944, 8.175, 4.352], ['Lucas 10:37', 38.394, 44.944, 8.71, 4.352], ['Juan 13:27', 70.017, 44.944, 9.259, 4.352]],
-    note: 'Contar la anécdota del hombre que abría la Biblia al azar antes de mostrar la lámina.'
-  }, {
-    type: 's-image',
-    src: 'presentaciones/4t2026-sem08/05.jpg?v=1',
-    alt: 'Día 2: Comprender a los profetas. El etíope lee Isaías 53, Felipe le habla de Jesús y pide el bautismo.',
-    verses: ['Hechos 8:32-38', 'Mateo 28:20'],
-    hotspots: [['Hechos 8:32-38', 4.688, 53.129, 10.557, 4.167], ['Mateo 28:20', 79.36, 75.305, 8.089, 3.889]]
   }, {
     type: 's-order',
     kicker: 'Actividad · Día 2',
@@ -6033,37 +6031,73 @@ const PRESENTATIONS = [{
     note: 'Dar 1–2 minutos para que ordenen en el celular; luego tocar Revelar.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem08/06.jpg?v=1',
+    src: 'presentaciones/4t2026-sem08/02.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/02-1.png', 8.49, 60.645, 3.438, 5.556, 'pulse'], ['presentaciones/4t2026-sem08/ic/02-2.png', 39.583, 60.645, 3.125, 5.556, 'float'], ['presentaciones/4t2026-sem08/ic/02-3.png', 70.521, 60.645, 3.125, 5.556, 'pulse']],
+    alt: 'Idea central: «¿Acaso entiende usted lo que está leyendo?» Las palabras, el contexto y la armonía con toda la Escritura.',
+    verses: ['Hechos 8:30-31'],
+    hotspots: [['Hechos 8:30-31', 15.418, 31.406, 12.264, 4.63]]
+  }, {
+    type: 's-image',
+    src: 'presentaciones/4t2026-sem08/03.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/03-1.png', 8.854, 30.352, 2.188, 5.556, 'float'], ['presentaciones/4t2026-sem08/ic/03-2.png', 39.323, 30.352, 3.125, 5.556, 'wiggle'], ['presentaciones/4t2026-sem08/ic/03-3.png', 70.26, 30.352, 3.125, 5.556, 'float']],
+    alt: 'Día 1: El significado del texto. Camino a Emaús y «¿Cómo la interpretas tú?».',
+    verses: ['Lucas 24:21', 'Lucas 24:25-27, 32', 'Lucas 10:26', '1 Corintios 13:12'],
+    hotspots: [['Lucas 24:21', 17.555, 48.731, 7.679, 3.889], ['Lucas 24:25-27, 32', 46.691, 52.342, 12.479, 3.889], ['Lucas 10:26', 69.115, 52.342, 7.678, 3.889], ['1 Corintios 13:12', 59.906, 71.277, 10.615, 4.63]]
+  }, {
+    type: 's-image',
+    src: 'presentaciones/4t2026-sem08/04.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/04-1.png', 8.314, 36.055, 2.539, 5, 'wiggle'], ['presentaciones/4t2026-sem08/ic/04-2.png', 32.69, 42.907, 2.995, 5.926, 'nudge'], ['presentaciones/4t2026-sem08/ic/04-3.png', 39.937, 36.055, 2.539, 5, 'wiggle'], ['presentaciones/4t2026-sem08/ic/04-4.png', 64.314, 42.907, 2.995, 5.926, 'nudge'], ['presentaciones/4t2026-sem08/ic/04-5.png', 71.56, 36.055, 2.539, 5, 'wiggle']],
+    alt: 'Día 1: Versículos fuera de contexto. Mateo 27:5, Lucas 10:37 y Juan 13:27.',
+    verses: ['Mateo 27:5', 'Lucas 10:37', 'Juan 13:27'],
+    hotspots: [['Mateo 27:5', 6.771, 44.944, 8.175, 4.352], ['Lucas 10:37', 38.394, 44.944, 8.71, 4.352], ['Juan 13:27', 70.017, 44.944, 9.259, 4.352]],
+    note: 'Contar la anécdota del hombre que abría la Biblia al azar antes de mostrar la lámina.'
+  }, {
+    type: 's-image',
+    src: 'presentaciones/4t2026-sem08/05.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/05-1.png', 9.382, 27.852, 4.258, 6.852, 'float'], ['presentaciones/4t2026-sem08/ic/05-2.png', 18.19, 28.222, 3.177, 6.296, 'nudge'], ['presentaciones/4t2026-sem08/ic/05-3.png', 25.716, 27.852, 4.661, 6.852, 'float'], ['presentaciones/4t2026-sem08/ic/05-4.png', 34.727, 28.222, 3.177, 6.296, 'nudge'], ['presentaciones/4t2026-sem08/ic/05-5.png', 42.454, 27.852, 4.258, 6.852, 'float']],
+    alt: 'Día 2: Comprender a los profetas. El etíope lee Isaías 53, Felipe le habla de Jesús y pide el bautismo.',
+    verses: ['Hechos 8:32-38', 'Mateo 28:20'],
+    hotspots: [['Hechos 8:32-38', 4.688, 53.129, 10.557, 4.167], ['Mateo 28:20', 79.36, 75.305, 8.089, 3.889]]
+
+  }, {
+    type: 's-image',
+    src: 'presentaciones/4t2026-sem08/06.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/06-1.png', 9.18, 30.444, 2.578, 5.741, 'float'], ['presentaciones/4t2026-sem08/ic/06-2.png', 54.935, 30.444, 3.88, 5.741, 'wiggle']],
     alt: 'Día 3: El contexto cultural e histórico. «Morir a los cien años» (Isaías 65:20) y «un beso santo».',
     verses: ['Isaías 65:20', 'Isaías 25:8', 'Isaías 26:19', '1 Corintios 16:20', 'Romanos 16:16', '1 Tesalonicenses 5:26'],
     hotspots: [['Isaías 65:20', 19.989, 41.37, 7.227, 3.889], ['Isaías 25:8', 42.126, 50.259, 2.907, 3.889], ['Isaías 25:8', 7.083, 53.87, 3.738, 3.889], ['Isaías 26:19', 10.891, 53.87, 4.644, 3.889], ['1 Corintios 16:20', 70.37, 41.37, 8.951, 3.889], ['Romanos 16:16', 79.391, 41.37, 8.435, 3.889], ['1 Tesalonicenses 5:26', 87.896, 41.37, 4.42, 3.889], ['1 Tesalonicenses 5:26', 53.49, 44.981, 3.738, 3.889]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem08/07.jpg?v=1',
+    src: 'presentaciones/4t2026-sem08/07.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/07-1.png', 8.438, 36, 3.438, 5.556, 'float'], ['presentaciones/4t2026-sem08/ic/07-2.png', 39.531, 36, 3.125, 5.556, 'float'], ['presentaciones/4t2026-sem08/ic/07-3.png', 70.156, 36, 3.75, 5.556, 'wiggle']],
     alt: 'Día 4: Interpretar bien la Palabra. Malinterpretar, interpretar rectamente y orar por entendimiento.',
     verses: ['Génesis 3:1-5', 'Mateo 4:5-7', '2 Pedro 3:16', '2 Timoteo 2:15', '2 Pedro 1:20', 'Salmos 119:125', 'Daniel 9:13, 23'],
     hotspots: [['Génesis 3:1-5', 6.979, 47.481, 11.361, 4.352], ['Mateo 4:5-7', 6.979, 52.833, 10.366, 4.352], ['2 Pedro 3:16', 6.979, 58.184, 10.653, 4.352], ['2 Timoteo 2:15', 37.917, 47.481, 12.556, 4.352], ['2 Pedro 1:20', 37.917, 52.833, 10.653, 4.352], ['Salmos 119:125', 68.854, 47.481, 13.228, 4.352], ['Daniel 9:13, 23', 68.854, 52.833, 12.476, 4.352]],
     note: 'Pedir que cada grupo busque una de las tres columnas.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem08/08.jpg?v=1',
+    src: 'presentaciones/4t2026-sem08/08.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/08-1.png', 8.268, 49.22, 2.63, 5.185, 'float'], ['presentaciones/4t2026-sem08/ic/08-2.png', 54.375, 49.22, 2.917, 5.185, 'float'], ['presentaciones/4t2026-sem08/ic/08-3.png', 8.411, 72.368, 2.344, 5.185, 'float'], ['presentaciones/4t2026-sem08/ic/08-4.png', 54.375, 72.368, 2.917, 5.185, 'pulse']],
     alt: 'Día 5: La Biblia se interpreta a sí misma.',
     verses: ['2 Timoteo 3:16', 'Daniel 2:31-45', 'Mateo 13:3-9, 18-23', 'Jeremías 25:11-12', '2 Crónicas 36:20-23', 'Mateo 5:17-48', 'Jeremías 31:31-34', 'Hebreos 8:8-10', '1 Pedro 1:10-12'],
     hotspots: [['2 Timoteo 3:16', 44.942, 25.629, 9.695, 4.63], ['Daniel 2:31-45', 32.921, 50.169, 9.563, 3.889], ['Mateo 13:3-9, 18-23', 30.197, 53.78, 13.433, 3.889], ['Jeremías 25:11-12', 69.823, 50.169, 9.671, 3.889], ['2 Crónicas 36:20-23', 89.091, 50.169, 1.532, 3.889], ['2 Crónicas 36:20-23', 59.583, 53.78, 11.069, 3.889], ['Mateo 5:17-48', 36.883, 73.317, 9.539, 3.889], ['Jeremías 31:31-34', 13.333, 76.929, 9.67, 3.889], ['Hebreos 8:8-10', 23.074, 76.929, 8.693, 3.889], ['1 Pedro 1:10-12', 66.238, 76.929, 10.557, 3.889]]
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem08/09.jpg?v=1',
+    src: 'presentaciones/4t2026-sem08/09.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/09-1.png', 7.799, 28.685, 3.359, 5, 'wiggle'], ['presentaciones/4t2026-sem08/ic/09-2.png', 38.7, 28.685, 3.086, 5, 'float'], ['presentaciones/4t2026-sem08/ic/09-3.png', 69.327, 28.685, 3.359, 5, 'wiggle'], ['presentaciones/4t2026-sem08/ic/09-4.png', 7.936, 62.203, 3.086, 5, 'float'], ['presentaciones/4t2026-sem08/ic/09-5.png', 38.836, 62.203, 2.813, 5, 'pulse']],
     alt: 'Día 6: Cómo leer a Elena G. de White: con oración, contexto, principios, todo el tema y verificando la fuente.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem08/10.jpg?v=1',
+    src: 'presentaciones/4t2026-sem08/10.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/10-1.png', 8.216, 30.444, 3.88, 5.741, 'wiggle'], ['presentaciones/4t2026-sem08/ic/10-2.png', 39.479, 30.444, 3.229, 5.741, 'float'], ['presentaciones/4t2026-sem08/ic/10-3.png', 70.417, 30.444, 3.229, 5.741, 'wiggle']],
     alt: 'Día 7: Para conversar en clase.',
     verses: ['Lucas 24:25-27, 44-45', 'Mateo 4:5-7', '2 Pedro 3:16', 'Daniel 2:31-45', '2 Crónicas 36:20-23'],
     hotspots: [['Lucas 24:25-27, 44-45', 15.305, 49.489, 15.308, 4.074], ['Mateo 4:5-7', 38.193, 49.489, 7.962, 4.074], ['2 Pedro 3:16', 46.248, 49.489, 8.455, 4.074], ['Daniel 2:31-45', 82.444, 45.615, 9.861, 4.074], ['2 Crónicas 36:20-23', 68.646, 49.489, 12.665, 4.074]],
     note: 'Buen momento para abrir la nube de palabras con una de las reflexiones.'
   }, {
     type: 's-image',
-    src: 'presentaciones/4t2026-sem08/11.jpg?v=1',
+    src: 'presentaciones/4t2026-sem08/11.jpg?v=2',
+    icons: [['presentaciones/4t2026-sem08/ic/11-1.png', 6.276, 28.315, 4.01, 5.926, 'float'], ['presentaciones/4t2026-sem08/ic/11-2.png', 6.445, 45.166, 3.672, 5.926, 'float'], ['presentaciones/4t2026-sem08/ic/11-3.png', 6.784, 62.018, 2.995, 5.926, 'float']],
     alt: 'Lo que nos llevamos. Próxima semana: Poniendo a prueba a los profetas · Mateo 7:13-29.',
     verses: ['Mateo 7:13-29'],
     hotspots: [['Mateo 7:13-29', 47.172, 84.722, 12.948, 4.63]]
@@ -7943,8 +7977,10 @@ function PresentationOverlay({
     ? React.createElement("div", { style: { background: '#fff', borderRadius: 8, aspectRatio: '16 / 9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: 'Barlow Condensed,sans-serif', fontWeight: 800, color: '#2b2542', textAlign: 'center', padding: 8 } },
         React.createElement("div", { style: { fontSize: 28 } }, '📱'), nextSlide.title || 'Actividad', React.createElement("div", { style: { fontSize: 11, color: '#c8862a', letterSpacing: '.1em', textTransform: 'uppercase' } }, 'Actividad en los celulares'))
     : nextSlide.type === 's-image'
-    ? React.createElement("img", { src: nextSlide.src, alt: nextSlide.alt || '', draggable: false,
-        style: { display: 'block', width: '100%', aspectRatio: nextSlide.ratio || '16 / 9', objectFit: 'contain', borderRadius: 8, background: '#fff' } })
+    ? React.createElement("div", { style: { position: 'relative' } }, React.createElement("img", { src: nextSlide.src, alt: nextSlide.alt || '', draggable: false,
+        style: { display: 'block', width: '100%', aspectRatio: nextSlide.ratio || '16 / 9', objectFit: 'contain', borderRadius: 8, background: '#fff' } }),
+        (nextSlide.icons || []).map(([src, x, y, w, hh], i) => React.createElement("img", { key: i, src, alt: '',
+          style: { position: 'absolute', left: x + '%', top: y + '%', width: w + '%', height: hh + '%', pointerEvents: 'none' } })))
     : React.createElement(NextSlideThumb, null, React.createElement(SlideView, {
             slide: Object.assign({}, nextSlide, { note: null }),
             index: idx + 1, total, footer,
